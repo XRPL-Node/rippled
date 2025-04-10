@@ -24,6 +24,12 @@ on:
         type: string
         default: ""
 
+      unittest_args:
+        description: 'Additional arguments to pass to rippled when running tests'
+        required: false
+        type: string
+        default: ""
+
       cmake_target:
         description: "The CMake target to build."
         type: string
@@ -205,7 +211,8 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
+          ./rippled --unittest --unittest-jobs "${BUILD_NPROC}" \
+            ${{ inputs.unittest_args }}
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
