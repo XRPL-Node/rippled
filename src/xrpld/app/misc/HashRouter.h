@@ -140,6 +140,13 @@ private:
             return std::move(peers_);
         }
 
+        /** Return set of peers waiting for reply. Leaves list unchanged. */
+        std::set<PeerShortID> const&
+        peekPeerSet()
+        {
+            return peers_;
+        }
+
         /** Return seated relay time point if the message has been relayed */
         std::optional<Stopwatch::time_point>
         relayed() const
@@ -173,6 +180,21 @@ private:
             return true;
         }
 
+        bool
+        shouldProcessForPeer(
+            PeerShortID peer,
+            Stopwatch::time_point now,
+            std::chrono::seconds interval)
+        {
+            if (peerProcessed_.contains(peer) &&
+                ((peerProcessed_[peer] + interval) > now))
+                return false;
+            // Peer may already be in the list, but adding it again doesn't hurt
+            addPeer(peer);
+            peerProcessed_[peer] = now;
+            return true;
+        }
+
     private:
         HashRouterFlags flags_ = HashRouterFlags::UNDEFINED;
         std::set<PeerShortID> peers_;
@@ -180,6 +202,7 @@ private:
         // than one flag needs to expire independently.
         std::optional<Stopwatch::time_point> relayed_;
         std::optional<Stopwatch::time_point> processed_;
+        std::map<PeerShortID, Stopwatch::time_point> peerProcessed_;
     };
 
 public:
@@ -223,6 +246,18 @@ public:
         HashRouterFlags& flags,
         std::chrono::seconds tx_interval);
 
+    /** Determines whether the hashed item should be processed for the given
+       peer. Could be an incoming or outgoing message.
+
+       Items filtered with this function should only be processed for the given
+       peer once. Unlike shouldProcess, it can be processed for other peers.
+     */
+    bool
+    shouldProcessForPeer(
+        uint256 const& key,
+        PeerShortID peer,
+        std::chrono::seconds interval);
+
     /** Set the flags on a hash.
 
         @return `true` if the flags were changed. `false` if unchanged.
@@ -247,6 +282,11 @@ public:
     */
     std::optional<std::set<PeerShortID>>
     shouldRelay(uint256 const& key);
+
+    /** Returns a copy of the set of peers in the Entry for the key
+     */
+    std::set<PeerShortID>
+    getPeers(uint256 const& key);
 
 private:
     // pair.second indicates whether the entry was created
