@@ -5,9 +5,9 @@
 #include <xrpld/core/JobQueue.h>
 #include <xrpld/perflog/PerfLog.h>
 
+#include <xrpl/basics/CanProcess.h>
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
-#include <xrpl/basics/scope.h>
 #include <xrpl/beast/container/aged_map.h>
 #include <xrpl/protocol/jss.h>
 
@@ -64,12 +64,15 @@ public:
                 (reason != InboundLedger::Reason::CONSENSUS))
                 return {};
 
+            std::stringstream ss;
+
             bool isNew = true;
             std::shared_ptr<InboundLedger> inbound;
             {
                 ScopedLockType sl(mLock);
                 if (stopping_)
                 {
+                    JLOG(j_.debug()) << "Abort(stopping): " << ss.str();
                     return {};
                 }
 
@@ -93,23 +96,29 @@ public:
                     ++mCounter;
                 }
             }
+            ss << " IsNew: " << (isNew ? "true" : "false");
 
             if (inbound->isFailed())
+            {
+                JLOG(j_.debug()) << "Abort(failed): " << ss.str();
                 return {};
+            }
 
             if (!isNew)
                 inbound->update(seq);
 
             if (!inbound->isComplete())
+            {
+                JLOG(j_.debug()) << "InProgress: " << ss.str();
                 return {};
+            }
 
+            JLOG(j_.debug()) << "Complete: " << ss.str();
             return inbound->getLedger();
         };
         using namespace std::chrono_literals;
-        std::shared_ptr<Ledger const> ledger = perf::measureDurationAndLog(
+        return perf::measureDurationAndLog(
             doAcquire, "InboundLedgersImp::acquire", 500ms, j_);
-
-        return ledger;
     }
 
     void
@@ -118,28 +127,25 @@ public:
         std::uint32_t seq,
         InboundLedger::Reason reason) override
     {
-        std::unique_lock lock(acquiresMutex_);
-        try
+        if (CanProcess const check{acquiresMutex_, pendingAcquires_, hash})
         {
-            if (pendingAcquires_.contains(hash))
-                return;
-            pendingAcquires_.insert(hash);
-            scope_unlock unlock(lock);
-            acquire(hash, seq, reason);
+            try
+            {
+                acquire(hash, seq, reason);
+            }
+            catch (std::exception const& e)
+            {
+                JLOG(j_.warn())
+                    << "Exception thrown for acquiring new inbound ledger "
+                    << hash << ": " << e.what();
+            }
+            catch (...)
+            {
+                JLOG(j_.warn()) << "Unknown exception thrown for acquiring new "
+                                   "inbound ledger "
+                                << hash;
+            }
         }
-        catch (std::exception const& e)
-        {
-            JLOG(j_.warn())
-                << "Exception thrown for acquiring new inbound ledger " << hash
-                << ": " << e.what();
-        }
-        catch (...)
-        {
-            JLOG(j_.warn())
-                << "Unknown exception thrown for acquiring new inbound ledger "
-                << hash;
-        }
-        pendingAcquires_.erase(hash);
     }
 
     std::shared_ptr<InboundLedger>
