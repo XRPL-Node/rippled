@@ -119,10 +119,40 @@ Rules::presets() const
     return impl_->presets();
 }
 
+/** Define features that can be considered enabled based on other features.
+ *
+ * This is a simple key-value map where
+ *   - the key is the feature being checked
+ *   - the value is a set of other features, which, in any of them are enabled,
+ *     will cause the key feature to be considered enabled.
+ *
+ */
+std::map<uint256, std::vector<uint256>> const&
+getTransitiveFeatureMap()
+{
+    static std::map<uint256, std::vector<uint256>> const featureToOverride{
+        // If LendingProtocol is enabled, then SingleAssetVault can also be
+        // considered enabled
+        {featureSingleAssetVault, {featureLendingProtocol}}};
+    return featureToOverride;
+}
+
 bool
 Rules::enabled(uint256 const& feature) const
 {
     XRPL_ASSERT(impl_, "xrpl::Rules::enabled : initialized");
+
+    // Some features can be considered enabled based on other enabled features.
+    static auto const& transitiveFeatureMap = getTransitiveFeatureMap();
+    if (transitiveFeatureMap.contains(feature))
+    {
+        auto const& transitiveFeatures = transitiveFeatureMap.at(feature);
+        if (std::any_of(
+                transitiveFeatures.begin(),
+                transitiveFeatures.end(),
+                [this](auto const& f) { return impl_->enabled(f); }))
+            return true;
+    }
 
     return impl_->enabled(feature);
 }
