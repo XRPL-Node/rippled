@@ -29,6 +29,8 @@
 #include <xrpl/beast/container/aged_unordered_map.h>
 #include <xrpl/protocol/PublicKey.h>
 
+#include "xrpld/shamap/SHAMapMissingNode.h"
+
 #include <mutex>
 #include <optional>
 #include <type_traits>
@@ -386,8 +388,16 @@ private:
     {
         for (auto it = acquiring_.begin(); it != acquiring_.end();)
         {
-            if (std::optional<Ledger> ledger =
-                    adaptor_.acquire(it->first.second))
+            std::optional<Ledger> ledger;
+            try
+            {
+                // Skip if we haven't finished acquiring this ledger,
+                // or the ledger we acquired isn't complete, which can happen
+                // because we're still trying to catch up.
+                ledger = adaptor_.acquire(it->first.second);
+            }
+            catch (SHAMapMissingNode const&) {}
+            if (ledger)
             {
                 for (NodeID const& nodeID : it->second)
                     updateTrie(lock, nodeID, *ledger);
