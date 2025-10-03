@@ -367,8 +367,6 @@ LoanManage::unimpairLoan(
 TER
 LoanManage::doApply()
 {
-    return temDISABLED;
-#if LOANCOMPLETE
     auto const& tx = ctx_.tx;
     auto& view = ctx_.view();
 
@@ -407,7 +405,6 @@ LoanManage::doApply()
     }
 
     return tesSUCCESS;
-#endif
 }
 
 //------------------------------------------------------------------------------
