@@ -3351,14 +3351,14 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         {
             std::uint32_t const expiration = lastClose(env) + 25;
 
-            auto const minterSeq0 = env.seq(minter);
-            uint256 const offer0 = keylet::nftoffer(minter, minterSeq0).key;
+            uint256 const offer0 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID0, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
 
-            auto const minterSeq1 = env.seq(minter);
-            uint256 const offer1 = keylet::nftoffer(minter, minterSeq1).key;
+            uint256 const offer1 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID1, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
@@ -3559,25 +3559,25 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         {
             std::uint32_t const expiration = lastClose(env) + 25;
 
-            auto const minterSeq0 = env.seq(minter);
-            uint256 const sellOffer0 = keylet::nftoffer(minter, minterSeq0).key;
+            uint256 const sellOffer0 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID0, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
 
-            auto const minterSeq1 = env.seq(minter);
-            uint256 const sellOffer1 = keylet::nftoffer(minter, minterSeq1).key;
+            uint256 const sellOffer1 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID1, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
 
-            auto const buyerSeq0 = env.seq(buyer);
-            uint256 const buyOffer0 = keylet::nftoffer(buyer, buyerSeq0).key;
+            uint256 const buyOffer0 =
+                keylet::nftoffer(buyer, env.seq(buyer)).key;
             env(token::createOffer(buyer, nftokenID0, drops(1)),
                 token::owner(minter));
 
-            auto const buyerSeq1 = env.seq(buyer);
-            uint256 const buyOffer1 = keylet::nftoffer(buyer, buyerSeq1).key;
+            uint256 const buyOffer1 =
+                keylet::nftoffer(buyer, env.seq(buyer)).key;
             env(token::createOffer(buyer, nftokenID1, drops(1)),
                 token::owner(minter));
 
@@ -3660,13 +3660,13 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         {
             std::uint32_t const expiration = lastClose(env) + 25;
 
-            auto const minterSeq0 = env.seq(minter);
-            uint256 const sellOffer0 = keylet::nftoffer(minter, minterSeq0).key;
+            uint256 const sellOffer0 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID0, drops(1)),
                 txflags(tfSellNFToken));
 
-            auto const minterSeq1 = env.seq(minter);
-            uint256 const sellOffer1 = keylet::nftoffer(minter, minterSeq1).key;
+            uint256 const sellOffer1 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID1, drops(1)),
                 txflags(tfSellNFToken));
 
@@ -3749,26 +3749,26 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         {
             std::uint32_t const expiration = lastClose(env) + 25;
 
-            auto const minterSeq0 = env.seq(minter);
-            uint256 const sellOffer0 = keylet::nftoffer(minter, minterSeq0).key;
+            uint256 const sellOffer0 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID0, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
 
-            auto const minterSeq1 = env.seq(minter);
-            uint256 const sellOffer1 = keylet::nftoffer(minter, minterSeq1).key;
+            uint256 const sellOffer1 =
+                keylet::nftoffer(minter, env.seq(minter)).key;
             env(token::createOffer(minter, nftokenID1, drops(1)),
                 token::expiration(expiration),
                 txflags(tfSellNFToken));
 
-            auto const buyerSeq0 = env.seq(buyer);
-            uint256 const buyOffer0 = keylet::nftoffer(buyer, buyerSeq0).key;
+            uint256 const buyOffer0 =
+                keylet::nftoffer(buyer, env.seq(buyer)).key;
             env(token::createOffer(buyer, nftokenID0, drops(1)),
                 token::expiration(expiration),
                 token::owner(minter));
 
-            auto const buyerSeq1 = env.seq(buyer);
-            uint256 const buyOffer1 = keylet::nftoffer(buyer, buyerSeq1).key;
+            uint256 const buyOffer1 =
+                keylet::nftoffer(buyer, env.seq(buyer)).key;
             env(token::createOffer(buyer, nftokenID1, drops(1)),
                 token::expiration(expiration),
                 token::owner(minter));
