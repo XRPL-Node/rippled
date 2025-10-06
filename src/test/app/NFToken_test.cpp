@@ -3515,6 +3515,7 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
                 // cancelled
                 env(token::cancelOffer(issuer, {offer1}));
                 env.close();
+                buyerCount--;
             }
             // Ensure that owner counts are the same with and without the
             // amendment
