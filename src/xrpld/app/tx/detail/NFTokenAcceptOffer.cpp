@@ -538,36 +538,30 @@ NFTokenAcceptOffer::doApply()
     {
         bool foundExpired = false;
 
-        if (bo && hasExpired(view(), (*bo)[~sfExpiration]))
-        {
-            JLOG(j_.trace()) << "Buy offer is expired, deleting: " << bo->key();
-            if (!nft::deleteTokenOffer(view(), bo))
+        auto const deleteOfferIfExpired =
+            [this, &foundExpired](std::shared_ptr<SLE> offer) -> TER {
+            if (offer && hasExpired(view(), (*offer)[~sfExpiration]))
             {
-                // LCOV_EXCL_START
-                JLOG(j_.fatal()) << "Unable to delete expired buy offer '"
-                                 << to_string(bo->key()) << "': ignoring";
-                return tecINTERNAL;
-                // LCOV_EXCL_STOP
+                JLOG(j_.trace())
+                    << "Offer is expired, deleting: " << offer->key();
+                if (!nft::deleteTokenOffer(view(), offer))
+                {
+                    // LCOV_EXCL_START
+                    JLOG(j_.fatal())
+                        << "Unable to delete expired offer '"
+                        << to_string(offer->key()) << "': ignoring";
+                    return tecINTERNAL;
+                    // LCOV_EXCL_STOP
+                }
+                foundExpired = true;
             }
-            foundExpired = true;
-            bo.reset();  // Clear the pointer since offer is deleted
-        }
+            return tesSUCCESS;
+        };
 
-        if (so && hasExpired(view(), (*so)[~sfExpiration]))
-        {
-            JLOG(j_.trace())
-                << "Sell offer is expired, deleting: " << so->key();
-            if (!nft::deleteTokenOffer(view(), so))
-            {
-                // LCOV_EXCL_START
-                JLOG(j_.fatal()) << "Unable to delete expired sell offer '"
-                                 << to_string(so->key()) << "': ignoring";
-                return tecINTERNAL;
-                // LCOV_EXCL_STOP
-            }
-            foundExpired = true;
-            so.reset();  // Clear the pointer since offer is deleted
-        }
+        if (auto const r = deleteOfferIfExpired(bo); !isTesSuccess(r))
+            return r;
+        if (auto const r = deleteOfferIfExpired(so); !isTesSuccess(r))
+            return r;
 
         if (foundExpired)
             return tecEXPIRED;
