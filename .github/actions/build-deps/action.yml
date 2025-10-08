@@ -38,6 +38,6 @@ runs:
           --options:host='&:tests=True' \
           --options:host='&:xrpld=True' \
           --settings:all build_type='${{ env.BUILD_TYPE }}' \
-          --conf:tools.build:verbosity='${{ inputs.verbosity }}' \
-          --conf:tools.compilation:verbosity='${{ inputs.verbosity }}' \
+          --conf:all tools.build:verbosity='${{ inputs.verbosity }}' \
+          --conf:all tools.compilation:verbosity='${{ inputs.verbosity }}' \
           ..
