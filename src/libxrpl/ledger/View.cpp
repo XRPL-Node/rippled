@@ -1787,6 +1787,26 @@ rippleCreditIOU(
             // Receiver reserve is clear.
         }
 
+        // Check if receiver's balance went from zero/negative to positive
+        // In this case, the receiver should now be charged for the trust line
+        // Note: balance is in sender's terms, so receiver going from 0 to
+        // positive means sender going from 0 to negative
+        if (view.rules().enabled(fixTrustLineOwnerCount) &&
+            saBefore >= beast::zero
+            // Sender balance was non-negative (receiver was non-positive).
+            && saBalance < beast::zero
+            // Sender is now negative (receiver is now positive).
+            && !(uFlags & (bSenderHigh ? lsfLowReserve : lsfHighReserve)))
+        // Receiver reserve is not set.
+        {
+            adjustOwnerCount(
+                view, view.peek(keylet::account(uReceiverID)), 1, j);
+
+            sleRippleState->setFieldU32(
+                sfFlags,
+                uFlags | (bSenderHigh ? lsfLowReserve : lsfHighReserve));
+        }
+
         if (bSenderHigh)
             saBalance.negate();
 

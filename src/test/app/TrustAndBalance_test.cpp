@@ -458,6 +458,79 @@ class TrustAndBalance_test : public beast::unit_test::suite
         BEAST_EXPECT(wsc->invoke("unsubscribe", jv)[jss::status] == "success");
     }
 
+    void
+    testOwnerCountOnBalanceChange(FeatureBitset features)
+    {
+        testcase("Owner Count on Balance Change");
+        using namespace test::jtx;
+
+        Env env{*this, features};
+        Account gw{"gateway"};
+        Account alice{"alice"};
+        Account market{"market"};
+        bool const aliceHigh = alice.id() > gw.id();
+
+        auto const USD = gw["USD"];
+
+        // Helper lambda to check alice's owner count and reserve flag
+        auto checkAlice = [&](std::uint32_t expectedOwnerCount,
+                              bool expectedReserveSet) {
+            BEAST_EXPECT(
+                env.le(alice)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
+            auto const line =
+                env.le(keylet::line(alice, gw, to_currency("USD")));
+            BEAST_EXPECT(
+                line->isFlag(aliceHigh ? lsfHighReserve : lsfLowReserve) ==
+                expectedReserveSet);
+        };
+
+        env.fund(XRP(10000), gw, alice, market);
+        env.close();
+
+        // create trust lines
+        env(trust(alice, USD(1000)));
+        env(trust(market, USD(1000)));
+        env.close();
+        checkAlice(1, true);
+
+        // gw issues USD to alice and market
+        env(pay(gw, alice, USD(100)));
+        env(pay(gw, market, USD(1000)));
+        env.close();
+        checkAlice(1, true);
+
+        // gw clears asfDefaultRipple
+        env(fclear(gw, asfDefaultRipple));
+        env.close();
+
+        // alice clears trustline limit. This should trigger the check for
+        // default ripple state and charge gw for non-default state
+        env(trust(alice, USD(0)));
+        env.close();
+        checkAlice(1, true);
+
+        // alice clears the balance causing decrement in owners count
+        env(pay(alice, gw, USD(100)));
+        env.close();
+        checkAlice(0, false);
+
+        // market offers USD for XRP
+        env(offer(market, XRP(100), USD(100)));
+        env.close();
+        // Now alice acquires balance again by placing an offer (direct payment
+        // would fail because alice set limit to 0). This offer will cross
+        // market's. Balance goes from 0 to positive - this triggers the new
+        // increment logic
+        env(offer(alice, USD(50), XRP(50)));
+        env.close();
+
+        BEAST_EXPECT(env.balance(alice, USD) == USD(50));
+        if (features[fixTrustLineOwnerCount])
+            checkAlice(1, true);
+        else
+            checkAlice(0, false);
+    }
+
 public:
     void
     run() override
@@ -477,11 +550,13 @@ public:
             testIndirectMultiPath(true, features);
             testIndirectMultiPath(false, features);
             testInvoiceID(features);
+            testOwnerCountOnBalanceChange(features);
         };
 
         using namespace test::jtx;
         auto const sa = testable_amendments();
         testWithFeatures(sa - featurePermissionedDEX);
+        testWithFeatures(sa - fixTrustLineOwnerCount);
         testWithFeatures(sa);
     }
 };

@@ -2409,11 +2409,11 @@ public:
             {"abe",             reserve(env, 0) + 0 * f,    1,   gwPreTrust, 1000,      tecUNFUNDED_OFFER,               f, USD(      0),    0, 0},
             {"bud",             reserve(env, 0) + 1 * f,    1,   gwPreTrust, 1000,      tecUNFUNDED_OFFER,               f, USD(      0),    0, 0},
             {"che",             reserve(env, 0) + 2 * f,    0,   gwPreTrust, 1000, tecINSUF_RESERVE_OFFER,               f, USD(      0),    0, 0},
-            {"dan", drops(10) + reserve(env, 0) + 1 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, drops(10)   + f, USD(0.00001),    0, 0},
-            {"eli", XRP(  20) + reserve(env, 0) + 1 * f, 1000,   gwPreTrust, 1000,             tesSUCCESS, XRP(20) + 1 * f, USD(     20),    0, 0},
+            {"dan", drops(10) + reserve(env, 0) + 1 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, drops(10)   + f, USD(0.00001),    0, features[fixTrustLineOwnerCount] ? 1 : 0},
+            {"eli", XRP(  20) + reserve(env, features[fixTrustLineOwnerCount] ? 1 : 0) + 1 * f, 1000,   gwPreTrust, 1000,             tesSUCCESS, XRP(20)     + f, USD(     20),    0, features[fixTrustLineOwnerCount] ? 1 : 0},
             {"fyn",             reserve(env, 1) + 0 * f,    0,   gwPreTrust, 1000,             tesSUCCESS,               f, USD(      0),    1, 1},
-            {"gar",             reserve(env, 1) + 0 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, XRP( 1) +     f, USD(      1),    1, 1},
-            {"hal",             reserve(env, 1) + 1 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, XRP( 1) +     f, USD(      1),    1, 1},
+            {"gar",             reserve(env, features[fixTrustLineOwnerCount] ? 2 : 1) + 0 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, XRP( 1) +     f, USD(      1),    1, features[fixTrustLineOwnerCount] ? 2 : 1},
+            {"hal",             reserve(env, features[fixTrustLineOwnerCount] ? 2 : 1) + 1 * f,    1,   gwPreTrust, 1000,             tesSUCCESS, XRP( 1) +     f, USD(      1),    1, features[fixTrustLineOwnerCount] ? 2 : 1},
 
             {"ned",             reserve(env, 1) + 0 * f,    1, acctPreTrust, 1000,      tecUNFUNDED_OFFER,           2 * f, USD(      0),    0, 1},
             {"ole",             reserve(env, 1) + 1 * f,    1, acctPreTrust, 1000,      tecUNFUNDED_OFFER,           2 * f, USD(      0),    0, 1},
@@ -2468,6 +2468,7 @@ public:
             BEAST_EXPECT(env.balance(acct, USD.issue()) == t.balanceUsd);
             BEAST_EXPECT(
                 env.balance(acct, xrpIssue()) == t.fundXrp - t.spentXrp);
+
             env.require(offers(acct, t.offers));
             env.require(owners(acct, t.owners));
 
@@ -5463,6 +5464,7 @@ class Offer_manual_test : public OfferBaseUtil_test
         testAll(all);
 
         testAll(all - takerDryOffer - permDEX);
+        testAll(all - fixTrustLineOwnerCount);
     }
 };
 
