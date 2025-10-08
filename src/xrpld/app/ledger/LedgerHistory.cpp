@@ -82,8 +82,8 @@ LedgerHash
 LedgerHistory::getLedgerHash(LedgerIndex index)
 {
     std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-    if (auto it = mLedgersByIndex.find(index); it != mLedgersByIndex.end())
-        return it->second;
+    if (auto p = mLedgersByIndex.get(index))
+        return *p;
     return {};
 }
 
@@ -92,11 +92,9 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
 {
     {
         std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-        auto it = mLedgersByIndex.find(index);
-
-        if (it != mLedgersByIndex.end())
+        if (auto p = mLedgersByIndex.get(index))
         {
-            uint256 hash = it->second;
+            uint256 const hash = *p;
             sl.unlock();
             return getLedgerByHash(hash);
         }
@@ -546,12 +544,13 @@ bool
 LedgerHistory::fixIndex(LedgerIndex ledgerIndex, LedgerHash const& ledgerHash)
 {
     std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-    auto it = mLedgersByIndex.find(ledgerIndex);
-
-    if ((it != mLedgersByIndex.end()) && (it->second != ledgerHash))
+    if (auto cur = mLedgersByIndex.get(ledgerIndex))
     {
-        it->second = ledgerHash;
-        return false;
+        if (*cur != ledgerHash)
+        {
+            mLedgersByIndex.put(ledgerIndex, ledgerHash);
+            return false;
+        }
     }
     return true;
 }

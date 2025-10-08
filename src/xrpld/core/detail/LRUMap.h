@@ -20,122 +20,138 @@
 #ifndef RIPPLE_APP_LRU_MAP_H_INCLUDED
 #define RIPPLE_APP_LRU_MAP_H_INCLUDED
 
-#include <cstddef>
 #include <list>
+#include <mutex>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
 namespace ripple {
 
+namespace concurrency {
+
+struct SingleThreaded
+{
+    struct mutex_type
+    {
+        void
+        lock() noexcept
+        {
+        }
+        void
+        unlock() noexcept
+        {
+        }
+    };
+    using lock_guard = std::lock_guard<mutex_type>;
+};
+
+struct ExclusiveMutex
+{
+    using mutex_type = std::mutex;
+    using lock_guard = std::lock_guard<mutex_type>;
+};
+
+}  // namespace concurrency
+
 template <
     class Key,
     class Value,
-    class Hash = std::hash<Key>,
-    class KeyEq = std::equal_to<Key>>
+    class Concurrency = concurrency::SingleThreaded>
 class LRUMap
 {
-    using List = std::list<Key>;
-    using DataMap = std::unordered_map<Key, Value, Hash, KeyEq>;
+    using List = std::list<Key>;                     // MRU .. LRU
+    using DataMap = std::unordered_map<Key, Value>;  // Key -> Value
     using PosMap =
-        std::unordered_map<Key, typename List::iterator, Hash, KeyEq>;
+        std::unordered_map<Key, typename List::iterator>;  // Key -> pos
+                                                           // iterator in the
+                                                           // list
 
 public:
     explicit LRUMap(std::size_t capacity) : capacity_(capacity)
     {
-        if (!capacity_)
-            throw std::invalid_argument(
-                "LRUMap capacity must be positive.");  // TODO XRPL_ASSERT
+        if (capacity_ == 0)
+            throw std::invalid_argument("LRUMap capacity must be positive.");
         data_.reserve(capacity_);
         pos_.reserve(capacity_);
+
+        // TODO:
+        //  static_assert(std::is_default_constructible_v<Value>,
+        //        "LRUMap requires Value to be default-constructible for
+        //        operator[]");
+        //  static_assert(std::is_copy_constructible_v<Key> ||
+        //  std::is_move_constructible_v<Key>,
+        //        "LRUMap requires Key to be copy- or move-constructible");
     }
+
+    LRUMap(LRUMap const&) = delete;
+
+    LRUMap&
+    operator=(LRUMap const&) = delete;
+
+    LRUMap(LRUMap&&) = delete;
+
+    LRUMap&
+    operator=(LRUMap&&) = delete;
 
     Value&
     operator[](Key const& key)
     {
-        if (auto it = data_.find(key); it != data_.end())
+        auto g = lock();
+        return insertOrpromote(key);
+    }
+
+    Value&
+    operator[](Key&& key)
+    {
+        auto g = lock();
+        auto it = data_.find(key);
+        if (it != data_.end())
         {
-            auto lit = pos_.at(key);
-            // promote
-            usage_.splice(usage_.begin(), usage_, lit);
+            promote(key);
             return it->second;
         }
-
-        if (data_.size() >= capacity_)
-        {
-            auto const& lru_key = usage_.back();
-            data_.erase(lru_key);
-            pos_.erase(lru_key);
-            usage_.pop_back();
-        }
-
-        usage_.emplace_front(key);
-        pos_.emplace(key, usage_.begin());
-        auto [it, _] = data_.emplace(key, Value{});
-        return it->second;
+        evictIfFull();
+        usage_.emplace_front(std::move(key));
+        pos_.emplace(usage_.front(), usage_.begin());
+        auto d = data_.emplace(usage_.front(), Value{});
+        return d.first->second;
     }
 
     Value*
     get(Key const& key)
     {
+        auto g = lock();
         auto it = data_.find(key);
         if (it == data_.end())
             return nullptr;
-        auto lit = pos_.at(key);
-        usage_.splice(usage_.begin(), usage_, lit);
+        promote(key);
         return &it->second;
     }
 
-    // TODO: remove
-    Value const*
-    peek(Key const& key) const
+    template <class... Args>
+    Value&
+    put(Key const& key, Args&&... args)
     {
-        auto it = data_.find(key);
-        return it == data_.end() ? nullptr : &it->second;
-    }
-
-    using iterator = typename DataMap::iterator;
-    using const_iterator = typename DataMap::const_iterator;
-
-    iterator
-    find(Key const& key)
-    {
-        return data_.find(key);
-    }
-
-    const_iterator
-    find(Key const& key) const
-    {
-        return data_.find(key);
-    }
-
-    iterator
-    begin()
-    {
-        return data_.begin();
-    }
-
-    const_iterator
-    begin() const
-    {
-        return data_.begin();
-    }
-
-    iterator
-    end()
-    {
-        return data_.end();
-    }
-
-    const_iterator
-    end() const
-    {
-        return data_.end();
+        auto g = lock();
+        if (auto it = data_.find(key); it != data_.end())
+        {
+            it->second = Value(std::forward<Args>(args)...);
+            promote(key);
+            return it->second;
+        }
+        evictIfFull();
+        usage_.emplace_front(key);
+        pos_.emplace(key, usage_.begin());
+        auto it = data_.emplace(key, Value(std::forward<Args>(args)...));
+        return it.first->second;
     }
 
     bool
     erase(Key const& key)
     {
+        auto g = lock();
         auto it = data_.find(key);
         if (it == data_.end())
             return false;
@@ -145,39 +161,17 @@ public:
         return true;
     }
 
-    template <class... Args>
-    Value&
-    put(Key const& key, Args&&... args)  // assign/construct + promote
-    {
-        if (auto it = data_.find(key); it != data_.end())
-        {
-            it->second = Value(std::forward<Args>(args)...);
-            auto lit = pos_.at(key);
-            usage_.splice(usage_.begin(), usage_, lit);
-            return it->second;
-        }
-        if (data_.size() >= capacity_)
-        {
-            auto const& lru_key = usage_.back();
-            data_.erase(lru_key);
-            pos_.erase(lru_key);
-            usage_.pop_back();
-        }
-        usage_.emplace_front(key);
-        pos_.emplace(key, usage_.begin());
-        auto [it, _] = data_.emplace(key, Value(std::forward<Args>(args)...));
-        return it->second;
-    }
-
     bool
     contains(Key const& key) const
     {
+        auto g = lock();
         return data_.find(key) != data_.end();
     }
 
     std::size_t
     size() const noexcept
     {
+        auto g = lock();
         return data_.size();
     }
 
@@ -190,22 +184,65 @@ public:
     bool
     empty() const noexcept
     {
+        auto g = lock();
         return data_.empty();
     }
 
     void
     clear()
     {
+        auto g = lock();
         data_.clear();
         pos_.clear();
         usage_.clear();
     }
 
 private:
+    Value&
+    insertOrpromote(Key const& key)
+    {
+        if (auto it = data_.find(key); it != data_.end())
+        {
+            promote(key);
+            return it->second;
+        }
+        evictIfFull();
+        usage_.emplace_front(key);
+        pos_.emplace(key, usage_.begin());
+        auto it = data_.emplace(key, Value{});
+        return it.first->second;
+    }
+
+    void
+    promote(Key const& key)
+    {
+        auto lit = pos_.at(key);
+        usage_.splice(usage_.begin(), usage_, lit);  // O(1)
+    }
+
+    void
+    evictIfFull()
+    {
+        if (data_.size() < capacity_)
+            return;
+        auto const& k = usage_.back();
+        data_.erase(k);
+        pos_.erase(k);
+        usage_.pop_back();
+    }
+
+    typename Concurrency::lock_guard
+    lock() const
+    {
+        return typename Concurrency::lock_guard{mtx_};
+    }
+
+private:
     std::size_t const capacity_;
-    DataMap data_;  // Key -> Value   (this is what callers iterate/find over)
-    PosMap pos_;    // Key -> list position
-    List usage_;    // recency order
+    DataMap data_;
+    PosMap pos_;
+    List usage_;
+    mutable typename Concurrency::mutex_type mtx_;
 };
 
 }  // namespace ripple
