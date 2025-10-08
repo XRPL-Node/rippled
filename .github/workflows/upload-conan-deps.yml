@@ -79,6 +79,7 @@ jobs:
           build_dir: .build
           build_type: ${{ matrix.build_type }}
           force_build: ${{ github.event_name == 'schedule' || github.event.inputs.force_source_build == 'true' }}
+          verbosity: ${{ runner.os == 'Windows' && 'quiet' || 'verbose' }}
 
       - name: Log into Conan remote
         if: ${{ github.repository_owner == 'XRPLF' && github.event_name != 'pull_request' }}
