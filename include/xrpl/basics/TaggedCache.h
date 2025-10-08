@@ -170,9 +170,6 @@ public:
     bool
     retrieve(key_type const& key, T& data);
 
-    mutex_type&
-    peekMutex();
-
     std::vector<key_type>
     getKeys() const;
 

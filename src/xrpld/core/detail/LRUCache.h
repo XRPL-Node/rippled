@@ -17,8 +17,8 @@
 */
 //==============================================================================
 
-#ifndef RIPPLE_APP_LRU_MAP_H_INCLUDED
-#define RIPPLE_APP_LRU_MAP_H_INCLUDED
+#ifndef RIPPLE_APP_LRU_CACHE_H_INCLUDED
+#define RIPPLE_APP_LRU_CACHE_H_INCLUDED
 
 #include <list>
 #include <mutex>
@@ -59,7 +59,7 @@ template <
     class Key,
     class Value,
     class Concurrency = concurrency::SingleThreaded>
-class LRUMap
+class LRUCache
 {
     using List = std::list<Key>;                     // MRU .. LRU
     using DataMap = std::unordered_map<Key, Value>;  // Key -> Value
@@ -69,31 +69,31 @@ class LRUMap
                                                            // list
 
 public:
-    explicit LRUMap(std::size_t capacity) : capacity_(capacity)
+    explicit LRUCache(std::size_t capacity) : capacity_(capacity)
     {
         if (capacity_ == 0)
-            throw std::invalid_argument("LRUMap capacity must be positive.");
+            throw std::invalid_argument("LRUCache capacity must be positive.");
         data_.reserve(capacity_);
         pos_.reserve(capacity_);
 
         // TODO:
         //  static_assert(std::is_default_constructible_v<Value>,
-        //        "LRUMap requires Value to be default-constructible for
+        //        "LRUCache requires Value to be default-constructible for
         //        operator[]");
         //  static_assert(std::is_copy_constructible_v<Key> ||
         //  std::is_move_constructible_v<Key>,
-        //        "LRUMap requires Key to be copy- or move-constructible");
+        //        "LRUCache requires Key to be copy- or move-constructible");
     }
 
-    LRUMap(LRUMap const&) = delete;
+    LRUCache(LRUCache const&) = delete;
 
-    LRUMap&
-    operator=(LRUMap const&) = delete;
+    LRUCache&
+    operator=(LRUCache const&) = delete;
 
-    LRUMap(LRUMap&&) = delete;
+    LRUCache(LRUCache&&) = delete;
 
-    LRUMap&
-    operator=(LRUMap&&) = delete;
+    LRUCache&
+    operator=(LRUCache&&) = delete;
 
     Value&
     operator[](Key const& key)

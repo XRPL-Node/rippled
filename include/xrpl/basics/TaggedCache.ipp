@@ -686,29 +686,6 @@ TaggedCache<
     SharedPointerType,
     Hash,
     KeyEqual,
-    Mutex>::peekMutex() -> mutex_type&
-{
-    return m_mutex;
-}
-
-template <
-    class Key,
-    class T,
-    bool IsKeyCache,
-    class SharedWeakUnionPointer,
-    class SharedPointerType,
-    class Hash,
-    class KeyEqual,
-    class Mutex>
-inline auto
-TaggedCache<
-    Key,
-    T,
-    IsKeyCache,
-    SharedWeakUnionPointer,
-    SharedPointerType,
-    Hash,
-    KeyEqual,
     Mutex>::getKeys() const -> std::vector<key_type>
 {
     std::vector<key_type> v;

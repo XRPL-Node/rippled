@@ -22,7 +22,7 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/core/detail/LRUMap.h>
+#include <xrpld/core/detail/LRUCache.h>
 
 #include <xrpl/beast/insight/Collector.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
@@ -150,7 +150,8 @@ private:
     ConsensusValidated m_consensus_validated;
 
     // Maps ledger indexes to the corresponding hash.
-    LRUMap<LedgerIndex, LedgerHash> mLedgersByIndex;  // validated ledgers
+    LRUCache<LedgerIndex, LedgerHash, concurrency::ExclusiveMutex>
+        mLedgersByIndex;  // validated ledgers
 
     beast::Journal j_;
 };
