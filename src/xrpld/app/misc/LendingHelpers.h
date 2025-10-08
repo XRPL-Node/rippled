@@ -150,14 +150,13 @@ computePaymentComponents(
         "Outstanding values are rounded");
     auto const roundedPeriodicPayment =
         roundPeriodicPayment(asset, periodicPayment, scale);
-    if (paymentRemaining == 1 || totalValueOutstanding <= periodicPayment)
+    if (paymentRemaining == 1 ||
+        totalValueOutstanding <= roundedPeriodicPayment)
     {
         // If there's only one payment left, we need to pay off each of the loan
         // parts.
-        //
-        // The totalValueOutstanding should never be less than the
-        // periodicPayment until the last scheduled payment, but if it ever is,
-        // make it the last payment.
+        // rawInterest could be < 0 because we're computing it with the rounded
+        // value outstanding, but for the last payment, we also don't care.
         Number rawInterest = totalValueOutstanding - referencePrincipal;
         Number roundedInterest = totalValueOutstanding - principalOutstanding;
 
@@ -169,7 +168,7 @@ computePaymentComponents(
             "last payment is complete");
 
         return {
-            .rawInterest = rawInterest,
+            .rawInterest = std::max(Number{}, rawInterest),
             .rawPrincipal = referencePrincipal,
             .roundedInterest = roundedInterest,
             .roundedPrincipal = principalOutstanding,
@@ -190,54 +189,54 @@ computePaymentComponents(
         "ripple::detail::computePaymentComponents",
         "valid raw interest");
     XRPL_ASSERT_PARTS(
-        rawPrincipal > 0 && rawPrincipal <= referencePrincipal,
+        rawPrincipal >= 0 && rawPrincipal <= referencePrincipal,
         "ripple::detail::computePaymentComponents",
         "valid raw principal");
 
-    // if (count($A20), MIN(Z19, Z19 - FLOOR(AA19 - Y20, 1)), "")
-    // Z19 = outstanding principal
-    // AA19 = reference principal
-    // Y20 = raw principal
-
     Number const roundedPrincipal = [&]() {
-        Number const p = std::max(
-            Number{},
-            std::min(
-                principalOutstanding,
-                principalOutstanding -
-                    roundToAsset(
-                        asset,
-                        referencePrincipal - rawPrincipal,
-                        scale,
-                        Number::downward)));
-        // if the estimated principal payment would leave the principal higher
-        // than the "total "after payment" value of the loan, make the principal
-        // payment also take the principal down to that same "after" value.
-        // This should mean that all interest is paid, or that the loan has some
-        // tricky parameters.
-        if (principalOutstanding - p >
-            totalValueOutstanding - roundedPeriodicPayment)
-            return roundedPeriodicPayment;
-        // Use the amount that will get principal outstanding as close to
-        // reference principal as possible, but don't pay more than the rounded
-        // periodic payment, or we'll end up with negative interest.
-        return std::min(p, roundedPeriodicPayment);
+        // Round the raw principal after payment
+        auto const roundedPrincipalTarget =
+            roundToAsset(asset, referencePrincipal - rawPrincipal, scale);
+        // Determine the total value after payment
+        auto const totalValueTarget =
+            totalValueOutstanding - roundedPeriodicPayment;
+        // We want to get the principal down to the smaller of the two targets
+        auto const principalTarget =
+            std::min(roundedPrincipalTarget, totalValueTarget);
+        // What will get us to our target?
+        auto const p = principalOutstanding - principalTarget;
+
+        XRPL_ASSERT_PARTS(
+            p >= 0 && p <= roundedPeriodicPayment,
+            "rippled::detail::computePaymentComponents",
+            "principal part not larger than total payment");
+        // Make sure nothing goes negative
+        if (p > roundedPeriodicPayment || p > principalOutstanding)
+            return std::min(roundedPeriodicPayment, principalOutstanding);
+        else if (p < 0)
+            return Number{};
+
+        return p;
     }();
 
-    // if(count($A20), if(AB19 < $B$5, AB19 - Z19, CEILING($B$10-W20, 1)), "")
-    // AB19 = total loan value
-    // $B$5 = periodic payment (unrounded)
-    // Z19 = outstanding principal
-    // $B$10 = periodic payment (rounded up)
-    // W20 = rounded principal
+    Number const roundedInterest = [&]() {
+        // Zero interest means ZERO interest
+        if (periodicRate == 0)
+            return Number{};
+        auto i = roundedPeriodicPayment - roundedPrincipal;
+        // No negative interest!
+        if (i < 0)
+            return Number{};
+        return i;
+    }();
 
-    Number const roundedInterest = roundedPeriodicPayment - roundedPrincipal;
     XRPL_ASSERT_PARTS(
         roundedInterest >= 0 && isRounded(asset, roundedInterest, scale),
         "ripple::detail::computePaymentComponents",
         "valid rounded interest");
     XRPL_ASSERT_PARTS(
         roundedPrincipal >= 0 && roundedPrincipal <= principalOutstanding &&
+            roundedPrincipal <= roundedPeriodicPayment &&
             isRounded(asset, roundedPrincipal, scale),
         "ripple::detail::computePaymentComponents",
         "valid rounded principal");
@@ -280,11 +279,12 @@ doPayment(
         nextDueDateProxy,
         "ripple::detail::doPayment",
         "Next due date proxy set");
+    auto const totalValueDelta = payment.roundedPrincipal +
+        payment.roundedInterest - payment.valueChange;
     if (!payment.extra)
     {
         if (payment.final)
         {
-            paymentRemainingProxy = 0;
             XRPL_ASSERT_PARTS(
                 referencePrincipalProxy == payment.rawPrincipal,
                 "ripple::detail::doPayment",
@@ -294,10 +294,11 @@ doPayment(
                 "ripple::detail::doPayment",
                 "Full principal payment");
             XRPL_ASSERT_PARTS(
-                totalValueOutstandingProxy ==
-                    payment.roundedPrincipal + payment.roundedInterest,
+                totalValueOutstandingProxy == totalValueDelta,
                 "ripple::detail::doPayment",
                 "Full value payment");
+
+            paymentRemainingProxy = 0;
 
             prevPaymentDateProxy = *nextDueDateProxy;
             // Remove the field. This is the only condition where nextDueDate is
@@ -306,6 +307,19 @@ doPayment(
         }
         else
         {
+            XRPL_ASSERT_PARTS(
+                referencePrincipalProxy > payment.rawPrincipal,
+                "ripple::detail::doPayment",
+                "Full reference principal payment");
+            XRPL_ASSERT_PARTS(
+                principalOutstandingProxy > payment.roundedPrincipal,
+                "ripple::detail::doPayment",
+                "Full principal payment");
+            XRPL_ASSERT_PARTS(
+                totalValueOutstandingProxy > totalValueDelta,
+                "ripple::detail::doPayment",
+                "Full value payment");
+
             paymentRemainingProxy -= 1;
 
             prevPaymentDateProxy = *nextDueDateProxy;
@@ -317,8 +331,7 @@ doPayment(
 
     referencePrincipalProxy -= payment.rawPrincipal;
     principalOutstandingProxy -= payment.roundedPrincipal;
-    totalValueOutstandingProxy -=
-        payment.roundedPrincipal + payment.roundedInterest;
+    totalValueOutstandingProxy -= totalValueDelta;
 
     return LoanPaymentParts{
         .principalPaid = payment.roundedPrincipal,
@@ -1008,10 +1021,15 @@ loanMakePayment(
             nextDueDateProxy,
             paymentInterval);
         ++numPayments;
+
+        if (nextPayment.final)
+            break;
     }
 
     XRPL_ASSERT_PARTS(
-        totalParts.principalPaid + totalParts.interestPaid == totalPaid,
+        totalParts.principalPaid + totalParts.interestPaid +
+                totalParts.feeToPay ==
+            totalPaid,
         "ripple::loanMakePayment",
         "payment parts add up");
     XRPL_ASSERT_PARTS(
@@ -1025,17 +1043,16 @@ loanMakePayment(
 
     // -------------------------------------------------------------
     // overpayment handling
-    if (loan->isFlag(lsfLoanOverpayment))
+    if (loan->isFlag(lsfLoanOverpayment) && paymentRemainingProxy > 0 &&
+        nextDueDateProxy && totalPaid < amount)
     {
         TenthBips32 const overpaymentInterestRate{
             loan->at(sfOverpaymentInterestRate)};
         TenthBips32 const overpaymentFeeRate{loan->at(sfOverpaymentFee)};
 
-        Number const overpayment = amount -
-            (totalParts.principalPaid + totalParts.interestPaid +
-             totalParts.feeToPay);
+        Number const overpayment = amount - totalPaid;
         XRPL_ASSERT(
-            overpayment >= 0 && isRounded(asset, overpayment, loanScale),
+            overpayment > 0 && isRounded(asset, overpayment, loanScale),
             "ripple::loanMakePayment : valid overpayment amount");
 
         Number const fee = roundToAsset(

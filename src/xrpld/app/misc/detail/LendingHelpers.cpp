@@ -61,13 +61,11 @@ loanPeriodicPayment(
 
     /*
      * This formula is from the XLS-66 spec, section 3.2.4.1.1 (Regular
-     * Payment), though the awkwardly-named "timeFactor" is computed only once
-     * and used twice.
+     * Payment), though "raisedRate" is computed only once and used twice.
      */
-    // TODO: Need a better name
-    Number const timeFactor = power(1 + periodicRate, paymentsRemaining);
+    Number const raisedRate = power(1 + periodicRate, paymentsRemaining);
 
-    return principalOutstanding * periodicRate * timeFactor / (timeFactor - 1);
+    return principalOutstanding * periodicRate * raisedRate / (raisedRate - 1);
 }
 
 Number

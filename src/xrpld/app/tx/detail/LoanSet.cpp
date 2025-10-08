@@ -317,7 +317,16 @@ LoanSet::doApply()
         // good. Note that the outstanding principal is rounded, and may not
         // change right away.
         JLOG(j_.warn()) << "Loan is unable to pay principal.";
-        return tecLIMIT_EXCEEDED;
+        return tecPRECISION_LOSS;
+    }
+    if (interestRate != 0 &&
+        (properties.totalValueOutstanding - principalRequested) <= 0)
+    {
+        // Unless this is a zero-interst loan, there must be some interest due
+        // on the loan, even if it's (measurable) dust
+        JLOG(j_.warn()) << "Loan with " << interestRate
+                        << "% interest has no interest due";
+        return tecPRECISION_LOSS;
     }
     // Check that the other computed values are valid
     if (properties.interestOwedToVault < 0 ||
