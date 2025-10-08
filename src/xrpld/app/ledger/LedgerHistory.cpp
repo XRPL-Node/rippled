@@ -555,6 +555,14 @@ LedgerHistory::clearLedgerCachePrior(LedgerIndex seq)
         if (!ledger || ledger->info().seq < seq)
             m_ledgers_by_hash.del(it, false);
     }
+
+    std::unique_lock sl(m_ledgers_by_hash.peekMutex());
+    JLOG(j_.debug()) << "mLedgersByIndex size before clear: "
+                     << mLedgersByIndex.size();
+    auto first_keep = mLedgersByIndex.lower_bound(seq);
+    mLedgersByIndex.erase(mLedgersByIndex.begin(), first_keep);
+    JLOG(j_.debug()) << "mLedgersByIndex size after clear: "
+                     << mLedgersByIndex.size();
 }
 
 }  // namespace ripple
