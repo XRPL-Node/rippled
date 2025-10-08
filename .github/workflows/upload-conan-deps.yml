@@ -79,7 +79,7 @@ jobs:
           build_dir: .build
           build_type: ${{ matrix.build_type }}
           # ${{ github.event_name == 'schedule' || github.event.inputs.force_source_build == 'true' }}
-          force_build: true
+          force_build: ${{ runner.os == 'Windows' }}
           verbosity: ${{ runner.os == 'Windows' && 'quiet' || 'verbose' }}
 
       - name: Log into Conan remote
