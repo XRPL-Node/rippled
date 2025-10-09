@@ -89,6 +89,8 @@ enum Privilege {
         0x0400,  // The transaction MAY delete an MPT object. May not create.
     mustModifyVault =
         0x0800,  // The transaction must modify, delete or create, a vault
+    mayModifyVault =
+        0x1000,  // The transaction MAY modify, delete or create, a vault
 };
 constexpr Privilege
 operator|(Privilege lhs, Privilege rhs)
@@ -2638,7 +2640,8 @@ ValidVault::finalize(
 
         return true;  // Not a vault operation
     }
-    else if (!hasPrivilege(tx, mustModifyVault))  // TODO: mayModifyVault
+    else if (!(hasPrivilege(tx, mustModifyVault) ||
+               hasPrivilege(tx, mayModifyVault)))
     {
         JLOG(j.fatal()) <<  //
             "Invariant failed: vault updated by a wrong transaction type";
@@ -2853,7 +2856,8 @@ ValidVault::finalize(
     }
 
     if (!beforeVault_.empty() &&
-        afterVault.lossUnrealized != beforeVault_[0].lossUnrealized)
+        afterVault.lossUnrealized != beforeVault_[0].lossUnrealized &&
+        tx.getTxnType() != ttLOAN_MANAGE)
     {
         JLOG(j.fatal()) <<  //
             "Invariant failed: vault transaction must not change loss "
@@ -3408,6 +3412,13 @@ ValidVault::finalize(
                 }
 
                 return result;
+            }
+
+            case ttLOAN_SET:
+            case ttLOAN_MANAGE:
+            case ttLOAN_PAY: {
+                // TBD
+                return true;
             }
 
             default:

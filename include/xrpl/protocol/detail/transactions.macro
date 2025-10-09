@@ -993,7 +993,7 @@ TRANSACTION(ttLOAN_BROKER_COVER_DEPOSIT, 76, LoanBrokerCoverDeposit,
 TRANSACTION(ttLOAN_BROKER_COVER_WITHDRAW, 77, LoanBrokerCoverWithdraw,
     Delegation::delegatable,
     featureLendingProtocol,
-    noPriv, ({
+    mayAuthorizeMPT, ({
     {sfLoanBrokerID, soeREQUIRED},
     {sfAmount, soeREQUIRED, soeMPTSupported},
     {sfDestination, soeOPTIONAL},
@@ -1020,7 +1020,7 @@ TRANSACTION(ttLOAN_BROKER_COVER_CLAWBACK, 78, LoanBrokerCoverClawback,
 TRANSACTION(ttLOAN_SET, 80, LoanSet,
     Delegation::delegatable,
     featureLendingProtocol,
-    noPriv, ({
+    mayAuthorizeMPT | mustModifyVault, ({
     {sfLoanBrokerID, soeREQUIRED},
     {sfData, soeOPTIONAL},
     {sfCounterparty, soeOPTIONAL},
@@ -1058,7 +1058,10 @@ TRANSACTION(ttLOAN_DELETE, 81, LoanDelete,
 TRANSACTION(ttLOAN_MANAGE, 82, LoanManage,
     Delegation::delegatable,
     featureLendingProtocol,
-    noPriv, ({
+    // All of the LoanManage options will modify the vault, but the
+    // transaction can succeed without options, essentially making it
+    // a noop.
+    mayModifyVault, ({
     {sfLoanID, soeREQUIRED},
 }))
 
@@ -1083,7 +1086,7 @@ TRANSACTION(ttLOAN_DRAW, 83, LoanDraw,
 TRANSACTION(ttLOAN_PAY, 84, LoanPay,
     Delegation::delegatable,
     featureLendingProtocol,
-    noPriv, ({
+    mayAuthorizeMPT | mustModifyVault, ({
     {sfLoanID, soeREQUIRED},
     {sfAmount, soeREQUIRED, soeMPTSupported},
 }))
