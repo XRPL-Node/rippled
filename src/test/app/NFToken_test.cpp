@@ -3453,14 +3453,13 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         {
             std::uint32_t const expiration = lastClose(env) + 25;
 
-            uint256 const offer0 = keylet::nftoffer(buyer, env.seq(buyer);).key;
+            uint256 const offer0 = keylet::nftoffer(buyer, env.seq(buyer)).key;
             env(token::createOffer(buyer, nftokenID0, drops(1)),
                 token::owner(minter),
                 token::expiration(expiration));
             buyerCount++;
 
             uint256 const offer1 = keylet::nftoffer(buyer, env.seq(buyer)).key;
-            uint256 const offer1 = keylet::nftoffer(buyer, buyerSeq1).key;
             env(token::createOffer(buyer, nftokenID1, drops(1)),
                 token::owner(minter),
                 token::expiration(expiration));
