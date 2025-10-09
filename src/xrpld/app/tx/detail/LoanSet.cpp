@@ -425,19 +425,21 @@ LoanSet::doApply()
     // from vault pseudo-account to the borrower.
     // Create a holding for the borrower if one does not already exist.
 
-    if (borrower == account_)
-    {
-        if (auto const ter = addEmptyHolding(
-                view,
-                borrower,
-                borrowerSle->at(sfBalance).value().xrp(),
-                vaultAsset,
-                j_);
-            ter && ter != tecDUPLICATE)
-            // ignore tecDUPLICATE. That means the holding already exists, and
-            // is fine here
-            return ter;
-    }
+    XRPL_ASSERT_PARTS(
+        borrower == account_ || borrower == counterparty,
+        "ripple::LoanSet::doApply",
+        "borrower signed transaction");
+    if (auto const ter = addEmptyHolding(
+            view,
+            borrower,
+            borrowerSle->at(sfBalance).value().xrp(),
+            vaultAsset,
+            j_);
+        ter && ter != tecDUPLICATE)
+        // ignore tecDUPLICATE. That means the holding already exists, and
+        // is fine here
+        return ter;
+
     if (auto const ter =
             requireAuth(view, vaultAsset, borrower, AuthType::StrongAuth))
         return ter;
@@ -448,19 +450,22 @@ LoanSet::doApply()
     {
         // Create the holding if it doesn't already exist (necessary for MPTs).
         // The owner may have deleted their MPT / line at some point.
-        if (brokerOwner == account_)
-        {
-            if (auto const ter = addEmptyHolding(
-                    view,
-                    brokerOwner,
-                    brokerOwnerSle->at(sfBalance).value().xrp(),
-                    vaultAsset,
-                    j_);
-                !isTesSuccess(ter) && ter != tecDUPLICATE)
-                // ignore tecDUPLICATE. That means the holding already exists,
-                // and is fine here
-                return ter;
-        }
+        XRPL_ASSERT_PARTS(
+            brokerOwner == account_ || brokerOwner == counterparty,
+            "ripple::LoanSet::doApply",
+            "broker owner signed transaction");
+
+        if (auto const ter = addEmptyHolding(
+                view,
+                brokerOwner,
+                brokerOwnerSle->at(sfBalance).value().xrp(),
+                vaultAsset,
+                j_);
+            !isTesSuccess(ter) && ter != tecDUPLICATE)
+            // ignore tecDUPLICATE. That means the holding already exists,
+            // and is fine here
+            return ter;
+
         if (auto const ter = requireAuth(
                 view, vaultAsset, brokerOwner, AuthType::StrongAuth))
             return ter;
