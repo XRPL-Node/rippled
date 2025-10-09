@@ -539,7 +539,7 @@ NFTokenAcceptOffer::doApply()
         bool foundExpired = false;
 
         auto const deleteOfferIfExpired =
-            [this, &foundExpired](std::shared_ptr<SLE> offer) -> TER {
+            [this, &foundExpired](std::shared_ptr<SLE> const& offer) -> TER {
             if (offer && hasExpired(view(), (*offer)[~sfExpiration]))
             {
                 JLOG(j_.trace())
@@ -547,9 +547,8 @@ NFTokenAcceptOffer::doApply()
                 if (!nft::deleteTokenOffer(view(), offer))
                 {
                     // LCOV_EXCL_START
-                    JLOG(j_.fatal())
-                        << "Unable to delete expired offer '"
-                        << to_string(offer->key()) << "': ignoring";
+                    JLOG(j_.fatal()) << "Unable to delete expired offer '"
+                                     << offer->key() << "': ignoring";
                     return tecINTERNAL;
                     // LCOV_EXCL_STOP
                 }
