@@ -106,6 +106,12 @@ loanPeriodicPayment(
     std::uint32_t paymentsRemaining);
 
 Number
+loanPrincipalFromPeriodicPayment(
+    Number const& periodicPayment,
+    Number const& periodicRate,
+    std::uint32_t paymentsRemaining);
+
+Number
 loanLatePaymentInterest(
     Number const& principalOutstanding,
     TenthBips32 lateInterestRate,
@@ -134,7 +140,6 @@ computePaymentComponents(
     std::int32_t scale,
     Number const& totalValueOutstanding,
     Number const& principalOutstanding,
-    Number const& referencePrincipal,
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t paymentRemaining)
@@ -154,27 +159,27 @@ computePaymentComponents(
         totalValueOutstanding <= roundedPeriodicPayment)
     {
         // If there's only one payment left, we need to pay off each of the loan
-        // parts.
-        // rawInterest could be < 0 because we're computing it with the rounded
-        // value outstanding, but for the last payment, we also don't care.
-        Number rawInterest = totalValueOutstanding - referencePrincipal;
-        Number roundedInterest = totalValueOutstanding - principalOutstanding;
+        // parts. It's probably impossible for the subtraction to result in a
+        // negative value, but don't leave anything to chance.
+        Number interest =
+            std::max(Number{}, totalValueOutstanding - principalOutstanding);
 
-        // This is only expected to be true on the last payment
-        XRPL_ASSERT_PARTS(
-            rawInterest + referencePrincipal ==
-                roundedInterest + principalOutstanding,
-            "ripple::detail::computePaymentComponents",
-            "last payment is complete");
-
+        // Pay everything off
         return {
-            .rawInterest = std::max(Number{}, rawInterest),
-            .rawPrincipal = referencePrincipal,
-            .roundedInterest = roundedInterest,
+            .rawInterest = interest,
+            .rawPrincipal = principalOutstanding,
+            .roundedInterest = interest,
             .roundedPrincipal = principalOutstanding,
-            .roundedPayment = roundedInterest + principalOutstanding,
+            .roundedPayment = interest + principalOutstanding,
             .final = true};
     }
+
+    Number const rawValueOutstanding = periodicPayment * paymentRemaining;
+    Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
+        periodicPayment, periodicRate, paymentRemaining);
+    Number const rawInterestOutstanding =
+        rawValueOutstanding - rawInterestOutstanding;
+
     /*
      * From the spec, once the periodicPayment is computed:
      *
@@ -182,34 +187,63 @@ computePaymentComponents(
      *  interest = principalOutstanding * periodicRate
      *  principal = periodicPayment - interest
      */
-    Number const rawInterest = referencePrincipal * periodicRate;
+    Number const rawInterest = rawPrincipalOutstanding * periodicRate;
     Number const rawPrincipal = periodicPayment - rawInterest;
     XRPL_ASSERT_PARTS(
         rawInterest >= 0,
         "ripple::detail::computePaymentComponents",
         "valid raw interest");
     XRPL_ASSERT_PARTS(
-        rawPrincipal >= 0 && rawPrincipal <= referencePrincipal,
+        rawPrincipal >= 0 && rawPrincipal <= rawPrincipalOutstanding,
         "ripple::detail::computePaymentComponents",
         "valid raw principal");
 
+    /*
+        Critical Calculation: Balancing Principal and Interest Outstanding
+
+        This calculation maintains a delicate balance between keeping
+        principal outstanding and interest outstanding as close as possible to
+        reference values. However, we cannot perfectly match the reference
+       values due to rounding issues.
+
+        Key considerations:
+            1. Since the periodic payment is rounded up, we have excess funds
+               that can be used to pay down the loan faster than the reference
+               calculation.
+
+            2. We must ensure that loan repayment is not too fast, otherwise we
+               will end up with negative principal outstanding or negative
+       interest outstanding.
+
+            3. We cannot allow the borrower to repay interest ahead of schedule.
+               If the borrower makes an overpayment, the interest portion could
+       go negative, requiring complex recalculation to refund the borrower by
+               reflecting the overpayment in the principal portion of the loan.
+    */
+
     Number const roundedPrincipal = [&]() {
-        // Round the raw principal after payment
-        auto const roundedPrincipalTarget =
-            roundToAsset(asset, referencePrincipal - rawPrincipal, scale);
-        // Determine the total value after payment
-        auto const totalValueTarget =
-            totalValueOutstanding - roundedPeriodicPayment;
-        // We want to get the principal down to the smaller of the two targets
-        auto const principalTarget =
-            std::min(roundedPrincipalTarget, totalValueTarget);
-        // What will get us to our target?
-        auto const p = principalOutstanding - principalTarget;
+        auto const p = roundToAsset(
+            asset,
+            // Compute the delta that will get the tracked principalOutstanding
+            // amount as close to the raw principal amount after the payment as
+            // possible.
+            principalOutstanding - (rawPrincipalOutstanding - rawPrincipal),
+            scale,
+            Number::downward);
 
         XRPL_ASSERT_PARTS(
-            p >= 0 && p <= roundedPeriodicPayment,
+            p > 0,
+            "rippled::detail::computePaymentComponents",
+            "principal part positive");
+        XRPL_ASSERT_PARTS(
+            p <= principalOutstanding,
+            "rippled::detail::computePaymentComponents",
+            "principal part not larger than outstanding principal");
+        XRPL_ASSERT_PARTS(
+            p <= roundedPeriodicPayment,
             "rippled::detail::computePaymentComponents",
             "principal part not larger than total payment");
+
         // Make sure nothing goes negative
         if (p > roundedPeriodicPayment || p > principalOutstanding)
             return std::min(roundedPeriodicPayment, principalOutstanding);
@@ -223,7 +257,28 @@ computePaymentComponents(
         // Zero interest means ZERO interest
         if (periodicRate == 0)
             return Number{};
-        auto i = roundedPeriodicPayment - roundedPrincipal;
+
+        // Compute the rounded interest outstanding
+        auto const interestOutstanding =
+            totalValueOutstanding - principalOutstanding;
+        // Compute the delta that will simply treat the rest of the rounded
+        // fixed payment amount as interest.
+        auto const iDiff = roundedPeriodicPayment - roundedPrincipal;
+
+        // Compute the delta that will get the untracked interestOutstanding
+        // amount as close as possible to the raw interest amount after the
+        // payment as possible.
+        auto const iSync = interestOutstanding -
+            (roundToAsset(asset, rawInterestOutstanding, scale) -
+             roundToAsset(asset, rawInterest, scale));
+        XRPL_ASSERT_PARTS(
+            isRounded(asset, iSync, scale),
+            "ripple::detail::computePaymentComponents",
+            "iSync is rounded");
+
+        // Use the smaller of the two to ensure we don't overpay interest.
+        auto const i = std::min({iSync, iDiff, interestOutstanding});
+
         // No negative interest!
         if (i < 0)
             return Number{};
@@ -240,6 +295,10 @@ computePaymentComponents(
             isRounded(asset, roundedPrincipal, scale),
         "ripple::detail::computePaymentComponents",
         "valid rounded principal");
+    XRPL_ASSERT_PARTS(
+        roundedPrincipal + roundedInterest <= roundedPeriodicPayment,
+        "ripple::detail::computePaymentComponents",
+        "payment parts fit within payment limit");
 
     return {
         .rawInterest = rawInterest,
@@ -263,16 +322,15 @@ struct PaymentComponentsPlus : public PaymentComponents
     }
 };
 
-template <class NumberProxy, class Int32Proxy, class Int32OptionalProxy>
+template <class NumberProxy, class UInt32Proxy, class UInt32OptionalProxy>
 LoanPaymentParts
 doPayment(
     PaymentComponentsPlus const& payment,
     NumberProxy& totalValueOutstandingProxy,
     NumberProxy& principalOutstandingProxy,
-    NumberProxy& referencePrincipalProxy,
-    Int32Proxy& paymentRemainingProxy,
-    Int32Proxy& prevPaymentDateProxy,
-    Int32OptionalProxy& nextDueDateProxy,
+    UInt32Proxy& paymentRemainingProxy,
+    UInt32Proxy& prevPaymentDateProxy,
+    UInt32OptionalProxy& nextDueDateProxy,
     std::uint32_t paymentInterval)
 {
     XRPL_ASSERT_PARTS(
@@ -285,10 +343,6 @@ doPayment(
     {
         if (payment.final)
         {
-            XRPL_ASSERT_PARTS(
-                referencePrincipalProxy == payment.rawPrincipal,
-                "ripple::detail::doPayment",
-                "Full reference principal payment");
             XRPL_ASSERT_PARTS(
                 principalOutstandingProxy == payment.roundedPrincipal,
                 "ripple::detail::doPayment",
@@ -308,10 +362,6 @@ doPayment(
         else
         {
             XRPL_ASSERT_PARTS(
-                referencePrincipalProxy > payment.rawPrincipal,
-                "ripple::detail::doPayment",
-                "Full reference principal payment");
-            XRPL_ASSERT_PARTS(
                 principalOutstandingProxy > payment.roundedPrincipal,
                 "ripple::detail::doPayment",
                 "Full principal payment");
@@ -323,21 +373,149 @@ doPayment(
             paymentRemainingProxy -= 1;
 
             prevPaymentDateProxy = *nextDueDateProxy;
-            // STObject::OptionalField does not define operator+=, and I don't
-            // want to add one right now.
+            // STObject::OptionalField does not define operator+=, so do it the
+            // old-fashioned way.
             nextDueDateProxy = *nextDueDateProxy + paymentInterval;
         }
     }
 
-    referencePrincipalProxy -= payment.rawPrincipal;
     principalOutstandingProxy -= payment.roundedPrincipal;
     totalValueOutstandingProxy -= totalValueDelta;
+
+    XRPL_ASSERT_PARTS(
+        // Use an explicit cast because the template parameter can be
+        // ValueProxy<Number> or Number
+        static_cast<Number>(principalOutstandingProxy) <=
+            static_cast<Number>(totalValueOutstandingProxy),
+        "ripple::detail::doPayment",
+        "principal does not exceed total");
 
     return LoanPaymentParts{
         .principalPaid = payment.roundedPrincipal,
         .interestPaid = payment.roundedInterest,
         .valueChange = payment.valueChange,
         .feeToPay = payment.fee};
+}
+
+template <
+    AssetType A,
+    class NumberProxy,
+    class UInt32Proxy,
+    class UInt32OptionalProxy>
+Expected<LoanPaymentParts, TER>
+doOverpayment(
+    A const& asset,
+    ApplyView& view,
+    PaymentComponentsPlus const& overpaymentComponents,
+    NumberProxy& totalValueOutstandingProxy,
+    NumberProxy& principalOutstandingProxy,
+    NumberProxy& periodicPaymentProxy,
+    TenthBips32 const interestRate,
+    std::uint32_t const paymentInterval,
+    UInt32Proxy& paymentRemainingProxy,
+    UInt32Proxy& prevPaymentDateProxy,
+    UInt32OptionalProxy& nextDueDateProxy,
+    TenthBips16 managementFeeRate,
+    beast::Journal j)
+{
+    Number const totalInterestOutstandingBefore =
+        totalValueOutstandingProxy - principalOutstandingProxy;
+
+    // Compute what the properties would be if the loan was new in its current
+    // state. They are not likely to match the original properties. We're
+    // interested in the error.
+    auto const oldLoanProperties = computeLoanProperties(
+        asset,
+        principalOutstandingProxy,
+        interestRate,
+        paymentInterval,
+        paymentRemainingProxy,
+        managementFeeRate);
+
+    auto const accumulatedError =
+        oldLoanProperties.totalValueOutstanding - totalValueOutstandingProxy;
+
+    {
+        // Use temp variables to do the payment, so they can be thrown away if
+        // they don't work
+        Number totalValueOutstanding = totalValueOutstandingProxy;
+        Number principalOutstanding = principalOutstandingProxy;
+        std::uint32_t paymentRemaining = paymentRemainingProxy;
+        std::uint32_t prevPaymentDate = prevPaymentDateProxy;
+        std::optional<std::uint32_t> nextDueDate = nextDueDateProxy;
+
+        auto const paymentParts = detail::doPayment(
+            overpaymentComponents,
+            totalValueOutstanding,
+            principalOutstanding,
+            paymentRemaining,
+            prevPaymentDate,
+            nextDueDate,
+            paymentInterval);
+
+        auto newLoanProperties = computeLoanProperties(
+            asset,
+            principalOutstanding,
+            interestRate,
+            paymentInterval,
+            paymentRemaining,
+            managementFeeRate);
+
+        newLoanProperties.totalValueOutstanding += accumulatedError;
+
+        if (newLoanProperties.firstPaymentPrincipal <= 0 &&
+            principalOutstanding > 0)
+        {
+            // The overpayment has caused the loan to be in a state
+            // where no further principal can be paid.
+            JLOG(j.warn())
+                << "Loan overpayment would cause loan to be stuck. "
+                   "Rejecting overpayment, but normal payments are unaffected.";
+            return Unexpected(tesSUCCESS);
+        }
+        // Check that the other computed values are valid
+        if (newLoanProperties.interestOwedToVault < 0 ||
+            newLoanProperties.totalValueOutstanding <= 0 ||
+            newLoanProperties.periodicPayment <= 0)
+        {
+            // LCOV_EXCL_START
+            JLOG(j.warn()) << "Computed loan properties are invalid. Does "
+                              "not compute. TotalValueOutstanding: "
+                           << newLoanProperties.totalValueOutstanding
+                           << ", PeriodicPayment: "
+                           << newLoanProperties.periodicPayment
+                           << ", InterestOwedToVault: "
+                           << newLoanProperties.interestOwedToVault;
+            return Unexpected(tesSUCCESS);
+            // LCOV_EXCL_STOP
+        }
+
+        totalValueOutstandingProxy =
+            newLoanProperties.totalValueOutstanding + accumulatedError;
+        principalOutstandingProxy = principalOutstanding;
+        periodicPaymentProxy = newLoanProperties.periodicPayment;
+
+        XRPL_ASSERT_PARTS(
+            paymentRemainingProxy == paymentRemaining,
+            "ripple::detail::doOverpayment",
+            "paymentRemaining is unchanged");
+        paymentRemainingProxy = paymentRemaining;
+        XRPL_ASSERT_PARTS(
+            prevPaymentDateProxy == prevPaymentDate,
+            "ripple::detail::doOverpayment",
+            "prevPaymentDate is unchanged");
+        prevPaymentDateProxy = prevPaymentDate;
+        XRPL_ASSERT_PARTS(
+            nextDueDateProxy == nextDueDate,
+            "ripple::detail::doOverpayment",
+            "nextDueDate is unchanged");
+        nextDueDateProxy = nextDueDate;
+
+        auto const totalInterestOutstandingAfter =
+            totalValueOutstanding - principalOutstanding;
+
+        return paymentParts;
+    }
 }
 
 /* Handle possible late payments.
@@ -425,7 +603,7 @@ handleFullPayment(
     A const& asset,
     ApplyView& view,
     Number const& principalOutstanding,
-    Number const& referencePrincipal,
+    Number const& periodicPayment,
     std::uint32_t paymentRemaining,
     std::uint32_t prevPaymentDate,
     std::uint32_t const startDate,
@@ -442,17 +620,20 @@ handleFullPayment(
         // If this is the last payment, it has to be a regular payment
         return Unexpected(tesSUCCESS);
 
+    Number const rawValueOutstanding = periodicPayment * paymentRemaining;
+    Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
+        periodicPayment, periodicRate, paymentRemaining);
+
     auto const totalInterest = calculateFullPaymentInterest(
         asset,
-        referencePrincipal,
+        rawPrincipalOutstanding,
         periodicRate,
         view.parentCloseTime(),
         paymentInterval,
         prevPaymentDate,
         startDate,
         closeInterestRate,
-        loanScale,
-        closePaymentFee);
+        loanScale);
 
     auto const closeFullPayment =
         principalOutstanding + totalInterest + closePaymentFee;
@@ -467,11 +648,11 @@ handleFullPayment(
     PaymentComponentsPlus const result{
         PaymentComponents{
             .rawInterest =
-                principalOutstanding + totalInterest - referencePrincipal,
-            .rawPrincipal = referencePrincipal,
+                principalOutstanding + totalInterest - rawPrincipalOutstanding,
+            .rawPrincipal = rawPrincipalOutstanding,
             .roundedInterest = totalInterest,
             .roundedPrincipal = principalOutstanding,
-            .roundedPayment = closeFullPayment,
+            .roundedPayment = principalOutstanding + totalInterest,
             .final = true},
         // A full payment only pays the single close payment fee
         closePaymentFee,
@@ -511,7 +692,6 @@ LoanProperties
 computeLoanProperties(
     A const& asset,
     Number const& principalOutstanding,
-    Number const& referencePrincipal,
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t paymentsRemaining,
@@ -520,7 +700,7 @@ computeLoanProperties(
     auto const periodicRate = loanPeriodicRate(interestRate, paymentInterval);
     XRPL_ASSERT(
         interestRate == 0 || periodicRate > 0,
-        "ripple::loanMakePayment : valid rate");
+        "ripple::computeLoanProperties : valid rate");
 
     auto const periodicPayment = detail::loanPeriodicPayment(
         principalOutstanding, periodicRate, paymentsRemaining);
@@ -539,7 +719,8 @@ computeLoanProperties(
             periodicPayment * paymentsRemaining};
     }();
     // Base the loan scale on the total value, since that's going to be the
-    // biggest number involved
+    // biggest number involved (barring unusual parameters for late, full, or
+    // over payments)
     auto const loanScale = totalValueOutstanding.exponent();
 
     auto const firstPaymentPrincipal = [&]() {
@@ -550,20 +731,13 @@ computeLoanProperties(
             loanScale,
             totalValueOutstanding,
             principalOutstanding,
-            referencePrincipal,
             periodicPayment,
             periodicRate,
             paymentsRemaining);
 
-        // We only care about the unrounded principal part. It needs to be large
-        // enough that it will affect the reference principal.
-        auto const remaining =
-            referencePrincipal - paymentComponents.rawPrincipal;
-        if (remaining == referencePrincipal)
-            // No change, so the first payment effectively pays no principal.
-            // Whether that's a problem is left to the caller.
-            return Number{0};
-        return paymentComponents.rawPrincipal;
+        // The rounded principal part needs to be large enough to affect the
+        // principal. What to do if not is left to the caller
+        return paymentComponents.roundedPrincipal;
     }();
 
     auto const interestOwedToVault = valueMinusFee(
@@ -588,22 +762,21 @@ template <AssetType A>
 Number
 calculateFullPaymentInterest(
     A const& asset,
-    Number const& referencePrincipal,
+    Number const& rawPrincipalOutstanding,
     Number const& periodicRate,
     NetClock::time_point parentCloseTime,
     std::uint32_t paymentInterval,
     std::uint32_t prevPaymentDate,
     std::uint32_t startDate,
     TenthBips32 closeInterestRate,
-    std::int32_t loanScale,
-    Number const& closePaymentFee)
+    std::int32_t loanScale)
 {
     // If there is more than one payment remaining, see if enough was
     // paid for a full payment
     auto const accruedInterest = roundToAsset(
         asset,
         detail::loanAccruedInterest(
-            referencePrincipal,
+            rawPrincipalOutstanding,
             periodicRate,
             parentCloseTime,
             startDate,
@@ -613,15 +786,46 @@ calculateFullPaymentInterest(
     XRPL_ASSERT(
         accruedInterest >= 0,
         "ripple::detail::handleFullPayment : valid accrued interest");
+
     auto const prepaymentPenalty = roundToAsset(
         asset,
-        tenthBipsOfValue(referencePrincipal, closeInterestRate),
+        tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate),
         loanScale);
     XRPL_ASSERT(
         prepaymentPenalty >= 0,
         "ripple::detail::handleFullPayment : valid prepayment "
         "interest");
     return accruedInterest + prepaymentPenalty;
+}
+
+template <AssetType A>
+Number
+calculateFullPaymentInterest(
+    A const& asset,
+    Number const& periodicPayment,
+    Number const& periodicRate,
+    std::uint32_t paymentRemaining,
+    NetClock::time_point parentCloseTime,
+    std::uint32_t paymentInterval,
+    std::uint32_t prevPaymentDate,
+    std::uint32_t startDate,
+    TenthBips32 closeInterestRate,
+    std::int32_t loanScale)
+{
+    Number const rawPrincipalOutstanding =
+        detail::loanPrincipalFromPeriodicPayment(
+            periodicPayment, periodicRate, paymentRemaining);
+
+    return calculateFullPaymentInterest(
+        asset,
+        rawPrincipalOutstanding,
+        periodicRate,
+        parentCloseTime,
+        paymentInterval,
+        prevPaymentDate,
+        startDate,
+        closeInterestRate,
+        loanScale);
 }
 
 #if LOANCOMPLETE
@@ -843,7 +1047,6 @@ loanMakePayment(
 
     std::int32_t const loanScale = loan->at(sfLoanScale);
     auto totalValueOutstandingProxy = loan->at(sfTotalValueOutstanding);
-    auto referencePrincipalProxy = loan->at(sfReferencePrincipal);
 
     TenthBips32 const interestRate{loan->at(sfInterestRate)};
     TenthBips32 const lateInterestRate{loan->at(sfLateInterestRate)};
@@ -879,7 +1082,6 @@ loanMakePayment(
             loanScale,
             totalValueOutstandingProxy,
             principalOutstandingProxy,
-            referencePrincipalProxy,
             periodicPayment,
             periodicRate,
             paymentRemainingProxy),
@@ -903,7 +1105,6 @@ loanMakePayment(
             *latePaymentComponents,
             totalValueOutstandingProxy,
             principalOutstandingProxy,
-            referencePrincipalProxy,
             paymentRemainingProxy,
             prevPaymentDateProxy,
             nextDueDateProxy,
@@ -911,8 +1112,8 @@ loanMakePayment(
     }
     else if (latePaymentComponents.error())
         // error() will be the TER returned if a payment is not made. It will
-        // only evaluate to true if it's an error. Otherwise, tesSUCCESS means
-        // nothing was done, so continue.
+        // only evaluate to true if it's unsuccessful. Otherwise, tesSUCCESS
+        // means nothing was done, so continue.
         return Unexpected(latePaymentComponents.error());
 
     // -------------------------------------------------------------
@@ -924,7 +1125,7 @@ loanMakePayment(
             asset,
             view,
             principalOutstandingProxy,
-            referencePrincipalProxy,
+            periodicPayment,
             paymentRemainingProxy,
             prevPaymentDateProxy,
             startDate,
@@ -940,15 +1141,14 @@ loanMakePayment(
             *fullPaymentComponents,
             totalValueOutstandingProxy,
             principalOutstandingProxy,
-            referencePrincipalProxy,
             paymentRemainingProxy,
             prevPaymentDateProxy,
             nextDueDateProxy,
             paymentInterval);
     else if (fullPaymentComponents.error())
         // error() will be the TER returned if a payment is not made. It will
-        // only evaluate to true if it's an error. Otherwise, tesSUCCESS means
-        // nothing was done, so continue.
+        // only evaluate to true if it's unsuccessful. Otherwise, tesSUCCESS
+        // means nothing was done, so continue.
         return Unexpected(fullPaymentComponents.error());
 
     // -------------------------------------------------------------
@@ -973,7 +1173,6 @@ loanMakePayment(
         periodic,
         totalValueOutstandingProxy,
         principalOutstandingProxy,
-        referencePrincipalProxy,
         paymentRemainingProxy,
         prevPaymentDateProxy,
         nextDueDateProxy,
@@ -990,7 +1189,6 @@ loanMakePayment(
                 loanScale,
                 totalValueOutstandingProxy,
                 principalOutstandingProxy,
-                referencePrincipalProxy,
                 periodicPayment,
                 periodicRate,
                 paymentRemainingProxy),
@@ -1015,7 +1213,6 @@ loanMakePayment(
             nextPayment,
             totalValueOutstandingProxy,
             principalOutstandingProxy,
-            referencePrincipalProxy,
             paymentRemainingProxy,
             prevPaymentDateProxy,
             nextDueDateProxy,
@@ -1062,6 +1259,8 @@ loanMakePayment(
 
         Number const payment = overpayment - fee;
 
+        // TODO: Is the overpaymentInterestRate an APR or flat?
+
         Number const interest =
             tenthBipsOfValue(payment, overpaymentInterestRate);
         Number const roundedInterest = roundToAsset(asset, interest, loanScale);
@@ -1074,86 +1273,35 @@ loanMakePayment(
                 .roundedPrincipal = payment - roundedInterest,
                 .roundedPayment = payment,
                 .extra = true},
-            fee};
+            fee,
+            roundedInterest};
 
         // Don't process an overpayment if the whole amount (or more!)
         // gets eaten by fees and interest.
         if (overpaymentComponents.rawPrincipal > 0 &&
             overpaymentComponents.roundedPrincipal > 0)
         {
-            Number const totalInterestOutstandingBefore =
-                totalValueOutstandingProxy - principalOutstandingProxy;
-
-            auto const oldLoanProperties = computeLoanProperties(
-                asset,
-                principalOutstandingProxy,
-                referencePrincipalProxy,
-                interestRate,
-                paymentInterval,
-                paymentRemainingProxy,
-                managementFeeRate);
-
-            auto const accumulatedError =
-                oldLoanProperties.totalValueOutstanding -
-                totalValueOutstandingProxy;
-
-            totalParts += detail::doPayment(
-                overpaymentComponents,
-                totalValueOutstandingProxy,
-                principalOutstandingProxy,
-                referencePrincipalProxy,
-                paymentRemainingProxy,
-                prevPaymentDateProxy,
-                nextDueDateProxy,
-                paymentInterval);
-
-            auto const newLoanProperties = computeLoanProperties(
-                asset,
-                principalOutstandingProxy,
-                referencePrincipalProxy,
-                interestRate,
-                paymentInterval,
-                paymentRemainingProxy,
-                managementFeeRate);
-
-            if (newLoanProperties.firstPaymentPrincipal <= 0 &&
-                *principalOutstandingProxy > 0)
-            {
-                // The overpayment has caused the loan to be in a state where
-                // no further principal can be paid.
-                JLOG(j.warn())
-                    << "Loan overpayment would cause loan to be stuck. "
-                       "Rejecting overpayment.";
-                return Unexpected(tecLIMIT_EXCEEDED);
-            }
-            // Check that the other computed values are valid
-            if (newLoanProperties.interestOwedToVault < 0 ||
-                newLoanProperties.totalValueOutstanding <= 0 ||
-                newLoanProperties.periodicPayment <= 0)
-            {
-                // LCOV_EXCL_START
-                JLOG(j.warn()) << "Computed loan properties are invalid. Does "
-                                  "not compute. TotalValueOutstanding: "
-                               << newLoanProperties.totalValueOutstanding
-                               << ", PeriodicPayment: "
-                               << newLoanProperties.periodicPayment
-                               << ", InterestOwedToVault: "
-                               << newLoanProperties.interestOwedToVault;
-                return Unexpected(tecINTERNAL);
-                // LCOV_EXCL_STOP
-            }
-
-            totalValueOutstandingProxy =
-                newLoanProperties.totalValueOutstanding;
-            loan->at(sfPeriodicPayment) = newLoanProperties.periodicPayment;
-            loan->at(sfInterestOwed) = newLoanProperties.interestOwedToVault;
-
-            auto const totalInterestOutstandingAfter =
-                totalValueOutstandingProxy - principalOutstandingProxy;
-
-            totalParts.valueChange += totalInterestOutstandingBefore -
-                totalInterestOutstandingAfter +
-                overpaymentComponents.roundedInterest + accumulatedError;
+            auto periodicPaymentProxy = loan->at(sfPeriodicPayment);
+            if (auto const overResult = detail::doOverpayment(
+                    asset,
+                    view,
+                    overpaymentComponents,
+                    totalValueOutstandingProxy,
+                    principalOutstandingProxy,
+                    periodicPaymentProxy,
+                    interestRate,
+                    paymentInterval,
+                    paymentRemainingProxy,
+                    prevPaymentDateProxy,
+                    nextDueDateProxy,
+                    managementFeeRate,
+                    j))
+                totalParts += *overResult;
+            else if (overResult.error())
+                // error() will be the TER returned if a payment is not made. It
+                // will only evaluate to true if it's unsuccessful. Otherwise,
+                // tesSUCCESS means nothing was done, so continue.
+                return Unexpected(overResult.error());
         }
     }
 

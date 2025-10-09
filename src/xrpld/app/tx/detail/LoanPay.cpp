@@ -90,20 +90,19 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
         // This is definitely paying fewer than paymentsPerFeeIncrement payments
         return normalCost;
 
-    // This computation isn't free, but it's relatively straightforward
     if (auto const fullInterest = calculateFullPaymentInterest(
             asset,
-            loanSle->at(sfReferencePrincipal),
+            loanSle->at(sfPeriodicPayment),
             loanPeriodicRate(
                 TenthBips32(loanSle->at(sfInterestRate)),
                 loanSle->at(sfPaymentInterval)),
+            loanSle->at(sfPaymentRemaining),
             view.parentCloseTime(),
             loanSle->at(sfPaymentInterval),
             loanSle->at(sfPreviousPaymentDate),
             loanSle->at(sfStartDate),
             TenthBips32(loanSle->at(sfCloseInterestRate)),
-            scale,
-            loanSle->at(sfClosePaymentFee));
+            scale);
         amount > loanSle->at(sfPrincipalOutstanding) + fullInterest +
             loanSle->at(sfClosePaymentFee))
         return normalCost;
@@ -189,18 +188,6 @@ LoanPay::preclaim(PreclaimContext const& ctx)
         JLOG(ctx.j.warn()) << "Borrower account is frozen.";
         return ret;
     }
-    if (auto const ret = checkDeepFrozen(ctx.view, brokerPseudoAccount, asset))
-    {
-        JLOG(ctx.j.warn()) << "Loan Broker pseudo-account can not receive "
-                              "funds (deep frozen).";
-        return ret;
-    }
-    if (auto const ret = checkDeepFrozen(ctx.view, brokerOwner, asset))
-    {
-        JLOG(ctx.j.warn())
-            << "Loan Broker can not receive funds (deep frozen).";
-        return ret;
-    }
     if (auto const ret = checkDeepFrozen(ctx.view, vaultPseudoAccount, asset))
     {
         JLOG(ctx.j.warn())
@@ -223,6 +210,7 @@ LoanPay::doApply()
     auto const loanSle = view.peek(keylet::loan(loanID));
     if (!loanSle)
         return tefBAD_LEDGER;  // LCOV_EXCL_LINE
+    std::int32_t const loanScale = loanSle->at(sfLoanScale);
 
     auto const brokerID = loanSle->at(sfLoanBrokerID);
     auto const brokerSle = view.peek(keylet::loanbroker(brokerID));
@@ -236,6 +224,41 @@ LoanPay::doApply()
         return tefBAD_LEDGER;  // LCOV_EXCL_LINE
     auto const vaultPseudoAccount = vaultSle->at(sfAccount);
     auto const asset = *vaultSle->at(sfAsset);
+
+    // Determine where to send the broker's fee
+    auto coverAvailableProxy = brokerSle->at(sfCoverAvailable);
+    TenthBips32 const coverRateMinimum{brokerSle->at(sfCoverRateMinimum)};
+    auto debtTotalProxy = brokerSle->at(sfDebtTotal);
+
+    // Send the broker fee to the owner if they have sufficient cover available,
+    // _and_ if the owner can receive funds. If not, so as not to block the
+    // payment, add it to the cover balance (send it to the broker pseudo
+    // account).
+    //
+    // Normally freeze status is checked in preflight, but we do it here to
+    // avoid duplicating the check. It'll claim a fee either way.
+    bool const sendBrokerFeeToOwner = coverAvailableProxy >=
+            roundToAsset(asset,
+                         tenthBipsOfValue(
+                             debtTotalProxy.value(), coverRateMinimum),
+                         loanScale) &&
+        !isDeepFrozen(view, brokerOwner, asset);
+
+    auto const brokerPayee =
+        sendBrokerFeeToOwner ? brokerOwner : brokerPseudoAccount;
+    auto const brokerPayeeSle = view.peek(keylet::account(brokerPayee));
+    if (!sendBrokerFeeToOwner)
+    {
+        // If we can't send the fee to the owner, and the pseudo-account is
+        // frozen, then we have to fail the payment.
+        if (auto const ret = checkDeepFrozen(view, brokerPayee, asset))
+        {
+            JLOG(j_.warn())
+                << "Both Loan Broker and Loan Broker pseudo-account "
+                   "can not receive funds (deep frozen).";
+            return ret;
+        }
+    }
 
     //------------------------------------------------------
     // Loan object state changes
@@ -303,8 +326,6 @@ LoanPay::doApply()
         // LCOV_EXCL_STOP
     }
 
-    std::int32_t const loanScale = loanSle->at(sfLoanScale);
-
     //------------------------------------------------------
     // LoanBroker object state changes
     view.update(brokerSle);
@@ -360,8 +381,6 @@ LoanPay::doApply()
         "ripple::LoanPay::doApply",
         "payments add up");
 
-    auto debtTotalProxy = brokerSle->at(sfDebtTotal);
-
     // Decrease LoanBroker Debt by the amount paid, add the Loan value change
     // (which might be negative). totalPaidToVaultForDebt may be negative,
     // increasing the debt
@@ -387,7 +406,7 @@ LoanPay::doApply()
 
     vaultSle->at(sfAssetsAvailable) += totalPaidToVault;
     vaultSle->at(sfAssetsTotal) += interestPaidExtra;
-    interestOwedProxy -= interestPaidToVault;
+    interestOwedProxy -= interestPaidForDebt;
     XRPL_ASSERT_PARTS(
         *vaultSle->at(sfAssetsAvailable) <= *vaultSle->at(sfAssetsTotal),
         "ripple::LoanPay::doApply",
@@ -398,27 +417,17 @@ LoanPay::doApply()
     // auto const unavailable = total - available;
 
     // Move funds
-    STAmount const paidToVault(asset, totalPaidToVault);
-    STAmount const paidToBroker(asset, totalPaidToBroker);
     XRPL_ASSERT_PARTS(
-        paidToVault + paidToBroker <= amount,
+        totalPaidToVault + totalPaidToBroker <= amount,
         "ripple::LoanPay::doApply",
         "amount is sufficient");
     XRPL_ASSERT_PARTS(
-        paidToVault + paidToBroker <= paymentParts->principalPaid +
+        totalPaidToVault + totalPaidToBroker <= paymentParts->principalPaid +
                 paymentParts->interestPaid + paymentParts->feeToPay,
         "ripple::LoanPay::doApply",
         "payment agreement");
 
-    // Determine where to send the broker's fee
-    auto coverAvailableProxy = brokerSle->at(sfCoverAvailable);
-    TenthBips32 const coverRateMinimum{brokerSle->at(sfCoverRateMinimum)};
-
-    bool const sufficientCover = coverAvailableProxy >=
-        roundToAsset(asset,
-                     tenthBipsOfValue(debtTotalProxy.value(), coverRateMinimum),
-                     loanScale);
-    if (!sufficientCover)
+    if (!sendBrokerFeeToOwner)
     {
         // If there is not enough first-loss capital, add the fee to First Loss
         // Cover Pool. Note that this moves the entire fee - it does not attempt
@@ -426,8 +435,6 @@ LoanPay::doApply()
         // it for future needs.
         coverAvailableProxy += totalPaidToBroker;
     }
-    auto const brokerPayee =
-        sufficientCover ? brokerOwner : brokerPseudoAccount;
 
 #if !NDEBUG
     auto const accountBalanceBefore =
@@ -447,19 +454,40 @@ LoanPay::doApply()
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 #endif
 
-    if (auto const ter = accountSend(
+    if (totalPaidToVault != Number{})
+    {
+        if (auto const ter = requireAuth(
+                view, asset, vaultPseudoAccount, AuthType::StrongAuth))
+            return ter;
+    }
+
+    if (totalPaidToBroker != Number{})
+    {
+        if (brokerPayee == account_)
+        {
+            // The broker may have deleted their holding. Recreate it if needed
+            if (auto const ter = addEmptyHolding(
+                    view,
+                    brokerPayee,
+                    brokerPayeeSle->at(sfBalance).value().xrp(),
+                    asset,
+                    j_);
+                ter && ter != tecDUPLICATE)
+                // ignore tecDUPLICATE. That means the holding already exists,
+                // and is fine here
+                return ter;
+        }
+        if (auto const ter =
+                requireAuth(view, asset, brokerPayee, AuthType::StrongAuth))
+            return ter;
+    }
+
+    if (auto const ter = accountSendMulti(
             view,
             account_,
-            vaultPseudoAccount,
-            paidToVault,
-            j_,
-            WaiveTransferFee::Yes))
-        return ter;
-    if (auto const ter = accountSend(
-            view,
-            account_,
-            brokerPayee,
-            paidToBroker,
+            asset,
+            {{vaultPseudoAccount, totalPaidToVault},
+             {brokerPayee, totalPaidToBroker}},
             j_,
             WaiveTransferFee::Yes))
         return ter;
@@ -481,6 +509,7 @@ LoanPay::doApply()
         : accountHolds(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 
+    /*
     auto const balanceScale = std::max(
         {accountBalanceBefore.exponent(),
          vaultBalanceBefore.exponent(),
@@ -488,15 +517,10 @@ LoanPay::doApply()
          accountBalanceAfter.exponent(),
          vaultBalanceAfter.exponent(),
          brokerBalanceAfter.exponent()});
+         */
     XRPL_ASSERT_PARTS(
-        roundToAsset(
-            asset,
-            accountBalanceBefore + vaultBalanceBefore + brokerBalanceBefore,
-            balanceScale) ==
-            roundToAsset(
-                asset,
-                accountBalanceAfter + vaultBalanceAfter + brokerBalanceAfter,
-                balanceScale),
+        accountBalanceBefore + vaultBalanceBefore + brokerBalanceBefore ==
+            accountBalanceAfter + vaultBalanceAfter + brokerBalanceAfter,
         "ripple::LoanPay::doApply",
         "funds are conserved (with rounding)");
 #endif

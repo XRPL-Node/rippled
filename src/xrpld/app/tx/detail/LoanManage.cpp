@@ -271,9 +271,9 @@ LoanManage::defaultLoan(
     loanSle->setFlag(lsfLoanDefault);
     loanSle->at(sfTotalValueOutstanding) = 0;
     loanSle->at(sfPaymentRemaining) = 0;
-    loanSle->at(sfReferencePrincipal) = 0;
     principalOutstandingProxy = 0;
     interestOwedProxy = 0;
+    loanSle->at(~sfNextPaymentDueDate) = std::nullopt;
     view.update(loanSle);
 
     // Return funds from the LoanBroker pseudo-account to the

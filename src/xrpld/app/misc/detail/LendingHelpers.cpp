@@ -47,6 +47,31 @@ loanPeriodicRate(TenthBips32 interestRate, std::uint32_t paymentInterval)
 namespace detail {
 
 Number
+computeRaisedRate(Number const& periodicRate, std::uint32_t paymentsRemaining)
+{
+    /*
+     * This formula is from the XLS-66 spec, section 3.2.4.1.1 (Regular
+     * Payment), though "raisedRate" is computed only once and used twice.
+     */
+    return power(1 + periodicRate, paymentsRemaining);
+}
+
+Number
+computePaymentFactor(
+    Number const& periodicRate,
+    std::uint32_t paymentsRemaining)
+{
+    /*
+     * This formula is from the XLS-66 spec, section 3.2.4.1.1 (Regular
+     * Payment), though "raisedRate" is computed only once and used twice.
+     */
+    Number const raisedRate =
+        computeRaisedRate(periodicRate, paymentsRemaining);
+
+    return (periodicRate * raisedRate) / (raisedRate - 1);
+}
+
+Number
 loanPeriodicPayment(
     Number const& principalOutstanding,
     Number const& periodicRate,
@@ -61,11 +86,10 @@ loanPeriodicPayment(
 
     /*
      * This formula is from the XLS-66 spec, section 3.2.4.1.1 (Regular
-     * Payment), though "raisedRate" is computed only once and used twice.
+     * Payment).
      */
-    Number const raisedRate = power(1 + periodicRate, paymentsRemaining);
-
-    return principalOutstanding * periodicRate * raisedRate / (raisedRate - 1);
+    return principalOutstanding *
+        computePaymentFactor(periodicRate, paymentsRemaining);
 }
 
 Number
@@ -85,6 +109,23 @@ loanPeriodicPayment(
 
     return loanPeriodicPayment(
         principalOutstanding, periodicRate, paymentsRemaining);
+}
+
+Number
+loanPrincipalFromPeriodicPayment(
+    Number const& periodicPayment,
+    Number const& periodicRate,
+    std::uint32_t paymentsRemaining)
+{
+    if (periodicRate == 0)
+        return periodicPayment * paymentsRemaining;
+
+    /*
+     * This formula is the reverse of the one from the XLS-66 spec,
+     * section 3.2.4.1.1 (Regular Payment) used in loanPeriodicPayment
+     */
+    return periodicPayment /
+        computePaymentFactor(periodicRate, paymentsRemaining);
 }
 
 Number

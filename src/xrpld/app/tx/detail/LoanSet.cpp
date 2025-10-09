@@ -79,12 +79,13 @@ LoanSet::preflight(PreflightContext const& ctx)
          {&sfLoanOriginationFee,
           &sfLoanServiceFee,
           &sfLatePaymentFee,
-          &sfClosePaymentFee,
-          &sfPrincipalRequested})
+          &sfClosePaymentFee})
     {
         if (!validNumericMinimum(tx[~*field]))
             return temINVALID;
     }
+    if (auto const p = tx[~sfPrincipalRequested]; p && p <= 0)
+        return temINVALID;
     if (!validNumericRange(tx[~sfInterestRate], maxInterestRate))
         return temINVALID;
     if (!validNumericRange(tx[~sfOverpaymentFee], maxOverpaymentFee))
@@ -304,22 +305,14 @@ LoanSet::doApply()
     auto const properties = computeLoanProperties(
         vaultAsset,
         principalRequested,
-        principalRequested,
         interestRate,
         paymentInterval,
         paymentTotal,
         TenthBips32{brokerSle->at(sfManagementFeeRate)});
 
-    if (properties.firstPaymentPrincipal <= 0)
-    {
-        // Check that some reference principal is paid each period. Since the
-        // first payment pays the least principal, if it's good, they'll all be
-        // good. Note that the outstanding principal is rounded, and may not
-        // change right away.
-        JLOG(j_.warn()) << "Loan is unable to pay principal.";
-        return tecPRECISION_LOSS;
-    }
-    if (interestRate != 0 &&
+    // Guard 1: if there is no computed total interest over the life of the loan
+    // for a non-zero interest rate, we cannot properly amortize the loan
+    if (interestRate > TenthBips32{0} &&
         (properties.totalValueOutstanding - principalRequested) <= 0)
     {
         // Unless this is a zero-interst loan, there must be some interest due
@@ -328,6 +321,39 @@ LoanSet::doApply()
                         << "% interest has no interest due";
         return tecPRECISION_LOSS;
     }
+
+    // Guard 2: if the rounded periodic payment is large enough that the loan
+    // can't be amortized in the specified number of payments, raise an error
+    if (auto const computedPayments = roundToAsset(
+            vaultAsset,
+            properties.totalValueOutstanding /
+                roundToAsset(
+                    vaultAsset,
+                    properties.periodicPayment,
+                    properties.loanScale,
+                    Number::upward),
+            properties.loanScale,
+            Number::upward);
+        computedPayments < paymentTotal)
+    {
+        JLOG(j_.warn()) << "Loan Periodic payment rounding will complete the "
+                           "loan in less than the specified number of payments";
+        return tecPRECISION_LOSS;
+    }
+
+    // Guard 3: if the principal portion of the first periodic payment is too
+    // small to be accurately represented with the given rounding mode, raise an
+    // error
+    if (properties.firstPaymentPrincipal <= 0)
+    {
+        // Check that some reference principal is paid each period. Since
+        // the first payment pays the least principal, if it's good, they'll
+        // all be good. Note that the outstanding principal is rounded, and
+        // may not change right away.
+        JLOG(j_.warn()) << "Loan is unable to pay principal.";
+        return tecPRECISION_LOSS;
+    }
+
     // Check that the other computed values are valid
     if (properties.interestOwedToVault < 0 ||
         properties.totalValueOutstanding <= 0 ||
@@ -398,50 +424,56 @@ LoanSet::doApply()
     // 1. Transfer loanAssetsAvailable (principalRequested - originationFee)
     // from vault pseudo-account to the borrower.
     // Create a holding for the borrower if one does not already exist.
-    if (auto const ter = addEmptyHolding(
-            view,
-            borrower,
-            borrowerSle->at(sfBalance).value().xrp(),
-            vaultAsset,
-            j_);
-        ter && ter != tecDUPLICATE)
-        // ignore tecDUPLICATE. That means the holding already exists, and
-        // is fine here
+
+    if (borrower == account_)
+    {
+        if (auto const ter = addEmptyHolding(
+                view,
+                borrower,
+                borrowerSle->at(sfBalance).value().xrp(),
+                vaultAsset,
+                j_);
+            ter && ter != tecDUPLICATE)
+            // ignore tecDUPLICATE. That means the holding already exists, and
+            // is fine here
+            return ter;
+    }
+    if (auto const ter =
+            requireAuth(view, vaultAsset, borrower, AuthType::StrongAuth))
         return ter;
 
-    if (auto const ter = accountSend(
-            view,
-            vaultPseudo,
-            borrower,
-            STAmount{vaultAsset, loanAssetsToBorrower},
-            j_,
-            WaiveTransferFee::Yes))
-        return ter;
     // 2. Transfer originationFee, if any, from vault pseudo-account to
     // LoanBroker owner.
     if (originationFee != Number{})
     {
         // Create the holding if it doesn't already exist (necessary for MPTs).
         // The owner may have deleted their MPT / line at some point.
-        if (auto const ter = addEmptyHolding(
-                view,
-                brokerOwner,
-                brokerOwnerSle->at(sfBalance).value().xrp(),
-                vaultAsset,
-                j_);
-            !isTesSuccess(ter) && ter != tecDUPLICATE)
-            // ignore tecDUPLICATE. That means the holding already exists, and
-            // is fine here
-            return ter;
-        if (auto const ter = accountSend(
-                view,
-                vaultPseudo,
-                brokerOwner,
-                STAmount{vaultAsset, originationFee},
-                j_,
-                WaiveTransferFee::Yes))
+        if (brokerOwner == account_)
+        {
+            if (auto const ter = addEmptyHolding(
+                    view,
+                    brokerOwner,
+                    brokerOwnerSle->at(sfBalance).value().xrp(),
+                    vaultAsset,
+                    j_);
+                !isTesSuccess(ter) && ter != tecDUPLICATE)
+                // ignore tecDUPLICATE. That means the holding already exists,
+                // and is fine here
+                return ter;
+        }
+        if (auto const ter = requireAuth(
+                view, vaultAsset, brokerOwner, AuthType::StrongAuth))
             return ter;
     }
+
+    if (auto const ter = accountSendMulti(
+            view,
+            vaultPseudo,
+            vaultAsset,
+            {{borrower, loanAssetsToBorrower}, {brokerOwner, originationFee}},
+            j_,
+            WaiveTransferFee::Yes))
+        return ter;
 
     // The portion of the loan interest that will go to the vault (total
     // interest minus the management fee)
@@ -461,7 +493,7 @@ LoanSet::doApply()
         };
 
     // Set required and fixed tx fields
-    loan->at(sfLoanScale) = principalRequested.exponent();
+    loan->at(sfLoanScale) = properties.loanScale;
     loan->at(sfStartDate) = startDate;
     loan->at(sfPaymentInterval) = paymentInterval;
     loan->at(sfLoanSequence) = *loanSequenceProxy;
@@ -482,7 +514,6 @@ LoanSet::doApply()
     setLoanField(~sfGracePeriod, defaultGracePeriod);
     // Set dynamic / computed fields to their initial values
     loan->at(sfPrincipalOutstanding) = principalRequested;
-    loan->at(sfReferencePrincipal) = principalRequested;
     loan->at(sfPeriodicPayment) = properties.periodicPayment;
     loan->at(sfTotalValueOutstanding) = properties.totalValueOutstanding;
     loan->at(sfInterestOwed) = properties.interestOwedToVault;

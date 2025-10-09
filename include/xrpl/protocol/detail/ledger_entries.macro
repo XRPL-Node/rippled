@@ -560,26 +560,54 @@ LEDGER_ENTRY(ltLOAN, 0x0089, Loan, loan, ({
     {sfStartDate,            soeREQUIRED},
     {sfPaymentInterval,      soeREQUIRED},
     {sfGracePeriod,          soeREQUIRED},
-    {sfPeriodicPayment,      soeREQUIRED},
     {sfPreviousPaymentDate,  soeDEFAULT},
     {sfNextPaymentDueDate,   soeOPTIONAL},
-    {sfPaymentRemaining,     soeDEFAULT},
-    // The loan object tracks three values:
-    // - TotalValueOutstanding: The total amount owed by the borrower to
-    //   the lender / vault.
-    // - PrincipalOutstanding: The portion of the TotalValueOutstanding
-    //   that is from the prinicpal borrowed.
-    // - InterestOwed: The portion of the TotalValueOutstanding that
-    //   represents interest owed to the vault.
-    // There are two additional values that can be computed from these:
-    // - InterestOutstanding: TotalValueOutstanding - PrincipalOutstanding
+    // The loan object tracks these values:
+    //
+    // - PaymentRemaining: The number of payments left in the loan. When it
+    //   reaches 0, the loan is paid off, and all other relevant values
+    //   must also be 0.
+    //
+    // - PeriodicPayment: The fixed, unrounded amount to be paid each
+    //   interval. Stored with as much precision as possible.
+    //   Payment transactions must round this value *UP*.
+    //
+    // - TotalValueOutstanding: The rounded total amount owed by the
+    //   borrower to the lender / vault.
+    //
+    // - PrincipalOutstanding: The rounded portion of the
+    //   TotalValueOutstanding that is from the principal borrowed.
+    //
+    // - InterestOwed: The rounded portion of the TotalValueOutstanding that
+    //   represents interest specifically owed to the vault. This may be less
+    //   than the interest owed by the borrower, because it excludes the
+    //   expected value of broker management fees.
+    //
+    // There are additional values that can be computed from these:
+    //
+    // - InterestOutstanding = TotalValueOutstanding - PrincipalOutstanding
     //   The total amount of interest still pending on the loan,
     //   independent of management fees.
-    // - ManagementFeeOwed: InterestOutstanding - InterestOwed
+    //
+    // - ManagementFeeOwed = InterestOutstanding - InterestOwed
     //   The amount of the total interest that will be sent to the
     //   broker as management fees.
+    //
+    // - TrueTotalLoanValue = PaymentRemaining * PeriodicPayment
+    //   The unrounded true total value of the loan.
+    //
+    // - TrueTotalPrincialOutstanding can be computed using the algorithm
+    //   in the ripple::detail::loanPrincipalFromPeriodicPayment function.
+    //
+    // - TrueTotalInterestOutstanding = TrueTotalLoanValue - 
+    //      TrueTotalPrincipalOutstanding
+    //   The unrounded true total interest remaining.
+    //
+    // Note the the "True" values may differ significantly from the tracked
+    // rounded values.
+    {sfPaymentRemaining,     soeDEFAULT},
+    {sfPeriodicPayment,      soeREQUIRED},
     {sfPrincipalOutstanding, soeDEFAULT},
-    {sfReferencePrincipal, soeDEFAULT},
     {sfTotalValueOutstanding, soeDEFAULT},
     {sfInterestOwed,         soeDEFAULT},
     // Based on the original principal borrowed, used for

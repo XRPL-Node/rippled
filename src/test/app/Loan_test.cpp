@@ -110,12 +110,11 @@ class Loan_test : public beast::unit_test::suite
     {
         std::uint32_t previousPaymentDate = 0;
         NetClock::time_point startDate = {};
-        std::optional<std::uint32_t> nextPaymentDate = 0;
+        std::uint32_t nextPaymentDate = 0;
         std::uint32_t paymentRemaining = 0;
         std::int32_t const loanScale = 0;
         Number totalValue = 0;
         Number principalOutstanding = 0;
-        Number referencePrincipal = 0;
         Number interestOwed = 0;
         Number periodicPayment = 0;
         std::uint32_t flags = 0;
@@ -206,16 +205,40 @@ class Loan_test : public beast::unit_test::suite
             }
         }
 
+        void
+        checkPayment(
+            std::int32_t loanScale,
+            jtx::Account const& account,
+            jtx::PrettyAmount const& balanceBefore,
+            STAmount const& expectedPayment,
+            jtx::PrettyAmount const& adjustment) const
+        {
+            auto const borrowerScale =
+                std::max(loanScale, balanceBefore.number().exponent());
+
+            STAmount const balanceChangeAmount{
+                broker.asset,
+                roundToAsset(
+                    broker.asset, expectedPayment + adjustment, borrowerScale)};
+            {
+                auto const difference = roundToScale(
+                    env.balance(account, broker.asset) -
+                        (balanceBefore - balanceChangeAmount),
+                    borrowerScale);
+                env.test.BEAST_EXPECT(
+                    roundToScale(difference, loanScale) >= beast::zero);
+            }
+        }
+
         /** Checks both the loan and broker expect states against the ledger */
         void
         operator()(
             std::uint32_t previousPaymentDate,
-            std::optional<std::uint32_t> nextPaymentDate,
+            std::uint32_t nextPaymentDate,
             std::uint32_t paymentRemaining,
             Number const& loanScale,
             Number const& totalValue,
             Number const& principalOutstanding,
-            Number const& referencePrincipal,
             Number const& interestOwed,
             Number const& periodicPayment,
             std::uint32_t flags) const
@@ -226,16 +249,17 @@ class Loan_test : public beast::unit_test::suite
                 env.test.BEAST_EXPECT(
                     loan->at(sfPreviousPaymentDate) == previousPaymentDate);
                 env.test.BEAST_EXPECT(
-                    loan->at(~sfNextPaymentDueDate) == nextPaymentDate);
-                env.test.BEAST_EXPECT(
                     loan->at(sfPaymentRemaining) == paymentRemaining);
+                if (paymentRemaining == 0)
+                    env.test.BEAST_EXPECT(!loan->at(~sfNextPaymentDueDate));
+                else
+                    env.test.BEAST_EXPECT(
+                        loan->at(sfNextPaymentDueDate) == nextPaymentDate);
                 env.test.BEAST_EXPECT(loan->at(sfLoanScale) == loanScale);
                 env.test.BEAST_EXPECT(
                     loan->at(sfTotalValueOutstanding) == totalValue);
                 env.test.BEAST_EXPECT(
                     loan->at(sfPrincipalOutstanding) == principalOutstanding);
-                env.test.BEAST_EXPECT(
-                    loan->at(sfReferencePrincipal) == referencePrincipal);
                 env.test.BEAST_EXPECT(loan->at(sfInterestOwed) == interestOwed);
                 env.test.BEAST_EXPECT(
                     loan->at(sfPeriodicPayment) == periodicPayment);
@@ -287,7 +311,6 @@ class Loan_test : public beast::unit_test::suite
                 state.loanScale,
                 state.totalValue,
                 state.principalOutstanding,
-                state.referencePrincipal,
                 state.interestOwed,
                 state.periodicPayment,
                 state.flags);
@@ -360,12 +383,11 @@ class Loan_test : public beast::unit_test::suite
             LoanState state{
                 .previousPaymentDate = loan->at(sfPreviousPaymentDate),
                 .startDate = tp{d{loan->at(sfStartDate)}},
-                .nextPaymentDate = loan->at(~sfNextPaymentDueDate),
+                .nextPaymentDate = loan->at(sfNextPaymentDueDate),
                 .paymentRemaining = loan->at(sfPaymentRemaining),
                 .loanScale = loan->at(sfLoanScale),
                 .totalValue = loan->at(sfTotalValueOutstanding),
                 .principalOutstanding = loan->at(sfPrincipalOutstanding),
-                .referencePrincipal = loan->at(sfReferencePrincipal),
                 .interestOwed = loan->at(sfInterestOwed),
                 .periodicPayment = loan->at(sfPeriodicPayment),
                 .flags = loan->at(sfFlags),
@@ -373,9 +395,8 @@ class Loan_test : public beast::unit_test::suite
                 .interestRate = TenthBips32{loan->at(sfInterestRate)},
             };
             BEAST_EXPECT(state.previousPaymentDate == 0);
-            if (BEAST_EXPECT(state.nextPaymentDate))
-                BEAST_EXPECT(
-                    tp{d{*state.nextPaymentDate}} == state.startDate + 600s);
+            BEAST_EXPECT(
+                tp{d{state.nextPaymentDate}} == state.startDate + 600s);
             BEAST_EXPECT(state.paymentRemaining == 12);
             BEAST_EXPECT(
                 state.principalOutstanding == broker.asset(1000).value());
@@ -608,7 +629,6 @@ class Loan_test : public beast::unit_test::suite
         auto const loanProperties = computeLoanProperties(
             broker.asset,
             state.principalOutstanding,
-            state.referencePrincipal,
             state.interestRate,
             state.paymentInterval,
             state.paymentRemaining,
@@ -620,7 +640,6 @@ class Loan_test : public beast::unit_test::suite
             total,
             principalRequest.exponent(),
             loanProperties.totalValueOutstanding,
-            principalRequest,
             principalRequest,
             loanProperties.interestOwedToVault,
             loanProperties.periodicPayment,
@@ -678,7 +697,6 @@ class Loan_test : public beast::unit_test::suite
             total,
             principalRequest.exponent(),
             loanProperties.totalValueOutstanding,
-            principalRequest,
             principalRequest,
             loanProperties.interestOwedToVault,
             loanProperties.periodicPayment,
@@ -1232,9 +1250,7 @@ class Loan_test : public beast::unit_test::suite
                     verifyLoanStatus(state);
                 }
 
-                BEAST_EXPECT(state.nextPaymentDate);
-                auto const nextDueDate =
-                    tp{d{state.nextPaymentDate.value_or(0)}};
+                auto const nextDueDate = tp{d{state.nextPaymentDate}};
 
                 // Can't default the loan yet. The grace period hasn't
                 // expired
@@ -1264,7 +1280,6 @@ class Loan_test : public beast::unit_test::suite
                 state.paymentRemaining = 0;
                 state.totalValue = 0;
                 state.principalOutstanding = 0;
-                state.referencePrincipal = 0;
                 state.interestOwed = 0;
                 verifyLoanStatus(state);
 
@@ -1279,8 +1294,9 @@ class Loan_test : public beast::unit_test::suite
             };
         };
 
-        auto immediatePayoff = [&](std::uint32_t baseFlag) {
-            return [&, baseFlag](
+        auto singlePayment = [&](STAmount const& payoffAmount,
+                                 std::uint32_t baseFlag) {
+            return [&, payoffAmount, baseFlag](
                        Keylet const& loanKeylet,
                        VerifyLoanStatus const& verifyLoanStatus) {
                 // toEndOfLife
@@ -1322,6 +1338,58 @@ class Loan_test : public beast::unit_test::suite
                 // fees
                 auto const borrowerBalanceBeforePayment =
                     env.balance(borrower, broker.asset);
+
+                BEAST_EXPECT(payoffAmount > state.principalOutstanding);
+                // Try to pay a little extra to show that it's _not_
+                // taken
+                auto const transactionAmount = payoffAmount + broker.asset(10);
+                BEAST_EXPECT(
+                    transactionAmount ==
+                    broker.asset(Number(1050000114155251, -12)));
+                env(pay(borrower, loanKeylet.key, transactionAmount));
+
+                env.close();
+
+                // Need to account for fees if the loan is in XRP
+                PrettyAmount adjustment = broker.asset(0);
+                if (broker.asset.raw().native())
+                {
+                    adjustment = env.current()->fees().base;
+                }
+
+                state.paymentRemaining = 0;
+                state.principalOutstanding = 0;
+                state.totalValue = 0;
+                state.interestOwed = 0;
+                state.previousPaymentDate = state.nextPaymentDate;
+                verifyLoanStatus(state);
+
+                verifyLoanStatus.checkPayment(
+                    state.loanScale,
+                    borrower,
+                    borrowerBalanceBeforePayment,
+                    payoffAmount,
+                    adjustment);
+
+                // Can't impair or default a paid off loan
+                env(manage(lender, loanKeylet.key, tfLoanImpair),
+                    ter(tecNO_PERMISSION));
+                env(manage(lender, loanKeylet.key, tfLoanDefault),
+                    ter(tecNO_PERMISSION));
+            };
+        };
+
+        auto immediatePayoff = [&](std::uint32_t baseFlag) {
+            return [&, baseFlag](
+                       Keylet const& loanKeylet,
+                       VerifyLoanStatus const& verifyLoanStatus) {
+                // toEndOfLife
+                //
+                auto const state =
+                    getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
+                env.close(state.startDate + 20s);
+                auto const loanAge = (env.now() - state.startDate).count();
+                BEAST_EXPECT(loanAge == 30);
 
                 // Full payoff amount will consist of
                 // 1. principal outstanding (1000)
@@ -1350,65 +1418,21 @@ class Loan_test : public beast::unit_test::suite
                     broker.asset, state.principalOutstanding * Number(36, -3)};
                 BEAST_EXPECT(prepaymentPenalty == broker.asset(36));
                 STAmount const closePaymentFee = broker.asset(4);
-                auto const payoffAmount = principalOutstanding +
-                    accruedInterest + prepaymentPenalty + closePaymentFee;
+                auto const payoffAmount = roundToScale(
+                    principalOutstanding + accruedInterest + prepaymentPenalty +
+                        closePaymentFee,
+                    state.loanScale);
                 BEAST_EXPECT(
                     payoffAmount ==
                     broker.asset(Number(1040000114155251, -12)));
-                BEAST_EXPECT(payoffAmount > state.principalOutstanding);
-                // The terms of this loan actually make the early payoff more
-                // expensive than just making payments
+
+                // The terms of this loan actually make the early payoff
+                // more expensive than just making payments
                 BEAST_EXPECT(
                     payoffAmount > state.paymentRemaining *
                         (state.periodicPayment + broker.asset(2).value()));
-                // Try to pay a little extra to show that it's _not_
-                // taken
-                auto const transactionAmount = payoffAmount + broker.asset(10);
-                BEAST_EXPECT(
-                    transactionAmount ==
-                    broker.asset(Number(1050000114155251, -12)));
-                env(pay(borrower, loanKeylet.key, transactionAmount));
 
-                env.close();
-
-                // Need to account for fees if the loan is in XRP
-                PrettyAmount adjustment = broker.asset(0);
-                if (broker.asset.raw().native())
-                {
-                    adjustment = env.current()->fees().base;
-                }
-
-                state.paymentRemaining = 0;
-                state.principalOutstanding = 0;
-                state.referencePrincipal = 0;
-                state.totalValue = 0;
-                state.interestOwed = 0;
-                if (BEAST_EXPECT(state.nextPaymentDate))
-                    state.previousPaymentDate = *state.nextPaymentDate;
-                state.nextPaymentDate.reset();
-                verifyLoanStatus(state);
-
-                STAmount const balanceChangeAmount{
-                    broker.asset,
-                    roundToAsset(broker.asset, payoffAmount, state.loanScale)};
-                {
-                    auto const difference =
-                        roundToScale(
-                            env.balance(borrower, broker.asset),
-                            state.loanScale) -
-                        (borrowerBalanceBeforePayment - balanceChangeAmount -
-                         adjustment);
-                    BEAST_EXPECT(difference == beast::zero);
-                    BEAST_EXPECT(
-                        roundToScale(difference, state.loanScale) ==
-                        beast::zero);
-                }
-
-                // Can't impair or default a paid off loan
-                env(manage(lender, loanKeylet.key, tfLoanImpair),
-                    ter(tecNO_PERMISSION));
-                env(manage(lender, loanKeylet.key, tfLoanDefault),
-                    ter(tecNO_PERMISSION));
+                singlePayment(payoffAmount, baseFlag);
             };
         };
 
@@ -1418,43 +1442,9 @@ class Loan_test : public beast::unit_test::suite
                        VerifyLoanStatus const& verifyLoanStatus) {
                 // toEndOfLife
                 //
-                auto state =
+
+                auto const state =
                     getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
-                BEAST_EXPECT(state.flags == baseFlag);
-                env.close(state.startDate + 20s);
-                auto const loanAge = (env.now() - state.startDate).count();
-                BEAST_EXPECT(loanAge == 30);
-
-                verifyLoanStatus(state);
-
-                // Send some bogus pay transactions
-                env(pay(borrower,
-                        keylet::loan(uint256(0)).key,
-                        broker.asset(10)),
-                    ter(temINVALID));
-                env(pay(borrower, loanKeylet.key, broker.asset(-100)),
-                    ter(temBAD_AMOUNT));
-                env(pay(borrower, broker.brokerID, broker.asset(100)),
-                    ter(tecNO_ENTRY));
-                env(pay(evan, loanKeylet.key, broker.asset(500)),
-                    ter(tecNO_PERMISSION));
-
-                {
-                    auto const otherAsset =
-                        broker.asset.raw() == assets[0].raw() ? assets[1]
-                                                              : assets[0];
-                    env(pay(borrower, loanKeylet.key, otherAsset(100)),
-                        ter(tecWRONG_ASSET));
-                }
-
-                // Amount doesn't cover a single payment
-                env(pay(borrower, loanKeylet.key, STAmount{broker.asset, 1}),
-                    ter(tecINSUFFICIENT_PAYMENT));
-
-                // Get the balance after these failed transactions take
-                // fees
-                auto const borrowerBalanceBeforePayment =
-                    env.balance(borrower, broker.asset);
 
                 // Make all the payments in one transaction
                 // service fee is 2
@@ -1467,51 +1457,7 @@ class Loan_test : public beast::unit_test::suite
                     broker.asset(Number(1024014840139457, -12)));
                 BEAST_EXPECT(payoffAmount > state.principalOutstanding);
 
-                // Try to pay a little extra to show that it's _not_
-                // taken
-                auto const transactionAmount = payoffAmount + broker.asset(10);
-                BEAST_EXPECT(
-                    transactionAmount ==
-                    broker.asset(Number(1034014840139457, -12)));
-                env(pay(borrower, loanKeylet.key, transactionAmount));
-
-                env.close();
-
-                // Need to account for fees if the loan is in XRP
-                PrettyAmount adjustment = broker.asset(0);
-                if (broker.asset.raw().native())
-                {
-                    adjustment = env.current()->fees().base;
-                }
-
-                state.paymentRemaining = 0;
-                state.principalOutstanding = 0;
-                state.referencePrincipal = 0;
-                state.totalValue = 0;
-                state.interestOwed = 0;
-                if (BEAST_EXPECT(state.nextPaymentDate))
-                    state.previousPaymentDate = *state.nextPaymentDate +
-                        state.paymentInterval *
-                            (startingPayments - 1);  // 9280-2680=6600
-                state.nextPaymentDate.reset();
-                verifyLoanStatus(state);
-
-                STAmount const balanceChangeAmount{
-                    broker.asset,
-                    roundToAsset(broker.asset, payoffAmount, state.loanScale)};
-                {
-                    auto const difference =
-                        env.balance(borrower, broker.asset) -
-                        (borrowerBalanceBeforePayment - balanceChangeAmount -
-                         adjustment);
-                    BEAST_EXPECT(difference == beast::zero);
-                }
-
-                // Can't impair or default a paid off loan
-                env(manage(lender, loanKeylet.key, tfLoanImpair),
-                    ter(tecNO_PERMISSION));
-                env(manage(lender, loanKeylet.key, tfLoanDefault),
-                    ter(tecNO_PERMISSION));
+                singlePayment(payoffAmount, baseFlag);
             };
         };
 
@@ -1690,8 +1636,11 @@ class Loan_test : public beast::unit_test::suite
                     // may drift as payments are made
                     BEAST_EXPECT(
                         roundedPeriodicPayment ==
-                        broker.asset(
-                            Number(8333457001162141, -14), Number::upward));
+                        roundToScale(
+                            broker.asset(
+                                Number(8333457001162141, -14), Number::upward),
+                            state.loanScale,
+                            Number::upward));
                     // 83334570.01162141
                     // Include the service fee
                     STAmount const totalDue = roundToScale(
@@ -1729,7 +1678,6 @@ class Loan_test : public beast::unit_test::suite
                             state.loanScale,
                             state.totalValue,
                             state.principalOutstanding,
-                            state.referencePrincipal,
                             state.periodicPayment,
                             periodicRate,
                             state.paymentRemaining);
@@ -1777,10 +1725,6 @@ class Loan_test : public beast::unit_test::suite
                                 state.loanScale,
                                 Number::upward));
                     BEAST_EXPECT(
-                        !paymentComponents.final ||
-                        paymentComponents.rawPrincipal ==
-                            state.referencePrincipal);
-                    BEAST_EXPECT(
                         paymentComponents.roundedPrincipal >= Number(0) &&
                         paymentComponents.roundedPrincipal <=
                             state.principalOutstanding);
@@ -1795,9 +1739,13 @@ class Loan_test : public beast::unit_test::suite
                             state.periodicPayment);
                     BEAST_EXPECT(
                         paymentComponents.final ||
-                        paymentComponents.roundedPrincipal +
-                                paymentComponents.roundedInterest ==
-                            roundedPeriodicPayment);
+                        roundedPeriodicPayment >=
+                                (paymentComponents.roundedPrincipal +
+                                 paymentComponents.roundedInterest) &&
+                            roundedPeriodicPayment -
+                                    (paymentComponents.roundedPrincipal +
+                                     paymentComponents.roundedInterest) <
+                                2);
 
                     auto const borrowerBalanceBeforePayment =
                         env.balance(borrower, broker.asset);
@@ -1821,35 +1769,25 @@ class Loan_test : public beast::unit_test::suite
                     }
 
                     // Check the result
-                    auto const borrowerBalance =
-                        env.balance(borrower, broker.asset);
-                    auto const expectedBalance = borrowerBalanceBeforePayment -
-                        totalDueAmount - adjustment;
-                    BEAST_EXPECT(
-                        borrowerBalance == expectedBalance ||
-                        (!broker.asset.raw().native() &&
-                         broker.asset.raw().holds<Issue>() &&
-                         ((borrowerBalance - expectedBalance) /
-                              expectedBalance <
-                          Number(1, -4))));
+                    verifyLoanStatus.checkPayment(
+                        state.loanScale,
+                        borrower,
+                        borrowerBalanceBeforePayment,
+                        totalDueAmount,
+                        adjustment);
 
                     --state.paymentRemaining;
-                    if (BEAST_EXPECT(state.nextPaymentDate))
+                    state.previousPaymentDate = state.nextPaymentDate;
+                    if (paymentComponents.final)
                     {
-                        state.previousPaymentDate = *state.nextPaymentDate;
-                        if (paymentComponents.final)
-                        {
-                            state.nextPaymentDate.reset();
-                            state.paymentRemaining = 0;
-                        }
-                        else
-                        {
-                            *state.nextPaymentDate += state.paymentInterval;
-                        }
+                        state.paymentRemaining = 0;
+                    }
+                    else
+                    {
+                        state.nextPaymentDate += state.paymentInterval;
                     }
                     state.principalOutstanding -=
                         paymentComponents.roundedPrincipal;
-                    state.referencePrincipal -= paymentComponents.rawPrincipal;
                     state.totalValue -= paymentComponents.roundedPrincipal +
                         paymentComponents.roundedInterest;
                     state.interestOwed -= valueMinusFee(
@@ -2104,7 +2042,6 @@ class Loan_test : public beast::unit_test::suite
             BEAST_EXPECT(loan[sfPaymentRemaining] == 1);
             BEAST_EXPECT(!loan.isMember(sfPreviousPaymentDate));
             BEAST_EXPECT(loan[sfPrincipalOutstanding] == "1000000000");
-            BEAST_EXPECT(loan[sfReferencePrincipal] == "1000000000");
             BEAST_EXPECT(loan[sfTotalValueOutstanding] == "1000000000");
             BEAST_EXPECT(loan[sfLoanScale] == -6);
             BEAST_EXPECT(

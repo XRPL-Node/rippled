@@ -2485,7 +2485,6 @@ ValidLoan::finalize(
               &sfLatePaymentFee,
               &sfClosePaymentFee,
               &sfPrincipalOutstanding,
-              &sfReferencePrincipal,
               &sfTotalValueOutstanding,
               &sfInterestOwed})
         {
