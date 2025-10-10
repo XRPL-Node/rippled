@@ -32,7 +32,6 @@ runs:
         echo 'Installing dependencies.'
         mkdir -p '${{ env.BUILD_DIR }}'
         cd '${{ env.BUILD_DIR }}'
-        export CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)
         conan install \
           --output-folder . \
           --build=${{ env.BUILD_OPTION }} \
