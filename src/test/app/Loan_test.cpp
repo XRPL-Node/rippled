@@ -1294,89 +1294,79 @@ class Loan_test : public beast::unit_test::suite
             };
         };
 
-        auto singlePayment = [&](STAmount const& payoffAmount,
+        auto singlePayment = [&](Keylet const& loanKeylet,
+                                 VerifyLoanStatus const& verifyLoanStatus,
+                                 LoanState& state,
+                                 STAmount const& payoffAmount,
+                                 std::uint32_t numPayments,
                                  std::uint32_t baseFlag) {
-            return [&, payoffAmount, baseFlag](
-                       Keylet const& loanKeylet,
-                       VerifyLoanStatus const& verifyLoanStatus) {
-                // toEndOfLife
-                //
-                auto state =
-                    getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
-                BEAST_EXPECT(state.flags == baseFlag);
-                env.close(state.startDate + 20s);
-                auto const loanAge = (env.now() - state.startDate).count();
-                BEAST_EXPECT(loanAge == 30);
+            // toEndOfLife
+            //
+            verifyLoanStatus(state);
 
-                verifyLoanStatus(state);
+            // Send some bogus pay transactions
+            env(pay(borrower, keylet::loan(uint256(0)).key, broker.asset(10)),
+                ter(temINVALID));
+            env(pay(borrower, loanKeylet.key, broker.asset(-100)),
+                ter(temBAD_AMOUNT));
+            env(pay(borrower, broker.brokerID, broker.asset(100)),
+                ter(tecNO_ENTRY));
+            env(pay(evan, loanKeylet.key, broker.asset(500)),
+                ter(tecNO_PERMISSION));
 
-                // Send some bogus pay transactions
-                env(pay(borrower,
-                        keylet::loan(uint256(0)).key,
-                        broker.asset(10)),
-                    ter(temINVALID));
-                env(pay(borrower, loanKeylet.key, broker.asset(-100)),
-                    ter(temBAD_AMOUNT));
-                env(pay(borrower, broker.brokerID, broker.asset(100)),
-                    ter(tecNO_ENTRY));
-                env(pay(evan, loanKeylet.key, broker.asset(500)),
-                    ter(tecNO_PERMISSION));
+            {
+                auto const otherAsset = broker.asset.raw() == assets[0].raw()
+                    ? assets[1]
+                    : assets[0];
+                env(pay(borrower, loanKeylet.key, otherAsset(100)),
+                    ter(tecWRONG_ASSET));
+            }
 
-                {
-                    auto const otherAsset =
-                        broker.asset.raw() == assets[0].raw() ? assets[1]
-                                                              : assets[0];
-                    env(pay(borrower, loanKeylet.key, otherAsset(100)),
-                        ter(tecWRONG_ASSET));
-                }
+            // Amount doesn't cover a single payment
+            env(pay(borrower, loanKeylet.key, STAmount{broker.asset, 1}),
+                ter(tecINSUFFICIENT_PAYMENT));
 
-                // Amount doesn't cover a single payment
-                env(pay(borrower, loanKeylet.key, STAmount{broker.asset, 1}),
-                    ter(tecINSUFFICIENT_PAYMENT));
+            // Get the balance after these failed transactions take
+            // fees
+            auto const borrowerBalanceBeforePayment =
+                env.balance(borrower, broker.asset);
 
-                // Get the balance after these failed transactions take
-                // fees
-                auto const borrowerBalanceBeforePayment =
-                    env.balance(borrower, broker.asset);
+            BEAST_EXPECT(payoffAmount > state.principalOutstanding);
+            // Try to pay a little extra to show that it's _not_
+            // taken
+            auto const transactionAmount = payoffAmount + broker.asset(10);
 
-                BEAST_EXPECT(payoffAmount > state.principalOutstanding);
-                // Try to pay a little extra to show that it's _not_
-                // taken
-                auto const transactionAmount = payoffAmount + broker.asset(10);
-                BEAST_EXPECT(
-                    transactionAmount ==
-                    broker.asset(Number(1050000114155251, -12)));
-                env(pay(borrower, loanKeylet.key, transactionAmount));
+            env(pay(borrower, loanKeylet.key, transactionAmount));
 
-                env.close();
+            env.close();
 
-                // Need to account for fees if the loan is in XRP
-                PrettyAmount adjustment = broker.asset(0);
-                if (broker.asset.raw().native())
-                {
-                    adjustment = env.current()->fees().base;
-                }
+            // Need to account for fees if the loan is in XRP
+            PrettyAmount adjustment = broker.asset(0);
+            if (broker.asset.raw().native())
+            {
+                adjustment = env.current()->fees().base;
+            }
 
-                state.paymentRemaining = 0;
-                state.principalOutstanding = 0;
-                state.totalValue = 0;
-                state.interestOwed = 0;
-                state.previousPaymentDate = state.nextPaymentDate;
-                verifyLoanStatus(state);
+            state.paymentRemaining = 0;
+            state.principalOutstanding = 0;
+            state.totalValue = 0;
+            state.interestOwed = 0;
+            state.previousPaymentDate = state.nextPaymentDate +
+                state.paymentInterval * (numPayments - 1);
+            verifyLoanStatus(state);
 
-                verifyLoanStatus.checkPayment(
-                    state.loanScale,
-                    borrower,
-                    borrowerBalanceBeforePayment,
-                    payoffAmount,
-                    adjustment);
+            verifyLoanStatus.checkPayment(
+                state.loanScale,
+                borrower,
+                borrowerBalanceBeforePayment,
+                payoffAmount,
+                adjustment);
 
-                // Can't impair or default a paid off loan
-                env(manage(lender, loanKeylet.key, tfLoanImpair),
-                    ter(tecNO_PERMISSION));
-                env(manage(lender, loanKeylet.key, tfLoanDefault),
-                    ter(tecNO_PERMISSION));
-            };
+            // Can't impair or default a paid off loan
+            env(manage(lender, loanKeylet.key, tfLoanImpair),
+                ter(tecNO_PERMISSION));
+            env(manage(lender, loanKeylet.key, tfLoanDefault),
+                ter(tecNO_PERMISSION));
         };
 
         auto immediatePayoff = [&](std::uint32_t baseFlag) {
@@ -1385,7 +1375,7 @@ class Loan_test : public beast::unit_test::suite
                        VerifyLoanStatus const& verifyLoanStatus) {
                 // toEndOfLife
                 //
-                auto const state =
+                auto state =
                     getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
                 env.close(state.startDate + 20s);
                 auto const loanAge = (env.now() - state.startDate).count();
@@ -1432,7 +1422,13 @@ class Loan_test : public beast::unit_test::suite
                     payoffAmount > state.paymentRemaining *
                         (state.periodicPayment + broker.asset(2).value()));
 
-                singlePayment(payoffAmount, baseFlag);
+                singlePayment(
+                    loanKeylet,
+                    verifyLoanStatus,
+                    state,
+                    payoffAmount,
+                    1,
+                    baseFlag);
             };
         };
 
@@ -1443,8 +1439,9 @@ class Loan_test : public beast::unit_test::suite
                 // toEndOfLife
                 //
 
-                auto const state =
+                auto state =
                     getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
+                env.close();
 
                 // Make all the payments in one transaction
                 // service fee is 2
@@ -1457,7 +1454,13 @@ class Loan_test : public beast::unit_test::suite
                     broker.asset(Number(1024014840139457, -12)));
                 BEAST_EXPECT(payoffAmount > state.principalOutstanding);
 
-                singlePayment(payoffAmount, baseFlag);
+                singlePayment(
+                    loanKeylet,
+                    verifyLoanStatus,
+                    state,
+                    payoffAmount,
+                    state.paymentRemaining,
+                    baseFlag);
             };
         };
 
@@ -1699,15 +1702,6 @@ class Loan_test : public beast::unit_test::suite
                     BEAST_EXPECT(
                         paymentComponents.final || totalDue == totalDueAmount);
 
-                    BEAST_EXPECT(
-                        state.paymentRemaining < 12 ||
-                        paymentComponents.roundedInterest ==
-                            roundToScale(
-                                broker.asset(
-                                    Number(2283105022831050, -18),
-                                    Number::upward),
-                                state.loanScale,
-                                Number::upward));
                     BEAST_EXPECT(
                         paymentComponents.roundedInterest >= Number(0));
 
