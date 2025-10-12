@@ -1369,7 +1369,7 @@ class Loan_test : public beast::unit_test::suite
                 ter(tecNO_PERMISSION));
         };
 
-        auto immediatePayoff = [&](std::uint32_t baseFlag) {
+        auto fullPayment = [&](std::uint32_t baseFlag) {
             return [&, baseFlag](
                        Keylet const& loanKeylet,
                        VerifyLoanStatus const& verifyLoanStatus) {
@@ -1432,7 +1432,7 @@ class Loan_test : public beast::unit_test::suite
             };
         };
 
-        auto multiplePayoff = [&](std::uint32_t baseFlag) {
+        auto combineAllPayments = [&](std::uint32_t baseFlag) {
             return [&, baseFlag](
                        Keylet const& loanKeylet,
                        VerifyLoanStatus const& verifyLoanStatus) {
@@ -1536,7 +1536,7 @@ class Loan_test : public beast::unit_test::suite
             broker,
             pseudoAcct,
             0,
-            immediatePayoff(0));
+            fullPayment(0));
 
         lifecycle(
             caseLabel,
@@ -1550,11 +1550,11 @@ class Loan_test : public beast::unit_test::suite
             broker,
             pseudoAcct,
             tfLoanOverpayment,
-            immediatePayoff(lsfLoanOverpayment));
+            fullPayment(lsfLoanOverpayment));
 
         lifecycle(
             caseLabel,
-            "Loan overpayment prohibited - Make multiple payments",
+            "Loan overpayment prohibited - Combine all payments",
             env,
             loanAmount,
             interestExponent,
@@ -1564,11 +1564,11 @@ class Loan_test : public beast::unit_test::suite
             broker,
             pseudoAcct,
             0,
-            multiplePayoff(0));
+            combineAllPayments(0));
 
         lifecycle(
             caseLabel,
-            "Loan overpayment allowed - Make multiple payments",
+            "Loan overpayment allowed - Combine all payments",
             env,
             loanAmount,
             interestExponent,
@@ -1578,7 +1578,7 @@ class Loan_test : public beast::unit_test::suite
             broker,
             pseudoAcct,
             tfLoanOverpayment,
-            multiplePayoff(lsfLoanOverpayment));
+            combineAllPayments(lsfLoanOverpayment));
 
         lifecycle(
             caseLabel,
@@ -1775,20 +1775,21 @@ class Loan_test : public beast::unit_test::suite
                     if (paymentComponents.final)
                     {
                         state.paymentRemaining = 0;
+                        state.interestOwed = 0;
                     }
                     else
                     {
                         state.nextPaymentDate += state.paymentInterval;
+                        state.interestOwed -= valueMinusFee(
+                            broker.asset.raw(),
+                            paymentComponents.roundedInterest,
+                            managementFeeRateParameter,
+                            state.loanScale);
                     }
                     state.principalOutstanding -=
                         paymentComponents.roundedPrincipal;
                     state.totalValue -= paymentComponents.roundedPrincipal +
                         paymentComponents.roundedInterest;
-                    state.interestOwed -= valueMinusFee(
-                        broker.asset.raw(),
-                        paymentComponents.roundedInterest,
-                        managementFeeRateParameter,
-                        state.loanScale);
 
                     verifyLoanStatus(state);
                 }
@@ -2214,38 +2215,28 @@ class Loan_test : public beast::unit_test::suite
         createJson["OverpaymentInterestRate"] = 1360;
         createJson["PaymentInterval"] = 727;
 
-        Number const actualPrincipal{6};
-
         auto const brokerStateBefore =
             env.le(keylet::loanbroker(broker.brokerID));
         auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
         auto const keylet = keylet::loan(broker.brokerID, loanSequence);
 
         createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
-        env(createJson, ter(tesSUCCESS));
+        // Fails in preclaim because principal requested can't be represented as
+        // XRP
+        env(createJson, ter(tecPRECISION_LOSS));
         env.close();
 
-        if (auto const loan = env.le(keylet); BEAST_EXPECT(loan))
-        {
-            // Verify the payment decreased the principal
-            BEAST_EXPECT(loan->at(sfPaymentRemaining) == numPayments);
-            BEAST_EXPECT(loan->at(sfLoanScale) == actualPrincipal.exponent());
-            BEAST_EXPECT(loan->at(sfPrincipalOutstanding) == actualPrincipal);
-        }
+        BEAST_EXPECT(!env.le(keylet));
 
-        auto loanPayTx = env.json(
-            pay(borrower, keylet.key, STAmount{broker.asset, serviceFee + 6}));
-        env(loanPayTx, ter(tesSUCCESS));
+        Number const actualPrincipal{6};
+
+        createJson[sfPrincipalRequested] = actualPrincipal;
+        createJson.removeMember(sfSequence.jsonName);
+        createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
+        // Fails in doApply because the payment is too small to be represented
+        // as XRP.
+        env(createJson, ter(tecPRECISION_LOSS));
         env.close();
-
-        if (auto const loan = env.le(keylet); BEAST_EXPECT(loan))
-        {
-            // Verify the payment decreased the principal
-            BEAST_EXPECT(loan->at(sfPaymentRemaining) == numPayments - 1);
-            BEAST_EXPECT(loan->at(sfLoanScale) == actualPrincipal.exponent());
-            BEAST_EXPECT(
-                loan->at(sfPrincipalOutstanding) == actualPrincipal - 1);
-        }
     }
 
     void

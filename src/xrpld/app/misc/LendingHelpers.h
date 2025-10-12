@@ -225,16 +225,19 @@ computePaymentComponents(
         auto const p = roundToAsset(
             asset,
             // Compute the delta that will get the tracked principalOutstanding
-            // amount as close to the raw principal amount after the payment as
+            // amount as close to the true principal amount after the payment as
             // possible.
             principalOutstanding - (rawPrincipalOutstanding - rawPrincipal),
             scale,
             Number::downward);
 
+        // The principal part can only be 0 during intial loan validation. If it
+        // is 0, the Loan will not be created, but we don't want an assert
+        // aborting the process before we get that far.
         XRPL_ASSERT_PARTS(
-            p > 0,
+            p >= 0,
             "rippled::detail::computePaymentComponents",
-            "principal part positive");
+            "principal part not negative");
         XRPL_ASSERT_PARTS(
             p <= principalOutstanding,
             "rippled::detail::computePaymentComponents",
@@ -266,7 +269,7 @@ computePaymentComponents(
         auto const iDiff = roundedPeriodicPayment - roundedPrincipal;
 
         // Compute the delta that will get the untracked interestOutstanding
-        // amount as close as possible to the raw interest amount after the
+        // amount as close as possible to the true interest amount after the
         // payment as possible.
         auto const iSync = interestOutstanding -
             (roundToAsset(asset, rawInterestOutstanding, scale) -
@@ -691,7 +694,7 @@ template <AssetType A>
 LoanProperties
 computeLoanProperties(
     A const& asset,
-    Number const& principalOutstanding,
+    Number principalOutstanding,
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t paymentsRemaining,
@@ -723,8 +726,14 @@ computeLoanProperties(
     // over payments)
     auto const loanScale = totalValueOutstanding.exponent();
 
+    // Since we just figured out the loan scale, we haven't been able to
+    // validate that the principal fits in it, so to allow this function to
+    // succeed, round it here, and let the caller do the validation.
+    principalOutstanding = roundToAsset(
+        asset, principalOutstanding, loanScale, Number::to_nearest);
+
     auto const firstPaymentPrincipal = [&]() {
-        // Compute the unrounded parts for the first payment. Ensure that the
+        // Compute the parts for the first payment. Ensure that the
         // principal payment will actually change the principal.
         auto const paymentComponents = detail::computePaymentComponents(
             asset,
@@ -735,9 +744,9 @@ computeLoanProperties(
             periodicRate,
             paymentsRemaining);
 
-        // The rounded principal part needs to be large enough to affect the
+        // The unrounded principal part needs to be large enough to affect the
         // principal. What to do if not is left to the caller
-        return paymentComponents.roundedPrincipal;
+        return paymentComponents.rawPrincipal;
     }();
 
     auto const interestOwedToVault = valueMinusFee(
@@ -1086,6 +1095,10 @@ loanMakePayment(
             periodicRate,
             paymentRemainingProxy),
         serviceFee};
+    XRPL_ASSERT_PARTS(
+        periodic.roundedPrincipal > 0,
+        "ripple::loanMakePayment",
+        "regular payment pays principal");
 
     // -------------------------------------------------------------
     // late payment handling
@@ -1193,6 +1206,10 @@ loanMakePayment(
                 periodicRate,
                 paymentRemainingProxy),
             periodic.fee};
+        XRPL_ASSERT_PARTS(
+            nextPayment.roundedPrincipal > 0,
+            "ripple::loanMakePayment",
+            "additional payment pays principal");
         XRPL_ASSERT(
             nextPayment.rawInterest <= periodic.rawInterest,
             "ripple::loanMakePayment : decreasing interest");

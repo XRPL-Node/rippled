@@ -179,6 +179,21 @@ LoanSet::calculateBaseFee(ReadView const& view, STTx const& tx)
     return normalCost + (signerCount * baseFee);
 }
 
+std::vector<OptionaledField<STNumber>> const&
+LoanSet::getValueFields()
+{
+    static std::vector<OptionaledField<STNumber>> const valueFields{
+        ~sfPrincipalRequested,
+        ~sfLoanOriginationFee,
+        ~sfLoanServiceFee,
+        ~sfLatePaymentFee,
+        ~sfClosePaymentFee
+        // Overpayment fee is really a rate. Don't check it here.
+    };
+
+    return valueFields;
+}
+
 TER
 LoanSet::preclaim(PreclaimContext const& ctx)
 {
@@ -220,6 +235,24 @@ LoanSet::preclaim(PreclaimContext const& ctx)
         return tefBAD_LEDGER;  // LCOV_EXCL_LINE
     Asset const asset = vault->at(sfAsset);
     auto const vaultPseudo = vault->at(sfAccount);
+
+    // Check that relevant values can be represented as the vault asset type.
+    // This check is almost duplicated in doApply, but that check is done after
+    // the overall loan scale is known. This is mostly only relevant for
+    // integral (non-IOU) types
+    {
+        for (auto const& field : getValueFields())
+        {
+            if (auto const value = tx[field];
+                value && STAmount{asset, *value} != *value)
+            {
+                JLOG(ctx.j.warn()) << field.f->getName() << " (" << *value
+                                   << ") can not be represented as a(n) "
+                                   << to_string(asset) << ".";
+                return tecPRECISION_LOSS;
+            }
+        }
+    }
 
     if (auto const ter = canAddHolding(ctx.view, asset))
         return ter;
@@ -310,47 +343,86 @@ LoanSet::doApply()
         paymentTotal,
         TenthBips32{brokerSle->at(sfManagementFeeRate)});
 
+    // Check that relevant values won't lose precision. This is mostly only
+    // relevant for IOU assets.
+    {
+        for (auto const& field : getValueFields())
+        {
+            if (auto const value = tx[field];
+                value && !isRounded(vaultAsset, *value, properties.loanScale))
+            {
+                JLOG(j_.warn())
+                    << field.f->getName() << " (" << *value
+                    << ") has too much precision. Total loan value is "
+                    << properties.totalValueOutstanding << " with a scale of "
+                    << properties.loanScale;
+                return tecPRECISION_LOSS;
+            }
+        }
+    }
+
     // Guard 1: if there is no computed total interest over the life of the loan
     // for a non-zero interest rate, we cannot properly amortize the loan
     if (interestRate > TenthBips32{0} &&
         (properties.totalValueOutstanding - principalRequested) <= 0)
     {
-        // Unless this is a zero-interst loan, there must be some interest due
+        // Unless this is a zero-interest loan, there must be some interest due
         // on the loan, even if it's (measurable) dust
         JLOG(j_.warn()) << "Loan with " << interestRate
                         << "% interest has no interest due";
         return tecPRECISION_LOSS;
     }
-
-    // Guard 2: if the rounded periodic payment is large enough that the loan
-    // can't be amortized in the specified number of payments, raise an error
-    if (auto const computedPayments = roundToAsset(
-            vaultAsset,
-            properties.totalValueOutstanding /
-                roundToAsset(
-                    vaultAsset,
-                    properties.periodicPayment,
-                    properties.loanScale,
-                    Number::upward),
-            properties.loanScale,
-            Number::upward);
-        computedPayments < paymentTotal)
+    // Guard 1a: If there is any interest computed over the life of the loan,
+    // for a zero interest rate, something went sideways.
+    if (interestRate == TenthBips32{0} &&
+        (properties.totalValueOutstanding - principalRequested) > 0)
     {
-        JLOG(j_.warn()) << "Loan Periodic payment rounding will complete the "
-                           "loan in less than the specified number of payments";
-        return tecPRECISION_LOSS;
+        // LCOV_EXCL_START
+        JLOG(j_.warn()) << "Loan with 0% interest has interest due";
+        return tecINTERNAL;
+        // LCOV_EXCL_STOP
     }
 
-    // Guard 3: if the principal portion of the first periodic payment is too
+    // Guard 2: if the principal portion of the first periodic payment is too
     // small to be accurately represented with the given rounding mode, raise an
     // error
     if (properties.firstPaymentPrincipal <= 0)
     {
-        // Check that some reference principal is paid each period. Since
+        // Check that some true (unrounded) principal is paid each period. Since
         // the first payment pays the least principal, if it's good, they'll
         // all be good. Note that the outstanding principal is rounded, and
         // may not change right away.
         JLOG(j_.warn()) << "Loan is unable to pay principal.";
+        return tecPRECISION_LOSS;
+    }
+
+    // Guard 3: If the periodic payment is so small that it can't even be
+    // rounded to a representable value, then the loan can't be paid. Also,
+    // avoids dividing by 0.
+    auto const roundedPayment = roundPeriodicPayment(
+        vaultAsset, properties.periodicPayment, properties.loanScale);
+    if (roundedPayment == Number{})
+    {
+        JLOG(j_.warn()) << "Loan Periodic payment ("
+                        << properties.periodicPayment << ") rounds to 0. ";
+        return tecPRECISION_LOSS;
+    }
+
+    // Guard 4: if the rounded periodic payment is large enough that the loan
+    // can't be amortized in the specified number of payments, raise an error
+    if (auto const computedPayments = roundToAsset(
+            vaultAsset,
+            properties.totalValueOutstanding / roundedPayment,
+            properties.loanScale,
+            Number::upward);
+        computedPayments < paymentTotal)
+    {
+        JLOG(j_.warn())
+            << "Loan Periodic payment (" << properties.periodicPayment
+            << ") rounding (" << roundedPayment
+            << ") will complete the "
+               "loan in less than the specified number of payments ("
+            << computedPayments << " < " << paymentTotal << ")";
         return tecPRECISION_LOSS;
     }
 
@@ -366,30 +438,6 @@ LoanSet::doApply()
         // LCOV_EXCL_STOP
     }
 
-    // Check that relevant values won't lose precision
-    {
-        static std::map<std::string, OptionaledField<STNumber>> const
-            valueFields{
-                {"Principal Requested", ~sfPrincipalRequested},
-                {"Origination fee", ~sfLoanOriginationFee},
-                {"Service fee", ~sfLoanServiceFee},
-                {"Late Payment fee", ~sfLatePaymentFee},
-                {"Close Payment fee", ~sfClosePaymentFee}
-                // Overpayment fee is really a rate. Don't include it.
-            };
-        for (auto const& [name, field] : valueFields)
-        {
-            if (auto const value = tx[field];
-                value && !isRounded(vaultAsset, *value, properties.loanScale))
-            {
-                JLOG(j_.warn())
-                    << name << " has too much precision. Total loan value is "
-                    << properties.totalValueOutstanding << " with a scale of "
-                    << properties.loanScale;
-                return tecPRECISION_LOSS;
-            }
-        }
-    }
     auto const originationFee = tx[~sfLoanOriginationFee].value_or(Number{});
 
     auto const loanAssetsToBorrower = principalRequested - originationFee;
