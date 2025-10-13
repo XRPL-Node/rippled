@@ -487,10 +487,8 @@ escrowLockApplyHelper<Issue>(
     beast::Journal journal)
 {
     // Defensive: Issuer cannot create an escrow
-    // LCOV_EXCL_START
     if (issuer == sender)
-        return tecINTERNAL;
-    // LCOV_EXCL_STOP
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto const ter = rippleCredit(
         view,
@@ -514,10 +512,8 @@ escrowLockApplyHelper<MPTIssue>(
     beast::Journal journal)
 {
     // Defensive: Issuer cannot create an escrow
-    // LCOV_EXCL_START
     if (issuer == sender)
-        return tecINTERNAL;
-    // LCOV_EXCL_STOP
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto const ter = rippleLockEscrowMPT(view, sender, amount, journal);
     if (ter != tesSUCCESS)
@@ -556,6 +552,9 @@ EscrowCreate::doApply()
     }
     else
     {
+        // This is old code that needs to stay to support replaying old ledgers,
+        // but does not need to be covered by new tests.
+        // LCOV_EXCL_START
         if (ctx_.tx[~sfCancelAfter])
         {
             auto const cancelAfter = ctx_.tx[sfCancelAfter];
@@ -571,6 +570,7 @@ EscrowCreate::doApply()
             if (closeTime.time_since_epoch().count() >= finishAfter)
                 return tecNO_PERMISSION;
         }
+        // LCOV_EXCL_STOP
     }
 
     auto const sle = ctx_.view().peek(keylet::account(account_));
@@ -600,12 +600,12 @@ EscrowCreate::doApply()
         auto const sled =
             ctx_.view().read(keylet::account(ctx_.tx[sfDestination]));
         if (!sled)
-            return tecNO_DST;
+            return tecNO_DST;  // LCOV_EXCL_LINE
         if (((*sled)[sfFlags] & lsfRequireDestTag) &&
             !ctx_.tx[~sfDestinationTag])
             return tecDST_TAG_NEEDED;
 
-        // Obeying the lsfDissalowXRP flag was a bug.  Piggyback on
+        // Obeying the lsfDisallowXRP flag was a bug.  Piggyback on
         // featureDepositAuth to remove the bug.
         if (!ctx_.view().rules().enabled(featureDepositAuth) &&
             ((*sled)[sfFlags] & lsfDisallowXRP))
@@ -689,7 +689,9 @@ EscrowCreate::doApply()
                 },
                 amount.asset().value());
             !isTesSuccess(ret))
+        {
             return ret;  // LCOV_EXCL_LINE
+        }
     }
 
     // increment owner count
@@ -985,10 +987,8 @@ escrowUnlockApplyHelper<Issue>(
     bool const receiverIssuer = issuer == receiver;
     bool const issuerHigh = issuer > receiver;
 
-    // LCOV_EXCL_START
     if (senderIssuer)
-        return tecINTERNAL;
-    // LCOV_EXCL_STOP
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     if (receiverIssuer)
         return tesSUCCESS;
@@ -1212,6 +1212,9 @@ EscrowFinish::doApply()
     }
     else
     {
+        // This is old code that needs to stay to support replaying old ledgers,
+        // but does not need to be covered by new tests.
+        // LCOV_EXCL_START
         // Too soon?
         if ((*slep)[~sfFinishAfter] &&
             ctx_.view().info().parentCloseTime.time_since_epoch().count() <=
@@ -1229,6 +1232,7 @@ EscrowFinish::doApply()
             JLOG(j_.debug()) << "Too late?";
             return tecNO_PERMISSION;
         }
+        // LCOV_EXCL_STOP
     }
 
     AccountID const destID = (*slep)[sfDestination];
@@ -1260,6 +1264,7 @@ EscrowFinish::doApply()
         // simply re-run the check.
         if (cb && !any(flags & (SF_CF_INVALID | SF_CF_VALID)))
         {
+            // LCOV_EXCL_START
             auto const fb = ctx_.tx[~sfFulfillment];
 
             if (!fb)
@@ -1271,6 +1276,7 @@ EscrowFinish::doApply()
                 flags = SF_CF_INVALID;
 
             ctx_.app.getHashRouter().setFlags(id, flags);
+            // LCOV_EXCL_STOP
         }
 
         // If the check failed, then simply return an error
@@ -1365,8 +1371,10 @@ EscrowFinish::doApply()
         if (!ctx_.view().dirRemove(
                 keylet::ownerDir(account), page, k.key, true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -1376,8 +1384,10 @@ EscrowFinish::doApply()
         if (!ctx_.view().dirRemove(
                 keylet::ownerDir(destID), *optPage, k.key, true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -1419,8 +1429,10 @@ EscrowFinish::doApply()
             if (!ctx_.view().dirRemove(
                     keylet::ownerDir(issuer), *optPage, k.key, true))
             {
+                // LCOV_EXCL_START
                 JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
                 return tefBAD_LEDGER;  // LCOV_EXCL_LINE
+                // LCOV_EXCL_STOP
             }
         }
     }
@@ -1567,11 +1579,15 @@ EscrowCancel::doApply()
     }
     else
     {
+        // This is old code that needs to stay to support replaying old ledgers,
+        // but does not need to be covered by new tests.
+        // LCOV_EXCL_START
         // Too soon?
         if (!(*slep)[~sfCancelAfter] ||
             ctx_.view().info().parentCloseTime.time_since_epoch().count() <=
                 (*slep)[sfCancelAfter])
             return tecNO_PERMISSION;
+        // LCOV_EXCL_STOP
     }
 
     AccountID const account = (*slep)[sfAccount];
@@ -1582,8 +1598,10 @@ EscrowCancel::doApply()
         if (!ctx_.view().dirRemove(
                 keylet::ownerDir(account), page, k.key, true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -1596,8 +1614,10 @@ EscrowCancel::doApply()
                 k.key,
                 true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -1638,8 +1658,10 @@ EscrowCancel::doApply()
             if (!ctx_.view().dirRemove(
                     keylet::ownerDir(issuer), *optPage, k.key, true))
             {
+                // LCOV_EXCL_START
                 JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
-                return tefBAD_LEDGER;  // LCOV_EXCL_LINE
+                return tefBAD_LEDGER;
+                // LCOV_EXCL_STOP
             }
         }
     }
