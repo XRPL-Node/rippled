@@ -152,7 +152,7 @@ public:
     }
 
     void
-    setGasUsed(std::uint32_t const& gasUsed)
+    setGasUsed(std::uint32_t const gasUsed)
     {
         gasUsed_ = gasUsed;
     }
@@ -169,11 +169,11 @@ public:
     bool
     hasGasUsed() const
     {
-        return static_cast<bool>(gasUsed_);
+        return gasUsed_.has_value();
     }
 
     void
-    setWasmReturnCode(std::int32_t const& wasmReturnCode)
+    setWasmReturnCode(std::int32_t const wasmReturnCode)
     {
         wasmReturnCode_ = wasmReturnCode;
     }
@@ -190,7 +190,7 @@ public:
     bool
     hasWasmReturnCode() const
     {
-        return static_cast<bool>(wasmReturnCode_);
+        return wasmReturnCode_.has_value();
     }
 
 private:
