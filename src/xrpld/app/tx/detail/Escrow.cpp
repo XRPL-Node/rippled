@@ -1344,13 +1344,13 @@ EscrowFinish::doApply()
 
         if (re.has_value())
         {
+            auto reValue = re.value().result;
+            auto reCost = re.value().cost;
             JLOG(j_.debug()) << "WASM Success: " + std::to_string(reValue)
                              << ", cost: " << reCost;
 
-            auto reValue = re.value().result;
             ctx_.setWasmReturnCode(reValue);
 
-            auto reCost = re.value().cost;
             if (reCost < 0 || reCost > std::numeric_limits<uint32_t>::max())
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             ctx_.setGasUsed(static_cast<uint32_t>(reCost));
