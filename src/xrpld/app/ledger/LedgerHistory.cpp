@@ -27,8 +27,6 @@
 
 namespace ripple {
 
-// FIXME: Need to clean up ledgers by index at some point
-
 LedgerHistory::LedgerHistory(
     beast::insight::Collector::ptr const& collector,
     Application& app)
@@ -47,6 +45,7 @@ LedgerHistory::LedgerHistory(
           std::chrono::minutes{5},
           stopwatch(),
           app_.journal("TaggedCache"))
+    , mLedgersByIndex(512)
     , j_(app.journal("LedgerHistory"))
 {
 }
@@ -63,8 +62,6 @@ LedgerHistory::insert(
         ledger->stateMap().getHash().isNonZero(),
         "ripple::LedgerHistory::insert : nonzero hash");
 
-    std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-
     bool const alreadyHad = m_ledgers_by_hash.canonicalize_replace_cache(
         ledger->info().hash, ledger);
     if (validated)
@@ -76,25 +73,18 @@ LedgerHistory::insert(
 LedgerHash
 LedgerHistory::getLedgerHash(LedgerIndex index)
 {
-    std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-    if (auto it = mLedgersByIndex.find(index); it != mLedgersByIndex.end())
-        return it->second;
+    if (auto p = mLedgersByIndex.get(index))
+        return *p;
     return {};
 }
 
 std::shared_ptr<Ledger const>
 LedgerHistory::getLedgerBySeq(LedgerIndex index)
 {
+    if (auto p = mLedgersByIndex.get(index))
     {
-        std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-        auto it = mLedgersByIndex.find(index);
-
-        if (it != mLedgersByIndex.end())
-        {
-            uint256 hash = it->second;
-            sl.unlock();
-            return getLedgerByHash(hash);
-        }
+        uint256 const hash = *p;
+        return getLedgerByHash(hash);
     }
 
     std::shared_ptr<Ledger const> ret = loadByIndex(index, app_);
@@ -108,8 +98,6 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
 
     {
         // Add this ledger to the local tracking by index
-        std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-
         XRPL_ASSERT(
             ret->isImmutable(),
             "ripple::LedgerHistory::getLedgerBySeq : immutable result ledger");
@@ -458,8 +446,6 @@ LedgerHistory::builtLedger(
     XRPL_ASSERT(
         !hash.isZero(), "ripple::LedgerHistory::builtLedger : nonzero hash");
 
-    std::unique_lock sl(m_consensus_validated.peekMutex());
-
     auto entry = std::make_shared<cv_entry>();
     m_consensus_validated.canonicalize_replace_client(index, entry);
 
@@ -500,8 +486,6 @@ LedgerHistory::validatedLedger(
         !hash.isZero(),
         "ripple::LedgerHistory::validatedLedger : nonzero hash");
 
-    std::unique_lock sl(m_consensus_validated.peekMutex());
-
     auto entry = std::make_shared<cv_entry>();
     m_consensus_validated.canonicalize_replace_client(index, entry);
 
@@ -535,13 +519,13 @@ LedgerHistory::validatedLedger(
 bool
 LedgerHistory::fixIndex(LedgerIndex ledgerIndex, LedgerHash const& ledgerHash)
 {
-    std::unique_lock sl(m_ledgers_by_hash.peekMutex());
-    auto it = mLedgersByIndex.find(ledgerIndex);
-
-    if ((it != mLedgersByIndex.end()) && (it->second != ledgerHash))
+    if (auto cur = mLedgersByIndex.get(ledgerIndex))
     {
-        it->second = ledgerHash;
-        return false;
+        if (*cur != ledgerHash)
+        {
+            mLedgersByIndex.put(ledgerIndex, ledgerHash);
+            return false;
+        }
     }
     return true;
 }
@@ -556,11 +540,9 @@ LedgerHistory::clearLedgerCachePrior(LedgerIndex seq)
             m_ledgers_by_hash.del(it, false);
     }
 
-    std::unique_lock sl(m_ledgers_by_hash.peekMutex());
     JLOG(j_.debug()) << "mLedgersByIndex size before clear: "
                      << mLedgersByIndex.size();
-    auto first_keep = mLedgersByIndex.lower_bound(seq);
-    mLedgersByIndex.erase(mLedgersByIndex.begin(), first_keep);
+    mLedgersByIndex.eraseBefore(seq);
     JLOG(j_.debug()) << "mLedgersByIndex size after clear: "
                      << mLedgersByIndex.size();
 }
