@@ -79,7 +79,8 @@ jobs:
         # run. The rest of the workflow will run if this job runs AND at
         # least one of:
         # * Any of the files checked in the `changes` step were modified
-        # * The PR is NOT a draft and is labeled "Ready to merge"
+        # * The PR is NOT a draft, is labeled "Ready to merge", and is NOT
+        #   labeled "SkipCI".
         # * The workflow is running from the merge queue
         id: go
         env:
@@ -87,8 +88,9 @@ jobs:
           DRAFT: ${{ github.event.pull_request.draft }}
           READY: ${{ contains(github.event.pull_request.labels.*.name, 'Ready to merge') }}
           MERGE: ${{ github.event_name == 'merge_group' }}
+          SKIP: ${{ contains(github.event.pull_request.labels.*.name, 'SkipRunCI') }}
         run: |
-          echo "go=${{ (env.DRAFT != 'true' && env.READY == 'true') || env.FILES == 'true' || env.MERGE == 'true' }}" >> "${GITHUB_OUTPUT}"
+          echo "go=${{ (env.DRAFT != 'true' && env.READY == 'true' && env.SKIP != 'true') || env.FILES == 'true' || env.MERGE == 'true' }}" >> "${GITHUB_OUTPUT}"
           cat "${GITHUB_OUTPUT}"
     outputs:
       go: ${{ steps.go.outputs.go == 'true' }}

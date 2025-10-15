@@ -39,12 +39,12 @@ shift
 
 set -e
 
-echo "Checking workspace."
-diff=$(git status --porcelain)
-if [ -n "${diff}" ]; then
-  echo "Error: Workspace is not clean. Please commit or stash your changes."
-  exit 1
-fi
+#echo "Checking workspace."
+#diff=$(git status --porcelain)
+#if [ -n "${diff}" ]; then
+#  echo "Error: Workspace is not clean. Please commit or stash your changes."
+#  exit 1
+#fi
 
 echo "Checking out PR ${pr}."
 gh pr checkout "${pr}"
@@ -90,14 +90,9 @@ if [ "${remote}" = "origin" ]; then
   cat << EOF
 ----------------------------------------------------------------------
 This script will not push. Verify everything is correct, then force
-push to the source branch using the following commands:
+push to the source branch using the following command:
 
-gh pr edit ${pr} --add-label 'SkipRunCI'
 git push --force-with-lease origin ${source}
-
-The first command adds a label to the PR to skip running CI on the new
-commit. As we are using a merge queue, CI will be run when the PR is added to
-the queue, which is required to pass before the changes are merged.
 
 Remember to navigate back to your previous branch after pushing. You
 may also want to delete the branch after the commit has been pushed.
@@ -109,21 +104,12 @@ else
   cat << EOF
 ----------------------------------------------------------------------
 This script will not push. Verify everything is correct, then force
-push to the fork using the following commands:
+push to the fork using the following command:
 
-gh label create 'SkipRunCI' --force || true
-gh pr edit ${pr} --add-label 'SkipRunCI' || true
 git remote add ${remote} git@github.com:${remote}/rippled.git
 git fetch ${remote}
 git push --force-with-lease ${remote} ${source}
 git remote remove ${remote}
-
-The first two commands add a label to the PR to skip running CI on the new
-commit. Forks created a long time ago may not yet have the label, so it is
-created if it does not exist; if you have insufficient permissions to create or
-add the label, then the CI pipeline will run as usual. As we are using a merge
-queue, CI will be run when the PR is added to the queue, which is required to
-pass before the changes are merged.
 
 Remember to navigate back to your previous branch after pushing. You
 may also want to delete the branch after the commit has been pushed.
