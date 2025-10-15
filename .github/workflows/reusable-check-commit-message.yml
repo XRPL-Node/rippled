@@ -1,0 +1,72 @@
+# This workflow checks that the commit message follows our expected format.
+name: Check commit message
+
+# This workflow can only be triggered by other workflows.
+on: workflow_call
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-single-commit
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+      - name: Check commit message
+        env:
+          MESSAGE: |
+
+            If you are reading this, then the commit message does not match our
+            expected format. See CONTRIBUTING.md for instructions.
+
+            It is further possible that you did not run the script in
+            `bin/git/squash-commits.sh` before clicking the 'Merge when ready'
+            button in GitHub's UI.
+        run: |
+          set -o pipefail
+
+          COMMIT_MSG='${{ github.event.head_commit.message }}'
+          echo "Commit message: ${COMMIT_MSG}"
+
+          # If the commit title contains a prefix then it must be one we permit.
+          COMMIT_TITLE=$(echo "${COMMIT_MSG}" | head -n1)
+          echo "Commit title: '${COMMIT_TITLE}'"
+
+          if [[ "${COMMIT_TITLE}" =~ ^[^:]+:[^:]+ ]]; then
+            if ! [[ "${COMMIT_TITLE}" =~ ^(build|chore|docs|fix|perf|refactor|test):[^:]+ ]]; then
+                echo "Commit title prefix is not permitted."
+                echo "${MESSAGE}"
+                exit 1
+            fi
+          fi
+
+          # The commit description may not only contain a list of commits, which
+          # is what happens if a PR containing multiple commits is squashed and
+          # merged by GitHub.
+          COMMIT_DESC=$(echo "${COMMIT_MSG}" | tail -n+3)
+          echo "Commit description: '${COMMIT_DESC}'"
+
+          while IFS=$'\n' read -r LINE; do
+              echo "Processing: ${LINE}"
+              # Check for lines starting with '-' or '*' followed by a space.
+              if ! [[ "${LINE}" =~ ^[[:space:]]*[-*][[:space:]]+.* ]]; then
+                exit 0
+              fi
+              # Check if the next line is empty.
+              IFS=$'\n' read -r LINE
+              if [ -n "${LINE}" ]; then
+                exit 0
+              fi
+          done <<< "${COMMIT_DESC}"
+
+          echo "Commit description is not permitted."
+          echo "${MESSAGE}"
+          exit 1

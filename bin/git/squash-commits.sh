@@ -94,7 +94,10 @@ push to the source branch using the following command:
 
 git push --force-with-lease origin ${source}
 
-Remember to navigate back to your previous branch after pushing.
+Remember to navigate back to your previous branch after pushing. You
+may also want to delete the branch after the commit has been pushed.
+
+git branch -D ${source}
 ----------------------------------------------------------------------
 EOF
 else
@@ -108,7 +111,10 @@ git fetch ${remote}
 git push --force-with-lease ${remote} ${source}
 git remote remove ${remote}
 
-Remember to navigate back to your previous branch after pushing.
+Remember to navigate back to your previous branch after pushing. You
+may also want to delete the branch after the commit has been pushed.
+
+git branch -D ${source}
 ----------------------------------------------------------------------
 EOF
 fi

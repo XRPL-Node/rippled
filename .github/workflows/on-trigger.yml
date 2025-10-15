@@ -62,6 +62,10 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref_type == 'branch' && contains(fromJSON('["develop", "release"]'), github.ref_name) }}
     uses: ./.github/workflows/reusable-check-missing-commits.yml
 
+  check-single-commit:
+    if: ${{ github.event_name == 'merge_group' }}
+    uses: ./.github/workflows/reusable-check-commit-message.yml
+
   build-test:
     uses: ./.github/workflows/reusable-build-test.yml
     strategy:
