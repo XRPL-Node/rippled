@@ -586,7 +586,7 @@ public:
         libff::alt_bn128_pp::init_public_params();
 
         try{
-            if (p1_uncompressed_be64.size() != G1_LEN || scalar_uncompressed_be32.size() != SCALAR_LEN)
+            if (p1_uncompressed_be64.size() != G1_LENGTH || scalar_uncompressed_be32.size() != SCALAR_LENGTH)
                 return Unexpected(HostFunctionError::INVALID_PARAMS);
 
             libff::alt_bn128_G1 p1;
@@ -599,7 +599,7 @@ public:
 
             libff::alt_bn128_G1 result = s * p1;
 
-            Bytes out(G1_LEN);
+            Bytes out(G1_LENGTH);
             if (!g1_to_uncompressed_be(result, out.data()))
                 return Unexpected(HostFunctionError::INTERNAL);
             
@@ -620,7 +620,7 @@ public:
         libff::alt_bn128_pp::init_public_params();
 
         try{
-            if (p1_uncompressed_be64.size() != G1_LEN || p2_uncompressed_be64.size() != G1_LEN)
+            if (p1_uncompressed_be64.size() != G1_LENGTH || p2_uncompressed_be64.size() != G1_LENGTH)
                 return Unexpected(HostFunctionError::INVALID_PARAMS);
 
             libff::alt_bn128_G1 p1, p2;
@@ -630,7 +630,7 @@ public:
                 
             libff::alt_bn128_G1 result = p1 + p2;
 
-            Bytes out(G1_LEN);
+            Bytes out(G1_LENGTH);
             if (!g1_to_uncompressed_be(result, out.data()))
                 return Unexpected(HostFunctionError::INTERNAL);
 
@@ -651,7 +651,7 @@ public:
         libff::alt_bn128_pp::init_public_params();
 
         try{
-            if (p1_uncompressed_be64.size() != G1_LEN)
+            if (p1_uncompressed_be64.size() != G1_LENGTH)
             return Unexpected(HostFunctionError::INVALID_PARAMS);
 
             libff::alt_bn128_G1 p1;
@@ -660,7 +660,7 @@ public:
 
             libff::alt_bn128_G1 result = -p1;
 
-            Bytes out(G1_LEN);
+            Bytes out(G1_LENGTH);
             if (!g1_to_uncompressed_be(result, out.data()))
                 return Unexpected(HostFunctionError::INTERNAL);
 
@@ -685,14 +685,14 @@ public:
         libff::alt_bn128_pp::init_public_params();
         
         try{
-            if (pairs.size() % PAIR_LEN != 0)
+            if (pairs.size() % PAIR_LENGTH != 0)
                 return Unexpected(HostFunctionError::INVALID_PARAMS);
 
             libff::alt_bn128_Fq12 acc = libff::alt_bn128_Fq12::one();
-            size_t const npairs = pairs.size() / PAIR_LEN;
+            size_t const npairs = pairs.size() / PAIR_LENGTH;
 
             for (std::size_t i = 0; i < npairs; ++i) {
-                auto const* base = pairs.data() + i * PAIR_LEN;
+                auto const* base = pairs.data() + i * PAIR_LENGTH;
 
                 libff::alt_bn128_G1 P;
                 libff::alt_bn128_G2 Q;
@@ -700,7 +700,7 @@ public:
                 if (!g1_from_uncompressed_be(base + 0, P))
                     return Unexpected(HostFunctionError::DECODING);
 
-                if (!g2_from_uncompressed_be(base + G1_LEN, Q))
+                if (!g2_from_uncompressed_be(base + G1_LENGTH, Q))
                     return Unexpected(HostFunctionError::DECODING);
 
                 if (P.is_zero() || Q.is_zero())

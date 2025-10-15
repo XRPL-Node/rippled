@@ -27,19 +27,19 @@ namespace ripple {
 /**
  *  Fixed sizes for BN254 encodings and pair packing.
  *
- * - G1_LEN:  uncompressed G1 (x||y), big-endian, 32B each (64B total)
- * - G2_LEN:  uncompressed G2 (x_c1||x_c0||y_c1||y_c0), big-endian (128B)
- * - IC_LEN:  generic 64B element container (e.g., G1 coord pair)
- * - SCALAR_LEN: scalar field element in 32B big-endian
- * - PAIR_LEN: bytes for one (G1,G2) uncompressed pair
- * - GROTH16_PAIR_LEN: space for 4 pairs (common in multi-pair checks)
+ * - G1_LENGTH:  uncompressed G1 (x||y), big-endian, 32B each (64B total)
+ * - G2_LENGTH:  uncompressed G2 (x_c1||x_c0||y_c1||y_c0), big-endian (128B)
+ * - IC_LENGTH:  generic 64B element container (e.g., G1 coord pair)
+ * - SCALAR_LENGTH: scalar field element in 32B big-endian
+ * - PAIR_LENGTH: bytes for one (G1,G2) uncompressed pair
+ * - GROTH16_PAIR_LENGTH: space for 4 pairs (common in multi-pair checks)
  */
-constexpr std::size_t G1_LEN = 64;
-constexpr std::size_t G2_LEN = 128;
-constexpr std::size_t IC_LEN = 64;
-constexpr std::size_t SCALAR_LEN = 32;
-constexpr std::size_t PAIR_LEN = G1_LEN + G2_LEN;
-constexpr std::size_t GROTH16_PAIR_LEN = 4 * (G1_LEN + G2_LEN);
+constexpr std::size_t G1_LENGTH = 64;
+constexpr std::size_t G2_LENGTH = 128;
+constexpr std::size_t IC_LENGTH = 64;
+constexpr std::size_t SCALAR_LENGTH = 32;
+constexpr std::size_t PAIR_LENGTH = G1_LENGTH + G2_LENGTH;
+constexpr std::size_t GROTH16_PAIR_LENGTH = 4 * (G1_LENGTH + G2_LENGTH);
 
 /**
  * Reverse a 32-byte big-endian limb into little-endian order.

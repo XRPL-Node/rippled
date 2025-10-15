@@ -3155,95 +3155,95 @@ struct HostFuncImpl_test : public beast::unit_test::suite
         std::memcpy(par_vec_ic, vk_bytes + 448, 384);
     
         // IC[0]
-        uint8_t add_buf[IC_LEN] = {0};
-        std::memcpy(add_buf, par_vec_ic + 0, IC_LEN);
+        uint8_t add_buf[IC_LENGTH] = {0};
+        std::memcpy(add_buf, par_vec_ic + 0, IC_LENGTH);
         // Temp for mul result
-        uint8_t mul_buf[IC_LEN] = {0};
+        uint8_t mul_buf[IC_LENGTH] = {0};
         // Iterate public inputs in 32-byte chunks
-        const size_t n_inputs = sizeof(public_bytes) / SCALAR_LEN;
+        const size_t n_inputs = sizeof(public_bytes) / SCALAR_LENGTH;
 
         // Linear combination to caculate acc
         for (size_t i = 0; i < n_inputs; ++i) {
-            const uint8_t* input_bytes = public_bytes + i * SCALAR_LEN;
+            const uint8_t* input_bytes = public_bytes + i * SCALAR_LENGTH;
     
-            const size_t start = IC_LEN * (i + 1);
-            const size_t end   = start + IC_LEN;
+            const size_t start = IC_LENGTH * (i + 1);
+            const size_t end   = start + IC_LENGTH;
             if (end > sizeof(par_vec_ic)) {
                 return;
             }
             const uint8_t* ic_bytes = par_vec_ic + start;
     
             auto mulRes = hfs.bn254MulHelper(
-                Slice{ic_bytes, IC_LEN},
-                Slice{input_bytes, SCALAR_LEN});
+                Slice{ic_bytes, IC_LENGTH},
+                Slice{input_bytes, SCALAR_LENGTH});
             BEAST_EXPECT(mulRes.has_value());
-            std::memcpy(mul_buf, mulRes->data(), IC_LEN);
+            std::memcpy(mul_buf, mulRes->data(), IC_LENGTH);
     
             auto addRes = hfs.bn254AddHelper(
-                Slice{add_buf, IC_LEN},
-                Slice{mul_buf, IC_LEN});
+                Slice{add_buf, IC_LENGTH},
+                Slice{mul_buf, IC_LENGTH});
             BEAST_EXPECT(addRes.has_value());
-            std::memcpy(add_buf, addRes->data(), IC_LEN);
+            std::memcpy(add_buf, addRes->data(), IC_LENGTH);
         }
         const uint8_t* vk_x_bytes = add_buf;
 
         // Split proof into (a, b, c) 
         const uint8_t* proof_a_bytes = proof_bytes;
-        const uint8_t* proof_b_bytes = proof_bytes + G1_LEN;
-        const uint8_t* proof_c_bytes = proof_bytes + G1_LEN + G2_LEN;
+        const uint8_t* proof_b_bytes = proof_bytes + G1_LENGTH;
+        const uint8_t* proof_c_bytes = proof_bytes + G1_LENGTH + G2_LENGTH;
 
         // Negate proof.a 
-        uint8_t proof_a_buf[G1_LEN];
-        std::memcpy(proof_a_buf, proof_a_bytes, G1_LEN);
-        uint8_t neg_proof_a_bytes[G1_LEN] = {0};
+        uint8_t proof_a_buf[G1_LENGTH];
+        std::memcpy(proof_a_buf, proof_a_bytes, G1_LENGTH);
+        uint8_t neg_proof_a_bytes[G1_LENGTH] = {0};
         {
-            auto negRes = hfs.bn254NegHelper(Slice{proof_a_buf, G1_LEN});
+            auto negRes = hfs.bn254NegHelper(Slice{proof_a_buf, G1_LENGTH});
             BEAST_EXPECT(negRes.has_value());
-            std::memcpy(neg_proof_a_bytes, negRes->data(), G1_LEN);
+            std::memcpy(neg_proof_a_bytes, negRes->data(), G1_LENGTH);
         }
 
-        uint8_t alpha_bytes[G1_LEN];
-        uint8_t beta_bytes[G2_LEN];
-        uint8_t gamma_bytes[G2_LEN];
-        uint8_t delta_bytes[G2_LEN];
+        uint8_t alpha_bytes[G1_LENGTH];
+        uint8_t beta_bytes[G2_LENGTH];
+        uint8_t gamma_bytes[G2_LENGTH];
+        uint8_t delta_bytes[G2_LENGTH];
 
         // Extract alpha, beta, gamma, delta 
-        std::memcpy(alpha_bytes, vk_bytes, G1_LEN);
-        std::memcpy(beta_bytes,  vk_bytes + G1_LEN, G2_LEN);
-        std::memcpy(gamma_bytes, vk_bytes + G1_LEN + G2_LEN,  G2_LEN);
-        std::memcpy(delta_bytes, vk_bytes + G1_LEN + 2 * G2_LEN, G2_LEN);
+        std::memcpy(alpha_bytes, vk_bytes, G1_LENGTH);
+        std::memcpy(beta_bytes,  vk_bytes + G1_LENGTH, G2_LENGTH);
+        std::memcpy(gamma_bytes, vk_bytes + G1_LENGTH + G2_LENGTH,  G2_LENGTH);
+        std::memcpy(delta_bytes, vk_bytes + G1_LENGTH + 2 * G2_LENGTH, G2_LENGTH);
 
         // Prepare input for pairing check
         // input_pairs = [(−a, b), (alpha, beta), (vk_x, gamma), (c, delta)]
-        uint8_t input_pairs[GROTH16_PAIR_LEN];
+        uint8_t input_pairs[GROTH16_PAIR_LENGTH];
         size_t offset = 0;
 
         // 1. (-a, b)
-        std::memcpy(input_pairs + offset, neg_proof_a_bytes, G1_LEN);
-        offset += G1_LEN;
-        std::memcpy(input_pairs + offset, proof_b_bytes, G2_LEN);
-        offset += G2_LEN;
+        std::memcpy(input_pairs + offset, neg_proof_a_bytes, G1_LENGTH);
+        offset += G1_LENGTH;
+        std::memcpy(input_pairs + offset, proof_b_bytes, G2_LENGTH);
+        offset += G2_LENGTH;
 
         // 2. (alpha, beta)
-        std::memcpy(input_pairs + offset, alpha_bytes, G1_LEN);
-        offset += G1_LEN;
-        std::memcpy(input_pairs + offset, beta_bytes, G2_LEN);
-        offset += G2_LEN;
+        std::memcpy(input_pairs + offset, alpha_bytes, G1_LENGTH);
+        offset += G1_LENGTH;
+        std::memcpy(input_pairs + offset, beta_bytes, G2_LENGTH);
+        offset += G2_LENGTH;
 
         // 3. (vk_x, gamma)
-        std::memcpy(input_pairs + offset, vk_x_bytes, G1_LEN);
-        offset += G1_LEN;
-        std::memcpy(input_pairs + offset, gamma_bytes, G2_LEN);
-        offset += G2_LEN;
+        std::memcpy(input_pairs + offset, vk_x_bytes, G1_LENGTH);
+        offset += G1_LENGTH;
+        std::memcpy(input_pairs + offset, gamma_bytes, G2_LENGTH);
+        offset += G2_LENGTH;
 
         // 4. (c, delta)
-        std::memcpy(input_pairs + offset, proof_c_bytes, G1_LEN);
-        offset += G1_LEN;
-        std::memcpy(input_pairs + offset, delta_bytes, G2_LEN);
+        std::memcpy(input_pairs + offset, proof_c_bytes, G1_LENGTH);
+        offset += G1_LENGTH;
+        std::memcpy(input_pairs + offset, delta_bytes, G2_LENGTH);
 
         size_t num = 1;
         for (size_t i = 0; i < num; ++i) {
-            auto result = hfs.bn254PairingHelper(Slice{input_pairs, GROTH16_PAIR_LEN});
+            auto result = hfs.bn254PairingHelper(Slice{input_pairs, GROTH16_PAIR_LENGTH});
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == 1);
         }
 
