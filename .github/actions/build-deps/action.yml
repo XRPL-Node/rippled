@@ -5,9 +5,9 @@ description: "Install Conan dependencies, optionally forcing a rebuild of all de
 # https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax#inputs.
 inputs:
   verbosity:
-    description: 'The build verbosity.'
+    description: "The build verbosity."
     required: false
-    default: 'verbose'
+    default: "verbose"
   build_dir:
     description: "The directory where to build."
     required: true
