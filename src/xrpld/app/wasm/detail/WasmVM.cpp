@@ -105,6 +105,11 @@ setCommonHostFunctions(HostFunctions* hfs, std::vector<WasmImportFunc>& i)
     WASM_IMPORT_FUNC2(i, floatRoot, "float_root", hfs,                                                       5'500);
     WASM_IMPORT_FUNC2(i, floatPower, "float_pow", hfs,                                                       5'500);
     WASM_IMPORT_FUNC2(i, floatLog, "float_log", hfs,                                                        12'000);
+
+    WASM_IMPORT_FUNC2(i, bn254AddHelper, "bn254_add_helper", hfs,                                              500);
+    WASM_IMPORT_FUNC2(i, bn254MulHelper, "bn254_mul_helper", hfs,                                             6000);
+    WASM_IMPORT_FUNC2(i, bn254NegHelper, "bn254_neg_helper", hfs,                                              500);
+    WASM_IMPORT_FUNC2(i, bn254PairingHelper, "bn254_pairing_helper", hfs,                                    40000);
     // clang-format on
 }
 

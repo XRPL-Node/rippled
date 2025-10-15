@@ -1888,6 +1888,82 @@ floatLog_wrap(void* env, wasm_val_vec_t const* params, wasm_val_vec_t* results)
         runtime, params, results, hf->floatLog(*x, *rounding), i);
 }
 
+wasm_trap_t*
+bn254AddHelper_wrap(
+    void* env,
+    wasm_val_vec_t const* params,
+    wasm_val_vec_t* results)
+{
+    auto* hf       = reinterpret_cast<HostFunctions*>(env);
+    auto const* rt = reinterpret_cast<InstanceWrapper const*>(hf->getRT());
+    int index = 0;
+
+    auto p1 = getDataSlice(rt, params, index);
+    if (!p1)
+        return hfResult(results, p1.error());
+
+    auto p2 = getDataSlice(rt, params, index);
+    if (!p2)
+        return hfResult(results, p2.error());
+
+
+    return returnResult(rt, params, results, hf->bn254AddHelper(*p1, *p2), index);
+}
+
+wasm_trap_t*
+bn254MulHelper_wrap(void* env, wasm_val_vec_t const* params, wasm_val_vec_t* results)
+{
+    auto* hf = reinterpret_cast<HostFunctions*>(env);
+    auto const* runtime = reinterpret_cast<InstanceWrapper const*>(hf->getRT());
+    
+    int i = 0;
+
+    auto const p1 = getDataSlice(runtime, params, i);
+    if (!p1)
+        return hfResult(results, p1.error());
+    
+    auto s = getDataSlice(runtime, params, i);
+    if (!s)
+        return hfResult(results, s.error());
+
+    return returnResult(runtime, params, results, hf->bn254MulHelper(*p1, *s), i);
+}
+
+wasm_trap_t*
+bn254NegHelper_wrap(
+    void* env,
+    wasm_val_vec_t const* params,
+    wasm_val_vec_t* results)
+{
+    auto* hf       = reinterpret_cast<HostFunctions*>(env);
+    auto const* rt = reinterpret_cast<InstanceWrapper const*>(hf->getRT());
+    int index = 0;
+
+    // Read P1
+    auto p1 = getDataSlice(rt, params, index);
+    if (!p1)
+        return hfResult(results, p1.error());
+
+    return returnResult(rt, params, results, hf->bn254NegHelper(*p1), index);
+}
+
+wasm_trap_t*
+bn254PairingHelper_wrap(
+    void* env,
+    wasm_val_vec_t const* params,
+    wasm_val_vec_t* results)
+{
+    auto* hf       = reinterpret_cast<HostFunctions*>(env);
+    auto const* rt = reinterpret_cast<InstanceWrapper const*>(hf->getRT());
+    int index = 0;
+
+    auto pairs = getDataSlice(rt, params, index);
+    if (!pairs)
+        return hfResult(results, pairs.error());
+
+    return returnResult(rt, params, results, hf->bn254PairingHelper(*pairs), index);
+}
+
 // LCOV_EXCL_START
 namespace test {
 

@@ -99,6 +99,8 @@ add_subdirectory(external/secp256k1)
 add_library(secp256k1::secp256k1 ALIAS secp256k1)
 add_subdirectory(external/ed25519-donna)
 add_subdirectory(external/antithesis-sdk)
+add_subdirectory(external/libff)
+add_library(libff::ff ALIAS ff)
 find_package(gRPC REQUIRED)
 find_package(lz4 REQUIRED)
 # Target names with :: are not allowed in a generator expression.
@@ -122,6 +124,95 @@ find_package(date REQUIRED)
 find_package(xxHash REQUIRED)
 find_package(wamr REQUIRED)
 
+# Silence noisy warnings just inside libff
+# Treat vendored headers as SYSTEM so their warnings don't bubble up.
+# Remove it if printing warnings is desired
+target_include_directories(ff SYSTEM PRIVATE
+  ${CMAKE_SOURCE_DIR}/external/libff/src
+  ${CMAKE_SOURCE_DIR}/external/libff/depends/xbyak/xbyak
+  ${CMAKE_SOURCE_DIR}/external/libff/depends/ate-pairing/include
+)
+
+# Suppress GCC array-bounds false positives (and related) only for libff.
+# Remove it if printing warnings is desired
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_compile_options(ff PRIVATE
+    -Wno-array-bounds
+    -Wno-stringop-overflow
+    -fno-strict-aliasing
+  )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(ff PRIVATE
+    -Wno-array-bounds
+  )
+endif()
+
+# Slience redundant constexpr data member if using C++17
+# Remove it if printing warnings is desired
+set(LIBFF_GF_SOURCES
+  ${PROJECT_SOURCE_DIR}/external/libff/libff/algebra/fields/binary/gf32.cpp
+  ${PROJECT_SOURCE_DIR}/external/libff/libff/algebra/fields/binary/gf64.cpp
+  ${PROJECT_SOURCE_DIR}/external/libff/libff/algebra/fields/binary/gf128.cpp
+  ${PROJECT_SOURCE_DIR}/external/libff/libff/algebra/fields/binary/gf192.cpp
+  ${PROJECT_SOURCE_DIR}/external/libff/libff/algebra/fields/binary/gf256.cpp
+)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set_source_files_properties(${LIBFF_GF_SOURCES}
+    PROPERTIES COMPILE_OPTIONS "-Wno-deprecated;-Wno-redundant-decls")
+endif()
+
+# --- Try config-mode first (works if someone provides GMPConfig.cmake) ---
+find_package(GMP CONFIG QUIET)
+
+# --- If no config package, synthesize imported targets with find_* and pkg-config ---
+if (NOT TARGET GMP::gmp)
+  find_package(PkgConfig QUIET)
+  if (PkgConfig_FOUND)
+    pkg_check_modules(PC_GMP   QUIET gmp)
+    pkg_check_modules(PC_GMPXX QUIET gmpxx)
+  endif()
+
+  # headers
+  find_path(GMP_INCLUDE_DIR
+    NAMES gmp.h
+    HINTS ${PC_GMP_INCLUDE_DIRS} ${PC_GMPXX_INCLUDE_DIRS}
+  )
+  # libraries
+  find_library(GMP_LIBRARY
+    NAMES gmp
+    HINTS ${PC_GMP_LIBRARY_DIRS}
+  )
+  find_library(GMPXX_LIBRARY
+    NAMES gmpxx
+    HINTS ${PC_GMPXX_LIBRARY_DIRS} ${PC_GMP_LIBRARY_DIRS}
+  )
+
+  if (GMP_INCLUDE_DIR AND GMP_LIBRARY)
+    add_library(GMP::gmp UNKNOWN IMPORTED)
+    set_target_properties(GMP::gmp PROPERTIES
+      IMPORTED_LOCATION "${GMP_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}"
+    )
+  endif()
+
+  if (GMP_INCLUDE_DIR AND GMPXX_LIBRARY)
+    add_library(GMP::gmpxx UNKNOWN IMPORTED)
+    set_target_properties(GMP::gmpxx PROPERTIES
+      IMPORTED_LOCATION "${GMPXX_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GMP_INCLUDE_DIR}"
+      INTERFACE_LINK_LIBRARIES GMP::gmp
+    )
+  endif()
+endif()
+
+# Final guard
+if (NOT TARGET GMP::gmp OR NOT TARGET GMP::gmpxx)
+  message(FATAL_ERROR "GMP/GMPXX not found. Install libgmp-dev (and gmpxx) or set CMAKE_PREFIX_PATH/GMP_DIR.")
+endif()
+
+# Link them transitively through ripple_libs
+target_link_libraries(ripple_libs INTERFACE GMP::gmp GMP::gmpxx)
+
 target_link_libraries(ripple_libs INTERFACE
   ed25519::ed25519
   lz4::lz4
@@ -130,6 +221,7 @@ target_link_libraries(ripple_libs INTERFACE
   secp256k1::secp256k1
   soci::soci
   SQLite::SQLite3
+  libff::ff
 )
 
 # Work around changes to Conan recipe for now.

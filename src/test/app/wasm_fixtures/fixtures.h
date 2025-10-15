@@ -37,6 +37,8 @@ extern std::string const sha512PureWasmHex;
 
 extern std::string const zkProofWasmHex;
 
+extern std::string const groth16WasmHex;
+
 extern std::string const sp1WasmHex;
 
 extern std::string const hfPerfTest;

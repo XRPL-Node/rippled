@@ -20,6 +20,8 @@
 #include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/tx/detail/NFTokenUtils.h>
 #include <xrpld/app/wasm/HostFuncImpl.h>
+#include <xrpld/app/wasm/BN254_codec.h>
+#include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
 
 #include <xrpl/protocol/STBitString.h>
 #include <xrpl/protocol/digest.h>
@@ -891,6 +893,153 @@ Expected<Bytes, HostFunctionError>
 WasmHostFunctionsImpl::floatLog(Slice const& x, int32_t mode)
 {
     return floatLogImpl(x, mode);
+}
+
+inline void ensure_bn254_init()
+{
+    static std::once_flag once;
+    std::call_once(once, [] {
+        libff::alt_bn128_pp::init_public_params();
+        // Optional: libff::inhibit_profiling_info = true;
+    });
+}
+
+Expected<Bytes, HostFunctionError>
+WasmHostFunctionsImpl::bn254AddHelper(
+    Slice const& p1_uncompressed_be64,
+    Slice const& p2_uncompressed_be64)
+{
+    ensure_bn254_init();
+
+    try{
+        if (p1_uncompressed_be64.size() != G1_LEN || p2_uncompressed_be64.size() != G1_LEN)
+            return Unexpected(HostFunctionError::INVALID_PARAMS);
+
+        libff::alt_bn128_G1 p1, p2;
+        if (!g1_from_uncompressed_be(p1_uncompressed_be64.data(), p1) ||
+            !g1_from_uncompressed_be(p2_uncompressed_be64.data(), p2))
+            return Unexpected(HostFunctionError::DECODING);
+            
+        libff::alt_bn128_G1 result = p1 + p2;
+        
+        Bytes out(64);
+        if (!g1_to_uncompressed_be(result, out.data()))
+            return Unexpected(HostFunctionError::INTERNAL);
+
+        return out;
+    }
+    catch (...)
+    {
+        return Unexpected(HostFunctionError::INTERNAL);
+    }       
+}
+
+Expected<Bytes, HostFunctionError>
+WasmHostFunctionsImpl::bn254MulHelper(
+    Slice const& p1_uncompressed_be64,
+    Slice const& scalar_uncompressed_be32)
+{
+    ensure_bn254_init();
+
+    try{
+        if (p1_uncompressed_be64.size() != G1_LEN || scalar_uncompressed_be32.size() != SCALAR_LEN)
+            return Unexpected(HostFunctionError::INVALID_PARAMS);
+
+        libff::alt_bn128_G1 p1;
+        if (!g1_from_uncompressed_be(p1_uncompressed_be64.data(), p1)) 
+            return Unexpected(HostFunctionError::DECODING);
+
+        libff::bigint<libff::alt_bn128_r_limbs> s;
+        if (!be32_to_bigint_r((scalar_uncompressed_be32.data()), s))
+            return Unexpected(HostFunctionError::DECODING);
+
+        libff::alt_bn128_G1 result = s * p1;
+
+        Bytes out(G1_LEN);
+        if (!g1_to_uncompressed_be(result, out.data()))
+            return Unexpected(HostFunctionError::INTERNAL);
+
+        return out;
+    } 
+    catch (...) 
+    {
+        return Unexpected(HostFunctionError::INTERNAL);
+    }
+}
+
+Expected<Bytes, HostFunctionError>
+WasmHostFunctionsImpl::bn254NegHelper(
+    Slice const& p1_uncompressed_be64)
+{
+    ensure_bn254_init();
+
+    try{
+        if (p1_uncompressed_be64.size() != G1_LEN)
+            return Unexpected(HostFunctionError::INVALID_PARAMS);
+
+        libff::alt_bn128_G1 p1;
+        if (!g1_from_uncompressed_be(p1_uncompressed_be64.data(), p1)) 
+            return Unexpected(HostFunctionError::DECODING);
+
+        libff::alt_bn128_G1 result = -p1;
+
+        Bytes out(G1_LEN);
+        if (!g1_to_uncompressed_be(result, out.data()))
+            return Unexpected(HostFunctionError::INTERNAL);
+
+        return out;
+    } 
+    catch (...) 
+    {
+        return Unexpected(HostFunctionError::INTERNAL);
+    }
+}
+
+Expected<int32_t, HostFunctionError>
+WasmHostFunctionsImpl::bn254PairingHelper(
+    Slice const& pairs)
+{
+    // Disabe profiling for libff operations
+    libff::inhibit_profiling_info = true;
+    libff::inhibit_profiling_counters = true;
+    ensure_bn254_init();
+    
+    try{
+        if (pairs.size() % PAIR_LEN != 0)
+            return Unexpected(HostFunctionError::INVALID_PARAMS);
+
+        libff::alt_bn128_Fq12 acc = libff::alt_bn128_Fq12::one();
+        size_t const npairs = pairs.size() / PAIR_LEN;
+
+        for (std::size_t i = 0; i < npairs; ++i) {
+            auto const* base = pairs.data() + i * PAIR_LEN;
+
+            libff::alt_bn128_G1 P;
+            libff::alt_bn128_G2 Q;
+
+            if (!g1_from_uncompressed_be(base + 0, P))
+                return Unexpected(HostFunctionError::DECODING);
+
+            if (!g2_from_uncompressed_be(base + G1_LEN, Q))
+                return Unexpected(HostFunctionError::DECODING);
+
+            if (P.is_zero() || Q.is_zero())
+                continue;
+
+            auto preP = libff::alt_bn128_pp::precompute_G1(P);
+            auto preQ = libff::alt_bn128_pp::precompute_G2(Q);
+
+            acc = acc * libff::alt_bn128_pp::miller_loop(preP, preQ);
+        }
+        auto const gt = libff::alt_bn128_pp::final_exponentiation(acc);
+        bool const result = (gt == libff::alt_bn128_GT::one());
+
+        return result ? 1 : -1;
+    }
+    catch (...)
+    {
+        return Unexpected(HostFunctionError::INTERNAL);
+    }
 }
 
 class Number2 : public Number
