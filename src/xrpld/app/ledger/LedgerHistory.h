@@ -22,9 +22,9 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/core/detail/LedgerIndexMap.h>
 
 #include <xrpl/beast/insight/Collector.h>
+#include <xrpl/ledger/LedgerIndexMap.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
 
 #include <optional>
