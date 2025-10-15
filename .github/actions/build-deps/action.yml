@@ -40,4 +40,5 @@ runs:
           --settings:all build_type='${{ env.BUILD_TYPE }}' \
           --conf:all tools.build:verbosity='${{ inputs.verbosity }}' \
           --conf:all tools.compilation:verbosity='${{ inputs.verbosity }}' \
+          --conf:all tools.build:jobs=$(nproc) \
           ..
