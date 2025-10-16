@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/reusable-check-missing-commits.yml
 
   check-single-commit:
-    if: ${{ github.event_name == 'merge_group' }}
+    if: ${{ github.event_name == 'push' }}
     uses: ./.github/workflows/reusable-check-commit-message.yml
 
   build-test:

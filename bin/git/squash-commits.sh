@@ -81,7 +81,7 @@ owner=$(gh pr view --json "headRepositoryOwner" --jq '.headRepositoryOwner.login
 user=$(gh api user --jq '.login')
 echo "The PR is owned by '${owner}'. The current user is '${user}'."
 if [ "${owner}" = 'XRPLF' ] || [ "${owner}" = "${user}" ]; then
-  remote="origin"
+  remote="$(git remote -v | grep 'XRPLF/rippled.git (push)' | cut -f1)"
 else
   remote="${owner}"
 fi
