@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <mutex>
-#include <queue>
 #include <unordered_map>
 
 namespace ripple {
@@ -48,20 +47,14 @@ public:
     operator[](Key const& k)
     {
         std::lock_guard lock(mutex_);
-        auto [it, inserted] = data_.try_emplace(k);
-        if (inserted)
-            order_.push(k);
-        return it->second;
+        return data_[k];
     }
 
     Mapped&
     operator[](Key&& k)
     {
         std::lock_guard lock(mutex_);
-        auto [it, inserted] = data_.try_emplace(std::move(k));
-        if (inserted)
-            order_.push(it->first);
-        return it->second;
+        return data_[std::move(k)];
     }
 
     [[nodiscard]] Mapped*
@@ -88,8 +81,6 @@ public:
         auto [it, inserted] = data_.try_emplace(k, std::forward<Args>(args)...);
         if (!inserted)
             it->second = Mapped(std::forward<Args>(args)...);
-        else
-            order_.push(k);
         return it->second;
     }
 
@@ -139,7 +130,6 @@ public:
 
 private:
     std::unordered_map<Key, Mapped> data_;
-    std::queue<Key> order_;
     mutable std::mutex mutex_;
 };
 
