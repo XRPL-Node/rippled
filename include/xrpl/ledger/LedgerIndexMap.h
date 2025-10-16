@@ -139,7 +139,7 @@ public:
 
 private:
     std::unordered_map<Key, Mapped> data_;
-    std::queue<Key> order_;  // assumes non-decreasing inserts for O(k) purge
+    std::queue<Key> order_;
     mutable std::mutex mutex_;
 };
 

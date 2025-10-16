@@ -533,18 +533,24 @@ LedgerHistory::fixIndex(LedgerIndex ledgerIndex, LedgerHash const& ledgerHash)
 void
 LedgerHistory::clearLedgerCachePrior(LedgerIndex seq)
 {
+    std::size_t hashesCleared = 0;
     for (LedgerHash it : m_ledgers_by_hash.getKeys())
     {
         auto const ledger = getLedgerByHash(it);
         if (!ledger || ledger->info().seq < seq)
+        {
             m_ledgers_by_hash.del(it, false);
+            ++hashesCleared;
+        }
     }
+    JLOG(j_.debug()) << "LedgersByHash: cleared " << hashesCleared
+                     << " entries before seq " << seq << " (total now "
+                     << m_ledgers_by_hash.size() << ")";
 
-    JLOG(j_.debug()) << "mLedgersByIndex size before clear: "
-                     << mLedgersByIndex.size();
-    mLedgersByIndex.eraseBefore(seq);
-    JLOG(j_.debug()) << "mLedgersByIndex size after clear: "
-                     << mLedgersByIndex.size();
+    std::size_t const indexesCleared = mLedgersByIndex.eraseBefore(seq);
+    JLOG(j_.debug()) << "LedgerIndexMap: cleared " << indexesCleared
+                     << " index entries before seq " << seq << " (total now "
+                     << mLedgersByIndex.size() << ")";
 }
 
 }  // namespace ripple
