@@ -80,7 +80,7 @@ jobs:
         # least one of:
         # * Any of the files checked in the `changes` step were modified
         # * The PR is NOT a draft, is labeled "Ready to merge", and is NOT
-        #   labeled "SkipCI".
+        #   labeled "SkipRunCI".
         # * The workflow is running from the merge queue
         id: go
         env:
