@@ -44,6 +44,130 @@ loanPeriodicRate(TenthBips32 interestRate, std::uint32_t paymentInterval)
         (365 * 24 * 60 * 60);
 }
 
+Number
+calculateFullPaymentInterest(
+    Number const& rawPrincipalOutstanding,
+    Number const& periodicRate,
+    NetClock::time_point parentCloseTime,
+    std::uint32_t paymentInterval,
+    std::uint32_t prevPaymentDate,
+    std::uint32_t startDate,
+    TenthBips32 closeInterestRate)
+{
+    // If there is more than one payment remaining, see if enough was
+    // paid for a full payment
+    auto const accruedInterest = detail::loanAccruedInterest(
+        rawPrincipalOutstanding,
+        periodicRate,
+        parentCloseTime,
+        startDate,
+        prevPaymentDate,
+        paymentInterval);
+    XRPL_ASSERT(
+        accruedInterest >= 0,
+        "ripple::detail::computeFullPaymentInterest : valid accrued interest");
+
+    auto const prepaymentPenalty =
+        tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate);
+    XRPL_ASSERT(
+        prepaymentPenalty >= 0,
+        "ripple::detail::computeFullPaymentInterest : valid prepayment "
+        "interest");
+
+    return accruedInterest + prepaymentPenalty;
+}
+
+Number
+calculateFullPaymentInterest(
+    Number const& periodicPayment,
+    Number const& periodicRate,
+    std::uint32_t paymentRemaining,
+    NetClock::time_point parentCloseTime,
+    std::uint32_t paymentInterval,
+    std::uint32_t prevPaymentDate,
+    std::uint32_t startDate,
+    TenthBips32 closeInterestRate)
+{
+    Number const rawPrincipalOutstanding =
+        detail::loanPrincipalFromPeriodicPayment(
+            periodicPayment, periodicRate, paymentRemaining);
+
+    return calculateFullPaymentInterest(
+        rawPrincipalOutstanding,
+        periodicRate,
+        parentCloseTime,
+        paymentInterval,
+        prevPaymentDate,
+        startDate,
+        closeInterestRate);
+}
+
+LoanState
+calculateRawLoanState(
+    Number const& periodicPayment,
+    Number const& periodicRate,
+    std::uint32_t const paymentRemaining,
+    TenthBips16 const managementFeeRate)
+{
+    Number const rawValueOutstanding = periodicPayment * paymentRemaining;
+    Number const rawPrincipalOutstanding =
+        detail::loanPrincipalFromPeriodicPayment(
+            periodicPayment, periodicRate, paymentRemaining);
+    Number const rawInterestOutstanding =
+        rawValueOutstanding - rawPrincipalOutstanding;
+    Number const rawManagementFeeOutstanding =
+        tenthBipsOfValue(rawInterestOutstanding, managementFeeRate);
+
+    return LoanState{
+        .valueOutstanding = rawValueOutstanding,
+        .principalOutstanding = rawPrincipalOutstanding,
+        .interestOutstanding = rawInterestOutstanding,
+        .interestDue = rawInterestOutstanding - rawManagementFeeOutstanding,
+        .managementFeeDue = rawManagementFeeOutstanding};
+};
+
+LoanState
+calculateRawLoanState(
+    Number const& periodicPayment,
+    TenthBips32 interestRate,
+    std::uint32_t paymentInterval,
+    std::uint32_t const paymentRemaining,
+    TenthBips16 const managementFeeRate)
+{
+    return calculateRawLoanState(
+        periodicPayment,
+        loanPeriodicRate(interestRate, paymentInterval),
+        paymentRemaining,
+        managementFeeRate);
+}
+
+LoanState
+calculateRoundedLoanState(
+    Number const& totalValueOutstanding,
+    Number const& principalOutstanding,
+    Number const& managementFeeOutstanding)
+{
+    // This implementation is pretty trivial, but ensures the calculations are
+    // consistent everywhere, and reduces copy/paste errors.
+    Number const interestOutstanding =
+        totalValueOutstanding - principalOutstanding;
+    return {
+        .valueOutstanding = totalValueOutstanding,
+        .principalOutstanding = principalOutstanding,
+        .interestOutstanding = interestOutstanding,
+        .interestDue = interestOutstanding - managementFeeOutstanding,
+        .managementFeeDue = managementFeeOutstanding};
+}
+
+LoanState
+calculateRoundedLoanState(SLE::const_ref loan)
+{
+    return calculateRoundedLoanState(
+        loan->at(sfTotalValueOutstanding),
+        loan->at(sfPrincipalOutstanding),
+        loan->at(sfManagementFeeOutstanding));
+}
+
 namespace detail {
 
 Number
@@ -126,6 +250,17 @@ loanPrincipalFromPeriodicPayment(
      */
     return periodicPayment /
         computePaymentFactor(periodicRate, paymentsRemaining);
+}
+
+std::pair<Number, Number>
+computeInterestAndFeeParts(
+    Number const& interest,
+    TenthBips16 managementFeeRate)
+{
+    auto const fee = tenthBipsOfValue(interest, managementFeeRate);
+
+    // No error tracking needed here because this is extra
+    return std::make_pair(interest - fee, fee);
 }
 
 Number

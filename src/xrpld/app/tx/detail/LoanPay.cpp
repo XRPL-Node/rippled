@@ -91,7 +91,6 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
         return normalCost;
 
     if (auto const fullInterest = calculateFullPaymentInterest(
-            asset,
             loanSle->at(sfPeriodicPayment),
             loanPeriodicRate(
                 TenthBips32(loanSle->at(sfInterestRate)),
@@ -101,8 +100,7 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
             loanSle->at(sfPaymentInterval),
             loanSle->at(sfPreviousPaymentDate),
             loanSle->at(sfStartDate),
-            TenthBips32(loanSle->at(sfCloseInterestRate)),
-            scale);
+            TenthBips32(loanSle->at(sfCloseInterestRate)));
         amount > loanSle->at(sfPrincipalOutstanding) + fullInterest +
             loanSle->at(sfClosePaymentFee))
         return normalCost;
@@ -269,19 +267,8 @@ LoanPay::doApply()
         LoanManage::unimpairLoan(view, loanSle, vaultSle, j_);
     }
 
-    TenthBips16 managementFeeRate{brokerSle->at(sfManagementFeeRate)};
-    auto const managementFeeOutstanding = [&]() {
-        auto const m = loanSle->at(sfTotalValueOutstanding) -
-            loanSle->at(sfPrincipalOutstanding) - loanSle->at(sfInterestOwed);
-        // It shouldn't be possible for this to result in a negative number, but
-        // with overpayments, who knows?
-        if (m < 0)
-            return Number{};
-        return m;
-    }();
-
     Expected<LoanPaymentParts, TER> paymentParts =
-        loanMakePayment(asset, view, loanSle, amount, managementFeeRate, j_);
+        loanMakePayment(asset, view, loanSle, brokerSle, amount, j_);
 
     if (!paymentParts)
     {
@@ -312,11 +299,16 @@ LoanPay::doApply()
         "ripple::LoanPay::doApply",
         "valid principal paid");
     XRPL_ASSERT_PARTS(
-        paymentParts->feeToPay >= 0,
+        paymentParts->extraFeePaid >= 0,
         "ripple::LoanPay::doApply",
         "valid fee paid");
+    XRPL_ASSERT_PARTS(
+        paymentParts->managementFeePaid >= 0,
+        "ripple::LoanPay::doApply",
+        "valid management fee paid");
+
     if (paymentParts->principalPaid < 0 || paymentParts->interestPaid < 0 ||
-        paymentParts->feeToPay < 0)
+        paymentParts->extraFeePaid < 0 || paymentParts->managementFeePaid < 0)
     {
         // LCOV_EXCL_START
         JLOG(j_.fatal()) << "Loan payment computation returned invalid values.";
@@ -328,54 +320,29 @@ LoanPay::doApply()
     // LoanBroker object state changes
     view.update(brokerSle);
 
-    auto interestOwedProxy = loanSle->at(sfInterestOwed);
+    auto assetsAvailableProxy = vaultSle->at(sfAssetsAvailable);
+    // The vault may be at a different scale than the loan. Reduce rounding
+    // errors during the payment by rounding some of the values to that scale.
+    auto const vaultScale = assetsAvailableProxy->value().exponent();
 
-    auto const [managementFee, interestPaidForDebt, interestPaidExtra] = [&]() {
-        auto const interestOwed =
-            paymentParts->interestPaid - paymentParts->valueChange;
-        auto const interestPaidExtra = paymentParts->valueChange;
-
-        auto const managementFeeOwed = std::min(
-            managementFeeOutstanding,
-            roundToAsset(
-                asset,
-                tenthBipsOfValue(interestOwed, managementFeeRate),
-                loanScale));
-        auto const managementFeeExtra = roundToAsset(
-            asset,
-            tenthBipsOfValue(interestPaidExtra, managementFeeRate),
-            loanScale);
-        auto const interestForDebt = interestOwed - managementFeeOwed;
-        auto const interestExtra = interestPaidExtra - managementFeeExtra;
-        auto const owed = *interestOwedProxy;
-        if (interestForDebt > owed)
-            return std::make_tuple(
-                interestOwed - owed + managementFeeExtra, owed, interestExtra);
-        return std::make_tuple(
-            managementFeeOwed + managementFeeExtra,
-            interestForDebt,
-            interestExtra);
-    }();
-    XRPL_ASSERT_PARTS(
-        managementFee >= 0 && interestPaidForDebt >= 0 &&
-            interestPaidExtra >= 0 &&
-            (managementFee + interestPaidForDebt + interestPaidExtra ==
-             paymentParts->interestPaid) &&
-            isRounded(asset, managementFee, loanScale) &&
-            isRounded(asset, interestPaidForDebt, loanScale) &&
-            isRounded(asset, interestPaidExtra, loanScale),
-        "ripple::LoanPay::doApply",
-        "management fee computation is valid");
+    auto const totalPaidToVaultRaw =
+        paymentParts->principalPaid + paymentParts->interestPaid;
+    auto const totalPaidToVaultRounded =
+        roundToAsset(asset, totalPaidToVaultRaw, vaultScale, Number::downward);
     auto const totalPaidToVaultForDebt =
-        paymentParts->principalPaid + interestPaidForDebt;
-    auto const totalPaidToVault = totalPaidToVaultForDebt + interestPaidExtra;
+        totalPaidToVaultRaw - paymentParts->valueChange;
 
-    auto const totalPaidToBroker = paymentParts->feeToPay + managementFee;
+    auto const totalPaidToBroker =
+        paymentParts->managementFeePaid + paymentParts->extraFeePaid;
 
+    auto const totalPaid = totalPaidToVaultRaw + totalPaidToBroker;
+    auto const totalParts = paymentParts->principalPaid +
+        paymentParts->interestPaid + paymentParts->managementFeePaid +
+        paymentParts->extraFeePaid;
     XRPL_ASSERT_PARTS(
-        (totalPaidToVault + totalPaidToBroker) ==
+        (totalPaidToVaultRaw + totalPaidToBroker) ==
             (paymentParts->principalPaid + paymentParts->interestPaid +
-             paymentParts->feeToPay),
+             paymentParts->managementFeePaid + paymentParts->extraFeePaid),
         "ripple::LoanPay::doApply",
         "payments add up");
 
@@ -398,32 +365,23 @@ LoanPay::doApply()
     // Vault object state changes
     view.update(vaultSle);
 
-    // auto const available = *vaultSle->at(sfAssetsAvailable);
-    // auto const total = *vaultSle->at(sfAssetsTotal);
-    // auto const unavailable = total - available;
+    {
+        auto assetsTotalProxy = vaultSle->at(sfAssetsTotal);
 
-    vaultSle->at(sfAssetsAvailable) += totalPaidToVault;
-    vaultSle->at(sfAssetsTotal) += interestPaidExtra;
-    interestOwedProxy -= interestPaidForDebt;
-    XRPL_ASSERT_PARTS(
-        *vaultSle->at(sfAssetsAvailable) <= *vaultSle->at(sfAssetsTotal),
-        "ripple::LoanPay::doApply",
-        "assets available must not be greater than assets outstanding");
+        assetsAvailableProxy += totalPaidToVaultRounded;
+        assetsTotalProxy += paymentParts->valueChange;
 
-    // auto const available = *vaultSle->at(sfAssetsAvailable);
-    // auto const total = *vaultSle->at(sfAssetsTotal);
-    // auto const unavailable = total - available;
+        XRPL_ASSERT_PARTS(
+            *assetsAvailableProxy <= *assetsTotalProxy,
+            "ripple::LoanPay::doApply",
+            "assets available must not be greater than assets outstanding");
+    }
 
     // Move funds
     XRPL_ASSERT_PARTS(
-        totalPaidToVault + totalPaidToBroker <= amount,
+        totalPaidToVaultRounded + totalPaidToBroker <= amount,
         "ripple::LoanPay::doApply",
         "amount is sufficient");
-    XRPL_ASSERT_PARTS(
-        totalPaidToVault + totalPaidToBroker <= paymentParts->principalPaid +
-                paymentParts->interestPaid + paymentParts->feeToPay,
-        "ripple::LoanPay::doApply",
-        "payment agreement");
 
     if (!sendBrokerFeeToOwner)
     {
@@ -452,7 +410,7 @@ LoanPay::doApply()
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 #endif
 
-    if (totalPaidToVault != beast::zero)
+    if (totalPaidToVaultRounded != beast::zero)
     {
         if (auto const ter = requireAuth(
                 view, asset, vaultPseudoAccount, AuthType::StrongAuth))
@@ -484,7 +442,7 @@ LoanPay::doApply()
             view,
             account_,
             asset,
-            {{vaultPseudoAccount, totalPaidToVault},
+            {{vaultPseudoAccount, totalPaidToVaultRounded},
              {brokerPayee, totalPaidToBroker}},
             j_,
             WaiveTransferFee::Yes))

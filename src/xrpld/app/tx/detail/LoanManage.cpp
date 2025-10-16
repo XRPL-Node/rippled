@@ -133,6 +133,13 @@ LoanManage::preclaim(PreclaimContext const& ctx)
     return tesSUCCESS;
 }
 
+Number
+owedToVault(SLE::ref loanSle)
+{
+    return loanSle->at(sfTotalValueOutstanding) -
+        loanSle->at(sfManagementFeeOutstanding);
+}
+
 TER
 LoanManage::defaultLoan(
     ApplyView& view,
@@ -148,10 +155,13 @@ LoanManage::defaultLoan(
     auto brokerDebtTotalProxy = brokerSle->at(sfDebtTotal);
 
     auto principalOutstandingProxy = loanSle->at(sfPrincipalOutstanding);
-    auto interestOwedProxy = loanSle->at(sfInterestOwed);
+    auto managementFeeOutstandingProxy =
+        loanSle->at(sfManagementFeeOutstanding);
 
-    Number const totalDefaultAmount =
-        principalOutstandingProxy + interestOwedProxy;
+    auto totalValueOutstandingProxy = loanSle->at(sfTotalValueOutstanding);
+    auto paymentRemainingProxy = loanSle->at(sfPaymentRemaining);
+
+    Number const totalDefaultAmount = owedToVault(loanSle);
 
     // Apply the First-Loss Capital to the Default Amount
     TenthBips32 const coverRateMinimum{brokerSle->at(sfCoverRateMinimum)};
@@ -269,10 +279,10 @@ LoanManage::defaultLoan(
 
     // Update the Loan object:
     loanSle->setFlag(lsfLoanDefault);
-    loanSle->at(sfTotalValueOutstanding) = 0;
-    loanSle->at(sfPaymentRemaining) = 0;
+    totalValueOutstandingProxy = 0;
+    paymentRemainingProxy = 0;
     principalOutstandingProxy = 0;
-    interestOwedProxy = 0;
+    managementFeeOutstandingProxy = 0;
     loanSle->at(~sfNextPaymentDueDate) = std::nullopt;
     view.update(loanSle);
 
@@ -294,8 +304,8 @@ LoanManage::impairLoan(
     SLE::ref vaultSle,
     beast::Journal j)
 {
-    Number const lossUnrealized =
-        loanSle->at(sfPrincipalOutstanding) + loanSle->at(sfInterestOwed);
+    Number const lossUnrealized = owedToVault(loanSle);
+
     // Update the Vault object(set "paper loss")
     auto vaultLossUnrealizedProxy = vaultSle->at(sfLossUnrealized);
     vaultLossUnrealizedProxy += lossUnrealized;
@@ -333,8 +343,7 @@ LoanManage::unimpairLoan(
 {
     // Update the Vault object(clear "paper loss")
     auto vaultLossUnrealizedProxy = vaultSle->at(sfLossUnrealized);
-    Number const lossReversed =
-        loanSle->at(sfPrincipalOutstanding) + loanSle->at(sfInterestOwed);
+    Number const lossReversed = owedToVault(loanSle);
     if (vaultLossUnrealizedProxy < lossReversed)
     {
         // LCOV_EXCL_START

@@ -2486,7 +2486,7 @@ ValidLoan::finalize(
               &sfClosePaymentFee,
               &sfPrincipalOutstanding,
               &sfTotalValueOutstanding,
-              &sfInterestOwed})
+              &sfManagementFeeOutstanding})
         {
             if (after->at(*field) < 0)
             {

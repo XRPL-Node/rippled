@@ -578,10 +578,10 @@ LEDGER_ENTRY(ltLOAN, 0x0089, Loan, loan, ({
     // - PrincipalOutstanding: The rounded portion of the
     //   TotalValueOutstanding that is from the principal borrowed.
     //
-    // - InterestOwed: The rounded portion of the TotalValueOutstanding that
-    //   represents interest specifically owed to the vault. This may be less
-    //   than the interest owed by the borrower, because it excludes the
-    //   expected value of broker management fees.
+    // - ManagementFeeOutstanding: The rounded portion of the
+    //   TotalValueOutstanding that represents management fees
+    //   specifically owed to the broker based on the initial
+    //   loan parameters.
     //
     // There are additional values that can be computed from these:
     //
@@ -589,9 +589,9 @@ LEDGER_ENTRY(ltLOAN, 0x0089, Loan, loan, ({
     //   The total amount of interest still pending on the loan,
     //   independent of management fees.
     //
-    // - ManagementFeeOwed = InterestOutstanding - InterestOwed
-    //   The amount of the total interest that will be sent to the
-    //   broker as management fees.
+    // - InterestOwedToVault = InterestOutstanding - ManagementFeeOutstanding
+    //   The amount of the total interest that is owed to the vault, and
+    //   will be sent to as part of a payment.
     //
     // - TrueTotalLoanValue = PaymentRemaining * PeriodicPayment
     //   The unrounded true total value of the loan.
@@ -603,18 +603,23 @@ LEDGER_ENTRY(ltLOAN, 0x0089, Loan, loan, ({
     //      TrueTotalPrincipalOutstanding
     //   The unrounded true total interest remaining.
     //
+    // - TrueTotalManagementFeeOutstanding = TrueTotalInterestOutstanding *
+    //      LoanBroker.ManagementFeeRate
+    //   The unrounded true total fee still owed to the broker.
+    //
     // Note the the "True" values may differ significantly from the tracked
     // rounded values.
-    {sfPaymentRemaining,     soeDEFAULT},
-    {sfPeriodicPayment,      soeREQUIRED},
-    {sfPrincipalOutstanding, soeDEFAULT},
-    {sfTotalValueOutstanding, soeDEFAULT},
-    {sfInterestOwed,         soeDEFAULT},
-    // Based on the original principal borrowed, used for
+    {sfPaymentRemaining,         soeDEFAULT},
+    {sfPeriodicPayment,          soeREQUIRED},
+    {sfPrincipalOutstanding,     soeDEFAULT},
+    {sfTotalValueOutstanding,    soeDEFAULT},
+    {sfManagementFeeOutstanding, soeDEFAULT},
+    // Based on the computed total value at creation, used for
     // rounding calculated values so they are all on a
     // consistent scale - that is, they all have the same
-    // number of decimal places after the decimal point.
-    {sfLoanScale,            soeDEFAULT},
+    // number of digits after the decimal point (excluding
+    // trailing zeros).
+    {sfLoanScale,                soeDEFAULT},
 }))
 
 #undef EXPAND

@@ -341,7 +341,7 @@ LoanSet::doApply()
         interestRate,
         paymentInterval,
         paymentTotal,
-        TenthBips32{brokerSle->at(sfManagementFeeRate)});
+        TenthBips16{brokerSle->at(sfManagementFeeRate)});
 
     // Check that relevant values won't lose precision. This is mostly only
     // relevant for IOU assets.
@@ -427,7 +427,7 @@ LoanSet::doApply()
     }
 
     // Check that the other computed values are valid
-    if (properties.interestOwedToVault < 0 ||
+    if (properties.managementFeeOwedToBroker < 0 ||
         properties.totalValueOutstanding <= 0 ||
         properties.periodicPayment <= 0)
     {
@@ -438,12 +438,16 @@ LoanSet::doApply()
         // LCOV_EXCL_STOP
     }
 
+    LoanState const state = calculateRoundedLoanState(
+        properties.totalValueOutstanding,
+        principalRequested,
+        properties.managementFeeOwedToBroker);
+
     auto const originationFee = tx[~sfLoanOriginationFee].value_or(Number{});
 
     auto const loanAssetsToBorrower = principalRequested - originationFee;
 
-    auto const newDebtDelta =
-        principalRequested + properties.interestOwedToVault;
+    auto const newDebtDelta = principalRequested + state.interestDue;
     auto const newDebtTotal = brokerSle->at(sfDebtTotal) + newDebtDelta;
     if (auto const debtMaximum = brokerSle->at(sfDebtMaximum);
         debtMaximum != 0 && debtMaximum < newDebtTotal)
@@ -528,8 +532,7 @@ LoanSet::doApply()
             WaiveTransferFee::Yes))
         return ter;
 
-    // The portion of the loan interest that will go to the vault (total
-    // interest minus the management fee)
+    // Get shortcuts to the loan property values
     auto const startDate = view.info().closeTime.time_since_epoch().count();
     auto loanSequenceProxy = brokerSle->at(sfLoanSequence);
 
@@ -569,7 +572,7 @@ LoanSet::doApply()
     loan->at(sfPrincipalOutstanding) = principalRequested;
     loan->at(sfPeriodicPayment) = properties.periodicPayment;
     loan->at(sfTotalValueOutstanding) = properties.totalValueOutstanding;
-    loan->at(sfInterestOwed) = properties.interestOwedToVault;
+    loan->at(sfManagementFeeOutstanding) = properties.managementFeeOwedToBroker;
     loan->at(sfPreviousPaymentDate) = 0;
     loan->at(sfNextPaymentDueDate) = startDate + paymentInterval;
     loan->at(sfPaymentRemaining) = paymentTotal;
@@ -577,7 +580,7 @@ LoanSet::doApply()
 
     // Update the balances in the vault
     vaultSle->at(sfAssetsAvailable) -= principalRequested;
-    vaultSle->at(sfAssetsTotal) += properties.interestOwedToVault;
+    vaultSle->at(sfAssetsTotal) += state.interestDue;
     XRPL_ASSERT_PARTS(
         *vaultSle->at(sfAssetsAvailable) <= *vaultSle->at(sfAssetsTotal),
         "ripple::LoanSet::doApply",
