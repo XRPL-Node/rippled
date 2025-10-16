@@ -401,7 +401,7 @@ LoanSet::doApply()
     // avoids dividing by 0.
     auto const roundedPayment = roundPeriodicPayment(
         vaultAsset, properties.periodicPayment, properties.loanScale);
-    if (roundedPayment == Number{})
+    if (roundedPayment == beast::zero)
     {
         JLOG(j_.warn()) << "Loan Periodic payment ("
                         << properties.periodicPayment << ") rounds to 0. ";
@@ -494,7 +494,7 @@ LoanSet::doApply()
 
     // 2. Transfer originationFee, if any, from vault pseudo-account to
     // LoanBroker owner.
-    if (originationFee != Number{})
+    if (originationFee != beast::zero)
     {
         // Create the holding if it doesn't already exist (necessary for MPTs).
         // The owner may have deleted their MPT / line at some point.

@@ -452,14 +452,14 @@ LoanPay::doApply()
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 #endif
 
-    if (totalPaidToVault != Number{})
+    if (totalPaidToVault != beast::zero)
     {
         if (auto const ter = requireAuth(
                 view, asset, vaultPseudoAccount, AuthType::StrongAuth))
             return ter;
     }
 
-    if (totalPaidToBroker != Number{})
+    if (totalPaidToBroker != beast::zero)
     {
         if (brokerPayee == account_)
         {
