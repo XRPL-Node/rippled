@@ -178,7 +178,7 @@ computePaymentComponents(
     Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
         periodicPayment, periodicRate, paymentRemaining);
     Number const rawInterestOutstanding =
-        rawValueOutstanding - rawInterestOutstanding;
+        rawValueOutstanding - rawPrincipalOutstanding;
 
     /*
      * From the spec, once the periodicPayment is computed:
@@ -514,8 +514,10 @@ doOverpayment(
             "nextDueDate is unchanged");
         nextDueDateProxy = nextDueDate;
 
+        /*
         auto const totalInterestOutstandingAfter =
             totalValueOutstanding - principalOutstanding;
+        */
 
         return paymentParts;
     }
@@ -623,7 +625,6 @@ handleFullPayment(
         // If this is the last payment, it has to be a regular payment
         return Unexpected(tesSUCCESS);
 
-    Number const rawValueOutstanding = periodicPayment * paymentRemaining;
     Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
         periodicPayment, periodicRate, paymentRemaining);
 

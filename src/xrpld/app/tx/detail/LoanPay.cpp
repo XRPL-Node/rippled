@@ -162,8 +162,6 @@ LoanPay::preclaim(PreclaimContext const& ctx)
         return tefBAD_LEDGER;
         // LCOV_EXCL_STOP
     }
-    auto const brokerPseudoAccount = loanBrokerSle->at(sfAccount);
-    auto const brokerOwner = loanBrokerSle->at(sfOwner);
     auto const vaultID = loanBrokerSle->at(sfVaultID);
     auto const vaultSle = ctx.view.read(keylet::vault(vaultID));
     if (!vaultSle)

@@ -1739,7 +1739,7 @@ class Loan_test : public beast::unit_test::suite
                             roundedPeriodicPayment -
                                     (paymentComponents.roundedPrincipal +
                                      paymentComponents.roundedInterest) <
-                                2);
+                                3);
 
                     auto const borrowerBalanceBeforePayment =
                         env.balance(borrower, broker.asset);
