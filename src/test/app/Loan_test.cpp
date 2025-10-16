@@ -1733,13 +1733,13 @@ class Loan_test : public beast::unit_test::suite
                             state.periodicPayment);
                     BEAST_EXPECT(
                         paymentComponents.final ||
-                        roundedPeriodicPayment >=
-                                (paymentComponents.roundedPrincipal +
-                                 paymentComponents.roundedInterest) &&
-                            roundedPeriodicPayment -
-                                    (paymentComponents.roundedPrincipal +
-                                     paymentComponents.roundedInterest) <
-                                3);
+                        ((roundedPeriodicPayment >=
+                          (paymentComponents.roundedPrincipal +
+                           paymentComponents.roundedInterest)) &&
+                         (roundedPeriodicPayment -
+                              (paymentComponents.roundedPrincipal +
+                               paymentComponents.roundedInterest) <
+                          3)));
 
                     auto const borrowerBalanceBeforePayment =
                         env.balance(borrower, broker.asset);

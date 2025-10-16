@@ -2495,27 +2495,7 @@ ValidLoan::finalize(
                 return false;
             }
         }
-        // Must not be negative - STUInt32
-        for (auto const field :
-             {&sfOverpaymentFee,
-              &sfInterestRate,
-              &sfLateInterestRate,
-              &sfCloseInterestRate,
-              &sfOverpaymentInterestRate,
-              &sfStartDate,
-              &sfPaymentInterval,
-              &sfGracePeriod,
-              &sfPreviousPaymentDate,
-              &sfPaymentRemaining})
-        {
-            if (after->at(*field) < 0)
-            {
-                JLOG(j.fatal()) << "Invariant failed: " << field->getName()
-                                << " is negative ";
-                return false;
-            }
-        }
-        // Must be positive
+        // Must be positive - STNumber
         for (auto const field : {
                  &sfPeriodicPayment,
              })

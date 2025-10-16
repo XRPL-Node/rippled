@@ -75,7 +75,7 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
         // Let preclaim worry about the error for this
         return normalCost;
     auto const vaultSle = view.read(keylet::vault(loanSle->at(sfVaultID)));
-    if (vaultSle)
+    if (!vaultSle)
         // Let preclaim worry about the error for this
         return normalCost;
 
