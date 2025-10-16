@@ -20,6 +20,7 @@
 #ifndef RIPPLE_APP_LEDGER_INDEX_MAP_H_INCLUDED
 #define RIPPLE_APP_LEDGER_INDEX_MAP_H_INCLUDED
 
+#include <algorithm>
 #include <mutex>
 #include <queue>
 #include <unordered_map>
@@ -72,7 +73,7 @@ public:
     }
 
     [[nodiscard]] Mapped const*
-    get(LedgerIndex const& k) const
+    get(Key const& k) const
     {
         std::lock_guard lock(mutex_);
         auto it = data_.find(k);
@@ -131,16 +132,9 @@ public:
     eraseBefore(Key const& cutoff)
     {
         std::lock_guard lock(mutex_);
-        std::size_t removed = 0;
-        while (!order_.empty())
-        {
-            Key const& k = order_.front();
-            if (!(k < cutoff))
-                break;
-            removed += (data_.erase(k) != 0);
-            order_.pop();
-        }
-        return removed;
+        auto const before = data_.size();
+        std::erase_if(data_, [&](auto const& kv) { return kv.first < cutoff; });
+        return before - data_.size();
     }
 
 private:
