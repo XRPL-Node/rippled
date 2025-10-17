@@ -81,15 +81,10 @@ jobs:
         # This step determines whether the rest of the workflow should run. If
         # it runs and all jobs complete successfully, then the 'passed' job is
         # marked as 'skipped' and, because its direct dependencies ran, the PR
-        # is allowed to be merged. This workflow will run when both are true:
-        # 1. At least one of the following is true:
-        #   * Any of the files checked in the `changes` step were modified.
-        #   * The PR is NOT a draft and is labeled 'Ready to merge'.
-        # 2. The PR does NOT have the 'MergeQueueCI' label.
-        #   * This is a special case where we do not want to run the full CI
-        #     suite, because the merge queue will bring the code up to date with
-        #     the default branch, and verifies that the code builds and passes
-        #     and tests before actually merging the PR.
+        # is allowed to be merged. This workflow will run when at least one of
+        # the following is true:
+        # * Any of the files checked in the `changes` step were modified.
+        # * The PR is NOT a draft and is labeled 'Ready to merge'.
         id: go
         env:
           FILES: ${{ steps.changes.outputs.any_changed }}
