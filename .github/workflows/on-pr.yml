@@ -28,7 +28,7 @@ jobs:
   # when the PR is not a draft (which should also cover merge-group) or
   # has the 'DraftRunCI' label and does NOT have the 'SkipRunCI' label.
   should-run:
-    if: ${{ !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'DraftRunCI') || contains(github.event.pull_request.labels.*.name, 'SkipRunCI') }}
+    if: ${{ ( !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'DraftRunCI') ) && ! contains(github.event.pull_request.labels.*.name, 'SkipRunCI') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
