@@ -92,7 +92,7 @@ if [ "${remote}" = "origin" ]; then
 This script will not push. Verify everything is correct, then force
 push to the source branch using the following commands:
 
-gh pr edit ${pr} --add-label 'SkipRunCI'
+gh pr edit ${pr} --add-label 'MergeQueueCI'
 git push --force-with-lease origin ${source}
 
 The first command adds a label to the PR to skip running CI on the new
@@ -111,7 +111,7 @@ else
 This script will not push. Verify everything is correct, then force
 push to the fork using the following commands:
 
-gh pr edit ${pr} --add-label 'SkipRunCI'
+gh pr edit ${pr} --add-label 'MergeQueueCI'
 git remote add ${remote} git@github.com:${remote}/rippled.git
 git fetch ${remote}
 git push --force-with-lease ${remote} ${source}
