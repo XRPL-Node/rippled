@@ -26,7 +26,7 @@ defaults:
 jobs:
   # This job determines whether the rest of the workflow should run. It runs
   # when the PR is not a draft (which should also cover merge-group) or
-  # has the 'DraftRunCI' or 'SkipRunCI' labels.
+  # has the 'DraftRunCI' label and does NOT have the 'SkipRunCI' label.
   should-run:
     if: ${{ !github.event.pull_request.draft || contains(github.event.pull_request.labels.*.name, 'DraftRunCI') || contains(github.event.pull_request.labels.*.name, 'SkipRunCI') }}
     runs-on: ubuntu-latest
