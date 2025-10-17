@@ -1,0 +1,35 @@
+# This workflow runs all workflows to check, build and test the project on
+# various Linux flavors, as well as on MacOS and Windows, when a PR is added to
+# the merge queue.
+name: Merge Queue
+
+on:
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check-commit-message:
+    uses: ./.github/workflows/reusable-check-commit-message.yml
+
+  check-levelization:
+    uses: ./.github/workflows/reusable-check-levelization.yml
+
+  build-test:
+    uses: ./.github/workflows/reusable-build-test.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux, macos, windows]
+    with:
+      os: ${{ matrix.os }}
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
