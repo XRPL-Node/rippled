@@ -1310,7 +1310,7 @@ var searchData=
   ['testsequential_1307',['testSequential',['../classripple_1_1test_1_1AccountOffers__test.html#aed512a9d5c17cf6c8078eea3d92ec1f6',1,'ripple::test::AccountOffers_test']]],
   ['testserialization_1308',['testSerialization',['../classripple_1_1STObject__test.html#a1a0f570065d6ea439e4da9a940cb4f53',1,'ripple::STObject_test']]],
   ['testserver_1309',['testServer',['../classripple_1_1test_1_1Subscribe__test.html#ab5074b2bc864c4508ea3c3daa9be4041',1,'ripple::test::Subscribe_test']]],
-  ['testserverdefinitions_1310',['testServerDefinitions',['../classripple_1_1test_1_1ServerInfo__test.html#ac05ab619f3b6912e010ec516ff93dd8a',1,'ripple::test::ServerInfo_test']]],
+  ['testserverdefinitions_1310',['testServerDefinitions',['../classripple_1_1test_1_1ServerDefinitions__test.html#ae9becf87ac8d822c96890a6e051b9da0',1,'ripple::test::ServerDefinitions_test']]],
   ['testserverinfo_1311',['testserverinfo',['../classripple_1_1test_1_1TxQPosNegFlows__test.html#ab8db2228cc5a9840688f8c4626122e9a',1,'ripple::test::TxQPosNegFlows_test::testServerInfo()'],['../classripple_1_1test_1_1ServerInfo__test.html#ac187e7b1d3db06d4caff67a83abd97a4',1,'ripple::test::ServerInfo_test::testServerInfo()']]],
   ['testserversubscribe_1312',['testServerSubscribe',['../classripple_1_1test_1_1TxQPosNegFlows__test.html#a290aeed1bbfa0847d5b4d5f46c70f60f',1,'ripple::test::TxQPosNegFlows_test']]],
   ['testset_1313',['testSet',['../classripple_1_1test_1_1PermissionedDomains__test.html#a94e6d58ae95b292205f5e1e4d80e8d53',1,'ripple::test::PermissionedDomains_test']]],
