@@ -695,7 +695,6 @@ EscrowCreate::doApply()
     }
 
     // increment owner count
-    // TODO: determine actual reserve based on FinishFunction size
     adjustOwnerCount(ctx_.view(), sle, reserveToAdd, ctx_.journal);
     ctx_.view().update(sle);
     return tesSUCCESS;
@@ -1346,11 +1345,16 @@ EscrowFinish::doApply()
         if (re.has_value())
         {
             auto reValue = re.value().result;
-            ctx_.setWasmReturnCode(reValue);
-            // TODO: better error handling for this conversion
-            ctx_.setGasUsed(static_cast<uint32_t>(re.value().cost));
+            auto reCost = re.value().cost;
             JLOG(j_.debug()) << "WASM Success: " + std::to_string(reValue)
-                             << ", cost: " << re.value().cost;
+                             << ", cost: " << reCost;
+
+            ctx_.setWasmReturnCode(reValue);
+
+            if (reCost < 0 || reCost > std::numeric_limits<uint32_t>::max())
+                return tecINTERNAL;  // LCOV_EXCL_LINE
+            ctx_.setGasUsed(static_cast<uint32_t>(reCost));
+
             if (reValue <= 0)
             {
                 return tecWASM_REJECTED;
