@@ -181,11 +181,6 @@ if(xrpld)
     xrpl.libxrpl
   )
   exclude_if_included(rippled)
-  # define a macro for tests that might need to
-  # be exluded or run differently in CI environment
-  if(is_ci)
-    target_compile_definitions(rippled PRIVATE RIPPLED_RUNNING_IN_CI)
-  endif ()
 
   if(voidstar)
     target_compile_options(rippled

@@ -43,7 +43,7 @@ else ()
   set (is_linux FALSE)
 endif ()
 
-if ("$ENV{CI}" STREQUAL "true" OR "$ENV{CONTINUOUS_INTEGRATION}" STREQUAL "true")
+if (DEFINED $ENV{GITHUB_ACTIONS})
   set (is_ci TRUE)
 else ()
   set (is_ci FALSE)
