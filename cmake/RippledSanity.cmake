@@ -43,7 +43,8 @@ else ()
   set (is_linux FALSE)
 endif ()
 
-if (DEFINED $ENV{GITHUB_ACTIONS})
+# The CI environment variable is set by GitHub Actions.
+if ("$ENV{CI}" STREQUAL "true" OR "$ENV{CONTINUOUS_INTEGRATION}" STREQUAL "true")
   set (is_ci TRUE)
 else ()
   set (is_ci FALSE)
