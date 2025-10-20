@@ -27,10 +27,10 @@ namespace ripple {
 struct MPTAuthorizeArgs
 {
     XRPAmount const& priorBalance;
-    uint192 const& mptIssuanceID;
+    MPTID const& mptIssuanceID;
     AccountID const& account;
-    std::uint32_t flags;
-    std::optional<AccountID> holderID;
+    std::uint32_t flags{};
+    std::optional<AccountID> holderID{};
 };
 
 class MPTokenAuthorize : public Transactor
@@ -42,6 +42,9 @@ public:
     {
     }
 
+    static std::uint32_t
+    getFlagsMask(PreflightContext const& ctx);
+
     static NotTEC
     preflight(PreflightContext const& ctx);
 
@@ -49,10 +52,11 @@ public:
     preclaim(PreclaimContext const& ctx);
 
     static TER
-    authorize(
+    createMPToken(
         ApplyView& view,
-        beast::Journal journal,
-        MPTAuthorizeArgs const& args);
+        MPTID const& mptIssuanceID,
+        AccountID const& account,
+        std::uint32_t const flags);
 
     TER
     doApply() override;

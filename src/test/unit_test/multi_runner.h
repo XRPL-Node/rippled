@@ -40,7 +40,6 @@
 #include <utility>
 
 namespace ripple {
-namespace test {
 
 namespace detail {
 
@@ -152,10 +151,10 @@ class multi_runner_base
         print_results(S& s);
     };
 
-    static constexpr const char* shared_mem_name_ = "RippledUnitTestSharedMem";
+    static constexpr char const* shared_mem_name_ = "RippledUnitTestSharedMem";
     // name of the message queue a multi_runner_child will use to communicate
     // with multi_runner_parent
-    static constexpr const char* message_queue_name_ =
+    static constexpr char const* message_queue_name_ =
         "RippledUnitTestMessageQueue";
 
     // `inner_` will be created in shared memory
@@ -211,6 +210,8 @@ public:
 };
 
 }  // namespace detail
+
+namespace test {
 
 //------------------------------------------------------------------------------
 

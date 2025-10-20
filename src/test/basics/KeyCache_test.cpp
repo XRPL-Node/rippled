@@ -95,6 +95,6 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(KeyCache, common, ripple);
+BEAST_DEFINE_TESTSUITE(KeyCache, basics, ripple);
 
 }  // namespace ripple

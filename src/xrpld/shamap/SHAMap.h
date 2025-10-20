@@ -36,6 +36,7 @@
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/beast/utility/instrumentation.h>
 
+#include <set>
 #include <stack>
 #include <vector>
 
@@ -513,9 +514,9 @@ private:
     struct MissingNodes
     {
         MissingNodes() = delete;
-        MissingNodes(const MissingNodes&) = delete;
+        MissingNodes(MissingNodes const&) = delete;
         MissingNodes&
-        operator=(const MissingNodes&) = delete;
+        operator=(MissingNodes const&) = delete;
 
         // basic parameters
         int max_;

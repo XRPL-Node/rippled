@@ -17,13 +17,13 @@
 */
 //==============================================================================
 
-#include <xrpld/app/misc/CredentialHelpers.h>
 #include <xrpld/app/tx/detail/PayChan.h>
-#include <xrpld/ledger/ApplyView.h>
-#include <xrpld/ledger/View.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/chrono.h>
+#include <xrpl/ledger/ApplyView.h>
+#include <xrpl/ledger/CredentialHelpers.h>
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/PayChan.h>
@@ -126,9 +126,11 @@ closeChannel(
         auto const page = (*slep)[sfOwnerNode];
         if (!view.dirRemove(keylet::ownerDir(src), page, key, true))
         {
+            // LCOV_EXCL_START
             JLOG(j.fatal())
                 << "Could not remove paychan from src owner directory";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -139,16 +141,18 @@ closeChannel(
         auto const dst = (*slep)[sfDestination];
         if (!view.dirRemove(keylet::ownerDir(dst), *page, key, true))
         {
+            // LCOV_EXCL_START
             JLOG(j.fatal())
                 << "Could not remove paychan from dst owner directory";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
     // Transfer amount back to owner, decrement owner count
     auto const sle = view.peek(keylet::account(src));
     if (!sle)
-        return tefINTERNAL;
+        return tefINTERNAL;  // LCOV_EXCL_LINE
 
     XRPL_ASSERT(
         (*slep)[sfAmount] >= (*slep)[sfBalance],
@@ -171,15 +175,16 @@ PayChanCreate::makeTxConsequences(PreflightContext const& ctx)
     return TxConsequences{ctx.tx, ctx.tx[sfAmount].xrp()};
 }
 
+std::uint32_t
+PayChanCreate::getFlagsMask(PreflightContext const& ctx)
+{
+    // 0 means "Allow any flags"
+    return ctx.rules.enabled(fix1543) ? tfUniversalMask : 0;
+}
+
 NotTEC
 PayChanCreate::preflight(PreflightContext const& ctx)
 {
-    if (ctx.rules.enabled(fix1543) && ctx.tx.getFlags() & tfUniversalMask)
-        return temINVALID_FLAG;
-
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
-
     if (!isXRP(ctx.tx[sfAmount]) || (ctx.tx[sfAmount] <= beast::zero))
         return temBAD_AMOUNT;
 
@@ -189,7 +194,7 @@ PayChanCreate::preflight(PreflightContext const& ctx)
     if (!publicKeyType(ctx.tx[sfPublicKey]))
         return temMALFORMED;
 
-    return preflight2(ctx);
+    return tesSUCCESS;
 }
 
 TER
@@ -237,7 +242,13 @@ PayChanCreate::preclaim(PreclaimContext const& ctx)
             (flags & lsfDisallowXRP))
             return tecNO_TARGET;
 
-        if (sled->isFieldPresent(sfAMMID))
+        // Pseudo-accounts cannot receive payment channels, other than native
+        // to their underlying ledger object - implemented in their respective
+        // transaction types. Note, this is not amendment-gated because all
+        // writes to pseudo-account discriminator fields **are** amendment
+        // gated, hence the behaviour of this check will always match the
+        // currently active amendments.
+        if (isPseudoAccount(sled))
             return tecNO_PERMISSION;
     }
 
@@ -250,7 +261,14 @@ PayChanCreate::doApply()
     auto const account = ctx_.tx[sfAccount];
     auto const sle = ctx_.view().peek(keylet::account(account));
     if (!sle)
-        return tefINTERNAL;
+        return tefINTERNAL;  // LCOV_EXCL_LINE
+
+    if (ctx_.view().rules().enabled(fixPayChanCancelAfter))
+    {
+        auto const closeTime = ctx_.view().info().parentCloseTime;
+        if (ctx_.tx[~sfCancelAfter] && after(closeTime, ctx_.tx[sfCancelAfter]))
+            return tecEXPIRED;
+    }
 
     auto const dst = ctx_.tx[sfDestination];
 
@@ -259,7 +277,7 @@ PayChanCreate::doApply()
     // Note that we we use the value from the sequence or ticket as the
     // payChan sequence.  For more explanation see comments in SeqProxy.h.
     Keylet const payChanKeylet =
-        keylet::payChan(account, dst, ctx_.tx.getSeqProxy().value());
+        keylet::payChan(account, dst, ctx_.tx.getSeqValue());
     auto const slep = std::make_shared<SLE>(payChanKeylet);
 
     // Funds held in this channel
@@ -273,6 +291,10 @@ PayChanCreate::doApply()
     (*slep)[~sfCancelAfter] = ctx_.tx[~sfCancelAfter];
     (*slep)[~sfSourceTag] = ctx_.tx[~sfSourceTag];
     (*slep)[~sfDestinationTag] = ctx_.tx[~sfDestinationTag];
+    if (ctx_.view().rules().enabled(fixIncludeKeyletFields))
+    {
+        (*slep)[sfSequence] = ctx_.tx.getSeqValue();
+    }
 
     ctx_.view().insert(slep);
 
@@ -283,7 +305,7 @@ PayChanCreate::doApply()
             payChanKeylet,
             describeOwnerDir(account));
         if (!page)
-            return tecDIR_FULL;
+            return tecDIR_FULL;  // LCOV_EXCL_LINE
         (*slep)[sfOwnerNode] = *page;
     }
 
@@ -293,7 +315,7 @@ PayChanCreate::doApply()
         auto const page = ctx_.view().dirInsert(
             keylet::ownerDir(dst), payChanKeylet, describeOwnerDir(dst));
         if (!page)
-            return tecDIR_FULL;
+            return tecDIR_FULL;  // LCOV_EXCL_LINE
         (*slep)[sfDestinationNode] = *page;
     }
 
@@ -313,19 +335,20 @@ PayChanFund::makeTxConsequences(PreflightContext const& ctx)
     return TxConsequences{ctx.tx, ctx.tx[sfAmount].xrp()};
 }
 
+std::uint32_t
+PayChanFund::getFlagsMask(PreflightContext const& ctx)
+{
+    // 0 means "Allow any flags"
+    return ctx.rules.enabled(fix1543) ? tfUniversalMask : 0;
+}
+
 NotTEC
 PayChanFund::preflight(PreflightContext const& ctx)
 {
-    if (ctx.rules.enabled(fix1543) && ctx.tx.getFlags() & tfUniversalMask)
-        return temINVALID_FLAG;
-
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
-
     if (!isXRP(ctx.tx[sfAmount]) || (ctx.tx[sfAmount] <= beast::zero))
         return temBAD_AMOUNT;
 
-    return preflight2(ctx);
+    return tesSUCCESS;
 }
 
 TER
@@ -370,7 +393,7 @@ PayChanFund::doApply()
 
     auto const sle = ctx_.view().peek(keylet::account(txAccount));
     if (!sle)
-        return tefINTERNAL;
+        return tefINTERNAL;  // LCOV_EXCL_LINE
 
     {
         // Check reserve and funds availability
@@ -403,16 +426,23 @@ PayChanFund::doApply()
 
 //------------------------------------------------------------------------------
 
+bool
+PayChanClaim::checkExtraFeatures(PreflightContext const& ctx)
+{
+    return !ctx.tx.isFieldPresent(sfCredentialIDs) ||
+        ctx.rules.enabled(featureCredentials);
+}
+
+std::uint32_t
+PayChanClaim::getFlagsMask(PreflightContext const& ctx)
+{
+    // 0 means "Allow any flags"
+    return ctx.rules.enabled(fix1543) ? tfPayChanClaimMask : 0;
+}
+
 NotTEC
 PayChanClaim::preflight(PreflightContext const& ctx)
 {
-    if (ctx.tx.isFieldPresent(sfCredentialIDs) &&
-        !ctx.rules.enabled(featureCredentials))
-        return temDISABLED;
-
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
-
     auto const bal = ctx.tx[~sfBalance];
     if (bal && (!isXRP(*bal) || *bal <= beast::zero))
         return temBAD_AMOUNT;
@@ -426,9 +456,6 @@ PayChanClaim::preflight(PreflightContext const& ctx)
 
     {
         auto const flags = ctx.tx.getFlags();
-
-        if (ctx.rules.enabled(fix1543) && (flags & tfPayChanClaimMask))
-            return temINVALID_FLAG;
 
         if ((flags & tfClose) && (flags & tfRenew))
             return temMALFORMED;
@@ -460,10 +487,11 @@ PayChanClaim::preflight(PreflightContext const& ctx)
             return temBAD_SIGNATURE;
     }
 
-    if (auto const err = credentials::checkFields(ctx); !isTesSuccess(err))
+    if (auto const err = credentials::checkFields(ctx.tx, ctx.j);
+        !isTesSuccess(err))
         return err;
 
-    return preflight2(ctx);
+    return tesSUCCESS;
 }
 
 TER
@@ -472,7 +500,8 @@ PayChanClaim::preclaim(PreclaimContext const& ctx)
     if (!ctx.view.rules().enabled(featureCredentials))
         return Transactor::preclaim(ctx);
 
-    if (auto const err = credentials::valid(ctx, ctx.tx[sfAccount]);
+    if (auto const err =
+            credentials::valid(ctx.tx, ctx.view, ctx.tx[sfAccount], ctx.j);
         !isTesSuccess(err))
         return err;
 
@@ -541,7 +570,8 @@ PayChanClaim::doApply()
 
         if (depositAuth)
         {
-            if (auto err = verifyDepositPreauth(ctx_, txAccount, dst, sled);
+            if (auto err = verifyDepositPreauth(
+                    ctx_.tx, ctx_.view(), txAccount, dst, sled, ctx_.journal);
                 !isTesSuccess(err))
                 return err;
         }

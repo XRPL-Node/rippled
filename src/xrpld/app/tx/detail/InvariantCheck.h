@@ -20,14 +20,17 @@
 #ifndef RIPPLE_APP_TX_INVARIANTCHECK_H_INCLUDED
 #define RIPPLE_APP_TX_INVARIANTCHECK_H_INCLUDED
 
+#include <xrpl/basics/Number.h>
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/protocol/MPTIssue.h>
 #include <xrpl/protocol/STLedgerEntry.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/TER.h>
 
 #include <cstdint>
 #include <tuple>
+#include <unordered_set>
 
 namespace ripple {
 
@@ -438,6 +441,8 @@ class ValidNewAccountRoot
 {
     std::uint32_t accountsCreated_ = 0;
     std::uint32_t accountSeq_ = 0;
+    bool pseudoAccount_ = false;
+    std::uint32_t flags_ = 0;
 
 public:
     void
@@ -616,6 +621,187 @@ public:
         beast::Journal const&);
 };
 
+/**
+ * @brief Invariants: Pseudo-accounts have valid and consisent properties
+ *
+ * Pseudo-accounts have certain properties, and some of those properties are
+ * unique to pseudo-accounts. Check that all pseudo-accounts are following the
+ * rules, and that only pseudo-accounts look like pseudo-accounts.
+ *
+ */
+class ValidPseudoAccounts
+{
+    std::vector<std::string> errors_;
+
+public:
+    void
+    visitEntry(
+        bool,
+        std::shared_ptr<SLE const> const&,
+        std::shared_ptr<SLE const> const&);
+
+    bool
+    finalize(
+        STTx const&,
+        TER const,
+        XRPAmount const,
+        ReadView const&,
+        beast::Journal const&);
+};
+
+class ValidPermissionedDEX
+{
+    bool regularOffers_ = false;
+    bool badHybrids_ = false;
+    hash_set<uint256> domains_;
+
+public:
+    void
+    visitEntry(
+        bool,
+        std::shared_ptr<SLE const> const&,
+        std::shared_ptr<SLE const> const&);
+
+    bool
+    finalize(
+        STTx const&,
+        TER const,
+        XRPAmount const,
+        ReadView const&,
+        beast::Journal const&);
+};
+
+class ValidAMM
+{
+    std::optional<AccountID> ammAccount_;
+    std::optional<STAmount> lptAMMBalanceAfter_;
+    std::optional<STAmount> lptAMMBalanceBefore_;
+    bool ammPoolChanged_;
+
+public:
+    enum class ZeroAllowed : bool { No = false, Yes = true };
+
+    ValidAMM() : ammPoolChanged_{false}
+    {
+    }
+    void
+    visitEntry(
+        bool,
+        std::shared_ptr<SLE const> const&,
+        std::shared_ptr<SLE const> const&);
+
+    bool
+    finalize(
+        STTx const&,
+        TER const,
+        XRPAmount const,
+        ReadView const&,
+        beast::Journal const&);
+
+private:
+    bool
+    finalizeBid(bool enforce, beast::Journal const&) const;
+    bool
+    finalizeVote(bool enforce, beast::Journal const&) const;
+    bool
+    finalizeCreate(
+        STTx const&,
+        ReadView const&,
+        bool enforce,
+        beast::Journal const&) const;
+    bool
+    finalizeDelete(bool enforce, TER res, beast::Journal const&) const;
+    bool
+    finalizeDeposit(
+        STTx const&,
+        ReadView const&,
+        bool enforce,
+        beast::Journal const&) const;
+    // Includes clawback
+    bool
+    finalizeWithdraw(
+        STTx const&,
+        ReadView const&,
+        bool enforce,
+        beast::Journal const&) const;
+    bool
+    finalizeDEX(bool enforce, beast::Journal const&) const;
+    bool
+    generalInvariant(
+        STTx const&,
+        ReadView const&,
+        ZeroAllowed zeroAllowed,
+        beast::Journal const&) const;
+};
+
+/**
+ * @brief Invariants: Vault object and MPTokenIssuance for vault shares
+ *
+ * - vault deleted and vault created is empty
+ * - vault created must be linked to pseudo-account for shares and assets
+ * - vault must have MPTokenIssuance for shares
+ * - vault without shares outstanding must have no shares
+ * - loss unrealized does not exceed the difference between assets total and
+ *   assets available
+ * - assets available do not exceed assets total
+ * - vault deposit increases assets and share issuance, and adds to:
+ *   total assets, assets available, shares outstanding
+ * - vault withdrawal and clawback reduce assets and share issuance, and
+ *   subtracts from: total assets, assets available, shares outstanding
+ * - vault set must not alter the vault assets or shares balance
+ * - no vault transaction can change loss unrealized (it's updated by loan
+ *   transactions)
+ *
+ */
+class ValidVault
+{
+    Number static constexpr zero{};
+
+    struct Vault final
+    {
+        uint256 key = beast::zero;
+        Asset asset = {};
+        AccountID pseudoId = {};
+        uint192 shareMPTID = beast::zero;
+        Number assetsTotal = 0;
+        Number assetsAvailable = 0;
+        Number assetsMaximum = 0;
+        Number lossUnrealized = 0;
+
+        Vault static make(SLE const&);
+    };
+
+    struct Shares final
+    {
+        MPTIssue share = {};
+        std::uint64_t sharesTotal = 0;
+        std::uint64_t sharesMaximum = 0;
+
+        Shares static make(SLE const&);
+    };
+
+    std::vector<Vault> afterVault_ = {};
+    std::vector<Shares> afterMPTs_ = {};
+    std::vector<Vault> beforeVault_ = {};
+    std::vector<Shares> beforeMPTs_ = {};
+    std::unordered_map<uint256, Number> deltas_ = {};
+
+public:
+    void
+    visitEntry(
+        bool,
+        std::shared_ptr<SLE const> const&,
+        std::shared_ptr<SLE const> const&);
+
+    bool
+    finalize(
+        STTx const&,
+        TER const,
+        XRPAmount const,
+        ReadView const&,
+        beast::Journal const&);
+};
+
 // additional invariant checks can be declared above and then added to this
 // tuple
 using InvariantChecks = std::tuple<
@@ -635,7 +821,11 @@ using InvariantChecks = std::tuple<
     NFTokenCountTracking,
     ValidClawback,
     ValidMPTIssuance,
-    ValidPermissionedDomain>;
+    ValidPermissionedDomain,
+    ValidPermissionedDEX,
+    ValidAMM,
+    ValidPseudoAccounts,
+    ValidVault>;
 
 /**
  * @brief get a tuple of all invariant checks

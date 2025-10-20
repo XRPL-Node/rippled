@@ -37,12 +37,14 @@
 #include <xrpl/basics/base64.h>
 #include <xrpl/basics/random.h>
 #include <xrpl/basics/safe_cast.h>
+#include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/digest.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/beast/core/ostream.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <numeric>
@@ -58,6 +60,10 @@ std::chrono::milliseconds constexpr peerHighLatency{300};
 
 /** How often we PING the peer to check for latency and sendq probe */
 std::chrono::seconds constexpr peerTimerInterval{60};
+
+/** The timeout for a shutdown timer */
+std::chrono::seconds constexpr shutdownTimerInterval{5};
+
 }  // namespace
 
 // TODO: Remove this exclusion once unit tests are added after the hotfix
@@ -83,7 +89,7 @@ PeerImp::PeerImp(
     , stream_ptr_(std::move(stream_ptr))
     , socket_(stream_ptr_->next_layer().socket())
     , stream_(*stream_ptr_)
-    , strand_(socket_.get_executor())
+    , strand_(boost::asio::make_strand(socket_.get_executor()))
     , timer_(waitable_timer{socket_.get_executor()})
     , remote_address_(slot->remote_endpoint())
     , overlay_(overlay)
@@ -112,28 +118,26 @@ PeerImp::PeerImp(
           headers_,
           FEATURE_TXRR,
           app_.config().TX_REDUCE_RELAY_ENABLE))
-    , vpReduceRelayEnabled_(peerFeatureEnabled(
-          headers_,
-          FEATURE_VPRR,
-          app_.config().VP_REDUCE_RELAY_ENABLE))
     , ledgerReplayEnabled_(peerFeatureEnabled(
           headers_,
           FEATURE_LEDGER_REPLAY,
           app_.config().LEDGER_REPLAY))
     , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
 {
-    JLOG(journal_.info()) << "compression enabled "
-                          << (compressionEnabled_ == Compressed::On)
-                          << " vp reduce-relay enabled "
-                          << vpReduceRelayEnabled_
-                          << " tx reduce-relay enabled "
-                          << txReduceRelayEnabled_ << " on " << remote_address_
-                          << " " << id_;
+    JLOG(journal_.info())
+        << "compression enabled " << (compressionEnabled_ == Compressed::On)
+        << " vp reduce-relay base squelch enabled "
+        << peerFeatureEnabled(
+               headers_,
+               FEATURE_VPRR,
+               app_.config().VP_REDUCE_RELAY_BASE_SQUELCH_ENABLE)
+        << " tx reduce-relay enabled " << txReduceRelayEnabled_ << " on "
+        << remote_address_ << " " << id_;
 }
 
 PeerImp::~PeerImp()
 {
-    const bool inCluster{cluster()};
+    bool const inCluster{cluster()};
 
     overlay_.deletePeer(id_);
     overlay_.onPeerDeactivate(id_);
@@ -216,23 +220,17 @@ PeerImp::stop()
 {
     if (!strand_.running_in_this_thread())
         return post(strand_, std::bind(&PeerImp::stop, shared_from_this()));
-    if (socket_.is_open())
-    {
-        // The rationale for using different severity levels is that
-        // outbound connections are under our control and may be logged
-        // at a higher level, but inbound connections are more numerous and
-        // uncontrolled so to prevent log flooding the severity is reduced.
-        //
-        if (inbound_)
-        {
-            JLOG(journal_.debug()) << "Stop";
-        }
-        else
-        {
-            JLOG(journal_.info()) << "Stop";
-        }
-    }
-    close();
+
+    if (!socket_.is_open())
+        return;
+
+    // The rationale for using different severity levels is that
+    // outbound connections are under our control and may be logged
+    // at a higher level, but inbound connections are more numerous and
+    // uncontrolled so to prevent log flooding the severity is reduced.
+    JLOG(journal_.debug()) << "stop: Stop";
+
+    shutdown();
 }
 
 //------------------------------------------------------------------------------
@@ -242,18 +240,31 @@ PeerImp::send(std::shared_ptr<Message> const& m)
 {
     if (!strand_.running_in_this_thread())
         return post(strand_, std::bind(&PeerImp::send, shared_from_this(), m));
-    if (gracefulClose_)
+
+    if (!socket_.is_open())
         return;
-    if (detaching_)
-        return;
+
+    // we are in progress of closing the connection
+    if (shutdown_)
+        return tryAsyncShutdown();
 
     auto validator = m->getValidatorKey();
     if (validator && !squelch_.expireSquelch(*validator))
+    {
+        overlay_.reportOutboundTraffic(
+            TrafficCount::category::squelch_suppressed,
+            static_cast<int>(m->getBuffer(compressionEnabled_).size()));
         return;
+    }
 
-    overlay_.reportTraffic(
+    // report categorized outgoing traffic
+    overlay_.reportOutboundTraffic(
         safe_cast<TrafficCount::category>(m->getCategory()),
-        false,
+        static_cast<int>(m->getBuffer(compressionEnabled_).size()));
+
+    // report total outgoing traffic
+    overlay_.reportOutboundTraffic(
+        TrafficCount::category::total,
         static_cast<int>(m->getBuffer(compressionEnabled_).size()));
 
     auto sendq_size = send_queue_.size();
@@ -278,6 +289,7 @@ PeerImp::send(std::shared_ptr<Message> const& m)
     if (sendq_size != 0)
         return;
 
+    writePending_ = true;
     boost::asio::async_write(
         stream_,
         boost::asio::buffer(
@@ -564,27 +576,21 @@ PeerImp::hasRange(std::uint32_t uMin, std::uint32_t uMax)
 //------------------------------------------------------------------------------
 
 void
-PeerImp::close()
+PeerImp::fail(std::string const& name, error_code ec)
 {
     XRPL_ASSERT(
         strand_.running_in_this_thread(),
-        "ripple::PeerImp::close : strand in this thread");
-    if (socket_.is_open())
-    {
-        detaching_ = true;  // DEPRECATED
-        error_code ec;
-        timer_.cancel(ec);
-        socket_.close(ec);
-        overlay_.incPeerDisconnect();
-        if (inbound_)
-        {
-            JLOG(journal_.debug()) << "Closed";
-        }
-        else
-        {
-            JLOG(journal_.info()) << "Closed";
-        }
-    }
+        "ripple::PeerImp::fail : strand in this thread");
+
+    if (!socket_.is_open())
+        return;
+
+    JLOG(journal_.warn()) << name << " from "
+                          << toBase58(TokenType::NodePublic, publicKey_)
+                          << " at " << remote_address_.to_string() << ": "
+                          << ec.message();
+
+    shutdown();
 }
 
 void
@@ -597,45 +603,39 @@ PeerImp::fail(std::string const& reason)
                 (void(Peer::*)(std::string const&)) & PeerImp::fail,
                 shared_from_this(),
                 reason));
-    if (journal_.active(beast::severities::kWarning) && socket_.is_open())
+
+    if (!socket_.is_open())
+        return;
+
+    // Call to name() locks, log only if the message will be outputed
+    if (journal_.active(beast::severities::kWarning))
     {
         std::string const n = name();
         JLOG(journal_.warn()) << (n.empty() ? remote_address_.to_string() : n)
                               << " failed: " << reason;
     }
-    close();
+
+    shutdown();
 }
 
 void
-PeerImp::fail(std::string const& name, error_code ec)
+PeerImp::tryAsyncShutdown()
 {
     XRPL_ASSERT(
         strand_.running_in_this_thread(),
-        "ripple::PeerImp::fail : strand in this thread");
-    if (socket_.is_open())
-    {
-        JLOG(journal_.warn())
-            << name << " from " << toBase58(TokenType::NodePublic, publicKey_)
-            << " at " << remote_address_.to_string() << ": " << ec.message();
-    }
-    close();
-}
+        "ripple::PeerImp::tryAsyncShutdown : strand in this thread");
 
-void
-PeerImp::gracefulClose()
-{
-    XRPL_ASSERT(
-        strand_.running_in_this_thread(),
-        "ripple::PeerImp::gracefulClose : strand in this thread");
-    XRPL_ASSERT(
-        socket_.is_open(), "ripple::PeerImp::gracefulClose : socket is open");
-    XRPL_ASSERT(
-        !gracefulClose_,
-        "ripple::PeerImp::gracefulClose : socket is not closing");
-    gracefulClose_ = true;
-    if (send_queue_.size() > 0)
+    if (!shutdown_ || shutdownStarted_)
         return;
-    setTimer();
+
+    if (readPending_ || writePending_)
+        return;
+
+    shutdownStarted_ = true;
+
+    setTimer(shutdownTimerInterval);
+
+    // gracefully shutdown the SSL socket, performing a shutdown handshake
     stream_.async_shutdown(bind_executor(
         strand_,
         std::bind(
@@ -643,61 +643,124 @@ PeerImp::gracefulClose()
 }
 
 void
-PeerImp::setTimer()
+PeerImp::shutdown()
 {
-    error_code ec;
-    timer_.expires_from_now(peerTimerInterval, ec);
+    XRPL_ASSERT(
+        strand_.running_in_this_thread(),
+        "ripple::PeerImp::shutdown: strand in this thread");
 
+    if (!socket_.is_open() || shutdown_)
+        return;
+
+    shutdown_ = true;
+
+    boost::beast::get_lowest_layer(stream_).cancel();
+
+    tryAsyncShutdown();
+}
+
+void
+PeerImp::onShutdown(error_code ec)
+{
+    cancelTimer();
     if (ec)
     {
-        JLOG(journal_.error()) << "setTimer: " << ec.message();
-        return;
+        // - eof: the stream was cleanly closed
+        // - operation_aborted: an expired timer (slow shutdown)
+        // - stream_truncated: the tcp connection closed (no handshake) it could
+        // occur if a peer does not perform a graceful disconnect
+        // - broken_pipe: the peer is gone
+        bool shouldLog =
+            (ec != boost::asio::error::eof &&
+             ec != boost::asio::error::operation_aborted &&
+             ec.message().find("application data after close notify") ==
+                 std::string::npos);
+
+        if (shouldLog)
+        {
+            JLOG(journal_.debug()) << "onShutdown: " << ec.message();
+        }
     }
+
+    close();
+}
+
+void
+PeerImp::close()
+{
+    XRPL_ASSERT(
+        strand_.running_in_this_thread(),
+        "ripple::PeerImp::close : strand in this thread");
+
+    if (!socket_.is_open())
+        return;
+
+    cancelTimer();
+
+    error_code ec;
+    socket_.close(ec);
+
+    overlay_.incPeerDisconnect();
+
+    // The rationale for using different severity levels is that
+    // outbound connections are under our control and may be logged
+    // at a higher level, but inbound connections are more numerous and
+    // uncontrolled so to prevent log flooding the severity is reduced.
+    JLOG((inbound_ ? journal_.debug() : journal_.info())) << "close: Closed";
+}
+
+//------------------------------------------------------------------------------
+
+void
+PeerImp::setTimer(std::chrono::seconds interval)
+{
+    try
+    {
+        timer_.expires_after(interval);
+    }
+    catch (std::exception const& ex)
+    {
+        JLOG(journal_.error()) << "setTimer: " << ex.what();
+        return shutdown();
+    }
+
     timer_.async_wait(bind_executor(
         strand_,
         std::bind(
             &PeerImp::onTimer, shared_from_this(), std::placeholders::_1)));
 }
 
-// convenience for ignoring the error code
-void
-PeerImp::cancelTimer()
-{
-    error_code ec;
-    timer_.cancel(ec);
-}
-
-//------------------------------------------------------------------------------
-
-std::string
-PeerImp::makePrefix(id_t id)
-{
-    std::stringstream ss;
-    ss << "[" << std::setfill('0') << std::setw(3) << id << "] ";
-    return ss.str();
-}
-
 void
 PeerImp::onTimer(error_code const& ec)
 {
-    if (!socket_.is_open())
-        return;
+    XRPL_ASSERT(
+        strand_.running_in_this_thread(),
+        "ripple::PeerImp::onTimer : strand in this thread");
 
-    if (ec == boost::asio::error::operation_aborted)
+    if (!socket_.is_open())
         return;
 
     if (ec)
     {
+        // do not initiate shutdown, timers are frequently cancelled
+        if (ec == boost::asio::error::operation_aborted)
+            return;
+
         // This should never happen
         JLOG(journal_.error()) << "onTimer: " << ec.message();
         return close();
     }
 
-    if (large_sendq_++ >= Tuning::sendqIntervals)
+    // the timer expired before the shutdown completed
+    // force close the connection
+    if (shutdown_)
     {
-        fail("Large send queue");
-        return;
+        JLOG(journal_.debug()) << "onTimer: shutdown timer expired";
+        return close();
     }
+
+    if (large_sendq_++ >= Tuning::sendqIntervals)
+        return fail("Large send queue");
 
     if (auto const t = tracking_.load(); !inbound_ && t != Tracking::converged)
     {
@@ -714,17 +777,13 @@ PeerImp::onTimer(error_code const& ec)
              (duration > app_.config().MAX_UNKNOWN_TIME)))
         {
             overlay_.peerFinder().on_failure(slot_);
-            fail("Not useful");
-            return;
+            return fail("Not useful");
         }
     }
 
     // Already waiting for PONG
     if (lastPingSeq_)
-    {
-        fail("Ping Timeout");
-        return;
-    }
+        return fail("Ping Timeout");
 
     lastPingTime_ = clock_type::now();
     lastPingSeq_ = rand_int<std::uint32_t>();
@@ -735,22 +794,28 @@ PeerImp::onTimer(error_code const& ec)
 
     send(std::make_shared<Message>(message, protocol::mtPING));
 
-    setTimer();
+    setTimer(peerTimerInterval);
 }
 
 void
-PeerImp::onShutdown(error_code ec)
+PeerImp::cancelTimer() noexcept
 {
-    cancelTimer();
-    // If we don't get eof then something went wrong
-    if (!ec)
+    try
     {
-        JLOG(journal_.error()) << "onShutdown: expected error condition";
-        return close();
+        timer_.cancel();
     }
-    if (ec != boost::asio::error::eof)
-        return fail("onShutdown", ec);
-    close();
+    catch (std::exception const& ex)
+    {
+        JLOG(journal_.error()) << "cancelTimer: " << ex.what();
+    }
+}
+
+std::string
+PeerImp::makePrefix(id_t id)
+{
+    std::stringstream ss;
+    ss << "[" << std::setfill('0') << std::setw(3) << id << "] ";
+    return ss.str();
 }
 
 //------------------------------------------------------------------------------
@@ -763,6 +828,10 @@ PeerImp::doAccept()
 
     JLOG(journal_.debug()) << "doAccept: " << remote_address_;
 
+    // a shutdown was initiated before the handshake, there is nothing to do
+    if (shutdown_)
+        return tryAsyncShutdown();
+
     auto const sharedValue = makeSharedValue(*stream_ptr_, journal_);
 
     // This shouldn't fail since we already computed
@@ -770,7 +839,7 @@ PeerImp::doAccept()
     if (!sharedValue)
         return fail("makeSharedValue: Unexpected failure");
 
-    JLOG(journal_.info()) << "Protocol: " << to_string(protocol_);
+    JLOG(journal_.debug()) << "Protocol: " << to_string(protocol_);
     JLOG(journal_.info()) << "Public Key: "
                           << toBase58(TokenType::NodePublic, publicKey_);
 
@@ -813,7 +882,7 @@ PeerImp::doAccept()
                 if (!socket_.is_open())
                     return;
                 if (ec == boost::asio::error::operation_aborted)
-                    return;
+                    return tryAsyncShutdown();
                 if (ec)
                     return fail("onWriteResponse", ec);
                 if (write_buffer->size() == bytes_transferred)
@@ -842,6 +911,10 @@ PeerImp::domain() const
 void
 PeerImp::doProtocolStart()
 {
+    // a shutdown was initiated before the handshare, there is nothing to do
+    if (shutdown_)
+        return tryAsyncShutdown();
+
     onReadMessage(error_code(), 0);
 
     // Send all the validator lists that have been loaded
@@ -873,30 +946,45 @@ PeerImp::doProtocolStart()
     if (auto m = overlay_.getManifestsMessage())
         send(m);
 
-    setTimer();
+    setTimer(peerTimerInterval);
 }
 
 // Called repeatedly with protocol message data
 void
 PeerImp::onReadMessage(error_code ec, std::size_t bytes_transferred)
 {
+    XRPL_ASSERT(
+        strand_.running_in_this_thread(),
+        "ripple::PeerImp::onReadMessage : strand in this thread");
+
+    readPending_ = false;
+
     if (!socket_.is_open())
         return;
-    if (ec == boost::asio::error::operation_aborted)
-        return;
-    if (ec == boost::asio::error::eof)
-    {
-        JLOG(journal_.info()) << "EOF";
-        return gracefulClose();
-    }
+
     if (ec)
+    {
+        if (ec == boost::asio::error::eof)
+        {
+            JLOG(journal_.debug()) << "EOF";
+            return shutdown();
+        }
+
+        if (ec == boost::asio::error::operation_aborted)
+            return tryAsyncShutdown();
+
         return fail("onReadMessage", ec);
+    }
+    // we started shutdown, no reason to process further data
+    if (shutdown_)
+        return tryAsyncShutdown();
+
     if (auto stream = journal_.trace())
     {
-        if (bytes_transferred > 0)
-            stream << "onReadMessage: " << bytes_transferred << " bytes";
-        else
-            stream << "onReadMessage";
+        stream << "onReadMessage: "
+               << (bytes_transferred > 0
+                       ? to_string(bytes_transferred) + " bytes"
+                       : "");
     }
 
     metrics_.recv.add_message(bytes_transferred);
@@ -918,16 +1006,28 @@ PeerImp::onReadMessage(error_code ec, std::size_t bytes_transferred)
             350ms,
             journal_);
 
-        if (ec)
-            return fail("onReadMessage", ec);
         if (!socket_.is_open())
             return;
-        if (gracefulClose_)
-            return;
+
+        // the error_code is produced by invokeProtocolMessage
+        // it could be due to a bad message
+        if (ec)
+            return fail("onReadMessage", ec);
+
         if (bytes_consumed == 0)
             break;
+
         read_buffer_.consume(bytes_consumed);
     }
+
+    // check if a shutdown was initiated while processing messages
+    if (shutdown_)
+        return tryAsyncShutdown();
+
+    readPending_ = true;
+
+    XRPL_ASSERT(
+        !shutdownStarted_, "ripple::PeerImp::onReadMessage : shutdown started");
 
     // Timeout on writes only
     stream_.async_read_some(
@@ -944,18 +1044,29 @@ PeerImp::onReadMessage(error_code ec, std::size_t bytes_transferred)
 void
 PeerImp::onWriteMessage(error_code ec, std::size_t bytes_transferred)
 {
+    XRPL_ASSERT(
+        strand_.running_in_this_thread(),
+        "ripple::PeerImp::onWriteMessage : strand in this thread");
+
+    writePending_ = false;
+
     if (!socket_.is_open())
         return;
-    if (ec == boost::asio::error::operation_aborted)
-        return;
+
     if (ec)
+    {
+        if (ec == boost::asio::error::operation_aborted)
+            return tryAsyncShutdown();
+
         return fail("onWriteMessage", ec);
+    }
+
     if (auto stream = journal_.trace())
     {
-        if (bytes_transferred > 0)
-            stream << "onWriteMessage: " << bytes_transferred << " bytes";
-        else
-            stream << "onWriteMessage";
+        stream << "onWriteMessage: "
+               << (bytes_transferred > 0
+                       ? to_string(bytes_transferred) + " bytes"
+                       : "");
     }
 
     metrics_.sent.add_message(bytes_transferred);
@@ -964,8 +1075,17 @@ PeerImp::onWriteMessage(error_code ec, std::size_t bytes_transferred)
         !send_queue_.empty(),
         "ripple::PeerImp::onWriteMessage : non-empty send buffer");
     send_queue_.pop();
+
+    if (shutdown_)
+        return tryAsyncShutdown();
+
     if (!send_queue_.empty())
     {
+        writePending_ = true;
+        XRPL_ASSERT(
+            !shutdownStarted_,
+            "ripple::PeerImp::onWriteMessage : shutdown started");
+
         // Timeout on writes only
         return boost::asio::async_write(
             stream_,
@@ -978,16 +1098,6 @@ PeerImp::onWriteMessage(error_code ec, std::size_t bytes_transferred)
                     shared_from_this(),
                     std::placeholders::_1,
                     std::placeholders::_2)));
-    }
-
-    if (gracefulClose_)
-    {
-        return stream_.async_shutdown(bind_executor(
-            strand_,
-            std::bind(
-                &PeerImp::onShutdown,
-                shared_from_this(),
-                std::placeholders::_1)));
     }
 }
 
@@ -1014,8 +1124,17 @@ PeerImp::onMessageBegin(
     auto const name = protocolMessageName(type);
     load_event_ = app_.getJobQueue().makeLoadEvent(jtPEER, name);
     fee_ = {Resource::feeTrivialPeer, name};
-    auto const category = TrafficCount::categorize(*m, type, true);
-    overlay_.reportTraffic(category, true, static_cast<int>(size));
+
+    auto const category = TrafficCount::categorize(
+        *m, static_cast<protocol::MessageType>(type), true);
+
+    // report total incoming traffic
+    overlay_.reportInboundTraffic(
+        TrafficCount::category::total, static_cast<int>(size));
+
+    // increase the traffic received for a specific category
+    overlay_.reportInboundTraffic(category, static_cast<int>(size));
+
     using namespace protocol;
     if ((type == MessageType::mtTRANSACTION ||
          type == MessageType::mtHAVE_TRANSACTIONS ||
@@ -1254,8 +1373,8 @@ PeerImp::handleTransaction(
     {
         // If we've never been in synch, there's nothing we can do
         // with a transaction
-        JLOG(p_journal_.debug())
-            << "Ignoring incoming transaction: " << "Need network ledger";
+        JLOG(p_journal_.debug()) << "Ignoring incoming transaction: "
+                                 << "Need network ledger";
         return;
     }
 
@@ -1266,13 +1385,25 @@ PeerImp::handleTransaction(
         auto stx = std::make_shared<STTx const>(sit);
         uint256 txID = stx->getTransactionID();
 
-        int flags;
+        // Charge strongly for attempting to relay a txn with tfInnerBatchTxn
+        // LCOV_EXCL_START
+        if (stx->isFlag(tfInnerBatchTxn) &&
+            getCurrentTransactionRules()->enabled(featureBatch))
+        {
+            JLOG(p_journal_.warn()) << "Ignoring Network relayed Tx containing "
+                                       "tfInnerBatchTxn (handleTransaction).";
+            fee_.update(Resource::feeModerateBurdenPeer, "inner batch txn");
+            return;
+        }
+        // LCOV_EXCL_STOP
+
+        HashRouterFlags flags;
         constexpr std::chrono::seconds tx_interval = 10s;
 
         if (!app_.getHashRouter().shouldProcess(txID, id_, flags, tx_interval))
         {
             // we have seen this transaction recently
-            if (flags & SF_BAD)
+            if (any(flags & HashRouterFlags::BAD))
             {
                 fee_.update(Resource::feeUselessData, "known bad");
                 JLOG(p_journal_.debug()) << "Ignoring known bad tx " << txID;
@@ -1282,6 +1413,10 @@ PeerImp::handleTransaction(
             // seen this tx then the tx could not has been queued for this peer.
             else if (eraseTxQueue && txReduceRelayEnabled())
                 removeTxQueue(txID);
+
+            overlay_.reportInboundTraffic(
+                TrafficCount::category::transaction_duplicate,
+                Message::messageSize(*m));
 
             return;
         }
@@ -1295,7 +1430,7 @@ PeerImp::handleTransaction(
             {
                 // Skip local checks if a server we trust
                 // put the transaction in its open ledger
-                flags |= SF_TRUSTED;
+                flags |= HashRouterFlags::TRUSTED;
             }
 
             // for non-validator nodes only -- localPublicKey is set for
@@ -1670,8 +1805,16 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProposeSet> const& m)
     // If the operator has specified that untrusted proposals be dropped then
     // this happens here I.e. before further wasting CPU verifying the signature
     // of an untrusted key
-    if (!isTrusted && app_.config().RELAY_UNTRUSTED_PROPOSALS == -1)
-        return;
+    if (!isTrusted)
+    {
+        // report untrusted proposal messages
+        overlay_.reportInboundTraffic(
+            TrafficCount::category::proposal_untrusted,
+            Message::messageSize(*m));
+
+        if (app_.config().RELAY_UNTRUSTED_PROPOSALS == -1)
+            return;
+    }
 
     uint256 const proposeHash{set.currenttxhash()};
     uint256 const prevLedger{set.previousledger()};
@@ -1692,11 +1835,17 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProposeSet> const& m)
     {
         // Count unique messages (Slots has it's own 'HashRouter'), which a peer
         // receives within IDLED seconds since the message has been relayed.
-        if (reduceRelayReady() && relayed &&
-            (stopwatch().now() - *relayed) < reduce_relay::IDLED)
+        if (relayed && (stopwatch().now() - *relayed) < reduce_relay::IDLED)
             overlay_.updateSlotAndSquelch(
                 suppression, publicKey, id_, protocol::mtPROPOSE_LEDGER);
+
+        // report duplicate proposal messages
+        overlay_.reportInboundTraffic(
+            TrafficCount::category::proposal_duplicate,
+            Message::messageSize(*m));
+
         JLOG(p_journal_.trace()) << "Proposal: duplicate";
+
         return;
     }
 
@@ -2085,10 +2234,12 @@ PeerImp::onValidatorListMessage(
         case ListDisposition::invalid:
         case ListDisposition::unsupported_version:
             break;
+        // LCOV_EXCL_START
         default:
             UNREACHABLE(
                 "ripple::PeerImp::onValidatorListMessage : invalid best list "
                 "disposition");
+            // LCOV_EXCL_STOP
     }
 
     // Charge based on the worst result
@@ -2129,10 +2280,12 @@ PeerImp::onValidatorListMessage(
             // If it happens frequently, that's probably bad.
             fee_.update(Resource::feeInvalidData, "version");
             break;
+        // LCOV_EXCL_START
         default:
             UNREACHABLE(
                 "ripple::PeerImp::onValidatorListMessage : invalid worst list "
                 "disposition");
+            // LCOV_EXCL_STOP
     }
 
     // Log based on all the results.
@@ -2189,10 +2342,12 @@ PeerImp::onValidatorListMessage(
                     << "Ignored " << count << "invalid " << messageType
                     << "(s) from peer " << remote_address_;
                 break;
+            // LCOV_EXCL_START
             default:
                 UNREACHABLE(
                     "ripple::PeerImp::onValidatorListMessage : invalid list "
                     "disposition");
+                // LCOV_EXCL_STOP
         }
     }
 }
@@ -2310,26 +2465,39 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMValidation> const& m)
         auto const isTrusted =
             app_.validators().trusted(val->getSignerPublic());
 
-        // If the operator has specified that untrusted validations be dropped
-        // then this happens here I.e. before further wasting CPU verifying the
-        // signature of an untrusted key
-        if (!isTrusted && app_.config().RELAY_UNTRUSTED_VALIDATIONS == -1)
-            return;
+        // If the operator has specified that untrusted validations be
+        // dropped then this happens here I.e. before further wasting CPU
+        // verifying the signature of an untrusted key
+        if (!isTrusted)
+        {
+            // increase untrusted validations received
+            overlay_.reportInboundTraffic(
+                TrafficCount::category::validation_untrusted,
+                Message::messageSize(*m));
+
+            if (app_.config().RELAY_UNTRUSTED_VALIDATIONS == -1)
+                return;
+        }
 
         auto key = sha512Half(makeSlice(m->validation()));
 
-        if (auto [added, relayed] =
-                app_.getHashRouter().addSuppressionPeerWithStatus(key, id_);
-            !added)
+        auto [added, relayed] =
+            app_.getHashRouter().addSuppressionPeerWithStatus(key, id_);
+
+        if (!added)
         {
             // Count unique messages (Slots has it's own 'HashRouter'), which a
             // peer receives within IDLED seconds since the message has been
-            // relayed. Wait WAIT_ON_BOOTUP time to let the server establish
-            // connections to peers.
-            if (reduceRelayReady() && relayed &&
-                (stopwatch().now() - *relayed) < reduce_relay::IDLED)
+            // relayed.
+            if (relayed && (stopwatch().now() - *relayed) < reduce_relay::IDLED)
                 overlay_.updateSlotAndSquelch(
                     key, val->getSignerPublic(), id_, protocol::mtVALIDATION);
+
+            // increase duplicate validations received
+            overlay_.reportInboundTraffic(
+                TrafficCount::category::validation_duplicate,
+                Message::messageSize(*m));
+
             JLOG(p_journal_.trace()) << "Validation: duplicate";
             return;
         }
@@ -2486,7 +2654,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMGetObjectByHash> const& m)
 
         for (int i = 0; i < packet.objects_size(); ++i)
         {
-            const protocol::TMIndexedObject& obj = packet.objects(i);
+            protocol::TMIndexedObject const& obj = packet.objects(i);
 
             if (obj.has_hash() && stringIsUint256Sized(obj.hash()))
             {
@@ -2652,16 +2820,6 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMSquelch> const& m)
     }
     PublicKey key(slice);
 
-    // Ignore non-validator squelch
-    if (!app_.validators().listed(key))
-    {
-        fee_.update(Resource::feeInvalidData, "squelch non-validator");
-        JLOG(p_journal_.debug())
-            << "onMessage: TMSquelch discarding non-validator squelch "
-            << slice;
-        return;
-    }
-
     // Ignore the squelch for validator's own messages.
     if (key == app_.getValidationPublicKey())
     {
@@ -2700,7 +2858,7 @@ PeerImp::addLedger(
 }
 
 void
-PeerImp::doFetchPack(const std::shared_ptr<protocol::TMGetObjectByHash>& packet)
+PeerImp::doFetchPack(std::shared_ptr<protocol::TMGetObjectByHash> const& packet)
 {
     // VFALCO TODO Invert this dependency using an observer and shared state
     // object. Don't queue fetch pack jobs if we're under load or we already
@@ -2790,7 +2948,7 @@ PeerImp::doTransactions(
 
 void
 PeerImp::checkTransaction(
-    int flags,
+    HashRouterFlags flags,
     bool checkSignature,
     std::shared_ptr<STTx const> const& stx,
     bool batch)
@@ -2798,12 +2956,28 @@ PeerImp::checkTransaction(
     // VFALCO TODO Rewrite to not use exceptions
     try
     {
+        // charge strongly for relaying batch txns
+        // LCOV_EXCL_START
+        if (stx->isFlag(tfInnerBatchTxn) &&
+            getCurrentTransactionRules()->enabled(featureBatch))
+        {
+            JLOG(p_journal_.warn()) << "Ignoring Network relayed Tx containing "
+                                       "tfInnerBatchTxn (checkSignature).";
+            charge(Resource::feeModerateBurdenPeer, "inner batch txn");
+            return;
+        }
+        // LCOV_EXCL_STOP
+
         // Expired?
         if (stx->isFieldPresent(sfLastLedgerSequence) &&
             (stx->getFieldU32(sfLastLedgerSequence) <
              app_.getLedgerMaster().getValidLedgerIndex()))
         {
-            app_.getHashRouter().setFlags(stx->getTransactionID(), SF_BAD);
+            JLOG(p_journal_.info())
+                << "Marking transaction " << stx->getTransactionID()
+                << "as BAD because it's expired";
+            app_.getHashRouter().setFlags(
+                stx->getTransactionID(), HashRouterFlags::BAD);
             charge(Resource::feeUselessData, "expired tx");
             return;
         }
@@ -2858,12 +3032,14 @@ PeerImp::checkTransaction(
             {
                 if (!validReason.empty())
                 {
-                    JLOG(p_journal_.trace())
+                    JLOG(p_journal_.debug())
                         << "Exception checking transaction: " << validReason;
                 }
 
-                // Probably not necessary to set SF_BAD, but doesn't hurt.
-                app_.getHashRouter().setFlags(stx->getTransactionID(), SF_BAD);
+                // Probably not necessary to set HashRouterFlags::BAD, but
+                // doesn't hurt.
+                app_.getHashRouter().setFlags(
+                    stx->getTransactionID(), HashRouterFlags::BAD);
                 charge(
                     Resource::feeInvalidSignature,
                     "check transaction signature failure");
@@ -2883,15 +3059,16 @@ PeerImp::checkTransaction(
         {
             if (!reason.empty())
             {
-                JLOG(p_journal_.trace())
+                JLOG(p_journal_.debug())
                     << "Exception checking transaction: " << reason;
             }
-            app_.getHashRouter().setFlags(stx->getTransactionID(), SF_BAD);
+            app_.getHashRouter().setFlags(
+                stx->getTransactionID(), HashRouterFlags::BAD);
             charge(Resource::feeInvalidSignature, "tx (impossible)");
             return;
         }
 
-        bool const trusted(flags & SF_TRUSTED);
+        bool const trusted = any(flags & HashRouterFlags::TRUSTED);
         app_.getOPs().processTransaction(
             tx, trusted, false, NetworkOPs::FailHard::no);
     }
@@ -2899,7 +3076,8 @@ PeerImp::checkTransaction(
     {
         JLOG(p_journal_.warn())
             << "Exception in " << __func__ << ": " << ex.what();
-        app_.getHashRouter().setFlags(stx->getTransactionID(), SF_BAD);
+        app_.getHashRouter().setFlags(
+            stx->getTransactionID(), HashRouterFlags::BAD);
         using namespace std::string_literals;
         charge(Resource::feeInvalidData, "tx "s + ex.what());
     }
@@ -2940,7 +3118,7 @@ PeerImp::checkPropose(
         // as part of the squelch logic.
         auto haveMessage = app_.overlay().relay(
             *packet, peerPos.suppressionID(), peerPos.publicKey());
-        if (reduceRelayReady() && !haveMessage.empty())
+        if (!haveMessage.empty())
             overlay_.updateSlotAndSquelch(
                 peerPos.suppressionID(),
                 peerPos.publicKey(),
@@ -2975,7 +3153,7 @@ PeerImp::checkValidation(
             // as part of the squelch logic.
             auto haveMessage =
                 overlay_.relay(*packet, key, val->getSignerPublic());
-            if (reduceRelayReady() && !haveMessage.empty())
+            if (!haveMessage.empty())
             {
                 overlay_.updateSlotAndSquelch(
                     key,
@@ -3377,7 +3555,7 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                 if (!m->has_ledgerhash())
                     info += ", no hash specified";
 
-                JLOG(p_journal_.error())
+                JLOG(p_journal_.warn())
                     << "processLedgerRequest: getNodeFat with nodeId "
                     << *shaMapNodeId << " and ledger info type " << info
                     << " throws exception: " << e.what();
@@ -3401,19 +3579,19 @@ PeerImp::getScore(bool haveItem) const
 {
     // Random component of score, used to break ties and avoid
     // overloading the "best" peer
-    static const int spRandomMax = 9999;
+    static int const spRandomMax = 9999;
 
     // Score for being very likely to have the thing we are
     // look for; should be roughly spRandomMax
-    static const int spHaveItem = 10000;
+    static int const spHaveItem = 10000;
 
     // Score reduction for each millisecond of latency; should
     // be roughly spRandomMax divided by the maximum reasonable
     // latency
-    static const int spLatency = 30;
+    static int const spLatency = 30;
 
     // Penalty for unknown latency; should be roughly spRandomMax
-    static const int spNoLatency = 8000;
+    static int const spNoLatency = 8000;
 
     int score = rand_int(spRandomMax);
 
@@ -3439,16 +3617,6 @@ PeerImp::isHighLatency() const
 {
     std::lock_guard sl(recentLock_);
     return latency_ >= peerHighLatency;
-}
-
-bool
-PeerImp::reduceRelayReady()
-{
-    if (!reduceRelayReady_)
-        reduceRelayReady_ =
-            reduce_relay::epoch<std::chrono::minutes>(UptimeClock::now()) >
-            reduce_relay::WAIT_ON_BOOTUP;
-    return vpReduceRelayEnabled_ && reduceRelayReady_;
 }
 
 void

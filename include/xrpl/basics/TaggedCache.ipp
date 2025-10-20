@@ -371,7 +371,7 @@ TaggedCache<
     SharedPointerType,
     Hash,
     KeyEqual,
-    Mutex>::del(const key_type& key, bool valid)
+    Mutex>::del(key_type const& key, bool valid)
 {
     // Remove from cache, if !valid, remove from map too. Returns true if
     // removed from cache
@@ -420,7 +420,7 @@ TaggedCache<
     KeyEqual,
     Mutex>::
     canonicalize(
-        const key_type& key,
+        key_type const& key,
         SharedPointerType& data,
         R&& replaceCallback)
 {
@@ -515,7 +515,7 @@ TaggedCache<
     KeyEqual,
     Mutex>::
     canonicalize_replace_cache(
-        const key_type& key,
+        key_type const& key,
         SharedPointerType const& data)
 {
     return canonicalize(
@@ -541,7 +541,7 @@ TaggedCache<
     Hash,
     KeyEqual,
     Mutex>::
-    canonicalize_replace_client(const key_type& key, SharedPointerType& data)
+    canonicalize_replace_client(key_type const& key, SharedPointerType& data)
 {
     return canonicalize(key, data, []() { return false; });
 }
@@ -564,7 +564,7 @@ TaggedCache<
     SharedPointerType,
     Hash,
     KeyEqual,
-    Mutex>::fetch(const key_type& key)
+    Mutex>::fetch(key_type const& key)
 {
     std::lock_guard<mutex_type> l(m_mutex);
     auto ret = initialFetch(key, l);
@@ -662,7 +662,7 @@ TaggedCache<
     SharedPointerType,
     Hash,
     KeyEqual,
-    Mutex>::retrieve(const key_type& key, T& data)
+    Mutex>::retrieve(key_type const& key, T& data)
 {
     // retrieve the value of the stored data
     auto entry = fetch(key);

@@ -91,7 +91,7 @@ struct STAccount_test : public beast::unit_test::suite
             {
                 // Construct from a VL that is not exactly 160 bits.
                 Serializer s;
-                const std::uint8_t bits128[]{
+                std::uint8_t const bits128[]{
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
                 s.addVL(bits128, sizeof(bits128));
                 SerialIter sit(s.slice());
@@ -123,9 +123,26 @@ struct STAccount_test : public beast::unit_test::suite
     }
 
     void
+    testAccountID()
+    {
+        auto const s = "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh";
+        if (auto const parsed = parseBase58<AccountID>(s); BEAST_EXPECT(parsed))
+        {
+            BEAST_EXPECT(toBase58(*parsed) == s);
+        }
+
+        {
+            auto const s =
+                "âabcd1rNxp4h8apvRis6mJf9Sh8C6iRxfrDWNâabcdAVâ\xc2\x80\xc2\x8f";
+            BEAST_EXPECT(!parseBase58<AccountID>(s));
+        }
+    }
+
+    void
     run() override
     {
         testSTAccount();
+        testAccountID();
     }
 };
 

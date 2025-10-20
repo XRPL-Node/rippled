@@ -58,9 +58,11 @@ to_string(TableType type)
             return "Transactions";
         case TableType::AccountTransactions:
             return "AccountTransactions";
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("ripple::detail::to_string : invalid TableType");
             return "Unknown";
+            // LCOV_EXCL_STOP
     }
 }
 
@@ -202,18 +204,22 @@ saveValidatedLedger(
 
     if (!ledger->info().accountHash.isNonZero())
     {
+        // LCOV_EXCL_START
         JLOG(j.fatal()) << "AH is zero: " << getJson({*ledger, {}});
         UNREACHABLE("ripple::detail::saveValidatedLedger : zero account hash");
+        // LCOV_EXCL_STOP
     }
 
     if (ledger->info().accountHash != ledger->stateMap().getHash().as_uint256())
     {
+        // LCOV_EXCL_START
         JLOG(j.fatal()) << "sAL: " << ledger->info().accountHash
                         << " != " << ledger->stateMap().getHash();
         JLOG(j.fatal()) << "saveAcceptedLedger: seq=" << seq
                         << ", current=" << current;
         UNREACHABLE(
             "ripple::detail::saveValidatedLedger : mismatched account hash");
+        // LCOV_EXCL_STOP
     }
 
     XRPL_ASSERT(
@@ -339,7 +345,11 @@ saveValidatedLedger(
                             seq, acceptedLedgerTx->getEscMeta()) +
                         ";");
 
-                app.getMasterTransaction().inLedger(transactionID, seq);
+                app.getMasterTransaction().inLedger(
+                    transactionID,
+                    seq,
+                    acceptedLedgerTx->getTxnSeq(),
+                    app.config().NETWORK_ID);
             }
 
             tr.commit();
@@ -1055,7 +1065,7 @@ accountTxPage(
 
     // SQL's BETWEEN uses a closed interval ([a,b])
 
-    const char* const order = forward ? "ASC" : "DESC";
+    char const* const order = forward ? "ASC" : "DESC";
 
     if (findLedger == 0)
     {
@@ -1070,10 +1080,10 @@ accountTxPage(
     }
     else
     {
-        const char* const compare = forward ? ">=" : "<=";
-        const std::uint32_t minLedger =
+        char const* const compare = forward ? ">=" : "<=";
+        std::uint32_t const minLedger =
             forward ? findLedger + 1 : options.minLedger;
-        const std::uint32_t maxLedger =
+        std::uint32_t const maxLedger =
             forward ? options.maxLedger : findLedger - 1;
 
         auto b58acct = toBase58(options.account);

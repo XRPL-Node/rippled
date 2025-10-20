@@ -374,7 +374,7 @@ public:
     }
 
     base_uint&
-    operator^=(const base_uint& b)
+    operator^=(base_uint const& b)
     {
         for (int i = 0; i < WIDTH; i++)
             data_[i] ^= b.data_[i];
@@ -383,7 +383,7 @@ public:
     }
 
     base_uint&
-    operator&=(const base_uint& b)
+    operator&=(base_uint const& b)
     {
         for (int i = 0; i < WIDTH; i++)
             data_[i] &= b.data_[i];
@@ -392,7 +392,7 @@ public:
     }
 
     base_uint&
-    operator|=(const base_uint& b)
+    operator|=(base_uint const& b)
     {
         for (int i = 0; i < WIDTH; i++)
             data_[i] |= b.data_[i];
@@ -415,11 +415,11 @@ public:
         return *this;
     }
 
-    const base_uint
+    base_uint const
     operator++(int)
     {
         // postfix operator
-        const base_uint ret = *this;
+        base_uint const ret = *this;
         ++(*this);
 
         return ret;
@@ -441,11 +441,11 @@ public:
         return *this;
     }
 
-    const base_uint
+    base_uint const
     operator--(int)
     {
         // postfix operator
-        const base_uint ret = *this;
+        base_uint const ret = *this;
         --(*this);
 
         return ret;
@@ -466,7 +466,7 @@ public:
     }
 
     base_uint&
-    operator+=(const base_uint& b)
+    operator+=(base_uint const& b)
     {
         std::uint64_t carry = 0;
 
@@ -511,7 +511,7 @@ public:
     }
 
     [[nodiscard]] constexpr bool
-    parseHex(const char* str)
+    parseHex(char const* str)
     {
         return parseHex(std::string_view{str});
     }
@@ -630,6 +630,16 @@ inline std::string
 to_string(base_uint<Bits, Tag> const& a)
 {
     return strHex(a.cbegin(), a.cend());
+}
+
+template <std::size_t Bits, class Tag>
+inline std::string
+to_short_string(base_uint<Bits, Tag> const& a)
+{
+    static_assert(
+        base_uint<Bits, Tag>::bytes > 4,
+        "For 4 bytes or less, use a native type");
+    return strHex(a.cbegin(), a.cbegin() + 4) + "...";
 }
 
 template <std::size_t Bits, class Tag>

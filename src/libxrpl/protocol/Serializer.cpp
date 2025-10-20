@@ -83,6 +83,12 @@ Serializer::addInteger(std::uint64_t i)
 {
     return add64(i);
 }
+template <>
+int
+Serializer::addInteger(std::int32_t i)
+{
+    return add32(i);
+}
 
 int
 Serializer::addRaw(Blob const& vector)
@@ -101,7 +107,7 @@ Serializer::addRaw(Slice slice)
 }
 
 int
-Serializer::addRaw(const Serializer& s)
+Serializer::addRaw(Serializer const& s)
 {
     int ret = mData.size();
     mData.insert(mData.end(), s.begin(), s.end());
@@ -109,10 +115,10 @@ Serializer::addRaw(const Serializer& s)
 }
 
 int
-Serializer::addRaw(const void* ptr, int len)
+Serializer::addRaw(void const* ptr, int len)
 {
     int ret = mData.size();
-    mData.insert(mData.end(), (const char*)ptr, ((const char*)ptr) + len);
+    mData.insert(mData.end(), (char const*)ptr, ((char const*)ptr) + len);
     return ret;
 }
 
@@ -208,7 +214,7 @@ Serializer::addVL(Slice const& slice)
 }
 
 int
-Serializer::addVL(const void* ptr, int len)
+Serializer::addVL(void const* ptr, int len)
 {
     int ret = addEncoded(len);
 

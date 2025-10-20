@@ -226,7 +226,7 @@ class ValidatorList
     TimeKeeper& timeKeeper_;
     boost::filesystem::path const dataPath_;
     beast::Journal const j_;
-    boost::shared_mutex mutable mutex_;
+    std::shared_mutex mutable mutex_;
     using lock_guard = std::lock_guard<decltype(mutex_)>;
     using shared_lock = std::shared_lock<decltype(mutex_)>;
 
@@ -271,7 +271,7 @@ class ValidatorList
     // collection with more than 5 entries will be considered malformed.
     static constexpr std::size_t maxSupportedBlobs = 5;
     // Prefix of the file name used to store cache files.
-    static const std::string filePrefix_;
+    static std::string const filePrefix_;
 
 public:
     ValidatorList(
@@ -877,7 +877,7 @@ private:
     verify(
         lock_guard const&,
         Json::Value& list,
-        std::string const& manifest,
+        Manifest manifest,
         std::string const& blob,
         std::string const& signature);
 

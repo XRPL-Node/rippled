@@ -20,9 +20,9 @@
 #include <xrpld/app/misc/AMMHelpers.h>
 #include <xrpld/app/misc/AMMUtils.h>
 #include <xrpld/app/tx/detail/AMMBid.h>
-#include <xrpld/ledger/Sandbox.h>
-#include <xrpld/ledger/View.h>
 
+#include <xrpl/ledger/Sandbox.h>
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/AMMCore.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/TER.h>
@@ -30,21 +30,15 @@
 
 namespace ripple {
 
+bool
+AMMBid::checkExtraFeatures(PreflightContext const& ctx)
+{
+    return ammEnabled(ctx.rules);
+}
+
 NotTEC
 AMMBid::preflight(PreflightContext const& ctx)
 {
-    if (!ammEnabled(ctx.rules))
-        return temDISABLED;
-
-    if (auto const ret = preflight1(ctx); !isTesSuccess(ret))
-        return ret;
-
-    if (ctx.tx.getFlags() & tfUniversalMask)
-    {
-        JLOG(ctx.j.debug()) << "AMM Bid: invalid flags.";
-        return temINVALID_FLAG;
-    }
-
     if (auto const res = invalidAMMAssetPair(
             ctx.tx[sfAsset].get<Issue>(), ctx.tx[sfAsset2].get<Issue>()))
     {
@@ -78,9 +72,24 @@ AMMBid::preflight(PreflightContext const& ctx)
             JLOG(ctx.j.debug()) << "AMM Bid: Invalid number of AuthAccounts.";
             return temMALFORMED;
         }
+        else if (ctx.rules.enabled(fixAMMv1_3))
+        {
+            AccountID account = ctx.tx[sfAccount];
+            std::set<AccountID> unique;
+            for (auto const& obj : authAccounts)
+            {
+                auto authAccount = obj[sfAccount];
+                if (authAccount == account || unique.contains(authAccount))
+                {
+                    JLOG(ctx.j.debug()) << "AMM Bid: Invalid auth.account.";
+                    return temMALFORMED;
+                }
+                unique.insert(authAccount);
+            }
+        }
     }
 
-    return preflight2(ctx);
+    return tesSUCCESS;
 }
 
 TER
@@ -232,14 +241,18 @@ applyBid(
             auctionSlot.makeFieldAbsent(sfAuthAccounts);
         // Burn the remaining bid amount
         auto const saBurn = adjustLPTokens(
-            lptAMMBalance, toSTAmount(lptAMMBalance.issue(), burn), false);
+            lptAMMBalance,
+            toSTAmount(lptAMMBalance.issue(), burn),
+            IsDeposit::No);
         if (saBurn >= lptAMMBalance)
         {
             // This error case should never occur.
+            // LCOV_EXCL_START
             JLOG(ctx_.journal.fatal())
                 << "AMM Bid: LP Token burn exceeds AMM balance " << burn << " "
                 << lptAMMBalance;
             return tecINTERNAL;
+            // LCOV_EXCL_STOP
         }
         auto res =
             redeemIOU(sb, account_, saBurn, lpTokens.issue(), ctx_.journal);

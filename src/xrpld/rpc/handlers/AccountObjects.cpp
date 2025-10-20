@@ -18,11 +18,11 @@
 //==============================================================================
 
 #include <xrpld/app/tx/detail/NFTokenUtils.h>
-#include <xrpld/ledger/ReadView.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/detail/RPCHelpers.h>
 #include <xrpld/rpc/detail/Tuning.h>
 
+#include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/LedgerFormats.h>
@@ -224,7 +224,9 @@ doAccountObjects(RPC::JsonContext& context)
             {jss::bridge, ltBRIDGE},
             {jss::mpt_issuance, ltMPTOKEN_ISSUANCE},
             {jss::mptoken, ltMPTOKEN},
-            {jss::permissioned_domain, ltPERMISSIONED_DOMAIN}};
+            {jss::permissioned_domain, ltPERMISSIONED_DOMAIN},
+            {jss::vault, ltVAULT},
+        };
 
         typeFilter.emplace();
         typeFilter->reserve(std::size(deletionBlockers));

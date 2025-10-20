@@ -17,10 +17,13 @@
 */
 //==============================================================================
 
+#include <xrpld/app/misc/PermissionedDEXHelpers.h>
 #include <xrpld/app/tx/detail/OfferStream.h>
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Feature.h>
+#include <xrpl/protocol/LedgerFormats.h>
 
 namespace ripple {
 
@@ -288,6 +291,17 @@ TOfferStreamBase<TIn, TOut>::step()
             continue;
         }
 
+        if (entry->isFieldPresent(sfDomainID) &&
+            !permissioned_dex::offerInDomain(
+                view_, entry->key(), entry->getFieldH256(sfDomainID), j_))
+        {
+            JLOG(j_.trace())
+                << "Removing offer no longer in domain " << entry->key();
+            permRmOffer(entry->key());
+            offer_ = TOffer<TIn, TOut>{};
+            continue;
+        }
+
         // Calculate owner funds
         ownerFunds_ = accountFundsHelper(
             view_,
@@ -355,10 +369,12 @@ TOfferStreamBase<TIn, TOut>::step()
                                 std::is_same_v<TOut, XRPAmount>))
                     return shouldRmSmallIncreasedQOffer<IOUAmount, IOUAmount>();
             }
+            // LCOV_EXCL_START
             UNREACHABLE(
                 "rippls::TOfferStreamBase::step::rmSmallIncreasedQOffer : XRP "
                 "vs XRP offer");
             return false;
+            // LCOV_EXCL_STOP
         }();
 
         if (rmSmallIncreasedQOffer)

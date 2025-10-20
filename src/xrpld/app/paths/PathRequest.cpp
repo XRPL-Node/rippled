@@ -41,7 +41,7 @@ namespace ripple {
 
 PathRequest::PathRequest(
     Application& app,
-    const std::shared_ptr<InfoSub>& subscriber,
+    std::shared_ptr<InfoSub> const& subscriber,
     int id,
     PathRequests& owner,
     beast::Journal journal)
@@ -206,8 +206,7 @@ PathRequest::isValid(std::shared_ptr<RippleLineCache> const& crCache)
             return false;
         }
 
-        if (!convert_all_ &&
-            saDstAmount < STAmount(lrLedger->fees().accountReserve(0)))
+        if (!convert_all_ && saDstAmount < STAmount(lrLedger->fees().reserve))
         {
             // Payment must meet reserve.
             jvStatus = rpcError(rpcDST_AMT_MALFORMED);
@@ -438,6 +437,21 @@ PathRequest::parseJson(Json::Value const& jvParams)
     if (jvParams.isMember(jss::id))
         jvId = jvParams[jss::id];
 
+    if (jvParams.isMember(jss::domain))
+    {
+        uint256 num;
+        if (!jvParams[jss::domain].isString() ||
+            !num.parseHex(jvParams[jss::domain].asString()))
+        {
+            jvStatus = rpcError(rpcDOMAIN_MALFORMED);
+            return PFR_PJ_INVALID;
+        }
+        else
+        {
+            domain = num;
+        }
+    }
+
     return PFR_PJ_NOCHANGE;
 }
 
@@ -484,6 +498,7 @@ PathRequest::getPathFinder(
         std::nullopt,
         dst_amount,
         saSendMax,
+        domain,
         app_);
     if (pathfinder->findPaths(level, continueCallback))
         pathfinder->computePathRanks(max_paths_, continueCallback);
@@ -581,6 +596,7 @@ PathRequest::findPaths(
             *raDstAccount,  // --> Account to deliver to.
             *raSrcAccount,  // --> Account sending from.
             ps,             // --> Path set.
+            domain,         // --> Domain.
             app_.logs(),
             &rcInput);
 
@@ -601,6 +617,7 @@ PathRequest::findPaths(
                 *raDstAccount,  // --> Account to deliver to.
                 *raSrcAccount,  // --> Account sending from.
                 ps,             // --> Path set.
+                domain,         // --> Domain.
                 app_.logs());
 
             if (rc.result() != tesSUCCESS)

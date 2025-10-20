@@ -24,6 +24,7 @@
 #include <xrpl/json/json_value.h>
 #include <xrpl/json/json_writer.h>
 
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -31,10 +32,10 @@
 
 namespace Json {
 
-const Value Value::null;
-const Int Value::minInt = Int(~(UInt(-1) / 2));
-const Int Value::maxInt = Int(UInt(-1) / 2);
-const UInt Value::maxUInt = UInt(-1);
+Value const Value::null;
+Int const Value::minInt = Int(~(UInt(-1) / 2));
+Int const Value::maxInt = Int(UInt(-1) / 2);
+UInt const Value::maxUInt = UInt(-1);
 
 class DefaultValueAllocator : public ValueAllocator
 {
@@ -42,7 +43,7 @@ public:
     virtual ~DefaultValueAllocator() = default;
 
     char*
-    makeMemberName(const char* memberName) override
+    makeMemberName(char const* memberName) override
     {
         return duplicateStringValue(memberName);
     }
@@ -54,7 +55,7 @@ public:
     }
 
     char*
-    duplicateStringValue(const char* value, unsigned int length = unknown)
+    duplicateStringValue(char const* value, unsigned int length = unknown)
         override
     {
         //@todo investigate this old optimization
@@ -110,14 +111,14 @@ Value::CZString::CZString(int index) : cstr_(0), index_(index)
 {
 }
 
-Value::CZString::CZString(const char* cstr, DuplicationPolicy allocate)
+Value::CZString::CZString(char const* cstr, DuplicationPolicy allocate)
     : cstr_(
           allocate == duplicate ? valueAllocator()->makeMemberName(cstr) : cstr)
     , index_(allocate)
 {
 }
 
-Value::CZString::CZString(const CZString& other)
+Value::CZString::CZString(CZString const& other)
     : cstr_(
           other.index_ != noDuplication && other.cstr_ != 0
               ? valueAllocator()->makeMemberName(other.cstr_)
@@ -136,7 +137,7 @@ Value::CZString::~CZString()
 }
 
 bool
-Value::CZString::operator<(const CZString& other) const
+Value::CZString::operator<(CZString const& other) const
 {
     if (cstr_ && other.cstr_)
         return strcmp(cstr_, other.cstr_) < 0;
@@ -145,7 +146,7 @@ Value::CZString::operator<(const CZString& other) const
 }
 
 bool
-Value::CZString::operator==(const CZString& other) const
+Value::CZString::operator==(CZString const& other) const
 {
     if (cstr_ && other.cstr_)
         return strcmp(cstr_, other.cstr_) == 0;
@@ -159,7 +160,7 @@ Value::CZString::index() const
     return index_;
 }
 
-const char*
+char const*
 Value::CZString::c_str() const
 {
     return cstr_;
@@ -212,8 +213,10 @@ Value::Value(ValueType type) : type_(type), allocated_(0)
             value_.bool_ = false;
             break;
 
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::Value(ValueType) : invalid type");
+            // LCOV_EXCL_STOP
     }
 }
 
@@ -232,9 +235,16 @@ Value::Value(double value) : type_(realValue)
     value_.real_ = value;
 }
 
-Value::Value(const char* value) : type_(stringValue), allocated_(true)
+Value::Value(char const* value) : type_(stringValue), allocated_(true)
 {
     value_.string_ = valueAllocator()->duplicateStringValue(value);
+}
+
+Value::Value(ripple::Number const& value) : type_(stringValue), allocated_(true)
+{
+    auto const tmp = to_string(value);
+    value_.string_ =
+        valueAllocator()->duplicateStringValue(tmp.c_str(), tmp.length());
 }
 
 Value::Value(std::string const& value) : type_(stringValue), allocated_(true)
@@ -243,7 +253,7 @@ Value::Value(std::string const& value) : type_(stringValue), allocated_(true)
         value.c_str(), (unsigned int)value.length());
 }
 
-Value::Value(const StaticString& value) : type_(stringValue), allocated_(false)
+Value::Value(StaticString const& value) : type_(stringValue), allocated_(false)
 {
     value_.string_ = const_cast<char*>(value.c_str());
 }
@@ -253,7 +263,7 @@ Value::Value(bool value) : type_(booleanValue)
     value_.bool_ = value;
 }
 
-Value::Value(const Value& other) : type_(other.type_)
+Value::Value(Value const& other) : type_(other.type_)
 {
     switch (type_)
     {
@@ -282,8 +292,10 @@ Value::Value(const Value& other) : type_(other.type_)
             value_.map_ = new ObjectValues(*other.value_.map_);
             break;
 
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::Value(Value const&) : invalid type");
+            // LCOV_EXCL_STOP
     }
 }
 
@@ -310,8 +322,10 @@ Value::~Value()
                 delete value_.map_;
             break;
 
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::~Value : invalid type");
+            // LCOV_EXCL_STOP
     }
 }
 
@@ -370,7 +384,7 @@ integerCmp(Int i, UInt ui)
 }
 
 bool
-operator<(const Value& x, const Value& y)
+operator<(Value const& x, Value const& y)
 {
     if (auto signum = x.type_ - y.type_)
     {
@@ -411,15 +425,17 @@ operator<(const Value& x, const Value& y)
             return *x.value_.map_ < *y.value_.map_;
         }
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::operator<(Value, Value) : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable
 }
 
 bool
-operator==(const Value& x, const Value& y)
+operator==(Value const& x, Value const& y)
 {
     if (x.type_ != y.type_)
     {
@@ -457,14 +473,16 @@ operator==(const Value& x, const Value& y)
             return x.value_.map_->size() == y.value_.map_->size() &&
                 *x.value_.map_ == *y.value_.map_;
 
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::operator==(Value, Value) : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable
 }
 
-const char*
+char const*
 Value::asCString() const
 {
     XRPL_ASSERT(type_ == stringValue, "Json::Value::asCString : valid type");
@@ -498,8 +516,10 @@ Value::asString() const
         case objectValue:
             JSON_ASSERT_MESSAGE(false, "Type is not convertible to string");
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::asString : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return "";  // unreachable
@@ -540,8 +560,10 @@ Value::asInt() const
         case objectValue:
             JSON_ASSERT_MESSAGE(false, "Type is not convertible to int");
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::asInt : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable;
@@ -582,8 +604,10 @@ Value::asUInt() const
         case objectValue:
             JSON_ASSERT_MESSAGE(false, "Type is not convertible to uint");
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::asUInt : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable;
@@ -614,8 +638,10 @@ Value::asDouble() const
         case objectValue:
             JSON_ASSERT_MESSAGE(false, "Type is not convertible to double");
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::asDouble : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable;
@@ -646,8 +672,10 @@ Value::asBool() const
         case objectValue:
             return value_.map_->size() != 0;
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::asBool : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return false;  // unreachable;
@@ -678,7 +706,9 @@ Value::isConvertibleTo(ValueType other) const
                 (other == intValue && value_.real_ >= minInt &&
                  value_.real_ <= maxInt) ||
                 (other == uintValue && value_.real_ >= 0 &&
-                 value_.real_ <= maxUInt) ||
+                 value_.real_ <= maxUInt &&
+                 std::fabs(round(value_.real_) - value_.real_) <
+                     std::numeric_limits<double>::epsilon()) ||
                 other == realValue || other == stringValue ||
                 other == booleanValue;
 
@@ -700,8 +730,10 @@ Value::isConvertibleTo(ValueType other) const
             return other == objectValue ||
                 (other == nullValue && value_.map_->size() == 0);
 
+        // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::isConvertible : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return false;  // unreachable;
@@ -734,8 +766,10 @@ Value::size() const
         case objectValue:
             return Int(value_.map_->size());
 
+            // LCOV_EXCL_START
         default:
             UNREACHABLE("Json::Value::size : invalid type");
+            // LCOV_EXCL_STOP
     }
 
     return 0;  // unreachable;
@@ -795,7 +829,7 @@ Value::operator[](UInt index)
     return (*it).second;
 }
 
-const Value&
+Value const&
 Value::operator[](UInt index) const
 {
     XRPL_ASSERT(
@@ -815,13 +849,13 @@ Value::operator[](UInt index) const
 }
 
 Value&
-Value::operator[](const char* key)
+Value::operator[](char const* key)
 {
     return resolveReference(key, false);
 }
 
 Value&
-Value::resolveReference(const char* key, bool isStatic)
+Value::resolveReference(char const* key, bool isStatic)
 {
     XRPL_ASSERT(
         type_ == nullValue || type_ == objectValue,
@@ -844,9 +878,9 @@ Value::resolveReference(const char* key, bool isStatic)
 }
 
 Value
-Value::get(UInt index, const Value& defaultValue) const
+Value::get(UInt index, Value const& defaultValue) const
 {
-    const Value* value = &((*this)[index]);
+    Value const* value = &((*this)[index]);
     return value == &null ? defaultValue : *value;
 }
 
@@ -856,8 +890,8 @@ Value::isValidIndex(UInt index) const
     return index < size();
 }
 
-const Value&
-Value::operator[](const char* key) const
+Value const&
+Value::operator[](char const* key) const
 {
     XRPL_ASSERT(
         type_ == nullValue || type_ == objectValue,
@@ -881,20 +915,26 @@ Value::operator[](std::string const& key)
     return (*this)[key.c_str()];
 }
 
-const Value&
+Value const&
 Value::operator[](std::string const& key) const
 {
     return (*this)[key.c_str()];
 }
 
 Value&
-Value::operator[](const StaticString& key)
+Value::operator[](StaticString const& key)
 {
     return resolveReference(key, true);
 }
 
+Value const&
+Value::operator[](StaticString const& key) const
+{
+    return (*this)[key.c_str()];
+}
+
 Value&
-Value::append(const Value& value)
+Value::append(Value const& value)
 {
     return (*this)[size()] = value;
 }
@@ -906,20 +946,20 @@ Value::append(Value&& value)
 }
 
 Value
-Value::get(const char* key, const Value& defaultValue) const
+Value::get(char const* key, Value const& defaultValue) const
 {
-    const Value* value = &((*this)[key]);
+    Value const* value = &((*this)[key]);
     return value == &null ? defaultValue : *value;
 }
 
 Value
-Value::get(std::string const& key, const Value& defaultValue) const
+Value::get(std::string const& key, Value const& defaultValue) const
 {
     return get(key.c_str(), defaultValue);
 }
 
 Value
-Value::removeMember(const char* key)
+Value::removeMember(char const* key)
 {
     XRPL_ASSERT(
         type_ == nullValue || type_ == objectValue,
@@ -946,12 +986,12 @@ Value::removeMember(std::string const& key)
 }
 
 bool
-Value::isMember(const char* key) const
+Value::isMember(char const* key) const
 {
     if (type_ != objectValue)
         return false;
 
-    const Value* value = &((*this)[key]);
+    Value const* value = &((*this)[key]);
     return value != &null;
 }
 

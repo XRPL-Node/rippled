@@ -39,7 +39,7 @@ TimeoutCounter::TimeoutCounter(
     , progress_(false)
     , timerInterval_(interval)
     , queueJobParameter_(std::move(jobParameter))
-    , timer_(app_.getIOService())
+    , timer_(app_.getIOContext())
 {
     XRPL_ASSERT(
         (timerInterval_ > 10ms) && (timerInterval_ < 30s),
@@ -100,8 +100,8 @@ TimeoutCounter::invokeOnTimer()
     if (!progress_)
     {
         ++timeouts_;
-        JLOG(journal_.debug())
-            << "Timeout(" << timeouts_ << ") " << " acquiring " << hash_;
+        JLOG(journal_.debug()) << "Timeout(" << timeouts_ << ") "
+                               << " acquiring " << hash_;
         onTimer(false, sl);
     }
     else

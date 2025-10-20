@@ -44,20 +44,15 @@ private:
         AccountID const& seller,
         uint256 const& nfTokenID);
 
-    static TER
-    checkAcceptAsset(
-        ReadView const& view,
-        ApplyFlags const flags,
-        AccountID const id,
-        beast::Journal const j,
-        Issue const& issue);
-
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
     explicit NFTokenAcceptOffer(ApplyContext& ctx) : Transactor(ctx)
     {
     }
+
+    static std::uint32_t
+    getFlagsMask(PreflightContext const& ctx);
 
     static NotTEC
     preflight(PreflightContext const& ctx);

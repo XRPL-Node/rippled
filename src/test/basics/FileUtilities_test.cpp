@@ -31,10 +31,10 @@ public:
     void
     testGetFileContents()
     {
-        using namespace ripple::test::detail;
+        using namespace ripple::detail;
         using namespace boost::system;
 
-        constexpr const char* expectedContents =
+        constexpr char const* expectedContents =
             "This file is very short. That's all we need.";
 
         FileDirGuard file(
@@ -79,6 +79,6 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(FileUtilities, ripple_basics, ripple);
+BEAST_DEFINE_TESTSUITE(FileUtilities, basics, ripple);
 
 }  // namespace ripple

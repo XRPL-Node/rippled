@@ -84,8 +84,8 @@ shouldCloseLedger(
                             agree
     @param stalled the network appears to be stalled, where
            neither we nor our peers have changed their vote on any disputes in a
-           while. This is undesirable, and will cause us to end consensus
-           without 80% agreement.
+           while. This is undesirable, and should be rare, and will cause us to
+           end consensus without 80% agreement.
     @param parms            Consensus constant parameters
     @param proposing        whether we should count ourselves
     @param j                journal for logging
@@ -603,7 +603,7 @@ private:
     Ledger_t previousLedger_;
 
     // Transaction Sets, indexed by hash of transaction tree
-    hash_map<typename TxSet_t::ID, const TxSet_t> acquired_;
+    hash_map<typename TxSet_t::ID, TxSet_t const> acquired_;
 
     std::optional<Result> result_;
     ConsensusCloseTimes rawCloseTimes_;
@@ -872,7 +872,7 @@ Consensus<Adaptor>::timerEntry(
     CLOG(clog) << "Set network adjusted time to " << to_string(now) << ". ";
 
     // Check we are on the proper ledger (this may change phase_)
-    const auto phaseOrig = phase_;
+    auto const phaseOrig = phase_;
     CLOG(clog) << "Phase " << to_string(phaseOrig) << ". ";
     checkLedger(clog);
     if (phaseOrig != phase_)
@@ -1121,8 +1121,8 @@ Consensus<Adaptor>::checkLedger(std::unique_ptr<std::stringstream> const& clog)
 
     auto netLgr =
         adaptor_.getPrevLedger(prevLedgerID_, previousLedger_, mode_.get());
-    CLOG(clog) << "network ledgerid " << netLgr << ",  " << "previous ledger "
-               << prevLedgerID_ << ". ";
+    CLOG(clog) << "network ledgerid " << netLgr << ",  "
+               << "previous ledger " << prevLedgerID_ << ". ";
 
     if (netLgr != prevLedgerID_)
     {
@@ -1213,7 +1213,8 @@ Consensus<Adaptor>::phaseOpen(std::unique_ptr<std::stringstream> const& clog)
         adaptor_.parms().ledgerIDLE_INTERVAL,
         2 * previousLedger_.closeTimeResolution());
     CLOG(clog) << "idle interval set to " << idleInterval.count()
-               << "ms based on " << "ledgerIDLE_INTERVAL: "
+               << "ms based on "
+               << "ledgerIDLE_INTERVAL: "
                << adaptor_.parms().ledgerIDLE_INTERVAL.count()
                << ", previous ledger close time resolution: "
                << previousLedger_.closeTimeResolution().count() << "ms. ";
@@ -1261,7 +1262,8 @@ Consensus<Adaptor>::shouldPause(
          << "roundTime: " << result_->roundTime.read().count() << ", "
          << "max consensus time: " << parms.ledgerMAX_CONSENSUS.count() << ", "
          << "validators: " << totalValidators << ", "
-         << "laggards: " << laggards << ", " << "offline: " << offline << ", "
+         << "laggards: " << laggards << ", "
+         << "offline: " << offline << ", "
          << "quorum: " << quorum << ")";
 
     if (!ahead || !laggards || !totalValidators || !adaptor_.validator() ||
@@ -1447,7 +1449,7 @@ Consensus<Adaptor>::closeLedger(std::unique_ptr<std::stringstream> const& clog)
     if (acquired_.emplace(result_->txns.id(), result_->txns).second)
         adaptor_.share(result_->txns);
 
-    const auto mode = mode_.get();
+    auto const mode = mode_.get();
     CLOG(clog)
         << "closeLedger transitioned to ConsensusPhase::establish, mode: "
         << to_string(mode)
@@ -1622,8 +1624,8 @@ Consensus<Adaptor>::updateOurPositions(
         if (!haveCloseTimeConsensus_)
         {
             JLOG(j_.debug())
-                << "No CT consensus:" << " Proposers:"
-                << currPeerPositions_.size()
+                << "No CT consensus:"
+                << " Proposers:" << currPeerPositions_.size()
                 << " Mode:" << to_string(mode_.get())
                 << " Thresh:" << threshConsensus
                 << " Pos:" << consensusCloseTime.time_since_epoch().count();
@@ -1710,15 +1712,29 @@ Consensus<Adaptor>::haveConsensus(
                      << ", disagree=" << disagree;
 
     ConsensusParms const& parms = adaptor_.parms();
-    // Stalling is BAD
+    // Stalling is BAD. It means that we have a consensus on the close time, so
+    // peers are talking, but we have disputed transactions that peers are
+    // unable or unwilling to come to agreement on one way or the other.
     bool const stalled = haveCloseTimeConsensus_ &&
+        !result_->disputes.empty() &&
         std::ranges::all_of(result_->disputes,
-                            [this, &parms](auto const& dispute) {
+                            [this, &parms, &clog](auto const& dispute) {
                                 return dispute.second.stalled(
                                     parms,
                                     mode_.get() == ConsensusMode::proposing,
-                                    peerUnchangedCounter_);
+                                    peerUnchangedCounter_,
+                                    j_,
+                                    clog);
                             });
+    if (stalled)
+    {
+        std::stringstream ss;
+        ss << "Consensus detects as stalled with " << (agree + disagree) << "/"
+           << prevProposers_ << " proposers, and " << result_->disputes.size()
+           << " stalled disputed transactions.";
+        JLOG(j_.error()) << ss.str();
+        CLOG(clog) << ss.str();
+    }
 
     // Determine if we actually have consensus or not
     result_->state = checkConsensus(

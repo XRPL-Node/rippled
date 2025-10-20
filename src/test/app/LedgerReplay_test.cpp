@@ -312,11 +312,11 @@ public:
     {
     }
     void
-    addTxQueue(const uint256&) override
+    addTxQueue(uint256 const&) override
     {
     }
     void
-    removeTxQueue(const uint256&) override
+    removeTxQueue(uint256 const&) override
     {
     }
     bool
@@ -414,7 +414,7 @@ struct TestPeerSet : public PeerSet
         }
     }
 
-    const std::set<Peer::id_t>&
+    std::set<Peer::id_t> const&
     getPeerIds() const override
     {
         static std::set<Peer::id_t> emptyPeers;
@@ -1107,7 +1107,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
                 return false;
 
             beast::IP::Address addr =
-                boost::asio::ip::address::from_string("172.1.1.100");
+                boost::asio::ip::make_address("172.1.1.100");
             jtx::Env serverEnv(*this);
             serverEnv.app().config().LEDGER_REPLAY = server;
             auto http_resp = ripple::makeResponse(

@@ -68,9 +68,13 @@ JSS(Flags);                // in/out: TransactionSign; field.
 JSS(Holder);               // field.
 JSS(Invalid);              //
 JSS(Issuer);               // in: Credential transactions
+JSS(IssuingChainDoor);     // field.
+JSS(IssuingChainIssue);    // field.
 JSS(LastLedgerSequence);   // in: TransactionSign; field
 JSS(LastUpdateTime);       // field.
 JSS(LimitAmount);          // field.
+JSS(LockingChainDoor);     // field.
+JSS(LockingChainIssue);    // field.
 JSS(NetworkID);            // field.
 JSS(LPTokenOut);           // in: AMM Liquidity Provider deposit tokens
 JSS(LPTokenIn);            // in: AMM Liquidity Provider withdraw tokens
@@ -83,6 +87,8 @@ JSS(PriceDataSeries);                    // field.
 JSS(PriceData);                          // field.
 JSS(Provider);                           // field.
 JSS(QuoteAsset);                         // in: Oracle.
+JSS(RawTransaction);                     // in: Batch
+JSS(RawTransactions);                    // in: Batch
 JSS(SLE_hit_rate);                       // out: GetCounts.
 JSS(Scale);                              // field.
 JSS(SettleDelay);                        // in: TransactionSign
@@ -95,10 +101,10 @@ JSS(SigningPubKey);                      // field.
 JSS(Subject);                            // in: Credential transactions
 JSS(TakerGets);                          // field.
 JSS(TakerPays);                          // field.
-JSS(TxnSignature);                       // field.
 JSS(TradingFee);                         // in/out: AMM trading fee
 JSS(TransactionType);                    // in: TransactionSign.
 JSS(TransferRate);                       // in: TransferRate.
+JSS(TxnSignature);                       // field.
 JSS(URI);                                // field.
 JSS(VoteSlots);                          // out: AMM Vote
 JSS(aborted);                            // out: InboundLedger
@@ -145,6 +151,7 @@ JSS(attestations);
 JSS(attestation_reward_account);
 JSS(auction_slot);            // out: amm_info
 JSS(authorized);              // out: AccountLines
+JSS(authorize);               // out: delegate
 JSS(authorized_credentials);   // in: ledger_entry DepositPreauth
 JSS(auth_accounts);           // out: amm_info
 JSS(auth_change);             // out: AccountInfo
@@ -388,6 +395,7 @@ JSS(load_fee);                // out: LoadFeeTrackImp, NetworkOPs
 JSS(local);                   // out: resource/Logic.h
 JSS(local_txs);               // out: GetCounts
 JSS(local_static_keys);       // out: ValidatorList
+JSS(locked);                  // out: GatewayBalances
 JSS(low);                     // out: BookChanges
 JSS(lowest_sequence);         // out: AccountInfo
 JSS(lowest_ticket);           // out: AccountInfo
@@ -448,6 +456,7 @@ JSS(node_reads_hit);          // out: GetCounts
 JSS(node_reads_total);        // out: GetCounts
 JSS(node_reads_duration_us);  // out: GetCounts
 JSS(node_size);               // out: server_info
+JSS(nodes);                   // out: VaultInfo
 JSS(nodestore);               // out: GetCounts
 JSS(node_writes);             // out: GetCounts
 JSS(node_written_bytes);      // out: GetCounts
@@ -558,6 +567,7 @@ JSS(server_status);           // out: NetworkOPs
 JSS(server_version);          // out: NetworkOPs
 JSS(settle_delay);            // out: AccountChannels
 JSS(severity);                // in: LogLevel
+JSS(shares);                  // out: VaultInfo
 JSS(signature);               // out: NetworkOPs, ChannelAuthorize
 JSS(signature_verified);      // out: ChannelVerify
 JSS(signing_key);             // out: NetworkOPs
@@ -683,6 +693,7 @@ JSS(validations);               // out: AmendmentTableImpl
 JSS(validator_list_threshold);  // out: ValidatorList
 JSS(validator_sites);           // out: ValidatorSites
 JSS(value);                     // out: STAmount
+JSS(vault_id);                  // in: VaultInfo
 JSS(version);                   // out: RPCVersion
 JSS(vetoed);                    // out: AmendmentTableImpl
 JSS(volume_a);                  // out: BookChanges
@@ -699,7 +710,7 @@ JSS(write_load);              // out: GetCounts
 #pragma push_macro("TRANSACTION")
 #undef TRANSACTION
 
-#define TRANSACTION(tag, value, name, fields) JSS(name);
+#define TRANSACTION(tag, value, name, ...) JSS(name);
 
 #include <xrpl/protocol/detail/transactions.macro>
 
@@ -711,11 +722,11 @@ JSS(write_load);              // out: GetCounts
 #pragma push_macro("LEDGER_ENTRY_DUPLICATE")
 #undef LEDGER_ENTRY_DUPLICATE
 
-#define LEDGER_ENTRY(tag, value, name, rpcName, fields) \
-    JSS(name);                                          \
+#define LEDGER_ENTRY(tag, value, name, rpcName, ...) \
+    JSS(name);                                       \
     JSS(rpcName);
 
-#define LEDGER_ENTRY_DUPLICATE(tag, value, name, rpcName, fields) JSS(rpcName);
+#define LEDGER_ENTRY_DUPLICATE(tag, value, name, rpcName, ...) JSS(rpcName);
 
 #include <xrpl/protocol/detail/ledger_entries.macro>
 

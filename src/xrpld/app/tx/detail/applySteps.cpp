@@ -18,49 +18,20 @@
 //==============================================================================
 
 #include <xrpld/app/tx/applySteps.h>
-#include <xrpld/app/tx/detail/AMMBid.h>
-#include <xrpld/app/tx/detail/AMMClawback.h>
-#include <xrpld/app/tx/detail/AMMCreate.h>
-#include <xrpld/app/tx/detail/AMMDelete.h>
-#include <xrpld/app/tx/detail/AMMDeposit.h>
-#include <xrpld/app/tx/detail/AMMVote.h>
-#include <xrpld/app/tx/detail/AMMWithdraw.h>
-#include <xrpld/app/tx/detail/ApplyContext.h>
-#include <xrpld/app/tx/detail/CancelCheck.h>
-#include <xrpld/app/tx/detail/CancelOffer.h>
-#include <xrpld/app/tx/detail/CashCheck.h>
-#include <xrpld/app/tx/detail/Change.h>
-#include <xrpld/app/tx/detail/Clawback.h>
-#include <xrpld/app/tx/detail/CreateCheck.h>
-#include <xrpld/app/tx/detail/CreateOffer.h>
-#include <xrpld/app/tx/detail/CreateTicket.h>
-#include <xrpld/app/tx/detail/Credentials.h>
-#include <xrpld/app/tx/detail/DID.h>
-#include <xrpld/app/tx/detail/DeleteAccount.h>
-#include <xrpld/app/tx/detail/DeleteOracle.h>
-#include <xrpld/app/tx/detail/DepositPreauth.h>
-#include <xrpld/app/tx/detail/Escrow.h>
-#include <xrpld/app/tx/detail/LedgerStateFix.h>
-#include <xrpld/app/tx/detail/MPTokenAuthorize.h>
-#include <xrpld/app/tx/detail/MPTokenIssuanceCreate.h>
-#include <xrpld/app/tx/detail/MPTokenIssuanceDestroy.h>
-#include <xrpld/app/tx/detail/MPTokenIssuanceSet.h>
-#include <xrpld/app/tx/detail/NFTokenAcceptOffer.h>
-#include <xrpld/app/tx/detail/NFTokenBurn.h>
-#include <xrpld/app/tx/detail/NFTokenCancelOffer.h>
-#include <xrpld/app/tx/detail/NFTokenCreateOffer.h>
-#include <xrpld/app/tx/detail/NFTokenMint.h>
-#include <xrpld/app/tx/detail/NFTokenModify.h>
-#include <xrpld/app/tx/detail/PayChan.h>
-#include <xrpld/app/tx/detail/Payment.h>
-#include <xrpld/app/tx/detail/PermissionedDomainDelete.h>
-#include <xrpld/app/tx/detail/PermissionedDomainSet.h>
-#include <xrpld/app/tx/detail/SetAccount.h>
-#include <xrpld/app/tx/detail/SetOracle.h>
-#include <xrpld/app/tx/detail/SetRegularKey.h>
-#include <xrpld/app/tx/detail/SetSignerList.h>
-#include <xrpld/app/tx/detail/SetTrust.h>
-#include <xrpld/app/tx/detail/XChainBridge.h>
+#pragma push_macro("TRANSACTION")
+#undef TRANSACTION
+
+// Do nothing
+#define TRANSACTION(...)
+#define TRANSACTION_INCLUDE 1
+
+#include <xrpl/protocol/detail/transactions.macro>
+
+#undef TRANSACTION
+#pragma pop_macro("TRANSACTION")
+
+// DO NOT INCLUDE TRANSACTOR HEADER FILES HERE.
+// See the instructions at the top of transactions.macro instead.
 
 #include <xrpl/protocol/TxFormats.h>
 
@@ -89,15 +60,14 @@ with_txn_type(TxType txnType, F&& f)
 #pragma push_macro("TRANSACTION")
 #undef TRANSACTION
 
-#define TRANSACTION(tag, value, name, fields) \
-    case tag:                                 \
+#define TRANSACTION(tag, value, name, ...) \
+    case tag:                              \
         return f.template operator()<name>();
 
 #include <xrpl/protocol/detail/transactions.macro>
 
 #undef TRANSACTION
 #pragma pop_macro("TRANSACTION")
-
         default:
             throw UnknownTxnType(txnType);
     }
@@ -149,7 +119,7 @@ invoke_preflight(PreflightContext const& ctx)
     try
     {
         return with_txn_type(ctx.tx.getTxnType(), [&]<typename T>() {
-            auto const tec = T::preflight(ctx);
+            auto const tec = Transactor::invokePreflight<T>(ctx);
             return std::make_pair(
                 tec,
                 isTesSuccess(tec) ? consequences_helper<T>(ctx)
@@ -159,10 +129,12 @@ invoke_preflight(PreflightContext const& ctx)
     catch (UnknownTxnType const& e)
     {
         // Should never happen
+        // LCOV_EXCL_START
         JLOG(ctx.j.fatal())
             << "Unknown transaction type in preflight: " << e.txnType;
         UNREACHABLE("ripple::invoke_preflight : unknown transaction type");
         return {temUNKNOWN, TxConsequences{temUNKNOWN}};
+        // LCOV_EXCL_STOP
     }
 }
 
@@ -196,6 +168,11 @@ invoke_preclaim(PreclaimContext const& ctx)
                 if (result != tesSUCCESS)
                     return result;
 
+                result = T::checkPermission(ctx.view, ctx.tx);
+
+                if (result != tesSUCCESS)
+                    return result;
+
                 result = T::checkSign(ctx);
 
                 if (result != tesSUCCESS)
@@ -208,13 +185,31 @@ invoke_preclaim(PreclaimContext const& ctx)
     catch (UnknownTxnType const& e)
     {
         // Should never happen
+        // LCOV_EXCL_START
         JLOG(ctx.j.fatal())
             << "Unknown transaction type in preclaim: " << e.txnType;
         UNREACHABLE("ripple::invoke_preclaim : unknown transaction type");
         return temUNKNOWN;
+        // LCOV_EXCL_STOP
     }
 }
 
+/**
+ * @brief Calculates the base fee for a given transaction.
+ *
+ * This function determines the base fee required for the specified transaction
+ * by invoking the appropriate fee calculation logic based on the transaction
+ * type. It uses a type-dispatch mechanism to select the correct calculation
+ * method.
+ *
+ * @param view The ledger view to use for fee calculation.
+ * @param tx The transaction for which the base fee is to be calculated.
+ * @return The calculated base fee as an XRPAmount.
+ *
+ * @throws std::exception If an error occurs during fee calculation, including
+ * but not limited to unknown transaction types or internal errors, the function
+ * logs an error and returns an XRPAmount of zero.
+ */
 static XRPAmount
 invoke_calculateBaseFee(ReadView const& view, STTx const& tx)
 {
@@ -226,9 +221,11 @@ invoke_calculateBaseFee(ReadView const& view, STTx const& tx)
     }
     catch (UnknownTxnType const& e)
     {
+        // LCOV_EXCL_START
         UNREACHABLE(
             "ripple::invoke_calculateBaseFee : unknown transaction type");
         return XRPAmount{0};
+        // LCOV_EXCL_STOP
     }
 }
 
@@ -286,10 +283,12 @@ invoke_apply(ApplyContext& ctx)
     catch (UnknownTxnType const& e)
     {
         // Should never happen
+        // LCOV_EXCL_START
         JLOG(ctx.journal.fatal())
             << "Unknown transaction type in apply: " << e.txnType;
         UNREACHABLE("ripple::invoke_apply : unknown transaction type");
         return {temUNKNOWN, false};
+        // LCOV_EXCL_STOP
     }
 }
 
@@ -308,7 +307,28 @@ preflight(
     }
     catch (std::exception const& e)
     {
-        JLOG(j.fatal()) << "apply: " << e.what();
+        JLOG(j.fatal()) << "apply (preflight): " << e.what();
+        return {pfctx, {tefEXCEPTION, TxConsequences{tx}}};
+    }
+}
+
+PreflightResult
+preflight(
+    Application& app,
+    Rules const& rules,
+    uint256 const& parentBatchId,
+    STTx const& tx,
+    ApplyFlags flags,
+    beast::Journal j)
+{
+    PreflightContext const pfctx(app, tx, parentBatchId, rules, flags, j);
+    try
+    {
+        return {pfctx, invoke_preflight(pfctx)};
+    }
+    catch (std::exception const& e)
+    {
+        JLOG(j.fatal()) << "apply (preflight): " << e.what();
         return {pfctx, {tefEXCEPTION, TxConsequences{tx}}};
     }
 }
@@ -322,18 +342,31 @@ preclaim(
     std::optional<PreclaimContext const> ctx;
     if (preflightResult.rules != view.rules())
     {
-        auto secondFlight = preflight(
-            app,
-            view.rules(),
-            preflightResult.tx,
-            preflightResult.flags,
-            preflightResult.j);
+        auto secondFlight = [&]() {
+            if (preflightResult.parentBatchId)
+                return preflight(
+                    app,
+                    view.rules(),
+                    preflightResult.parentBatchId.value(),
+                    preflightResult.tx,
+                    preflightResult.flags,
+                    preflightResult.j);
+
+            return preflight(
+                app,
+                view.rules(),
+                preflightResult.tx,
+                preflightResult.flags,
+                preflightResult.j);
+        }();
+
         ctx.emplace(
             app,
             view,
             secondFlight.ter,
             secondFlight.tx,
             secondFlight.flags,
+            secondFlight.parentBatchId,
             secondFlight.j);
     }
     else
@@ -344,8 +377,10 @@ preclaim(
             preflightResult.ter,
             preflightResult.tx,
             preflightResult.flags,
+            preflightResult.parentBatchId,
             preflightResult.j);
     }
+
     try
     {
         if (ctx->preflightResult != tesSUCCESS)
@@ -354,7 +389,7 @@ preclaim(
     }
     catch (std::exception const& e)
     {
-        JLOG(ctx->j.fatal()) << "apply: " << e.what();
+        JLOG(ctx->j.fatal()) << "apply (preclaim): " << e.what();
         return {*ctx, tefEXCEPTION};
     }
 }
@@ -387,6 +422,7 @@ doApply(PreclaimResult const& preclaimResult, Application& app, OpenView& view)
         ApplyContext ctx(
             app,
             view,
+            preclaimResult.parentBatchId,
             preclaimResult.tx,
             preclaimResult.ter,
             calculateBaseFee(view, preclaimResult.tx),

@@ -619,7 +619,7 @@ class Check_test : public beast::unit_test::suite
         }
         {
             // Write a check that chews into alice's reserve.
-            STAmount const reserve{env.current()->fees().accountReserve(0)};
+            STAmount const reserve{env.current()->fees().reserve};
             STAmount const checkAmount{
                 startBalance - reserve - drops(baseFeeDrops)};
             uint256 const chkId{getCheckIndex(alice, env.seq(alice))};
@@ -657,7 +657,7 @@ class Check_test : public beast::unit_test::suite
         }
         {
             // Write a check that goes one drop past what alice can pay.
-            STAmount const reserve{env.current()->fees().accountReserve(0)};
+            STAmount const reserve{env.current()->fees().reserve};
             STAmount const checkAmount{
                 startBalance - reserve - drops(baseFeeDrops - 1)};
             uint256 const chkId{getCheckIndex(alice, env.seq(alice))};
@@ -2720,7 +2720,7 @@ public:
     run() override
     {
         using namespace test::jtx;
-        auto const sa = supported_amendments();
+        auto const sa = testable_amendments();
         testWithFeats(sa - featureCheckCashMakesTrustLine);
         testWithFeats(sa - disallowIncoming);
         testWithFeats(sa);
@@ -2729,6 +2729,6 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Check, tx, ripple);
+BEAST_DEFINE_TESTSUITE(Check, app, ripple);
 
 }  // namespace ripple

@@ -24,10 +24,8 @@
 
 #include <boost/operators.hpp>
 
-#include <functional>
 #include <iostream>
 #include <type_traits>
-#include <utility>
 
 namespace ripple {
 
@@ -76,13 +74,13 @@ public:
     }
 
     bool
-    operator<(const tagged_integer& rhs) const noexcept
+    operator<(tagged_integer const& rhs) const noexcept
     {
         return m_value < rhs.m_value;
     }
 
     bool
-    operator==(const tagged_integer& rhs) const noexcept
+    operator==(tagged_integer const& rhs) const noexcept
     {
         return m_value == rhs.m_value;
     }
@@ -144,14 +142,14 @@ public:
     }
 
     tagged_integer&
-    operator<<=(const tagged_integer& rhs) noexcept
+    operator<<=(tagged_integer const& rhs) noexcept
     {
         m_value <<= rhs.m_value;
         return *this;
     }
 
     tagged_integer&
-    operator>>=(const tagged_integer& rhs) noexcept
+    operator>>=(tagged_integer const& rhs) noexcept
     {
         m_value >>= rhs.m_value;
         return *this;

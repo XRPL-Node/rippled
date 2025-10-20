@@ -28,6 +28,7 @@
 
 #include <cerrno>
 #include <cstddef>
+#include <fstream>
 #include <ios>
 #include <iterator>
 #include <optional>
@@ -55,7 +56,7 @@ getFileContents(
         return {};
     }
 
-    ifstream fileStream(fullPath, std::ios::in);
+    std::ifstream fileStream(fullPath.string(), std::ios::in);
 
     if (!fileStream)
     {
@@ -63,7 +64,7 @@ getFileContents(
         return {};
     }
 
-    const std::string result{
+    std::string const result{
         std::istreambuf_iterator<char>{fileStream},
         std::istreambuf_iterator<char>{}};
 
@@ -85,7 +86,8 @@ writeFileContents(
     using namespace boost::filesystem;
     using namespace boost::system::errc;
 
-    ofstream fileStream(destPath, std::ios::out | std::ios::trunc);
+    std::ofstream fileStream(
+        destPath.string(), std::ios::out | std::ios::trunc);
 
     if (!fileStream)
     {

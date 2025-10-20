@@ -22,9 +22,11 @@
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/tx/apply.h>
-#include <xrpld/ledger/CachedView.h>
 #include <xrpld/overlay/Message.h>
 #include <xrpld/overlay/Overlay.h>
+
+#include <xrpl/ledger/CachedView.h>
+#include <xrpl/protocol/TxFlags.h>
 
 #include <boost/range/adaptor/transformed.hpp>
 
@@ -120,6 +122,18 @@ OpenLedger::accept(
     {
         auto const& tx = txpair.first;
         auto const txId = tx->getTransactionID();
+
+        // skip batch txns
+        // LCOV_EXCL_START
+        if (tx->isFlag(tfInnerBatchTxn) && rules.enabled(featureBatch))
+        {
+            XRPL_ASSERT(
+                txpair.second && txpair.second->isFieldPresent(sfParentBatchID),
+                "Inner Batch transaction missing sfParentBatchID");
+            continue;
+        }
+        // LCOV_EXCL_STOP
+
         if (auto const toSkip = app.getHashRouter().shouldRelay(txId))
         {
             JLOG(j_.debug()) << "Relaying recovered tx " << txId;

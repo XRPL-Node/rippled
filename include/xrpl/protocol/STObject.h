@@ -25,7 +25,6 @@
 #include <xrpl/basics/chrono.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
-#include <xrpl/protocol/FeeUnits.h>
 #include <xrpl/protocol/HashPrefix.h>
 #include <xrpl/protocol/SOTemplate.h>
 #include <xrpl/protocol/STAmount.h>
@@ -34,6 +33,7 @@
 #include <xrpl/protocol/STIssue.h>
 #include <xrpl/protocol/STPathSet.h>
 #include <xrpl/protocol/STVector256.h>
+#include <xrpl/protocol/Units.h>
 #include <xrpl/protocol/detail/STVar.h>
 
 #include <boost/iterator/transform_iterator.hpp>
@@ -99,8 +99,8 @@ public:
     STObject&
     operator=(STObject&& other);
 
-    STObject(const SOTemplate& type, SField const& name);
-    STObject(const SOTemplate& type, SerialIter& sit, SField const& name);
+    STObject(SOTemplate const& type, SField const& name);
+    STObject(SOTemplate const& type, SerialIter& sit, SField const& name);
     STObject(SerialIter& sit, SField const& name, int depth = 0);
     STObject(SerialIter&& sit, SField const& name);
     explicit STObject(SField const& name);
@@ -121,7 +121,7 @@ public:
     reserve(std::size_t n);
 
     void
-    applyTemplate(const SOTemplate& type);
+    applyTemplate(SOTemplate const& type);
 
     void
     applyTemplateFromSField(SField const&);
@@ -130,7 +130,7 @@ public:
     isFree() const;
 
     void
-    set(const SOTemplate&);
+    set(SOTemplate const&);
 
     bool
     set(SerialIter& u, int depth = 0);
@@ -139,7 +139,7 @@ public:
     getSType() const override;
 
     bool
-    isEquivalent(const STBase& t) const override;
+    isEquivalent(STBase const& t) const override;
 
     bool
     isDefault() const override;
@@ -154,8 +154,7 @@ public:
     getText() const override;
 
     // TODO(tom): options should be an enum.
-    Json::Value
-    getJson(JsonOptions options) const override;
+    Json::Value getJson(JsonOptions = JsonOptions::none) const override;
 
     void
     addWithoutSigningFields(Serializer& s) const;
@@ -183,13 +182,13 @@ public:
     uint256
     getSigningHash(HashPrefix prefix) const;
 
-    const STBase&
+    STBase const&
     peekAtIndex(int offset) const;
 
     STBase&
     getIndex(int offset);
 
-    const STBase*
+    STBase const*
     peekAtPIndex(int offset) const;
 
     STBase*
@@ -201,13 +200,13 @@ public:
     SField const&
     getFieldSType(int index) const;
 
-    const STBase&
+    STBase const&
     peekAtField(SField const& field) const;
 
     STBase&
     getField(SField const& field);
 
-    const STBase*
+    STBase const*
     peekAtPField(SField const& field) const;
 
     STBase*
@@ -232,6 +231,8 @@ public:
     getFieldH192(SField const& field) const;
     uint256
     getFieldH256(SField const& field) const;
+    std::int32_t
+    getFieldI32(SField const& field) const;
     AccountID
     getAccountID(SField const& field) const;
 
@@ -241,11 +242,11 @@ public:
     getFieldAmount(SField const& field) const;
     STPathSet const&
     getFieldPathSet(SField const& field) const;
-    const STVector256&
+    STVector256 const&
     getFieldV256(SField const& field) const;
-    const STArray&
+    STArray const&
     getFieldArray(SField const& field) const;
-    const STCurrency&
+    STCurrency const&
     getFieldCurrency(SField const& field) const;
     STNumber const&
     getFieldNumber(SField const& field) const;
@@ -366,6 +367,8 @@ public:
     void
     setFieldH256(SField const& field, uint256 const&);
     void
+    setFieldI32(SField const& field, std::int32_t);
+    void
     setFieldVL(SField const& field, Blob const&);
     void
     setFieldVL(SField const& field, Slice const&);
@@ -409,12 +412,12 @@ public:
     delField(int index);
 
     bool
-    hasMatchingEntry(const STBase&);
+    hasMatchingEntry(STBase const&);
 
     bool
-    operator==(const STObject& o) const;
+    operator==(STObject const& o) const;
     bool
-    operator!=(const STObject& o) const;
+    operator!=(STObject const& o) const;
 
     class FieldErr;
 
@@ -484,9 +487,19 @@ private:
 template <class T>
 class STObject::Proxy
 {
-protected:
+public:
     using value_type = typename T::value_type;
 
+    value_type
+    value() const;
+
+    value_type
+    operator*() const;
+
+    T const*
+    operator->() const;
+
+protected:
     STObject* st_;
     SOEStyle style_;
     TypedField<T> const* f_;
@@ -494,9 +507,6 @@ protected:
     Proxy(Proxy const&) = default;
 
     Proxy(STObject* st, TypedField<T> const* f);
-
-    value_type
-    value() const;
 
     T const*
     find() const;
@@ -512,7 +522,7 @@ template <typename U>
 concept IsArithmetic = std::is_arithmetic_v<U> || std::is_same_v<U, STAmount>;
 
 template <class T>
-class STObject::ValueProxy : private Proxy<T>
+class STObject::ValueProxy : public Proxy<T>
 {
 private:
     using value_type = typename T::value_type;
@@ -538,6 +548,13 @@ public:
 
     operator value_type() const;
 
+    template <typename U>
+    friend bool
+    operator==(U const& lhs, STObject::ValueProxy<T> const& rhs)
+    {
+        return rhs.value() == lhs;
+    }
+
 private:
     friend class STObject;
 
@@ -545,7 +562,7 @@ private:
 };
 
 template <class T>
-class STObject::OptionalProxy : private Proxy<T>
+class STObject::OptionalProxy : public Proxy<T>
 {
 private:
     using value_type = typename T::value_type;
@@ -564,15 +581,6 @@ public:
     */
     explicit
     operator bool() const noexcept;
-
-    /** Return the contained value
-
-        Throws:
-
-            STObject::FieldErr if !engaged()
-    */
-    value_type
-    operator*() const;
 
     operator optional_type() const;
 
@@ -718,6 +726,20 @@ STObject::Proxy<T>::value() const -> value_type
 }
 
 template <class T>
+auto
+STObject::Proxy<T>::operator*() const -> value_type
+{
+    return this->value();
+}
+
+template <class T>
+T const*
+STObject::Proxy<T>::operator->() const
+{
+    return this->find();
+}
+
+template <class T>
 inline T const*
 STObject::Proxy<T>::find() const
 {
@@ -790,13 +812,6 @@ template <class T>
 STObject::OptionalProxy<T>::operator bool() const noexcept
 {
     return engaged();
-}
-
-template <class T>
-auto
-STObject::OptionalProxy<T>::operator*() const -> value_type
-{
-    return this->value();
 }
 
 template <class T>
@@ -970,7 +985,7 @@ STObject::getCount() const
     return v_.size();
 }
 
-inline const STBase&
+inline STBase const&
 STObject::peekAtIndex(int offset) const
 {
     return v_[offset].get();
@@ -982,7 +997,7 @@ STObject::getIndex(int offset)
     return v_[offset].get();
 }
 
-inline const STBase*
+inline STBase const*
 STObject::peekAtPIndex(int offset) const
 {
     return &v_[offset].get();
@@ -1117,7 +1132,7 @@ STObject::setFieldH160(SField const& field, base_uint<160, Tag> const& v)
 }
 
 inline bool
-STObject::operator!=(const STObject& o) const
+STObject::operator!=(STObject const& o) const
 {
     return !(*this == o);
 }
@@ -1126,7 +1141,7 @@ template <typename T, typename V>
 V
 STObject::getFieldByValue(SField const& field) const
 {
-    const STBase* rf = peekAtPField(field);
+    STBase const* rf = peekAtPField(field);
 
     if (!rf)
         throwFieldNotFound(field);
@@ -1136,7 +1151,7 @@ STObject::getFieldByValue(SField const& field) const
     if (id == STI_NOTPRESENT)
         return V();  // optional field not present
 
-    const T* cf = dynamic_cast<const T*>(rf);
+    T const* cf = dynamic_cast<T const*>(rf);
 
     if (!cf)
         Throw<std::runtime_error>("Wrong field type");
@@ -1153,7 +1168,7 @@ template <typename T, typename V>
 V const&
 STObject::getFieldByConstRef(SField const& field, V const& empty) const
 {
-    const STBase* rf = peekAtPField(field);
+    STBase const* rf = peekAtPField(field);
 
     if (!rf)
         throwFieldNotFound(field);
@@ -1163,7 +1178,7 @@ STObject::getFieldByConstRef(SField const& field, V const& empty) const
     if (id == STI_NOTPRESENT)
         return empty;  // optional field not present
 
-    const T* cf = dynamic_cast<const T*>(rf);
+    T const* cf = dynamic_cast<T const*>(rf);
 
     if (!cf)
         Throw<std::runtime_error>("Wrong field type");

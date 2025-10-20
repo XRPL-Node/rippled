@@ -53,7 +53,7 @@ struct DepositAuth_test : public beast::unit_test::suite
 
         {
             // featureDepositAuth is disabled.
-            Env env(*this, supported_amendments() - featureDepositAuth);
+            Env env(*this, testable_amendments() - featureDepositAuth);
             env.fund(XRP(10000), alice);
 
             // Note that, to support old behavior, invalid flags are ignored.
@@ -352,27 +352,27 @@ struct DepositAuth_test : public beast::unit_test::suite
             auto const noRippleNext = i & 0x2;
             auto const withDepositAuth = i & 0x4;
             testIssuer(
-                supported_amendments() | featureDepositAuth,
+                testable_amendments() | featureDepositAuth,
                 noRipplePrev,
                 noRippleNext,
                 withDepositAuth);
 
             if (!withDepositAuth)
                 testIssuer(
-                    supported_amendments() - featureDepositAuth,
+                    testable_amendments() - featureDepositAuth,
                     noRipplePrev,
                     noRippleNext,
                     withDepositAuth);
 
             testNonIssuer(
-                supported_amendments() | featureDepositAuth,
+                testable_amendments() | featureDepositAuth,
                 noRipplePrev,
                 noRippleNext,
                 withDepositAuth);
 
             if (!withDepositAuth)
                 testNonIssuer(
-                    supported_amendments() - featureDepositAuth,
+                    testable_amendments() - featureDepositAuth,
                     noRipplePrev,
                     noRippleNext,
                     withDepositAuth);
@@ -420,7 +420,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
         Account const becky{"becky"};
         {
             // featureDepositPreauth is disabled.
-            Env env(*this, supported_amendments() - featureDepositPreauth);
+            Env env(*this, testable_amendments() - featureDepositPreauth);
             env.fund(XRP(10000), alice, becky);
             env.close();
 
@@ -664,7 +664,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
 
             {
                 // becky setup depositpreauth with credentials
-                const char credType[] = "abcde";
+                char const credType[] = "abcde";
                 Account const carol{"carol"};
                 env.fund(XRP(5000), carol);
                 env.close();
@@ -714,12 +714,12 @@ struct DepositPreauth_test : public beast::unit_test::suite
                 if (!supportsPreauth)
                 {
                     auto const seq1 = env.seq(alice);
-                    env(escrow(alice, becky, XRP(100)),
-                        finish_time(env.now() + 1s));
+                    env(escrow::create(alice, becky, XRP(100)),
+                        escrow::finish_time(env.now() + 1s));
                     env.close();
 
                     // Failed as rule is disabled
-                    env(finish(gw, alice, seq1),
+                    env(escrow::finish(gw, alice, seq1),
                         fee(1500),
                         ter(tecNO_PERMISSION));
                     env.close();
@@ -820,7 +820,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
     {
         using namespace jtx;
 
-        const char credType[] = "abcde";
+        char const credType[] = "abcde";
         Account const issuer{"issuer"};
         Account const alice{"alice"};
         Account const bob{"bob"};
@@ -828,9 +828,9 @@ struct DepositPreauth_test : public beast::unit_test::suite
         Account const john{"john"};
 
         {
-            testcase("Payment failed with disabled credentials rule.");
+            testcase("Payment failure with disabled credentials rule.");
 
-            Env env(*this, supported_amendments() - featureCredentials);
+            Env env(*this, testable_amendments() - featureCredentials);
 
             env.fund(XRP(5000), issuer, bob, alice);
             env.close();
@@ -930,7 +930,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
         }
 
         {
-            testcase("Payment failed with invalid credentials.");
+            testcase("Payment failure with invalid credentials.");
 
             Env env(*this);
 
@@ -993,7 +993,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
 
             {
                 // create another valid credential
-                const char credType2[] = "fghij";
+                char const credType2[] = "fghij";
                 env(credentials::create(alice, issuer, credType2));
                 env.close();
                 env(credentials::accept(alice, issuer, credType2));
@@ -1025,7 +1025,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
     {
         using namespace jtx;
 
-        const char credType[] = "abcde";
+        char const credType[] = "abcde";
         Account const issuer{"issuer"};
         Account const alice{"alice"};
         Account const bob{"bob"};
@@ -1196,8 +1196,8 @@ struct DepositPreauth_test : public beast::unit_test::suite
     testExpiredCreds()
     {
         using namespace jtx;
-        const char credType[] = "abcde";
-        const char credType2[] = "fghijkl";
+        char const credType[] = "abcde";
+        char const credType2[] = "fghijkl";
         Account const issuer{"issuer"};
         Account const alice{"alice"};
         Account const bob{"bob"};
@@ -1206,7 +1206,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
         Account const zelda{"zelda"};
 
         {
-            testcase("Payment failed with expired credentials.");
+            testcase("Payment failure with expired credentials.");
 
             Env env(*this);
 
@@ -1353,7 +1353,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
         {
             using namespace std::chrono;
 
-            testcase("Escrow failed with expired credentials.");
+            testcase("Escrow failure with expired credentials.");
 
             Env env(*this);
 
@@ -1387,12 +1387,13 @@ struct DepositPreauth_test : public beast::unit_test::suite
             env.close();
 
             auto const seq = env.seq(alice);
-            env(escrow(alice, bob, XRP(1000)), finish_time(env.now() + 1s));
+            env(escrow::create(alice, bob, XRP(1000)),
+                escrow::finish_time(env.now() + 1s));
             env.close();
 
             // zelda can't finish escrow with invalid credentials
             {
-                env(finish(zelda, alice, seq),
+                env(escrow::finish(zelda, alice, seq),
                     credentials::ids({}),
                     ter(temMALFORMED));
                 env.close();
@@ -1404,14 +1405,14 @@ struct DepositPreauth_test : public beast::unit_test::suite
                     "0E0B04ED60588A758B67E21FBBE95AC5A63598BA951761DC0EC9C08D7E"
                     "01E034";
 
-                env(finish(zelda, alice, seq),
+                env(escrow::finish(zelda, alice, seq),
                     credentials::ids({invalidIdx}),
                     ter(tecBAD_CREDENTIALS));
                 env.close();
             }
 
             {  // Ledger closed, time increased, zelda can't finish escrow
-                env(finish(zelda, alice, seq),
+                env(escrow::finish(zelda, alice, seq),
                     credentials::ids({credIdx}),
                     fee(1500),
                     ter(tecEXPIRED));
@@ -1562,7 +1563,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
     {
         testEnable();
         testInvalid();
-        auto const supported{jtx::supported_amendments()};
+        auto const supported{jtx::testable_amendments()};
         testPayment(supported - featureDepositPreauth - featureCredentials);
         testPayment(supported - featureDepositPreauth);
         testPayment(supported - featureCredentials);

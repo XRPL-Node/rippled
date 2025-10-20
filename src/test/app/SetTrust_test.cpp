@@ -192,7 +192,7 @@ public:
         auto const& assistor = createOnHighAcct ? acctC : acctD;
 
         auto const txFee = env.current()->fees().base;
-        auto const baseReserve = env.current()->fees().accountReserve(0);
+        auto const baseReserve = env.current()->fees().reserve;
         auto const threelineReserve = env.current()->fees().accountReserve(3);
 
         env.fund(XRP(10000), gwA, gwB, assistor);
@@ -469,7 +469,7 @@ public:
         auto& tx1 = createQuality ? txWithQuality : txWithoutQuality;
         auto& tx2 = createQuality ? txWithoutQuality : txWithQuality;
 
-        auto check_quality = [&](const bool exists) {
+        auto check_quality = [&](bool const exists) {
             Json::Value jv;
             jv["account"] = toAcct.human();
             auto const lines = env.rpc("json", "account_lines", to_string(jv));
@@ -648,7 +648,7 @@ public:
     run() override
     {
         using namespace test::jtx;
-        auto const sa = supported_amendments();
+        auto const sa = testable_amendments();
         testWithFeats(sa - disallowIncoming);
         testWithFeats(sa);
     }

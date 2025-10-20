@@ -22,7 +22,6 @@
 
 #include <xrpl/basics/ByteUtilities.h>
 #include <xrpl/basics/base_uint.h>
-#include <xrpl/basics/partitioned_unordered_map.h>
 
 #include <cstdint>
 
@@ -116,6 +115,23 @@ std::size_t constexpr maxMPTokenMetadataLength = 1024;
 /** The maximum amount of MPTokenIssuance */
 std::uint64_t constexpr maxMPTokenAmount = 0x7FFF'FFFF'FFFF'FFFFull;
 
+/** The maximum length of Data payload */
+std::size_t constexpr maxDataPayloadLength = 256;
+
+/** Vault withdrawal policies */
+std::uint8_t constexpr vaultStrategyFirstComeFirstServe = 1;
+
+/** Default IOU scale factor for a Vault */
+std::uint8_t constexpr vaultDefaultIOUScale = 6;
+/** Maximum scale factor for a Vault. The number is chosen to ensure that
+1 IOU can be always converted to shares.
+10^19 > maxMPTokenAmount (2^64-1) > 10^18 */
+std::uint8_t constexpr vaultMaximumIOUScale = 18;
+
+/** Maximum recursion depth for vault shares being put as an asset inside
+ * another vault; counted from 0 */
+std::uint8_t constexpr maxAssetCheckDepth = 5;
+
 /** A ledger index. */
 using LedgerIndex = std::uint32_t;
 
@@ -154,6 +170,13 @@ std::size_t constexpr maxPriceScale = 20;
 /** The maximum percentage of outliers to trim
  */
 std::size_t constexpr maxTrim = 25;
+
+/** The maximum number of delegate permissions an account can grant
+ */
+std::size_t constexpr permissionMaxSize = 10;
+
+/** The maximum number of transactions that can be in a batch. */
+std::size_t constexpr maxBatchTxCount = 8;
 
 }  // namespace ripple
 

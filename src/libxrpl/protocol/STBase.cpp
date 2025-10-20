@@ -40,7 +40,7 @@ STBase::STBase(SField const& n) : fName(&n)
 }
 
 STBase&
-STBase::operator=(const STBase& t)
+STBase::operator=(STBase const& t)
 {
     if (!fName->isUseful())
         fName = t.fName;
@@ -48,13 +48,13 @@ STBase::operator=(const STBase& t)
 }
 
 bool
-STBase::operator==(const STBase& t) const
+STBase::operator==(STBase const& t) const
 {
     return (getSType() == t.getSType()) && isEquivalent(t);
 }
 
 bool
-STBase::operator!=(const STBase& t) const
+STBase::operator!=(STBase const& t) const
 {
     return (getSType() != t.getSType()) || !isEquivalent(t);
 }
@@ -112,11 +112,13 @@ void
 STBase::add(Serializer& s) const
 {
     // Should never be called
+    // LCOV_EXCL_START
     UNREACHABLE("ripple::STBase::add : not implemented");
+    // LCOV_EXCL_STOP
 }
 
 bool
-STBase::isEquivalent(const STBase& t) const
+STBase::isEquivalent(STBase const& t) const
 {
     XRPL_ASSERT(
         getSType() == STI_NOTPRESENT,
@@ -154,7 +156,7 @@ STBase::addFieldID(Serializer& s) const
 //------------------------------------------------------------------------------
 
 std::ostream&
-operator<<(std::ostream& out, const STBase& t)
+operator<<(std::ostream& out, STBase const& t)
 {
     return out << t.getFullText();
 }

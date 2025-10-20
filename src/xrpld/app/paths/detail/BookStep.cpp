@@ -23,11 +23,11 @@
 #include <xrpld/app/paths/detail/FlatSets.h>
 #include <xrpld/app/paths/detail/Steps.h>
 #include <xrpld/app/tx/detail/OfferStream.h>
-#include <xrpld/ledger/PaymentSandbox.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/ledger/PaymentSandbox.h>
 #include <xrpl/protocol/Book.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/IOUAmount.h>
@@ -93,7 +93,7 @@ protected:
 public:
     BookStep(StrandContext const& ctx, Issue const& in, Issue const& out)
         : maxOffersToConsume_(getMaxOffersToConsume(ctx))
-        , book_(in, out)
+        , book_(in, out, ctx.domainID)
         , strandSrc_(ctx.strandSrc)
         , strandDst_(ctx.strandDst)
         , prevStep_(ctx.prevStep)
@@ -190,7 +190,8 @@ protected:
     logStringImpl(char const* name) const
     {
         std::ostringstream ostr;
-        ostr << name << ": " << "\ninIss: " << book_.in.account
+        ostr << name << ": "
+             << "\ninIss: " << book_.in.account
              << "\noutIss: " << book_.out.account
              << "\ninCur: " << book_.in.currency
              << "\noutCur: " << book_.out.currency;
@@ -742,7 +743,6 @@ BookStep<TIn, TOut, TDerived>::forEachOffer(
     FlowOfferStream<TIn, TOut> offers(
         sb, afView, book_, sb.parentCloseTime(), counter, j_);
 
-    bool const flowCross = afView.rules().enabled(featureFlowCross);
     bool offerAttempted = false;
     std::optional<Quality> ofrQ;
     auto execOffer = [&](auto& offer) {
@@ -759,8 +759,8 @@ BookStep<TIn, TOut, TDerived>::forEachOffer(
 
         // Make sure offer owner has authorization to own IOUs from issuer.
         // An account can always own XRP or their own IOUs.
-        if (flowCross && (!isXRP(offer.issueIn().currency)) &&
-            (offer.owner() != offer.issueIn().account))
+        if (!isXRP(offer.issueIn().currency) &&
+            offer.owner() != offer.issueIn().account)
         {
             auto const& issuerID = offer.issueIn().account;
             auto const issuer = afView.read(keylet::account(issuerID));
@@ -836,6 +836,10 @@ BookStep<TIn, TOut, TDerived>::forEachOffer(
 
     // At any payment engine iteration, AMM offer can only be consumed once.
     auto tryAMM = [&](std::optional<Quality> const& lobQuality) -> bool {
+        // amm doesn't support domain yet
+        if (book_.domain)
+            return true;
+
         // If offer crossing then use either LOB quality or nullopt
         // to prevent AMM being blocked by a lower quality LOB.
         auto const qualityThreshold = [&]() -> std::optional<Quality> {
@@ -1109,11 +1113,13 @@ BookStep<TIn, TOut, TDerived>::revImp(
     {
         case -1: {
             // something went very wrong
+            // LCOV_EXCL_START
             JLOG(j_.error())
                 << "BookStep remainingOut < 0 " << to_string(remainingOut);
             UNREACHABLE("ripple::BookStep::revImp : remaining less than zero");
             cache_.emplace(beast::zero, beast::zero);
             return {beast::zero, beast::zero};
+            // LCOV_EXCL_STOP
         }
         case 0: {
             // due to normalization, remainingOut can be zero without
@@ -1279,12 +1285,14 @@ BookStep<TIn, TOut, TDerived>::fwdImp(
     switch (remainingIn.signum())
     {
         case -1: {
+            // LCOV_EXCL_START
             // something went very wrong
             JLOG(j_.error())
                 << "BookStep remainingIn < 0 " << to_string(remainingIn);
             UNREACHABLE("ripple::BookStep::fwdImp : remaining less than zero");
             cache_.emplace(beast::zero, beast::zero);
             return {beast::zero, beast::zero};
+            // LCOV_EXCL_STOP
         }
         case 0: {
             // due to normalization, remainingIn can be zero without
@@ -1417,8 +1425,10 @@ bookStepEqual(Step const& step, ripple::Book const& book)
     bool const outXRP = isXRP(book.out.currency);
     if (inXRP && outXRP)
     {
+        // LCOV_EXCL_START
         UNREACHABLE("ripple::test::bookStepEqual : no XRP to XRP book step");
         return false;  // no such thing as xrp/xrp book step
+        // LCOV_EXCL_STOP
     }
     if (inXRP && !outXRP)
         return equalHelper<

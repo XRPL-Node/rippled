@@ -22,6 +22,7 @@
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/LedgerFormats.h>
+#include <xrpl/protocol/Permissions.h>
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STBase.h>
 #include <xrpl/protocol/STInteger.h>
@@ -61,8 +62,10 @@ STUInt8::getText() const
         if (transResultInfo(TER::fromInt(value_), token, human))
             return human;
 
+        // LCOV_EXCL_START
         JLOG(debugLog().error())
             << "Unknown result code in metadata: " << value_;
+        // LCOV_EXCL_STOP
     }
 
     return std::to_string(value_);
@@ -79,8 +82,10 @@ STUInt8::getJson(JsonOptions) const
         if (transResultInfo(TER::fromInt(value_), token, human))
             return token;
 
+        // LCOV_EXCL_START
         JLOG(debugLog().error())
             << "Unknown result code in metadata: " << value_;
+        // LCOV_EXCL_STOP
     }
 
     return value_;
@@ -170,6 +175,13 @@ template <>
 std::string
 STUInt32::getText() const
 {
+    if (getFName() == sfPermissionValue)
+    {
+        auto const permissionName =
+            Permission::getInstance().getPermissionName(value_);
+        if (permissionName)
+            return *permissionName;
+    }
     return std::to_string(value_);
 }
 
@@ -177,6 +189,14 @@ template <>
 Json::Value
 STUInt32::getJson(JsonOptions) const
 {
+    if (getFName() == sfPermissionValue)
+    {
+        auto const permissionName =
+            Permission::getInstance().getPermissionName(value_);
+        if (permissionName)
+            return *permissionName;
+    }
+
     return value_;
 }
 
@@ -227,6 +247,35 @@ STUInt64::getJson(JsonOptions) const
     }
 
     return convertToString(value_, 16);  // Convert to base 16
+}
+
+//------------------------------------------------------------------------------
+
+template <>
+STInteger<std::int32_t>::STInteger(SerialIter& sit, SField const& name)
+    : STInteger(name, sit.get32())
+{
+}
+
+template <>
+SerializedTypeID
+STInt32::getSType() const
+{
+    return STI_INT32;
+}
+
+template <>
+std::string
+STInt32::getText() const
+{
+    return std::to_string(value_);
+}
+
+template <>
+Json::Value
+STInt32::getJson(JsonOptions) const
+{
+    return value_;
 }
 
 }  // namespace ripple
