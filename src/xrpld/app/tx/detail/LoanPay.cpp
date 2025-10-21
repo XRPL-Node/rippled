@@ -335,10 +335,6 @@ LoanPay::doApply()
     auto const totalPaidToBroker =
         paymentParts->managementFeePaid + paymentParts->extraFeePaid;
 
-    auto const totalPaid = totalPaidToVaultRaw + totalPaidToBroker;
-    auto const totalParts = paymentParts->principalPaid +
-        paymentParts->interestPaid + paymentParts->managementFeePaid +
-        paymentParts->extraFeePaid;
     XRPL_ASSERT_PARTS(
         (totalPaidToVaultRaw + totalPaidToBroker) ==
             (paymentParts->principalPaid + paymentParts->interestPaid +
