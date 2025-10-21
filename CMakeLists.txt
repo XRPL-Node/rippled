@@ -122,7 +122,7 @@ endif()
 find_package(nudb REQUIRED)
 find_package(date REQUIRED)
 find_package(xxHash REQUIRED)
-find_package(wamr REQUIRED)
+find_package(wasm-xrplf REQUIRED)
 
 # Silence noisy warnings just inside libff
 # Treat vendored headers as SYSTEM so their warnings don't bubble up.
