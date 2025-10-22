@@ -1410,6 +1410,7 @@ loanMakePayment(
     SLE::ref loan,
     SLE::const_ref brokerSle,
     STAmount const& amount,
+    bool const overpaymentAllowed,
     beast::Journal j)
 {
     /*
@@ -1648,8 +1649,8 @@ loanMakePayment(
 
     // -------------------------------------------------------------
     // overpayment handling
-    if (loan->isFlag(lsfLoanOverpayment) && paymentRemainingProxy > 0 &&
-        nextDueDateProxy && totalPaid < amount)
+    if (overpaymentAllowed && loan->isFlag(lsfLoanOverpayment) &&
+        paymentRemainingProxy > 0 && nextDueDateProxy && totalPaid < amount)
     {
         TenthBips32 const overpaymentInterestRate{
             loan->at(sfOverpaymentInterestRate)};

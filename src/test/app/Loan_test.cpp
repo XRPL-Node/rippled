@@ -1330,6 +1330,19 @@ class Loan_test : public beast::unit_test::suite
             env(pay(evan, loanKeylet.key, broker.asset(500)),
                 ter(tecNO_PERMISSION));
 
+            // TODO: Write a general "isFlag" function? See STObject::isFlag.
+            // Maybe add a static overloaded member?
+            if (!(state.flags & lsfLoanOverpayment))
+            {
+                // If the loan does not allow overpayments, send a payment that
+                // tries to make an overpayment
+                env(pay(borrower,
+                        loanKeylet.key,
+                        broker.asset(state.periodicPayment * 2),
+                        tfLoanOverpayment),
+                    ter(temINVALID_FLAG));
+            }
+
             {
                 auto const otherAsset = broker.asset.raw() == assets[0].raw()
                     ? assets[1]
@@ -1845,6 +1858,71 @@ class Loan_test : public beast::unit_test::suite
                 env(manage(lender, loanKeylet.key, tfLoanDefault),
                     ter(tecNO_PERMISSION));
             });
+
+#if LOANCOMPLETE
+        // TODO
+
+        lifecycle(
+            caseLabel,
+            "Loan overpayment allowed - Explicit overpayment",
+            env,
+            loanAmount,
+            interestExponent,
+            lender,
+            borrower,
+            evan,
+            broker,
+            pseudoAcct,
+            tfLoanOverpayment,
+            [&](Keylet const& loanKeylet,
+                VerifyLoanStatus const& verifyLoanStatus) { throw 0; });
+
+        lifecycle(
+            caseLabel,
+            "Loan overpayment prohibited - Late payment",
+            env,
+            loanAmount,
+            interestExponent,
+            lender,
+            borrower,
+            evan,
+            broker,
+            pseudoAcct,
+            tfLoanOverpayment,
+            [&](Keylet const& loanKeylet,
+                VerifyLoanStatus const& verifyLoanStatus) { throw 0; });
+
+        lifecycle(
+            caseLabel,
+            "Loan overpayment allowed - Late payment",
+            env,
+            loanAmount,
+            interestExponent,
+            lender,
+            borrower,
+            evan,
+            broker,
+            pseudoAcct,
+            tfLoanOverpayment,
+            [&](Keylet const& loanKeylet,
+                VerifyLoanStatus const& verifyLoanStatus) { throw 0; });
+
+        lifecycle(
+            caseLabel,
+            "Loan overpayment allowed - Late payment and overpayment",
+            env,
+            loanAmount,
+            interestExponent,
+            lender,
+            borrower,
+            evan,
+            broker,
+            pseudoAcct,
+            tfLoanOverpayment,
+            [&](Keylet const& loanKeylet,
+                VerifyLoanStatus const& verifyLoanStatus) { throw 0; });
+
+#endif
     }
 
     void

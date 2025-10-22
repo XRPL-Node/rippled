@@ -30,6 +30,12 @@ LoanPay::checkExtraFeatures(PreflightContext const& ctx)
     return checkLendingProtocolDependencies(ctx);
 }
 
+std::uint32_t
+LoanPay::getFlagsMask(PreflightContext const& ctx)
+{
+    return tfLoanPayMask;
+}
+
 NotTEC
 LoanPay::preflight(PreflightContext const& ctx)
 {
@@ -137,6 +143,13 @@ LoanPay::preclaim(PreclaimContext const& ctx)
     {
         JLOG(ctx.j.warn()) << "Loan does not belong to the account.";
         return tecNO_PERMISSION;
+    }
+
+    if (tx.isFlag(tfLoanOverpayment) && !loanSle->isFlag(lsfLoanOverpayment))
+    {
+        JLOG(ctx.j.warn())
+            << "Requested overpayment on a loan that doesn't allow it";
+        return temINVALID_FLAG;
     }
 
     auto const principalOutstanding = loanSle->at(sfPrincipalOutstanding);
@@ -267,8 +280,14 @@ LoanPay::doApply()
         LoanManage::unimpairLoan(view, loanSle, vaultSle, j_);
     }
 
-    Expected<LoanPaymentParts, TER> paymentParts =
-        loanMakePayment(asset, view, loanSle, brokerSle, amount, j_);
+    Expected<LoanPaymentParts, TER> paymentParts = loanMakePayment(
+        asset,
+        view,
+        loanSle,
+        brokerSle,
+        amount,
+        tx.isFlag(tfLoanOverpayment),
+        j_);
 
     if (!paymentParts)
     {
