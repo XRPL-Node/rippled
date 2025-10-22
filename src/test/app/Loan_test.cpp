@@ -404,7 +404,10 @@ class Loan_test : public beast::unit_test::suite
             BEAST_EXPECT(
                 state.principalOutstanding == broker.asset(1000).value());
             BEAST_EXPECT(
-                state.principalOutstanding.exponent() == state.loanScale);
+                state.loanScale ==
+                (broker.asset.integral()
+                     ? 0
+                     : state.principalOutstanding.exponent()));
             BEAST_EXPECT(state.paymentInterval == 600);
             BEAST_EXPECT(
                 state.totalValue ==
@@ -636,7 +639,9 @@ class Loan_test : public beast::unit_test::suite
             BEAST_EXPECT(
                 loan->at(sfNextPaymentDueDate) == startDate + interval);
             BEAST_EXPECT(loan->at(sfPaymentRemaining) == total);
-            BEAST_EXPECT(loan->at(sfLoanScale) == principalRequest.exponent());
+            BEAST_EXPECT(
+                loan->at(sfLoanScale) ==
+                (broker.asset.integral() ? 0 : principalRequest.exponent()));
             BEAST_EXPECT(loan->at(sfPrincipalOutstanding) == principalRequest);
         }
 
@@ -654,7 +659,7 @@ class Loan_test : public beast::unit_test::suite
             0,
             startDate + interval,
             total,
-            principalRequest.exponent(),
+            broker.asset.integral() ? 0 : principalRequest.exponent(),
             loanProperties.totalValueOutstanding,
             principalRequest,
             loanProperties.managementFeeOwedToBroker,
@@ -711,7 +716,7 @@ class Loan_test : public beast::unit_test::suite
             0,
             nextDueDate,
             total,
-            principalRequest.exponent(),
+            broker.asset.integral() ? 0 : principalRequest.exponent(),
             loanProperties.totalValueOutstanding,
             principalRequest,
             loanProperties.managementFeeOwedToBroker,
@@ -1196,7 +1201,10 @@ class Loan_test : public beast::unit_test::suite
                 BEAST_EXPECT(brokerSle))
             {
                 BEAST_EXPECT(
-                    state.loanScale == state.principalOutstanding.exponent());
+                    state.loanScale ==
+                    (broker.asset.integral()
+                         ? 0
+                         : state.principalOutstanding.exponent()));
                 auto const defaultAmount = roundToAsset(
                     broker.asset,
                     std::min(
@@ -2166,7 +2174,7 @@ class Loan_test : public beast::unit_test::suite
             BEAST_EXPECT(!loan.isMember(sfPreviousPaymentDate));
             BEAST_EXPECT(loan[sfPrincipalOutstanding] == "1000000000");
             BEAST_EXPECT(loan[sfTotalValueOutstanding] == "1000000000");
-            BEAST_EXPECT(loan[sfLoanScale] == -6);
+            BEAST_EXPECT(!loan.isMember(sfLoanScale));
             BEAST_EXPECT(
                 loan[sfStartDate].asUInt() ==
                 startDate.time_since_epoch().count());
