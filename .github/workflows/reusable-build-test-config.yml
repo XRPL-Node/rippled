@@ -25,7 +25,7 @@ on:
         default: ""
 
       unittest_args:
-        description: 'Additional arguments to pass to rippled when running tests'
+        description: "Additional arguments to pass to rippled when running tests"
         required: false
         type: string
         default: ""
