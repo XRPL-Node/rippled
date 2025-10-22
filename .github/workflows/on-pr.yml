@@ -125,19 +125,11 @@ jobs:
       conan_remote_username: ${{ secrets.CONAN_REMOTE_USERNAME }}
       conan_remote_password: ${{ secrets.CONAN_REMOTE_PASSWORD }}
 
-  merge-queue-check:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'MergeQueueCI') }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: No-op
-        run: true
-
   passed:
     if: ${{ failure() || cancelled() }}
     needs:
       - build-test
       - check-levelization
-      - merge-queue-check
     runs-on: ubuntu-latest
     steps:
       - name: Fail
