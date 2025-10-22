@@ -594,7 +594,7 @@ class Loan_test : public beast::unit_test::suite
         {
             // Need to account for fees if the loan is in XRP
             PrettyAmount adjustment = broker.asset(0);
-            if (broker.asset.raw().native())
+            if (broker.asset.native())
             {
                 adjustment = 2 * env.current()->fees().base;
             }
@@ -757,7 +757,7 @@ class Loan_test : public beast::unit_test::suite
         if (deleter == borrower)
         {
             // Need to account for fees if the loan is in XRP
-            if (broker.asset.raw().native())
+            if (broker.asset.native())
             {
                 adjustment = env.current()->fees().base;
             }
@@ -1061,12 +1061,12 @@ class Loan_test : public beast::unit_test::suite
                           TER> {
                 // Freeze / lock the asset
                 std::function<void(Account const& holder)> empty;
-                if (broker.asset.raw().native())
+                if (broker.asset.native())
                 {
                     // XRP can't be frozen
                     return std::make_tuple(empty, empty, empty, tesSUCCESS);
                 }
-                else if (broker.asset.raw().holds<Issue>())
+                else if (broker.asset.holds<Issue>())
                 {
                     auto freeze = [&](Account const& holder) {
                         env(trust(issuer, holder[iouCurrency](0), tfSetFreeze));
@@ -1365,15 +1365,24 @@ class Loan_test : public beast::unit_test::suite
             // taken
             auto const transactionAmount = payoffAmount + broker.asset(10);
 
+            // Send a transaction that tries to pay more than the borrowers's
+            // balance
+            env(pay(borrower,
+                    loanKeylet.key,
+                    STAmount{
+                        broker.asset,
+                        borrowerBalanceBeforePayment.number() * 2}),
+                ter(tecINSUFFICIENT_FUNDS));
+
             env(pay(borrower, loanKeylet.key, transactionAmount));
 
             env.close();
 
             // Need to account for fees if the loan is in XRP
             PrettyAmount adjustment = broker.asset(0);
-            if (broker.asset.raw().native())
+            if (broker.asset.native())
             {
-                adjustment = env.current()->fees().base;
+                adjustment = env.current()->fees().base * 2;
             }
 
             state.paymentRemaining = 0;
@@ -1814,7 +1823,7 @@ class Loan_test : public beast::unit_test::suite
 
                     // Need to account for fees if the loan is in XRP
                     PrettyAmount adjustment = broker.asset(0);
-                    if (broker.asset.raw().native())
+                    if (broker.asset.native())
                     {
                         adjustment = env.current()->fees().base;
                     }
@@ -2730,7 +2739,6 @@ class Loan_test : public beast::unit_test::suite
 
             env(trust(broker, IOU(20'000'000)));
             env(pay(issuer, broker, IOU(10'000'000)));
-            env(trust(borrower, IOU(20'000'000)));
             env.close();
 
             auto const brokerInfo = createVaultAndBroker(env, IOU, broker);
@@ -2745,6 +2753,13 @@ class Loan_test : public beast::unit_test::suite
                 paymentInterval(100),
                 fee(XRP(100)));
             env.close();
+
+            env(trust(borrower, IOU(20'000'000)));
+            // The borrower increases their limit and acquires some IOU so they
+            // can pay interest
+            env(pay(issuer, borrower, IOU(500)));
+            env.close();
+
             if (auto const le = env.le(keylet::loan(keylet.key));
                 BEAST_EXPECT(le))
             {

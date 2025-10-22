@@ -22,6 +22,8 @@
 #include <xrpld/app/misc/LendingHelpers.h>
 #include <xrpld/app/tx/detail/LoanManage.h>
 
+#include <xrpl/json/to_string.h>
+
 namespace ripple {
 
 bool
@@ -202,6 +204,27 @@ LoanPay::preclaim(PreclaimContext const& ctx)
         JLOG(ctx.j.warn())
             << "Vault pseudo-account can not receive funds (deep frozen).";
         return ret;
+    }
+    // Make sure the borrower has enough funds to make the payment!
+    // Do not support "partial payments" - if the transaction says to pay X,
+    // then the account must have X available, even if the loan payment takes
+    // less.
+    // Also assume that anybody taking loans is not using "community credit",
+    // which would let an IOU balance go negative up to the other side's limit.
+    // This may change in a later version.
+    if (auto const balance = accountHolds(
+            ctx.view,
+            account,
+            asset,
+            fhZERO_IF_FROZEN,
+            ahZERO_IF_UNAUTHORIZED,
+            ctx.j);
+        balance < amount)
+    {
+        JLOG(ctx.j.warn()) << "Payment amount too large. Amount: "
+                           << to_string(amount.getJson())
+                           << ". Balance: " << to_string(balance.getJson());
+        return tecINSUFFICIENT_FUNDS;
     }
 
     return tesSUCCESS;
@@ -480,20 +503,36 @@ LoanPay::doApply()
         : accountHolds(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 
-    /*
-    auto const balanceScale = std::max(
-        {accountBalanceBefore.exponent(),
-         vaultBalanceBefore.exponent(),
-         brokerBalanceBefore.exponent(),
-         accountBalanceAfter.exponent(),
-         vaultBalanceAfter.exponent(),
-         brokerBalanceAfter.exponent()});
-         */
     XRPL_ASSERT_PARTS(
         accountBalanceBefore + vaultBalanceBefore + brokerBalanceBefore ==
             accountBalanceAfter + vaultBalanceAfter + brokerBalanceAfter,
         "ripple::LoanPay::doApply",
         "funds are conserved (with rounding)");
+    XRPL_ASSERT_PARTS(
+        accountBalanceAfter >= beast::zero,
+        "ripple::LoanPay::doApply",
+        "positive account balance");
+    XRPL_ASSERT_PARTS(
+        accountBalanceAfter < accountBalanceBefore,
+        "ripple::LoanPay::doApply",
+        "account balance decreased");
+    XRPL_ASSERT_PARTS(
+        vaultBalanceAfter >= beast::zero && brokerBalanceAfter >= beast::zero,
+        "ripple::LoanPay::doApply",
+        "positive vault and broker balances");
+    XRPL_ASSERT_PARTS(
+        vaultBalanceAfter >= vaultBalanceBefore,
+        "ripple::LoanPay::doApply",
+        "vault balance did not decrease");
+    XRPL_ASSERT_PARTS(
+        brokerBalanceAfter >= brokerBalanceBefore,
+        "ripple::LoanPay::doApply",
+        "broker balance did not decrease");
+    XRPL_ASSERT_PARTS(
+        vaultBalanceAfter > vaultBalanceBefore ||
+            brokerBalanceAfter > brokerBalanceBefore,
+        "ripple::LoanPay::doApply",
+        "vault and/or broker balance increased");
 #endif
 
     return tesSUCCESS;
