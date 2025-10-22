@@ -321,7 +321,7 @@ STAmount::xrp() const
 IOUAmount
 STAmount::iou() const
 {
-    if (native() || !holds<Issue>())
+    if (integral())
         Throw<std::logic_error>("Cannot return non-IOU STAmount as IOUAmount");
 
     auto mantissa = static_cast<std::int64_t>(mValue);
@@ -1513,7 +1513,7 @@ STAmount
 roundToScale(STAmount value, std::int32_t scale, Number::rounding_mode rounding)
 {
     // Nothing to do for intgral types.
-    if (value.asset().native() || !value.asset().holds<Issue>())
+    if (value.integral())
         return value;
 
     // If the value's exponent is greater than or equal to the scale, then

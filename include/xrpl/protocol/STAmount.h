@@ -175,6 +175,9 @@ public:
     exponent() const noexcept;
 
     bool
+    integral() const noexcept;
+
+    bool
     native() const noexcept;
 
     template <ValidIssueType TIss>
@@ -452,6 +455,12 @@ inline int
 STAmount::exponent() const noexcept
 {
     return mOffset;
+}
+
+inline bool
+STAmount::integral() const noexcept
+{
+    return mAsset.integral();
 }
 
 inline bool
@@ -735,7 +744,7 @@ roundToAsset(
 {
     NumberRoundModeGuard mg(rounding);
     STAmount const ret{asset, value};
-    if (ret.asset().native() || !ret.asset().holds<Issue>())
+    if (ret.integral())
         return ret;
     // Not that the ctor will round integral types (XRP, MPT) via canonicalize,
     // so no extra work is needed for those.

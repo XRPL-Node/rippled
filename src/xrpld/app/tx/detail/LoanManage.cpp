@@ -203,7 +203,7 @@ LoanManage::defaultLoan(
         // Capital and any unclaimed funds amount:
         vaultAssetsAvailableProxy += defaultCovered;
         if (*vaultAssetsAvailableProxy > *vaultAssetsTotalProxy &&
-            !vaultAsset.native() && vaultAsset.holds<Issue>())
+            !vaultAsset.integral())
         {
             auto const difference =
                 vaultAssetsAvailableProxy - vaultAssetsTotalProxy;

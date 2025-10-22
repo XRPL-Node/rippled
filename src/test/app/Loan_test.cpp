@@ -193,9 +193,7 @@ class Loan_test : public beast::unit_test::suite
                         auto const available = vaultSle->at(sfAssetsAvailable);
                         env.test.BEAST_EXPECT(
                             total == available ||
-                            (!broker.asset.raw().native() &&
-                             broker.asset.raw().holds<Issue>() &&
-                             available != 0 &&
+                            (!broker.asset.integral() && available != 0 &&
                              ((total - available) / available <
                               Number(1, -6))));
                         env.test.BEAST_EXPECT(
@@ -1750,7 +1748,7 @@ class Loan_test : public beast::unit_test::suite
                     BEAST_EXPECT(
                         paymentComponents.final || diff == beast::zero ||
                         (diff > beast::zero &&
-                         ((broker.asset.raw().integral() &&
+                         ((broker.asset.integral() &&
                            (static_cast<Number>(diff) < 3)) ||
                           (totalDue.exponent() - diff.exponent() > 8))));
 

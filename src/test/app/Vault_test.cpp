@@ -84,14 +84,14 @@ class Vault_test : public beast::unit_test::suite
                  this]() -> std::tuple<PrettyAsset, Account> {
                 auto const vault = env.le(keylet);
                 BEAST_EXPECT(vault != nullptr);
-                if (asset.raw().holds<Issue>() && !asset.raw().native())
+                if (!asset.integral())
                     BEAST_EXPECT(vault->at(sfScale) == 6);
                 else
                     BEAST_EXPECT(vault->at(sfScale) == 0);
                 auto const shares =
                     env.le(keylet::mptIssuance(vault->at(sfShareMPTID)));
                 BEAST_EXPECT(shares != nullptr);
-                if (asset.raw().holds<Issue>() && !asset.raw().native())
+                if (!asset.integral())
                     BEAST_EXPECT(shares->at(sfAssetScale) == 6);
                 else
                     BEAST_EXPECT(shares->at(sfAssetScale) == 0);
@@ -446,7 +446,7 @@ class Vault_test : public beast::unit_test::suite
                 }
             }
 
-            if (!asset.raw().native() && asset.raw().holds<Issue>())
+            if (!asset.integral())
             {
                 testcase(prefix + " temporary authorization for 3rd party");
                 env(trust(erin, asset(1000)));
