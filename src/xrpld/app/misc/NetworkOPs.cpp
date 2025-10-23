@@ -2946,8 +2946,7 @@ NetworkOPsImp::getServerInfo(bool human, bool admin, bool counters)
         l[jss::hash] = to_string(lpClosed->info().hash);
 
         bool const smartEscrowEnabled =
-            m_ledgerMaster.getValidatedLedger()->rules().enabled(
-                featureSmartEscrow);
+            lpClosed->rules().enabled(featureSmartEscrow);
         if (!human)
         {
             l[jss::base_fee] = baseFee.jsonClipped();
