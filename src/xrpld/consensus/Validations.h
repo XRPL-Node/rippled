@@ -396,7 +396,9 @@ private:
                 // because we're still trying to catch up.
                 ledger = adaptor_.acquire(it->first.second);
             }
-            catch (SHAMapMissingNode const&) {}
+            catch (SHAMapMissingNode const&)
+            {
+            }
             if (ledger)
             {
                 for (NodeID const& nodeID : it->second)
