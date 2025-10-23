@@ -464,7 +464,7 @@ multi_runner_parent::~multi_runner_parent()
     continue_message_queue_ = false;
     message_queue_thread_.join();
 
-    add_failures(running_suites_.count());
+    add_failures(running_suites_.size());
 
     print_results(os_);
 
