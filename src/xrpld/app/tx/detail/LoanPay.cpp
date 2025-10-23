@@ -201,10 +201,7 @@ LoanPay::preclaim(PreclaimContext const& ctx)
     // Do not support "partial payments" - if the transaction says to pay X,
     // then the account must have X available, even if the loan payment takes
     // less.
-    // Also assume that anybody taking loans is not using "community credit",
-    // which would let an IOU balance go negative up to the other side's limit.
-    // This may change in a later version.
-    if (auto const balance = accountHolds(
+    if (auto const balance = accountCanSend(
             ctx.view,
             account,
             asset,
@@ -427,11 +424,11 @@ LoanPay::doApply()
     }
 
 #if !NDEBUG
-    auto const accountBalanceBefore =
-        accountHolds(view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
+    auto const accountBalanceBefore = accountCanSend(
+        view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
     auto const vaultBalanceBefore = account_ == vaultPseudoAccount
         ? STAmount{asset, 0}
-        : accountHolds(
+        : accountCanSend(
               view,
               vaultPseudoAccount,
               asset,
@@ -440,7 +437,7 @@ LoanPay::doApply()
               j_);
     auto const brokerBalanceBefore = account_ == brokerPayee
         ? STAmount{asset, 0}
-        : accountHolds(
+        : accountCanSend(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 #endif
 
@@ -483,11 +480,11 @@ LoanPay::doApply()
         return ter;
 
 #if !NDEBUG
-    auto const accountBalanceAfter =
-        accountHolds(view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
+    auto const accountBalanceAfter = accountCanSend(
+        view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
     auto const vaultBalanceAfter = account_ == vaultPseudoAccount
         ? STAmount{asset, 0}
-        : accountHolds(
+        : accountCanSend(
               view,
               vaultPseudoAccount,
               asset,
@@ -496,7 +493,7 @@ LoanPay::doApply()
               j_);
     auto const brokerBalanceAfter = account_ == brokerPayee
         ? STAmount{asset, 0}
-        : accountHolds(
+        : accountCanSend(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 
     XRPL_ASSERT_PARTS(
