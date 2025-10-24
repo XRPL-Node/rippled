@@ -18,12 +18,14 @@
 //==============================================================================
 
 #include <test/jtx.h>
+#include <test/jtx/mpt.h>
 
 #include <xrpld/app/misc/LendingHelpers.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/tx/detail/LoanSet.h>
 
 #include <xrpl/beast/unit_test/suite.h>
+#include <xrpl/protocol/SField.h>
 
 namespace ripple {
 namespace test {
@@ -1958,6 +1960,466 @@ class Loan_test : public beast::unit_test::suite
     }
 
     void
+    testLoanSet()
+    {
+        using namespace jtx;
+
+        Account const issuer{"issuer"};
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        struct CaseArgs
+        {
+            bool requireAuth = false;
+            bool authorizeBorrower = false;
+            int initialXRP = 1'000'000;
+        };
+
+        auto const testCase =
+            [&, this](
+                std::function<void(Env&, BrokerInfo const&, MPTTester&)>
+                    mptTest,
+                std::function<void(Env&, BrokerInfo const&)> iouTest,
+                CaseArgs args = {}) {
+                Env env(*this, all);
+                env.fund(XRP(args.initialXRP), issuer, lender, borrower);
+                env.close();
+                if (args.requireAuth)
+                {
+                    env(fset(issuer, asfRequireAuth));
+                    env.close();
+                }
+
+                // We need two different asset types, MPT and IOU. Prepare MPT
+                // first
+                MPTTester mptt{env, issuer, mptInitNoFund};
+
+                auto const none = LedgerSpecificFlags(0);
+                mptt.create(
+                    {.flags = tfMPTCanTransfer | tfMPTCanLock |
+                         (args.requireAuth ? tfMPTRequireAuth : none)});
+                env.close();
+                PrettyAsset mptAsset = mptt.issuanceID();
+                mptt.authorize({.account = lender});
+                mptt.authorize({.account = borrower});
+                env.close();
+                if (args.requireAuth)
+                {
+                    mptt.authorize({.account = issuer, .holder = lender});
+                    if (args.authorizeBorrower)
+                        mptt.authorize({.account = issuer, .holder = borrower});
+                    env.close();
+                }
+
+                env(pay(issuer, lender, mptAsset(10'000'000)));
+                env.close();
+
+                // Prepare IOU
+                PrettyAsset const iouAsset = issuer[iouCurrency];
+                env(trust(lender, iouAsset(10'000'000)));
+                env(trust(borrower, iouAsset(10'000'000)));
+                env.close();
+                if (args.requireAuth)
+                {
+                    env(trust(issuer, iouAsset(0), lender, tfSetfAuth));
+                    env(pay(issuer, lender, iouAsset(10'000'000)));
+                    if (args.authorizeBorrower)
+                    {
+                        env(trust(issuer, iouAsset(0), borrower, tfSetfAuth));
+                        env(pay(issuer, borrower, iouAsset(10'000)));
+                    }
+                }
+                else
+                {
+                    env(pay(issuer, lender, iouAsset(10'000'000)));
+                    env(pay(issuer, borrower, iouAsset(10'000)));
+                }
+                env.close();
+
+                // Create vaults and loan brokers
+                std::array const assets{mptAsset, iouAsset};
+                std::vector<BrokerInfo> brokers;
+                for (auto const& asset : assets)
+                {
+                    brokers.emplace_back(
+                        createVaultAndBroker(env, asset, lender));
+                }
+
+                if (mptTest)
+                    (mptTest)(env, brokers[0], mptt);
+                if (iouTest)
+                    (iouTest)(env, brokers[1]);
+            };
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("MPT issuer is borrower, issuer submits");
+                env(set(issuer, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+
+                testcase("MPT issuer is borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(issuer),
+                    sig(sfCounterpartySignature, issuer),
+                    fee(env.current()->fees().base * 5));
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("IOU issuer is borrower, issuer submits");
+                env(set(issuer, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+
+                testcase("IOU issuer is borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(issuer),
+                    sig(sfCounterpartySignature, issuer),
+                    fee(env.current()->fees().base * 5));
+            },
+            CaseArgs{.requireAuth = true});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("MPT unauthorized borrower, borrower submits");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_AUTH});
+
+                testcase("MPT unauthorized borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    sig(sfCounterpartySignature, borrower),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_AUTH});
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("IOU unauthorized borrower, borrower submits");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_AUTH});
+
+                testcase("IOU unauthorized borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    sig(sfCounterpartySignature, borrower),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_AUTH});
+            },
+            CaseArgs{.requireAuth = true});
+
+        auto const [acctReserve, incReserve] = [this]() -> std::pair<int, int> {
+            Env env{*this, testable_amendments()};
+            return {
+                env.current()->fees().accountReserve(0).drops() /
+                    DROPS_PER_XRP.drops(),
+                env.current()->fees().increment.drops() /
+                    DROPS_PER_XRP.drops()};
+        }();
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, MPTTester& mptt) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "MPT authorized borrower, borrower submits, borrower has "
+                    "no reserve");
+                mptt.authorize(
+                    {.account = borrower, .flags = tfMPTUnauthorize});
+                env.close();
+
+                auto const mptoken =
+                    keylet::mptoken(mptt.issuanceID(), borrower);
+                auto const sleMPT1 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT1 == nullptr);
+
+                // Burn some XRP
+                env(noop(borrower), fee(XRP(acctReserve * 2 + incReserve * 2)));
+                env.close();
+
+                // Cannot create loan, not enough reserve to create MPToken
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecINSUFFICIENT_RESERVE});
+                env.close();
+
+                // Can create loan now, will implicitly create MPToken
+                env(pay(issuer, borrower, XRP(incReserve)));
+                env.close();
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+                env.close();
+
+                auto const sleMPT2 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT2 != nullptr);
+            },
+            {},
+            CaseArgs{.initialXRP = acctReserve * 2 + incReserve * 8 + 1});
+
+        testCase(
+            {},
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "IOU authorized borrower, borrower submits, borrower has "
+                    "no reserve");
+                // Remove trust line from borrower to issuer
+                env.trust(broker.asset(0), borrower);
+                env.close();
+
+                env(pay(borrower, issuer, broker.asset(10'000)));
+                env.close();
+                auto const trustline =
+                    keylet::line(borrower, broker.asset.raw().get<Issue>());
+                auto const sleLine1 = env.le(trustline);
+                BEAST_EXPECT(sleLine1 == nullptr);
+
+                // Burn some XRP
+                env(noop(borrower), fee(XRP(acctReserve * 2 + incReserve * 2)));
+                env.close();
+
+                // Cannot create loan, not enough reserve to create trust line
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_LINE_INSUF_RESERVE});
+                env.close();
+
+                // Can create loan now, will implicitly create trust line
+                env(pay(issuer, borrower, XRP(incReserve)));
+                env.close();
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+                env.close();
+
+                auto const sleLine2 = env.le(trustline);
+                BEAST_EXPECT(sleLine2 != nullptr);
+            },
+            CaseArgs{.initialXRP = acctReserve * 2 + incReserve * 8 + 1});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, MPTTester& mptt) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "MPT authorized borrower, borrower submits, lender has "
+                    "no reserve");
+                auto const mptoken = keylet::mptoken(mptt.issuanceID(), lender);
+                auto const sleMPT1 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT1 != nullptr);
+
+                env(pay(
+                    lender, issuer, broker.asset(sleMPT1->at(sfMPTAmount))));
+                env.close();
+
+                mptt.authorize({.account = lender, .flags = tfMPTUnauthorize});
+                env.close();
+
+                auto const sleMPT2 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT2 == nullptr);
+
+                // Burn some XRP
+                env(noop(lender), fee(XRP(incReserve)));
+                env.close();
+
+                // Cannot create loan, not enough reserve to create MPToken
+                env(set(borrower, broker.brokerID, principalRequest),
+                    loanOriginationFee(broker.asset(1).value()),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecINSUFFICIENT_RESERVE});
+                env.close();
+
+                // Can create loan now, will implicitly create MPToken
+                env(pay(issuer, lender, XRP(incReserve)));
+                env.close();
+                env(set(borrower, broker.brokerID, principalRequest),
+                    loanOriginationFee(broker.asset(1).value()),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+                env.close();
+
+                auto const sleMPT3 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT3 != nullptr);
+            },
+            {},
+            CaseArgs{.initialXRP = acctReserve * 2 + incReserve * 8 + 1});
+
+        testCase(
+            {},
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "IOU authorized borrower, borrower submits, lender has no "
+                    "reserve");
+                // Remove trust line from lender to issuer
+                env.trust(broker.asset(0), lender);
+                env.close();
+
+                auto const trustline =
+                    keylet::line(lender, broker.asset.raw().get<Issue>());
+                auto const sleLine1 = env.le(trustline);
+                BEAST_EXPECT(sleLine1 != nullptr);
+
+                env(
+                    pay(lender,
+                        issuer,
+                        broker.asset(abs(sleLine1->at(sfBalance).value()))));
+                env.close();
+                auto const sleLine2 = env.le(trustline);
+                BEAST_EXPECT(sleLine2 == nullptr);
+
+                // Burn some XRP
+                env(noop(lender), fee(XRP(incReserve)));
+                env.close();
+
+                // Cannot create loan, not enough reserve to create trust line
+                env(set(borrower, broker.brokerID, principalRequest),
+                    loanOriginationFee(broker.asset(1).value()),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_LINE_INSUF_RESERVE});
+                env.close();
+
+                // Can create loan now, will implicitly create trust line
+                env(pay(issuer, lender, XRP(incReserve)));
+                env.close();
+                env(set(borrower, broker.brokerID, principalRequest),
+                    loanOriginationFee(broker.asset(1).value()),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+                env.close();
+
+                auto const sleLine3 = env.le(trustline);
+                BEAST_EXPECT(sleLine3 != nullptr);
+            },
+            CaseArgs{.initialXRP = acctReserve * 2 + incReserve * 8 + 1});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, MPTTester& mptt) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("MPT authorized borrower, unauthorized lender");
+                auto const mptoken = keylet::mptoken(mptt.issuanceID(), lender);
+                auto const sleMPT1 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT1 != nullptr);
+
+                env(pay(
+                    lender, issuer, broker.asset(sleMPT1->at(sfMPTAmount))));
+                env.close();
+
+                mptt.authorize({.account = lender, .flags = tfMPTUnauthorize});
+                env.close();
+
+                auto const sleMPT2 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT2 == nullptr);
+
+                // Cannot create loan, lender not authorized to receive fee
+                env(set(borrower, broker.brokerID, principalRequest),
+                    loanOriginationFee(broker.asset(1).value()),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5),
+                    ter{tecNO_AUTH});
+                env.close();
+
+                // Can create loan without origination fee
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+                env.close();
+
+                // No MPToken for lender - no authorization and no payment
+                auto const sleMPT3 = env.le(mptoken);
+                BEAST_EXPECT(sleMPT3 == nullptr);
+            },
+            {},
+            CaseArgs{.requireAuth = true, .authorizeBorrower = true});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("MPT authorized borrower, borrower submits");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("IOU authorized borrower, borrower submits");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    sig(sfCounterpartySignature, lender),
+                    fee(env.current()->fees().base * 5));
+            },
+            CaseArgs{.requireAuth = true, .authorizeBorrower = true});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("MPT authorized borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    sig(sfCounterpartySignature, borrower),
+                    fee(env.current()->fees().base * 5));
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase("IOU authorized borrower, lender submits");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    sig(sfCounterpartySignature, borrower),
+                    fee(env.current()->fees().base * 5));
+            },
+            CaseArgs{.requireAuth = true, .authorizeBorrower = true});
+    }
+
+    void
     testLifecycle()
     {
         testcase("Lifecycle");
@@ -3092,6 +3554,7 @@ public:
         testIssuerLoan();
         testDisabled();
         testSelfLoan();
+        testLoanSet();
         testLifecycle();
         testBatchBypassCounterparty();
         testWrongMaxDebtBehavior();
