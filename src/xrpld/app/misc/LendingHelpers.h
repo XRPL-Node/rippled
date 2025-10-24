@@ -66,13 +66,6 @@ struct PaymentComponents
     // fees.
     Number trackedManagementFeeDelta;
 
-    Number oldInterest;
-    Number oldPrincipal;
-    // roundedManagementFee is explicitly on for the portion of the pre-computed
-    // periodic payment that goes toward the Broker's management fee, which is
-    // tracked by sfManagementFeeOutstanding
-    Number oldManagementFee;
-
     PaymentSpecialCase specialCase = PaymentSpecialCase::none;
 
     Number
@@ -511,7 +504,6 @@ struct PaymentComponentsPlus : public PaymentComponents
     // final value returned in LoanPaymentParts.interestPaid will never be
     // negative.
     Number untrackedInterest;
-    Number oldValueChange;
     Number totalDue;
 
     PaymentComponentsPlus(
@@ -521,27 +513,9 @@ struct PaymentComponentsPlus : public PaymentComponents
         : PaymentComponents(p)
         , untrackedManagementFee(f)
         , untrackedInterest(v)
-        , oldValueChange(v)
         , totalDue(
               trackedValueDelta + untrackedInterest + untrackedManagementFee)
     {
-        verify();
-    }
-
-    void
-    verify() const
-    {
-        assert(
-            totalDue ==
-            oldPrincipal + oldInterest + oldManagementFee +
-                untrackedManagementFee);
-        assert(trackedInterestPart() == oldInterest - oldValueChange);
-        assert(trackedPrincipalDelta == oldPrincipal);
-        assert(trackedManagementFeeDelta == oldManagementFee);
-        assert(
-            trackedValueDelta ==
-            oldPrincipal + oldInterest + oldManagementFee - oldValueChange);
-        assert(untrackedInterest == oldValueChange);
     }
 };
 
@@ -561,8 +535,6 @@ doPayment(
         nextDueDateProxy,
         "ripple::detail::doPayment",
         "Next due date proxy set");
-
-    payment.verify();
 
     if (payment.specialCase == PaymentSpecialCase::final)
     {
@@ -680,7 +652,6 @@ tryOverpayment(
     auto const principalError = principalOutstanding - raw.principalOutstanding;
     auto const feeError = managementFeeOutstanding - raw.managementFeeDue;
 
-    overpaymentComponents.verify();
     auto const newRawPrincipal =
         raw.principalOutstanding - overpaymentComponents.trackedPrincipalDelta;
 
@@ -816,8 +787,6 @@ doOverpayment(
         // LCOV_EXCL_STOP
     }
 
-    overpaymentComponents.verify();
-
     // We haven't updated the proxies yet, so they still have the original
     // values. Use those to do some checks.
     XRPL_ASSERT_PARTS(
@@ -937,11 +906,9 @@ computeLatePayment(
         "no extra parts to this payment");
     // Copy the periodic payment values, and add on the late interest.
     // This preserves all the other fields without having to enumerate them.
-    periodic.verify();
     PaymentComponentsPlus const late = [&]() {
         auto inner = periodic;
         inner.rawInterest += rawLateInterest;
-        inner.oldInterest += roundedLateInterest;
 
         return PaymentComponentsPlus{
             inner,
@@ -952,7 +919,6 @@ computeLatePayment(
             // between periodic and late payment interest
             periodic.untrackedInterest + roundedLateInterest};
     }();
-    late.verify();
 
     XRPL_ASSERT_PARTS(
         isRounded(asset, late.totalDue, loanScale),
@@ -1036,12 +1002,9 @@ computeFullPayment(
             .trackedValueDelta = principalOutstanding +
                 totalInterestOutstanding + managementFeeOutstanding,
             .trackedPrincipalDelta = principalOutstanding,
-            .trackedManagementFeeDelta = managementFeeOutstanding,
-            .oldInterest = roundedFullInterest,
-            .oldPrincipal = principalOutstanding,
             // to make the accounting work later, the tracked part of the fee
             // must be paid in full
-            .oldManagementFee = managementFeeOutstanding,
+            .trackedManagementFeeDelta = managementFeeOutstanding,
             .specialCase = PaymentSpecialCase::final},
         // A full payment pays the single close payment fee, plus the computed
         // management fee part of the interest portion, but for tracking, the
@@ -1130,9 +1093,6 @@ computePaymentComponents(
                 interest + principalOutstanding + managementFeeOutstanding,
             .trackedPrincipalDelta = principalOutstanding,
             .trackedManagementFeeDelta = managementFeeOutstanding,
-            .oldInterest = interest,
-            .oldPrincipal = principalOutstanding,
-            .oldManagementFee = managementFeeOutstanding,
             .specialCase = PaymentSpecialCase::final};
     }
 
@@ -1231,9 +1191,6 @@ computePaymentComponents(
         .trackedValueDelta = roundedInterest + roundedPrincipal + roundedFee,
         .trackedPrincipalDelta = roundedPrincipal,
         .trackedManagementFeeDelta = roundedFee,
-        .oldInterest = roundedInterest,
-        .oldPrincipal = roundedPrincipal,
-        .oldManagementFee = roundedFee,
     };
 }
 
@@ -1863,9 +1820,6 @@ loanMakePayment(
                 .trackedPrincipalDelta = payment - roundedOverpaymentInterest -
                     roundedOverpaymentManagementFee,
                 .trackedManagementFeeDelta = roundedOverpaymentManagementFee,
-                .oldInterest = roundedOverpaymentInterest,
-                .oldPrincipal = payment - roundedOverpaymentInterest,
-                .oldManagementFee = roundedOverpaymentManagementFee,
                 .specialCase = PaymentSpecialCase::extra},
             fee,
             roundedOverpaymentInterest};
