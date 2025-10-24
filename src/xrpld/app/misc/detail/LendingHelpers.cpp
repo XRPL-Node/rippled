@@ -1125,6 +1125,51 @@ computePaymentComponents(
     };
 }
 
+PaymentComponentsPlus
+computeOverpaymentComponents(
+    Asset const& asset,
+    int32_t const loanScale,
+    Number const& overpayment,
+    TenthBips32 const overpaymentInterestRate,
+    TenthBips32 const overpaymentFeeRate,
+    TenthBips16 const managementFeeRate)
+{
+    XRPL_ASSERT(
+        overpayment > 0 && isRounded(asset, overpayment, loanScale),
+        "ripple::loanMakePayment : valid overpayment amount");
+
+    Number const fee = roundToAsset(
+        asset, tenthBipsOfValue(overpayment, overpaymentFeeRate), loanScale);
+
+    Number const payment = overpayment - fee;
+
+    auto const [rawOverpaymentInterest, rawOverpaymentManagementFee] = [&]() {
+        Number const interest =
+            tenthBipsOfValue(payment, overpaymentInterestRate);
+        return detail::computeInterestAndFeeParts(interest, managementFeeRate);
+    }();
+    auto const [roundedOverpaymentInterest, roundedOverpaymentManagementFee] =
+        [&]() {
+            Number const interest =
+                roundToAsset(asset, rawOverpaymentInterest, loanScale);
+            return detail::computeInterestAndFeeParts(
+                asset, interest, managementFeeRate, loanScale);
+        }();
+
+    return detail::PaymentComponentsPlus{
+        detail::PaymentComponents{
+            .rawInterest = rawOverpaymentInterest,
+            .rawPrincipal = payment - rawOverpaymentInterest,
+            .rawManagementFee = 0,
+            .trackedValueDelta = payment,
+            .trackedPrincipalDelta = payment - roundedOverpaymentInterest -
+                roundedOverpaymentManagementFee,
+            .trackedManagementFeeDelta = roundedOverpaymentManagementFee,
+            .specialCase = detail::PaymentSpecialCase::extra},
+        fee,
+        roundedOverpaymentInterest};
+}
+
 }  // namespace detail
 
 Number
@@ -1680,45 +1725,15 @@ loanMakePayment(
         TenthBips32 const overpaymentFeeRate{loan->at(sfOverpaymentFee)};
 
         Number const overpayment = amount - totalPaid;
-        XRPL_ASSERT(
-            overpayment > 0 && isRounded(asset, overpayment, loanScale),
-            "ripple::loanMakePayment : valid overpayment amount");
 
-        Number const fee = roundToAsset(
-            asset,
-            tenthBipsOfValue(overpayment, overpaymentFeeRate),
-            loanScale);
-
-        Number const payment = overpayment - fee;
-
-        auto const [rawOverpaymentInterest, rawOverpaymentManagementFee] =
-            [&]() {
-                Number const interest =
-                    tenthBipsOfValue(payment, overpaymentInterestRate);
-                return detail::computeInterestAndFeeParts(
-                    interest, managementFeeRate);
-            }();
-        auto const
-            [roundedOverpaymentInterest, roundedOverpaymentManagementFee] =
-                [&]() {
-                    Number const interest =
-                        roundToAsset(asset, rawOverpaymentInterest, loanScale);
-                    return detail::computeInterestAndFeeParts(
-                        asset, interest, managementFeeRate, loanScale);
-                }();
-
-        detail::PaymentComponentsPlus overpaymentComponents{
-            detail::PaymentComponents{
-                .rawInterest = rawOverpaymentInterest,
-                .rawPrincipal = payment - rawOverpaymentInterest,
-                .rawManagementFee = 0,
-                .trackedValueDelta = payment,
-                .trackedPrincipalDelta = payment - roundedOverpaymentInterest -
-                    roundedOverpaymentManagementFee,
-                .trackedManagementFeeDelta = roundedOverpaymentManagementFee,
-                .specialCase = detail::PaymentSpecialCase::extra},
-            fee,
-            roundedOverpaymentInterest};
+        detail::PaymentComponentsPlus const overpaymentComponents =
+            detail::computeOverpaymentComponents(
+                asset,
+                loanScale,
+                overpayment,
+                overpaymentInterestRate,
+                overpaymentFeeRate,
+                managementFeeRate);
 
         // Don't process an overpayment if the whole amount (or more!)
         // gets eaten by fees and interest.
