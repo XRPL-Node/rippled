@@ -730,6 +730,7 @@ checkDestinationAndTag(SLE::const_ref toSle, bool hasDestinationTag);
 canSendToAccount(
     AccountID const& from,
     ReadView const& view,
+    AccountID const& to,
     SLE::const_ref toSle,
     bool hasDestinationTag);
 

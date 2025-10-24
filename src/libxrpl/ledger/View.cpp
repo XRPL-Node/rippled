@@ -1378,15 +1378,19 @@ checkDestinationAndTag(SLE::const_ref toSle, bool hasDestinationTag)
 canSendToAccount(
     AccountID const& from,
     ReadView const& view,
+    AccountID const& to,
     SLE::const_ref toSle,
     bool hasDestinationTag)
 {
     if (auto const ret = checkDestinationAndTag(toSle, hasDestinationTag))
         return ret;
 
+    if (from == to)
+        return tesSUCCESS;
+
     if (toSle->isFlag(lsfDepositAuth))
     {
-        if (!view.exists(keylet::depositPreauth(toSle->at(sfAccount), from)))
+        if (!view.exists(keylet::depositPreauth(to, from)))
             return tecNO_PERMISSION;
     }
 
@@ -1401,10 +1405,8 @@ canSendToAccount(
     bool hasDestinationTag)
 {
     auto const toSle = view.read(keylet::account(to));
-    if (from == to)
-        return toSle ? (TER)tesSUCCESS : (TER)tecINTERNAL;
 
-    return canSendToAccount(from, view, toSle, hasDestinationTag);
+    return canSendToAccount(from, view, to, toSle, hasDestinationTag);
 }
 
 [[nodiscard]] TER
