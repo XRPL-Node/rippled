@@ -893,10 +893,21 @@ class Loan_test : public beast::unit_test::suite
             interestRate(maxInterestRate),
             loanSetFee,
             ter(tefBAD_AUTH));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, borrower),
+            interestRate(TenthBips32(0)),
+            loanSetFee,
+            ter(tefBAD_AUTH));
         // sfInterestRate: too big
         env(set(evan, broker.brokerID, principalRequest),
             sig(sfCounterpartySignature, lender),
             interestRate(maxInterestRate + 1),
+            loanSetFee,
+            ter(temINVALID));
+        // sfInterestRate: too small
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, lender),
+            interestRate(TenthBips32(-1)),
             loanSetFee,
             ter(temINVALID));
 
@@ -906,10 +917,21 @@ class Loan_test : public beast::unit_test::suite
             lateInterestRate(maxLateInterestRate),
             loanSetFee,
             ter(tefBAD_AUTH));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, borrower),
+            lateInterestRate(TenthBips32(0)),
+            loanSetFee,
+            ter(tefBAD_AUTH));
         // sfLateInterestRate: too big
         env(set(evan, broker.brokerID, principalRequest),
             sig(sfCounterpartySignature, lender),
             lateInterestRate(maxLateInterestRate + 1),
+            loanSetFee,
+            ter(temINVALID));
+        // sfLateInterestRate: too small
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, lender),
+            lateInterestRate(TenthBips32(-1)),
             loanSetFee,
             ter(temINVALID));
 
@@ -919,10 +941,20 @@ class Loan_test : public beast::unit_test::suite
             closeInterestRate(maxCloseInterestRate),
             loanSetFee,
             ter(tefBAD_AUTH));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, borrower),
+            closeInterestRate(TenthBips32(0)),
+            loanSetFee,
+            ter(tefBAD_AUTH));
         // sfCloseInterestRate: too big
         env(set(evan, broker.brokerID, principalRequest),
             sig(sfCounterpartySignature, lender),
             closeInterestRate(maxCloseInterestRate + 1),
+            loanSetFee,
+            ter(temINVALID));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, lender),
+            closeInterestRate(TenthBips32(-1)),
             loanSetFee,
             ter(temINVALID));
 
@@ -932,10 +964,20 @@ class Loan_test : public beast::unit_test::suite
             overpaymentInterestRate(maxOverpaymentInterestRate),
             loanSetFee,
             ter(tefBAD_AUTH));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, borrower),
+            overpaymentInterestRate(TenthBips32(0)),
+            loanSetFee,
+            ter(tefBAD_AUTH));
         // sfOverpaymentInterestRate: too big
         env(set(evan, broker.brokerID, principalRequest),
             sig(sfCounterpartySignature, lender),
             overpaymentInterestRate(maxOverpaymentInterestRate + 1),
+            loanSetFee,
+            ter(temINVALID));
+        env(set(evan, broker.brokerID, principalRequest),
+            sig(sfCounterpartySignature, lender),
+            overpaymentInterestRate(TenthBips32(-1)),
             loanSetFee,
             ter(temINVALID));
 
@@ -3563,10 +3605,76 @@ class Loan_test : public beast::unit_test::suite
         });
     }
 
+    void
+    testAccountSendMptMinAmountInvariant()
+    {
+        // (From FIND-006)
+        testcase << "LoanSet trigger ripple::accountSendMPT : minimum amount "
+                    "and MPT";
+
+        using namespace jtx;
+        using namespace std::chrono_literals;
+        Env env(*this, all);
+
+        Account const issuer{"issuer"};
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        env.fund(XRP(1'000'000), issuer, lender, borrower);
+        env.close();
+
+        MPTTester mptt{env, issuer, mptInitNoFund};
+        mptt.create(
+            {.flags = tfMPTCanClawback | tfMPTCanTransfer | tfMPTCanLock});
+        PrettyAsset const mptAsset = mptt.issuanceID();
+        mptt.authorize({.account = lender});
+        mptt.authorize({.account = borrower});
+        env(pay(issuer, lender, mptAsset(2'000'000)));
+        env(pay(issuer, borrower, mptAsset(1'000)));
+        env.close();
+
+        BrokerInfo broker{createVaultAndBroker(env, mptAsset, lender)};
+
+        using namespace loan;
+
+        auto const loanSetFee = fee(env.current()->fees().base * 2);
+        Number const principalRequest{1, 3};
+
+        auto createJson = env.json(
+            set(borrower, broker.brokerID, principalRequest),
+            fee(loanSetFee),
+            json(sfCounterpartySignature, Json::objectValue));
+
+        createJson["CloseInterestRate"] = 76671;
+        createJson["ClosePaymentFee"] = "2061925410";
+        createJson["GracePeriod"] = 434;
+        createJson["InterestRate"] = 50302;
+        createJson["LateInterestRate"] = 30322;
+        createJson["LatePaymentFee"] = "294427911";
+        createJson["LoanOriginationFee"] = "3250635102";
+        createJson["LoanServiceFee"] = "9557386";
+        createJson["OverpaymentFee"] = 51249;
+        createJson["OverpaymentInterestRate"] = 14304;
+        createJson["PaymentInterval"] = 434;
+        createJson["PaymentTotal"] = "2891743748";
+        createJson["PrincipalRequested"] = "8516.98";
+
+        auto const brokerStateBefore =
+            env.le(keylet::loanbroker(broker.brokerID));
+        auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+        auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+        createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
+        env(createJson, ter(temINVALID));
+        env.close();
+    }
+
 public:
     void
     run() override
     {
+        testAccountSendMptMinAmountInvariant();
+
         testIssuerLoan();
         testDisabled();
         testSelfLoan();

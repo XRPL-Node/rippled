@@ -76,15 +76,15 @@ LoanSet::preflight(PreflightContext const& ctx)
         !validDataLength(tx[~sfData], maxDataPayloadLength))
         return temINVALID;
     for (auto const& field :
-         {&sfLoanOriginationFee,
-          &sfLoanServiceFee,
-          &sfLatePaymentFee,
-          &sfClosePaymentFee})
+         {&sfLoanServiceFee, &sfLatePaymentFee, &sfClosePaymentFee})
     {
         if (!validNumericMinimum(tx[~*field]))
             return temINVALID;
     }
-    if (auto const p = tx[~sfPrincipalRequested]; p && p <= 0)
+    // Principal Requested is required
+    if (auto const p = tx[sfPrincipalRequested]; p <= 0)
+        return temINVALID;
+    else if (!validNumericRange(tx[~sfLoanOriginationFee], p))
         return temINVALID;
     if (!validNumericRange(tx[~sfInterestRate], maxInterestRate))
         return temINVALID;

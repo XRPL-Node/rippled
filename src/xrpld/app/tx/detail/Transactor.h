@@ -307,7 +307,7 @@ protected:
 
     template <class T>
     static bool
-    validNumericRange(std::optional<T> value, T max, T min = {});
+    validNumericRange(std::optional<T> value, T max, T min = T{});
 
     template <class T, class Unit>
     static bool
