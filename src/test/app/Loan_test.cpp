@@ -1349,13 +1349,22 @@ class Loan_test : public beast::unit_test::suite
             if (!(state.flags & lsfLoanOverpayment))
             {
                 // If the loan does not allow overpayments, send a payment that
-                // tries to make an overpayment
+                // tries to make an overpayment. Do not include `txFlags`, so we
+                // don't end up duplicating the next test transaction.
                 env(pay(borrower,
                         loanKeylet.key,
                         broker.asset(state.periodicPayment * 2),
-                        tfLoanOverpayment | txFlags),
+                        tfLoanOverpayment),
                     ter(temINVALID_FLAG));
             }
+            // Try to send a payment marked as both full payment and
+            // overpayment. Do not include `txFlags`, so we don't duplicate the
+            // prior test transaction.
+            env(pay(borrower,
+                    loanKeylet.key,
+                    broker.asset(state.periodicPayment * 2),
+                    tfLoanOverpayment | tfLoanFullPayment),
+                ter(temINVALID_FLAG));
 
             {
                 auto const otherAsset = broker.asset.raw() == assets[0].raw()
@@ -1685,10 +1694,11 @@ class Loan_test : public beast::unit_test::suite
                     roundPeriodicPayment(
                         broker.asset, state.periodicPayment, state.loanScale)};
 
-                testcase << "\tPayment components: "
-                         << "Payments remaining, rawInterest, rawPrincipal, "
-                            "rawMFee, roundedInterest, roundedPrincipal, "
-                            "roundedMFee, special";
+                testcase
+                    << "\tPayment components: "
+                    << "Payments remaining, rawInterest, rawPrincipal, "
+                       "rawMFee, trackedValueDelta, trackedPrincipalDelta, "
+                       "trackedMgmtFeeDelta, special";
 
                 auto const serviceFee = broker.asset(2);
 
@@ -1767,21 +1777,20 @@ class Loan_test : public beast::unit_test::suite
                         << ", " << paymentComponents.rawInterest << ", "
                         << paymentComponents.rawPrincipal << ", "
                         << paymentComponents.rawManagementFee << ", "
-                        << paymentComponents.roundedInterest << ", "
-                        << paymentComponents.roundedPrincipal << ", "
-                        << paymentComponents.roundedManagementFee << ", "
-                        << (paymentComponents.specialCase == SpecialCase::final
+                        << paymentComponents.trackedValueDelta << ", "
+                        << paymentComponents.trackedPrincipalDelta << ", "
+                        << paymentComponents.trackedManagementFeeDelta << ", "
+                        << (paymentComponents.specialCase ==
+                                    PaymentSpecialCase::final
                                 ? "final"
                                 : paymentComponents.specialCase ==
-                                    SpecialCase::final
+                                    PaymentSpecialCase::extra
                                 ? "extra"
                                 : "none");
 
                     auto const totalDueAmount = STAmount{
                         broker.asset,
-                        paymentComponents.roundedPrincipal +
-                            paymentComponents.roundedInterest +
-                            paymentComponents.roundedManagementFee +
+                        paymentComponents.trackedValueDelta +
                             serviceFee.number()};
 
                     // Due to the rounding algorithms to keep the interest and
@@ -1792,7 +1801,8 @@ class Loan_test : public beast::unit_test::suite
                     // IOUs, the difference should be after the 8th digit.
                     Number const diff = totalDue - totalDueAmount;
                     BEAST_EXPECT(
-                        paymentComponents.specialCase == SpecialCase::final ||
+                        paymentComponents.specialCase ==
+                            PaymentSpecialCase::final ||
                         diff == beast::zero ||
                         (diff > beast::zero &&
                          ((broker.asset.integral() &&
@@ -1800,7 +1810,9 @@ class Loan_test : public beast::unit_test::suite
                           (totalDue.exponent() - diff.exponent() > 8))));
 
                     BEAST_EXPECT(
-                        paymentComponents.roundedInterest >= Number(0));
+                        paymentComponents.trackedValueDelta >=
+                        paymentComponents.trackedPrincipalDelta +
+                            paymentComponents.trackedManagementFeeDelta);
 
                     BEAST_EXPECT(
                         state.paymentRemaining < 12 ||
@@ -1816,15 +1828,18 @@ class Loan_test : public beast::unit_test::suite
                                 state.loanScale,
                                 Number::upward));
                     BEAST_EXPECT(
-                        paymentComponents.roundedPrincipal >= Number(0) &&
-                        paymentComponents.roundedPrincipal <=
+                        paymentComponents.trackedPrincipalDelta >=
+                            beast::zero &&
+                        paymentComponents.trackedPrincipalDelta <=
                             state.principalOutstanding);
                     BEAST_EXPECT(
-                        paymentComponents.specialCase != SpecialCase::final ||
-                        paymentComponents.roundedPrincipal ==
+                        paymentComponents.specialCase !=
+                            PaymentSpecialCase::final ||
+                        paymentComponents.trackedPrincipalDelta ==
                             state.principalOutstanding);
                     BEAST_EXPECT(
-                        paymentComponents.specialCase == SpecialCase::final ||
+                        paymentComponents.specialCase ==
+                            PaymentSpecialCase::final ||
                         (state.periodicPayment.exponent() -
                          (paymentComponents.rawPrincipal +
                           paymentComponents.rawInterest +
@@ -1863,7 +1878,8 @@ class Loan_test : public beast::unit_test::suite
 
                     --state.paymentRemaining;
                     state.previousPaymentDate = state.nextPaymentDate;
-                    if (paymentComponents.specialCase == SpecialCase::final)
+                    if (paymentComponents.specialCase ==
+                        PaymentSpecialCase::final)
                     {
                         state.paymentRemaining = 0;
                     }
@@ -1872,12 +1888,10 @@ class Loan_test : public beast::unit_test::suite
                         state.nextPaymentDate += state.paymentInterval;
                     }
                     state.principalOutstanding -=
-                        paymentComponents.roundedPrincipal;
+                        paymentComponents.trackedPrincipalDelta;
                     state.managementFeeOutstanding -=
-                        paymentComponents.roundedManagementFee;
-                    state.totalValue -= paymentComponents.roundedPrincipal +
-                        paymentComponents.roundedInterest +
-                        paymentComponents.roundedManagementFee;
+                        paymentComponents.trackedManagementFeeDelta;
+                    state.totalValue -= paymentComponents.trackedValueDelta;
 
                     verifyLoanStatus(state);
                 }

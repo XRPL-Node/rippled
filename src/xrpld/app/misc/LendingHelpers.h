@@ -45,22 +45,42 @@ roundPeriodicPayment(
     return roundToAsset(asset, periodicPayment, scale, Number::upward);
 }
 
-enum class SpecialCase { none, final, extra };
+enum class PaymentSpecialCase { none, final, extra };
 
 /// This structure is used internally to compute the breakdown of a
 /// single loan payment
 struct PaymentComponents
 {
+    // raw values are unrounded, and are based on pure math
     Number rawInterest;
     Number rawPrincipal;
     Number rawManagementFee;
-    Number roundedInterest;
-    Number roundedPrincipal;
+    // tracked values are rounded to the asset and loan scale, and correspond to
+    // fields in the Loan ledger object.
+    // trackedValueDelta modifies sfTotalValueOutstanding.
+    Number trackedValueDelta;
+    // trackedPrincipalDelta modifies sfPrincipalOutstanding.
+    Number trackedPrincipalDelta;
+    // trackedManagementFeeDelta modifies sfManagementFeeOutstanding. It will
+    // not include any "extra" fees that go directly to the broker, such as late
+    // fees.
+    Number trackedManagementFeeDelta;
+
+    Number oldInterest;
+    Number oldPrincipal;
     // roundedManagementFee is explicitly on for the portion of the pre-computed
     // periodic payment that goes toward the Broker's management fee, which is
     // tracked by sfManagementFeeOutstanding
-    Number roundedManagementFee;
-    SpecialCase specialCase = SpecialCase::none;
+    Number oldManagementFee;
+
+    PaymentSpecialCase specialCase = PaymentSpecialCase::none;
+
+    Number
+    trackedInterestPart() const
+    {
+        return trackedValueDelta -
+            (trackedPrincipalDelta + trackedManagementFeeDelta);
+    }
 };
 
 /// This structure is explained in the XLS-66 spec, section 3.2.4.4 (Failure
@@ -84,6 +104,20 @@ struct LoanPaymentParts
     LoanPaymentParts&
     operator+=(LoanPaymentParts const& other)
     {
+        XRPL_ASSERT(
+
+            other.principalPaid >= beast::zero,
+            "ripple::LoanPaymentParts::operator+= : other principal "
+            "non-negative");
+        XRPL_ASSERT(
+            other.interestPaid >= beast::zero,
+            "ripple::LoanPaymentParts::operator+= : other interest paid "
+            "non-negative");
+        XRPL_ASSERT(
+            other.feePaid >= beast::zero,
+            "ripple::LoanPaymentParts::operator+= : other fee paid "
+            "non-negative");
+
         principalPaid += other.principalPaid;
         interestPaid += other.interestPaid;
         valueChange += other.valueChange;
@@ -468,8 +502,16 @@ computeRoundedInterestAndFeeComponents(
 
 struct PaymentComponentsPlus : public PaymentComponents
 {
-    Number extraFee{0};
-    Number valueChange{0};
+    // untrackedManagementFeeDelta includes any fees that go directly to the
+    // Broker, such as late fees. This value may be negative, though the final
+    // value returned in LoanPaymentParts.feePaid will never be negative.
+    Number untrackedManagementFee;
+    // untrackedInterest includes any fees that go directly to the Vault, such
+    // as late payment penalty interest. This value may be negative, though the
+    // final value returned in LoanPaymentParts.interestPaid will never be
+    // negative.
+    Number untrackedInterest;
+    Number oldValueChange;
     Number totalDue;
 
     PaymentComponentsPlus(
@@ -477,12 +519,29 @@ struct PaymentComponentsPlus : public PaymentComponents
         Number f,
         Number v = Number{})
         : PaymentComponents(p)
-        , extraFee(f)
-        , valueChange(v)
+        , untrackedManagementFee(f)
+        , untrackedInterest(v)
+        , oldValueChange(v)
         , totalDue(
-              roundedPrincipal + roundedInterest + roundedManagementFee +
-              extraFee)
+              trackedValueDelta + untrackedInterest + untrackedManagementFee)
     {
+        verify();
+    }
+
+    void
+    verify() const
+    {
+        assert(
+            totalDue ==
+            oldPrincipal + oldInterest + oldManagementFee +
+                untrackedManagementFee);
+        assert(trackedInterestPart() == oldInterest - oldValueChange);
+        assert(trackedPrincipalDelta == oldPrincipal);
+        assert(trackedManagementFeeDelta == oldManagementFee);
+        assert(
+            trackedValueDelta ==
+            oldPrincipal + oldInterest + oldManagementFee - oldValueChange);
+        assert(untrackedInterest == oldValueChange);
     }
 };
 
@@ -503,21 +562,20 @@ doPayment(
         "ripple::detail::doPayment",
         "Next due date proxy set");
 
-    auto const totalValueDelta = payment.roundedPrincipal +
-        payment.roundedInterest + payment.roundedManagementFee -
-        payment.valueChange;
-    if (payment.specialCase == SpecialCase::final)
+    payment.verify();
+
+    if (payment.specialCase == PaymentSpecialCase::final)
     {
         XRPL_ASSERT_PARTS(
-            principalOutstandingProxy == payment.roundedPrincipal,
+            principalOutstandingProxy == payment.trackedPrincipalDelta,
             "ripple::detail::doPayment",
             "Full principal payment");
         XRPL_ASSERT_PARTS(
-            totalValueOutstandingProxy == totalValueDelta,
+            totalValueOutstandingProxy == payment.trackedValueDelta,
             "ripple::detail::doPayment",
             "Full value payment");
         XRPL_ASSERT_PARTS(
-            managementFeeOutstandingProxy == payment.roundedManagementFee,
+            managementFeeOutstandingProxy == payment.trackedManagementFeeDelta,
             "ripple::detail::doPayment",
             "Full management fee payment");
 
@@ -535,7 +593,7 @@ doPayment(
     }
     else
     {
-        if (payment.specialCase != SpecialCase::extra)
+        if (payment.specialCase != PaymentSpecialCase::extra)
         {
             paymentRemainingProxy -= 1;
 
@@ -545,23 +603,23 @@ doPayment(
             nextDueDateProxy = *nextDueDateProxy + paymentInterval;
         }
         XRPL_ASSERT_PARTS(
-            principalOutstandingProxy > payment.roundedPrincipal,
+            principalOutstandingProxy > payment.trackedPrincipalDelta,
             "ripple::detail::doPayment",
             "Partial principal payment");
         XRPL_ASSERT_PARTS(
-            totalValueOutstandingProxy > totalValueDelta,
+            totalValueOutstandingProxy > payment.trackedValueDelta,
             "ripple::detail::doPayment",
             "Partial value payment");
         // Management fees are expected to be relatively small, and could get to
         // zero before the loan is paid off
         XRPL_ASSERT_PARTS(
-            managementFeeOutstandingProxy >= payment.roundedManagementFee,
+            managementFeeOutstandingProxy >= payment.trackedManagementFeeDelta,
             "ripple::detail::doPayment",
             "Valid management fee");
 
-        principalOutstandingProxy -= payment.roundedPrincipal;
-        totalValueOutstandingProxy -= totalValueDelta;
-        managementFeeOutstandingProxy -= payment.roundedManagementFee;
+        principalOutstandingProxy -= payment.trackedPrincipalDelta;
+        totalValueOutstandingProxy -= payment.trackedValueDelta;
+        managementFeeOutstandingProxy -= payment.trackedManagementFeeDelta;
     }
 
     XRPL_ASSERT_PARTS(
@@ -579,12 +637,16 @@ doPayment(
         "fee outstanding stays valid");
 
     return LoanPaymentParts{
-        .principalPaid = payment.roundedPrincipal,
-        .interestPaid = payment.roundedInterest,
-        .valueChange = payment.valueChange,
-        // Now that the adjustments have been made, the fee parts can be
+        .principalPaid = payment.trackedPrincipalDelta,
+        // Now that the Loan object has been updated, the tracked interest
+        // (computed here) and untracked interest can be combined.
+        .interestPaid =
+            payment.trackedInterestPart() + payment.untrackedInterest,
+        .valueChange = payment.untrackedInterest,
+        // Now that the Loan object has been updated, the fee parts can be
         // combined
-        .feePaid = payment.roundedManagementFee + payment.extraFee};
+        .feePaid =
+            payment.trackedManagementFeeDelta + payment.untrackedManagementFee};
 }
 
 // This function mainly exists to guarantee isolation of the "sandbox"
@@ -618,8 +680,9 @@ tryOverpayment(
     auto const principalError = principalOutstanding - raw.principalOutstanding;
     auto const feeError = managementFeeOutstanding - raw.managementFeeDue;
 
+    overpaymentComponents.verify();
     auto const newRawPrincipal =
-        raw.principalOutstanding - overpaymentComponents.roundedPrincipal;
+        raw.principalOutstanding - overpaymentComponents.trackedPrincipalDelta;
 
     auto newLoanProperties = computeLoanProperties(
         asset,
@@ -690,14 +753,14 @@ tryOverpayment(
         .principalPaid =
             rounded.principalOutstanding - newRounded.principalOutstanding,
         .interestPaid = rounded.interestDue - newRounded.interestDue,
-        .valueChange = valueChange + overpaymentComponents.valueChange,
+        .valueChange = valueChange + overpaymentComponents.untrackedInterest,
         .feePaid = rounded.managementFeeDue - newRounded.managementFeeDue +
-            overpaymentComponents.extraFee};
+            overpaymentComponents.untrackedManagementFee};
 }
 
 template <AssetType A, class NumberProxy>
 Expected<LoanPaymentParts, TER>
-computeOverpayment(
+doOverpayment(
     A const& asset,
     std::int32_t loanScale,
     PaymentComponentsPlus const& overpaymentComponents,
@@ -753,36 +816,40 @@ computeOverpayment(
         // LCOV_EXCL_STOP
     }
 
+    overpaymentComponents.verify();
+
+    // We haven't updated the proxies yet, so they still have the original
+    // values. Use those to do some checks.
     XRPL_ASSERT_PARTS(
-        principalOutstandingProxy - principalOutstanding ==
-            overpaymentComponents.roundedPrincipal,
-        "ripple::detail::computeOverpayment",
+        overpaymentComponents.trackedPrincipalDelta ==
+            principalOutstandingProxy - principalOutstanding,
+        "ripple::detail::doOverpayment",
         "principal change agrees");
 
     XRPL_ASSERT_PARTS(
-        managementFeeOutstandingProxy - managementFeeOutstanding ==
-            overpaymentComponents.roundedManagementFee,
-        "ripple::detail::computeOverpayment",
+        overpaymentComponents.trackedManagementFeeDelta ==
+            managementFeeOutstandingProxy - managementFeeOutstanding,
+        "ripple::detail::doOverpayment",
         "no fee change");
 
     XRPL_ASSERT_PARTS(
-        totalValueOutstandingProxy - totalValueOutstanding -
-                overpaymentComponents.roundedPrincipal ==
-            overpaymentComponents.valueChange,
-        "ripple::detail::computeOverpayment",
+        overpaymentComponents.untrackedInterest ==
+            totalValueOutstandingProxy - totalValueOutstanding -
+                overpaymentComponents.trackedPrincipalDelta,
+        "ripple::detail::doOverpayment",
         "value change agrees");
 
     XRPL_ASSERT_PARTS(
-        loanPaymentParts.principalPaid ==
-            overpaymentComponents.roundedPrincipal,
-        "ripple::detail::computeOverpayment",
+        overpaymentComponents.trackedPrincipalDelta ==
+            loanPaymentParts.principalPaid,
+        "ripple::detail::doOverpayment",
         "principal payment matches");
 
     XRPL_ASSERT_PARTS(
         loanPaymentParts.feePaid ==
-            overpaymentComponents.extraFee +
-                overpaymentComponents.roundedManagementFee,
-        "ripple::detail::computeOverpayment",
+            overpaymentComponents.untrackedManagementFee +
+                overpaymentComponents.trackedManagementFeeDelta,
+        "ripple::detail::doOverpayment",
         "fee payment matches");
 
     // Update the loan object (via proxies)
@@ -865,22 +932,27 @@ computeLatePayment(
         roundedLateInterest >= 0,
         "ripple::detail::computeLatePayment : valid late interest");
     XRPL_ASSERT_PARTS(
-        periodic.specialCase != SpecialCase::extra,
+        periodic.specialCase != PaymentSpecialCase::extra,
         "ripple::detail::computeLatePayment",
         "no extra parts to this payment");
     // Copy the periodic payment values, and add on the late interest.
     // This preserves all the other fields without having to enumerate them.
-    PaymentComponents inner = periodic;
-    inner.rawInterest += rawLateInterest;
-    inner.roundedInterest += roundedLateInterest;
+    periodic.verify();
+    PaymentComponentsPlus const late = [&]() {
+        auto inner = periodic;
+        inner.rawInterest += rawLateInterest;
+        inner.oldInterest += roundedLateInterest;
 
-    PaymentComponentsPlus const late{
-        inner,
-        // A late payment pays both the normal fee, and the extra fees
-        periodic.extraFee + latePaymentFee + roundedLateManagementFee,
-        // A late payment increases the value of the loan by the difference
-        // between periodic and late payment interest
-        roundedLateInterest};
+        return PaymentComponentsPlus{
+            inner,
+            // A late payment pays both the normal fee, and the extra fees
+            periodic.untrackedManagementFee + latePaymentFee +
+                roundedLateManagementFee,
+            // A late payment increases the value of the loan by the difference
+            // between periodic and late payment interest
+            periodic.untrackedInterest + roundedLateInterest};
+    }();
+    late.verify();
 
     XRPL_ASSERT_PARTS(
         isRounded(asset, late.totalDue, loanScale),
@@ -961,12 +1033,16 @@ computeFullPayment(
             .rawInterest = rawFullInterest,
             .rawPrincipal = rawPrincipalOutstanding,
             .rawManagementFee = rawFullManagementFee,
-            .roundedInterest = roundedFullInterest,
-            .roundedPrincipal = principalOutstanding,
+            .trackedValueDelta = principalOutstanding +
+                totalInterestOutstanding + managementFeeOutstanding,
+            .trackedPrincipalDelta = principalOutstanding,
+            .trackedManagementFeeDelta = managementFeeOutstanding,
+            .oldInterest = roundedFullInterest,
+            .oldPrincipal = principalOutstanding,
             // to make the accounting work later, the tracked part of the fee
             // must be paid in full
-            .roundedManagementFee = managementFeeOutstanding,
-            .specialCase = SpecialCase::final},
+            .oldManagementFee = managementFeeOutstanding,
+            .specialCase = PaymentSpecialCase::final},
         // A full payment pays the single close payment fee, plus the computed
         // management fee part of the interest portion, but for tracking, the
         // outstanding part is removed. That could make this value negative, but
@@ -1050,10 +1126,14 @@ computePaymentComponents(
             .rawInterest = raw.interestOutstanding,
             .rawPrincipal = raw.principalOutstanding,
             .rawManagementFee = raw.managementFeeDue,
-            .roundedInterest = interest,
-            .roundedPrincipal = principalOutstanding,
-            .roundedManagementFee = managementFeeOutstanding,
-            .specialCase = SpecialCase::final};
+            .trackedValueDelta =
+                interest + principalOutstanding + managementFeeOutstanding,
+            .trackedPrincipalDelta = principalOutstanding,
+            .trackedManagementFeeDelta = managementFeeOutstanding,
+            .oldInterest = interest,
+            .oldPrincipal = principalOutstanding,
+            .oldManagementFee = managementFeeOutstanding,
+            .specialCase = PaymentSpecialCase::final};
     }
 
     /*
@@ -1148,9 +1228,12 @@ computePaymentComponents(
         .rawInterest = rawInterest - rawFee,
         .rawPrincipal = rawPrincipal,
         .rawManagementFee = rawFee,
-        .roundedInterest = roundedInterest,
-        .roundedPrincipal = roundedPrincipal,
-        .roundedManagementFee = roundedFee,
+        .trackedValueDelta = roundedInterest + roundedPrincipal + roundedFee,
+        .trackedPrincipalDelta = roundedPrincipal,
+        .trackedManagementFeeDelta = roundedFee,
+        .oldInterest = roundedInterest,
+        .oldPrincipal = roundedPrincipal,
+        .oldManagementFee = roundedFee,
     };
 }
 
@@ -1610,7 +1693,7 @@ loanMakePayment(
             managementFeeRate),
         serviceFee};
     XRPL_ASSERT_PARTS(
-        periodic.roundedPrincipal >= 0,
+        periodic.trackedPrincipalDelta >= 0,
         "ripple::loanMakePayment",
         "regular payment valid principal");
 
@@ -1690,9 +1773,9 @@ loanMakePayment(
                 managementFeeRate),
             serviceFee};
         XRPL_ASSERT_PARTS(
-            nextPayment.roundedPrincipal > 0,
+            nextPayment.trackedPrincipalDelta >= 0,
             "ripple::loanMakePayment",
-            "additional payment pays principal");
+            "additional payment pays non-negative principal");
         XRPL_ASSERT(
             nextPayment.rawInterest <= periodic.rawInterest,
             "ripple::loanMakePayment : decreasing interest");
@@ -1717,7 +1800,7 @@ loanMakePayment(
         ++numPayments;
 
         XRPL_ASSERT_PARTS(
-            (nextPayment.specialCase == SpecialCase::final) ==
+            (nextPayment.specialCase == PaymentSpecialCase::final) ==
                 (paymentRemainingProxy == 0),
             "ripple::loanMakePayment",
             "final payment is the final payment");
@@ -1776,25 +1859,29 @@ loanMakePayment(
                 .rawInterest = rawOverpaymentInterest,
                 .rawPrincipal = payment - rawOverpaymentInterest,
                 .rawManagementFee = 0,
-                .roundedInterest = roundedOverpaymentInterest,
-                .roundedPrincipal = payment - roundedOverpaymentInterest,
-                .roundedManagementFee = 0,
-                .specialCase = SpecialCase::extra},
+                .trackedValueDelta = payment,
+                .trackedPrincipalDelta = payment - roundedOverpaymentInterest -
+                    roundedOverpaymentManagementFee,
+                .trackedManagementFeeDelta = roundedOverpaymentManagementFee,
+                .oldInterest = roundedOverpaymentInterest,
+                .oldPrincipal = payment - roundedOverpaymentInterest,
+                .oldManagementFee = roundedOverpaymentManagementFee,
+                .specialCase = PaymentSpecialCase::extra},
             fee,
             roundedOverpaymentInterest};
 
         // Don't process an overpayment if the whole amount (or more!)
         // gets eaten by fees and interest.
         if (overpaymentComponents.rawPrincipal > 0 &&
-            overpaymentComponents.roundedPrincipal > 0)
+            overpaymentComponents.trackedPrincipalDelta > 0)
         {
             XRPL_ASSERT_PARTS(
-                overpaymentComponents.valueChange >= beast::zero,
+                overpaymentComponents.untrackedInterest >= beast::zero,
                 "ripple::loanMakePayment",
                 "overpayment penalty did not reduce value of loan");
             // Can't just use `periodicPayment` here, because it might change
             auto periodicPaymentProxy = loan->at(sfPeriodicPayment);
-            if (auto const overResult = detail::computeOverpayment(
+            if (auto const overResult = detail::doOverpayment(
                     asset,
                     loanScale,
                     overpaymentComponents,
@@ -1822,17 +1909,20 @@ loanMakePayment(
     // Check the final results are rounded, to double-check that the
     // intermediate steps were rounded.
     XRPL_ASSERT(
-        isRounded(asset, totalParts.principalPaid, loanScale),
-        "ripple::loanMakePayment : total principal paid rounded");
+        isRounded(asset, totalParts.principalPaid, loanScale) &&
+            totalParts.principalPaid >= beast::zero,
+        "ripple::loanMakePayment : total principal paid is valid");
     XRPL_ASSERT(
-        isRounded(asset, totalParts.interestPaid, loanScale),
-        "ripple::loanMakePayment : total interest paid rounded");
+        isRounded(asset, totalParts.interestPaid, loanScale) &&
+            totalParts.interestPaid >= beast::zero,
+        "ripple::loanMakePayment : total interest paid is valid");
     XRPL_ASSERT(
         isRounded(asset, totalParts.valueChange, loanScale),
-        "ripple::loanMakePayment : loan value change rounded");
+        "ripple::loanMakePayment : loan value change is valid");
     XRPL_ASSERT(
-        isRounded(asset, totalParts.feePaid, loanScale),
-        "ripple::loanMakePayment : fee paid rounded");
+        isRounded(asset, totalParts.feePaid, loanScale) &&
+            totalParts.feePaid >= beast::zero,
+        "ripple::loanMakePayment : fee paid is valid");
     return totalParts;
 }
 

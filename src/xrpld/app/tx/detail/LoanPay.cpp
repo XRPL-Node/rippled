@@ -48,6 +48,10 @@ LoanPay::preflight(PreflightContext const& ctx)
     if (ctx.tx[sfAmount] <= beast::zero)
         return temBAD_AMOUNT;
 
+    // isFlag requires an exact match - all flags to be set - to return true.
+    if (ctx.tx.isFlag(tfLoanOverpayment | tfLoanFullPayment))
+        return temINVALID_FLAG;
+
     return tesSUCCESS;
 }
 
