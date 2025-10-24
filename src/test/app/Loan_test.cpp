@@ -2742,6 +2742,72 @@ class Loan_test : public beast::unit_test::suite
                     fee(env.current()->fees().base * 5));
             },
             CaseArgs{.requireAuth = true, .authorizeBorrower = true});
+
+        jtx::Account const alice{"alice"};
+        jtx::Account const bella{"bella"};
+        auto const msigSetup = [&](Env& env, Account const& account) {
+            Json::Value tx1 = signers(account, 2, {{alice, 1}, {bella, 1}});
+            env(tx1);
+            env.close();
+        };
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                msigSetup(env, lender);
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "MPT authorized borrower, borrower submits, lender "
+                    "multisign");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    msig(sfCounterpartySignature, alice, bella),
+                    fee(env.current()->fees().base * 5));
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                msigSetup(env, lender);
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "IOU authorized borrower, borrower submits, lender "
+                    "multisign");
+                env(set(borrower, broker.brokerID, principalRequest),
+                    counterparty(lender),
+                    msig(sfCounterpartySignature, alice, bella),
+                    fee(env.current()->fees().base * 5));
+            },
+            CaseArgs{.requireAuth = true, .authorizeBorrower = true});
+
+        testCase(
+            [&, this](Env& env, BrokerInfo const& broker, auto&) {
+                using namespace loan;
+                msigSetup(env, borrower);
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "MPT authorized borrower, lender submits, borrower "
+                    "multisign");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    msig(sfCounterpartySignature, alice, bella),
+                    fee(env.current()->fees().base * 5));
+            },
+            [&, this](Env& env, BrokerInfo const& broker) {
+                using namespace loan;
+                msigSetup(env, borrower);
+                Number const principalRequest = broker.asset(1'000).value();
+
+                testcase(
+                    "IOU authorized borrower, lender submits, borrower "
+                    "multisign");
+                env(set(lender, broker.brokerID, principalRequest),
+                    counterparty(borrower),
+                    msig(sfCounterpartySignature, alice, bella),
+                    fee(env.current()->fees().base * 5));
+            },
+            CaseArgs{.requireAuth = true, .authorizeBorrower = true});
     }
 
     void
