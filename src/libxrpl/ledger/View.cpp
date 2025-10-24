@@ -1406,8 +1406,8 @@ addEmptyHolding(
     Issue const& issue,
     beast::Journal journal)
 {
-    // Every account can hold XRP.
-    if (issue.native())
+    // Every account can hold XRP. An issuer can issue directly.
+    if (issue.native() || accountID == issue.getIssuer())
         return tesSUCCESS;
 
     auto const& issuerId = issue.getIssuer();
@@ -1468,6 +1468,8 @@ addEmptyHolding(
         return tefINTERNAL;  // LCOV_EXCL_LINE
     if (view.peek(keylet::mptoken(mptID, accountID)))
         return tecDUPLICATE;
+    if (accountID == mptIssue.getIssuer())
+        return tesSUCCESS;
 
     return authorizeMPToken(view, priorBalance, mptID, accountID, journal);
 }
