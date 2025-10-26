@@ -194,10 +194,44 @@ LoanSet::getValueFields()
     return valueFields;
 }
 
+std::uint32_t
+getStartDate(ReadView const& view)
+{
+    return view.info().closeTime.time_since_epoch().count();
+}
+
 TER
 LoanSet::preclaim(PreclaimContext const& ctx)
 {
     auto const& tx = ctx.tx;
+
+    {
+        // Check for numeric overflow of the schedule before we load any
+        // objects. NextPaymentDue date for the last payment is:
+        //      startDate + (paymentInterval * paymentTotal).
+        // If that value is larger than "maxTime", the value
+        // overflows, and we kill the transaction.
+        using timeType = decltype(sfNextPaymentDueDate)::type::value_type;
+        static_assert(std::is_same_v<timeType, std::uint32_t>);
+        timeType constexpr maxTime = std::numeric_limits<timeType>::max();
+        static_assert(maxTime == 4'294'967'295);
+
+        auto const timeAvailable = maxTime - getStartDate(ctx.view);
+
+        auto const interval =
+            ctx.tx.at(~sfPaymentInterval).value_or(defaultPaymentInterval);
+        auto const total =
+            ctx.tx.at(~sfPaymentTotal).value_or(defaultPaymentTotal);
+
+        if (interval > timeAvailable)
+            return tecKILLED;
+
+        if (total > timeAvailable)
+            return tecKILLED;
+
+        if (timeAvailable / interval < total)
+            return tecKILLED;
+    }
 
     auto const account = tx[sfAccount];
     auto const brokerID = tx[sfLoanBrokerID];
@@ -536,7 +570,7 @@ LoanSet::doApply()
         return ter;
 
     // Get shortcuts to the loan property values
-    auto const startDate = view.info().closeTime.time_since_epoch().count();
+    auto const startDate = getStartDate(view);
     auto loanSequenceProxy = brokerSle->at(sfLoanSequence);
 
     // Create the loan

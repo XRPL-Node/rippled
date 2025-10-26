@@ -326,7 +326,8 @@ class Loan_test : public beast::unit_test::suite
         jtx::Env& env,
         jtx::PrettyAsset const& asset,
         jtx::Account const& lender,
-        std::optional<Number> debtMax = std::nullopt)
+        std::optional<Number> debtMax = std::nullopt,
+        std::optional<std::uint32_t> coverRateMin = std::nullopt)
     {
         using namespace jtx;
 
@@ -337,6 +338,10 @@ class Loan_test : public beast::unit_test::suite
             ? STAmount{asset.raw(), *debtMax}
             : asset(debtMaximumParameter).value();
         auto const coverDepositValue = asset(coverDepositParameter).value();
+
+        auto const coverRateMinValue = coverRateMin
+            ? TenthBips32(*coverRateMin)
+            : TenthBips32(coverRateMinParameter);
 
         auto [tx, vaultKeylet] =
             vault.create({.owner = lender, .asset = asset});
@@ -361,7 +366,7 @@ class Loan_test : public beast::unit_test::suite
             data(testData),
             managementFeeRate(managementFeeRateParameter),
             debtMaximum(debtMaximumValue),
-            coverRateMinimum(TenthBips32(coverRateMinParameter)),
+            coverRateMinimum(coverRateMinValue),
             coverRateLiquidation(TenthBips32(coverRateLiquidationParameter)));
 
         env(coverDeposit(lender, keylet.key, coverDepositValue));
@@ -2976,7 +2981,7 @@ class Loan_test : public beast::unit_test::suite
         Number const principalRequest{640562, -5};
 
         Number const serviceFee{2462611968};
-        std::uint32_t const numPayments{4294967295};
+        std::uint32_t const numPayments{4294967295 / 800};
 
         auto createJson = env.json(
             set(borrower, broker.brokerID, principalRequest),
@@ -4241,6 +4246,243 @@ class Loan_test : public beast::unit_test::suite
             stateBefore.paymentRemaining - loanMaximumPaymentsPerTransaction);
     }
 
+    void
+    testLoanNextPaymentDueDateOverflow()
+    {
+        // For FIND-013
+        testcase << "Prevent nextPaymentDueDate overflow";
+
+        using namespace jtx;
+        using namespace std::chrono_literals;
+        Env env(*this, all);
+
+        Account const issuer{"issuer"};
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        env.fund(XRP(1'000'000), issuer, lender, borrower);
+        env.close();
+
+        PrettyAsset const iouAsset = issuer[iouCurrency];
+        auto trustLenderTx = env.json(trust(lender, iouAsset(1'000'000'000)));
+        env(trustLenderTx);
+        auto trustBorrowerTx =
+            env.json(trust(borrower, iouAsset(1'000'000'000)));
+        env(trustBorrowerTx);
+        auto payLenderTx = pay(issuer, lender, iouAsset(100'000'000));
+        env(payLenderTx);
+        auto payIssuerTx = pay(issuer, borrower, iouAsset(10'000'000));
+        env(payIssuerTx);
+        env.close();
+
+        BrokerInfo broker{
+            createVaultAndBroker(env, iouAsset, lender, Number(0), 0)};
+
+        using namespace loan;
+
+        auto const loanSetFee = fee(env.current()->fees().base * 2);
+
+        using timeType = decltype(sfNextPaymentDueDate)::type::value_type;
+        static_assert(std::is_same_v<timeType, std::uint32_t>);
+        timeType constexpr maxTime = std::numeric_limits<timeType>::max();
+        static_assert(maxTime == 4'294'967'295);
+
+        auto const baseJson = [&]() {
+            auto createJson = env.json(
+                set(borrower, broker.brokerID, Number{55524'81, -2}),
+                fee(loanSetFee),
+                closePaymentFee(0),
+                gracePeriod(0),
+                interestRate(TenthBips32(12833)),
+                lateInterestRate(TenthBips32(77048)),
+                latePaymentFee(0),
+                loanOriginationFee(218),
+                json(sfCounterpartySignature, Json::objectValue));
+
+            createJson.removeMember(sfSequence.getJsonName());
+
+            return createJson;
+        }();
+
+        auto const brokerStateBefore =
+            env.le(keylet::loanbroker(broker.brokerID));
+        auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+        auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+        auto const baseFee = env.current()->fees().base;
+
+        auto parentCloseTime = [&]() {
+            return env.current()->parentCloseTime().time_since_epoch().count();
+        };
+        auto maxLoanTime = [&]() {
+            auto const startDate = parentCloseTime();
+
+            BEAST_EXPECT(startDate >= 50);
+
+            return maxTime - startDate;
+        };
+
+        {
+            // straight-up overflow
+            auto const interval = maxLoanTime() + 1;
+            auto const total = 1;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
+            // straight-up overflow
+            // min interval is 60
+            auto const interval = 60;
+            auto const total = maxLoanTime() + 1;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
+            // Overflow with multiplication of a few large intervals
+            auto const interval = 1'000'000'000;
+            auto const total = 10;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
+            // Overflow with multiplication of many small payments
+            // min interval is 60
+            auto const interval = 60;
+            auto const total = 1'000'000'000;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
+            // Start date when the ledger is closed will be larger
+            auto const interval = maxLoanTime();
+            auto const total = 1;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tesSUCCESS));
+            env.close();
+
+            // The transaction is killed in the closed ledger
+            auto const meta = env.meta();
+            if (BEAST_EXPECT(meta))
+            {
+                BEAST_EXPECT(meta->at(sfTransactionResult) == tecKILLED);
+            }
+
+            // If the transaction had succeeded, the loan would exist
+            auto const loanSle = env.le(keylet);
+            // but it doesn't
+            BEAST_EXPECT(!loanSle);
+        }
+        {
+            // Start date when the ledger is closed will be larger
+            auto const closeStartDate = (parentCloseTime() / 10 + 1) * 10;
+            auto const interval = maxTime - closeStartDate;
+            auto const total = 1;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tesSUCCESS));
+            env.close();
+
+            // The transaction succeeds in the closed ledger
+            auto const meta = env.meta();
+            if (BEAST_EXPECT(meta))
+            {
+                BEAST_EXPECT(meta->at(sfTransactionResult) == tesSUCCESS);
+            }
+
+            // This loan exists
+            auto const afterState = getCurrentState(env, broker, keylet);
+            BEAST_EXPECT(afterState.nextPaymentDate == maxTime);
+            BEAST_EXPECT(afterState.previousPaymentDate == 0);
+            BEAST_EXPECT(afterState.paymentRemaining == 1);
+        }
+
+        {
+            // Ensure the borrower has funds to pay back the loan
+            env(pay(issuer, borrower, iouAsset(Number{1'055'524'81, -2})));
+
+            // Start date when the ledger is closed will be larger
+            auto const closeStartDate = (parentCloseTime() / 10 + 1) * 10;
+            auto const maxLoanTime = maxTime - closeStartDate;
+            auto const total = [&]() {
+                if (maxLoanTime % 5 == 0)
+                    return 5;
+                if (maxLoanTime % 3 == 0)
+                    return 3;
+                if (maxLoanTime % 2 == 0)
+                    return 2;
+                return 0;
+            }();
+            if (!BEAST_EXPECT(total != 0))
+                return;
+
+            auto const brokerState =
+                env.le(keylet::loanbroker(broker.brokerID));
+            // Intentionally shadow the outer values
+            auto const loanSequence = brokerState->at(sfLoanSequence);
+            auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+            auto const interval = maxLoanTime / total;
+            auto createJson = env.json(
+                baseJson, paymentInterval(interval), paymentTotal(total));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tesSUCCESS));
+            env.close();
+
+            // This loan exists
+            auto const beforeState = getCurrentState(env, broker, keylet);
+            BEAST_EXPECT(
+                beforeState.nextPaymentDate == closeStartDate + interval);
+            BEAST_EXPECT(beforeState.previousPaymentDate == 0);
+            BEAST_EXPECT(beforeState.paymentRemaining == total);
+            BEAST_EXPECT(beforeState.periodicPayment > 0);
+
+            // pay all but the last payment
+            Number const payment = beforeState.periodicPayment * (total - 1);
+            XRPAmount const payFee{
+                baseFee * ((total - 1) / loanPaymentsPerFeeIncrement + 1)};
+            auto loanPayTx = env.json(
+                pay(borrower, keylet.key, STAmount{broker.asset, payment}),
+                fee(payFee));
+            env(loanPayTx, ter(tesSUCCESS));
+            env.close();
+
+            // The loan is on the last payment
+            auto const afterState = getCurrentState(env, broker, keylet);
+            BEAST_EXPECT(afterState.nextPaymentDate == maxTime);
+            BEAST_EXPECT(afterState.previousPaymentDate == maxTime - interval);
+            BEAST_EXPECT(afterState.paymentRemaining == 1);
+        }
+    }
+
 public:
     void
     run() override
@@ -4269,6 +4511,7 @@ public:
         testDosLoanPay();
         testLoanPayComputePeriodicPaymentValidTotalPrincipalPaidInvariant();
         testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant();
+        testLoanNextPaymentDueDateOverflow();
     }
 };
 
