@@ -3772,6 +3772,110 @@ class Loan_test : public beast::unit_test::suite
         env.close();
     }
 
+    void
+    testLoanPayDebtDecreaseInvariant()
+    {
+        testcase
+            << "LoanPay ripple::LoanPay::doApply : debtDecrease rounding good";
+
+        using namespace jtx;
+        using namespace std::chrono_literals;
+        Env env(*this, all);
+
+        Account const issuer{"issuer"};
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        env.fund(XRP(1'000'000), issuer, lender, borrower);
+        env.close();
+
+        PrettyAsset const iouAsset = issuer[iouCurrency];
+        auto trustLenderTx = env.json(trust(lender, iouAsset(1'000'000'000)));
+        env(trustLenderTx);
+        auto trustBorrowerTx =
+            env.json(trust(borrower, iouAsset(1'000'000'000)));
+        env(trustBorrowerTx);
+        auto payLenderTx = pay(issuer, lender, iouAsset(100'000'000));
+        env(payLenderTx);
+        auto payIssuerTx = pay(issuer, borrower, iouAsset(1'000'000));
+        env(payIssuerTx);
+        env.close();
+
+        BrokerInfo broker{createVaultAndBroker(env, iouAsset, lender)};
+
+        using namespace loan;
+
+        auto const baseFee = env.current()->fees().base;
+        auto const loanSetFee = fee(baseFee * 2);
+        Number const principalRequest{1, 3};
+
+        auto createJson = env.json(
+            set(borrower, broker.brokerID, principalRequest),
+            fee(loanSetFee),
+            json(sfCounterpartySignature, Json::objectValue));
+
+        createJson["ClosePaymentFee"] = "0";
+        createJson["GracePeriod"] = 60;
+        createJson["InterestRate"] = 24346;
+        createJson["LateInterestRate"] = 65535;
+        createJson["LatePaymentFee"] = "0";
+        createJson["LoanOriginationFee"] = "218";
+        createJson["LoanServiceFee"] = "0";
+        createJson["PaymentInterval"] = 60;
+        createJson["PaymentTotal"] = 5678;
+        createJson["PrincipalRequested"] = "9924.81";
+
+        auto const brokerStateBefore =
+            env.le(keylet::loanbroker(broker.brokerID));
+        auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+        auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+        createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
+        env(createJson, ter(tesSUCCESS));
+        env.close();
+
+        auto const pseudoAcct = [&]() {
+            auto const brokerSle = env.le(keylet::loanbroker(broker.brokerID));
+            if (!BEAST_EXPECT(brokerSle))
+                return lender;
+            auto const brokerPseudo = brokerSle->at(sfAccount);
+            return Account("Broker pseudo-account", brokerPseudo);
+        }();
+
+        VerifyLoanStatus verifyLoanStatus(
+            env, broker, Number{992481, -2}, pseudoAcct, keylet);
+        auto const originalState = getCurrentState(env, broker, keylet);
+        verifyLoanStatus(originalState);
+
+        Number const payment{3'269'349'176'470'588, -12};
+        XRPAmount const payFee{
+            baseFee *
+            ((payment / originalState.periodicPayment) /
+                 loanPaymentsPerFeeIncrement +
+             1)};
+        auto loanPayTx = env.json(
+            pay(borrower, keylet.key, STAmount{broker.asset, payment}),
+            fee(payFee));
+        BEAST_EXPECT(to_string(payment) == "3269.349176470588");
+        env(loanPayTx, ter(tesSUCCESS));
+        env.close();
+
+        auto const newState = getCurrentState(env, broker, keylet);
+        BEAST_EXPECT(isRounded(
+            broker.asset,
+            newState.managementFeeOutstanding,
+            originalState.loanScale));
+        BEAST_EXPECT(
+            newState.managementFeeOutstanding <
+            originalState.managementFeeOutstanding);
+        BEAST_EXPECT(isRounded(
+            broker.asset, newState.totalValue, originalState.loanScale));
+        BEAST_EXPECT(isRounded(
+            broker.asset,
+            newState.principalOutstanding,
+            originalState.loanScale));
+    }
+
 public:
     void
     run() override
@@ -3795,6 +3899,7 @@ public:
         testInvalidLoanSet();
 
         testAccountSendMptMinAmountInvariant();
+        testLoanPayDebtDecreaseInvariant();
     }
 };
 
