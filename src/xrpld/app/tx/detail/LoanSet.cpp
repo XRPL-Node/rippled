@@ -411,20 +411,21 @@ LoanSet::doApply()
 
     // Guard 4: if the rounded periodic payment is large enough that the loan
     // can't be amortized in the specified number of payments, raise an error
-    if (auto const computedPayments = roundToAsset(
-            vaultAsset,
-            properties.totalValueOutstanding / roundedPayment,
-            properties.loanScale,
-            Number::upward);
-        computedPayments < paymentTotal)
     {
-        JLOG(j_.warn())
-            << "Loan Periodic payment (" << properties.periodicPayment
-            << ") rounding (" << roundedPayment
-            << ") will complete the "
-               "loan in less than the specified number of payments ("
-            << computedPayments << " < " << paymentTotal << ")";
-        return tecPRECISION_LOSS;
+        NumberRoundModeGuard mg(Number::upward);
+
+        if (std::int64_t const computedPayments{
+                properties.totalValueOutstanding / roundedPayment};
+            computedPayments < paymentTotal)
+        {
+            JLOG(j_.warn())
+                << "Loan Periodic payment (" << properties.periodicPayment
+                << ") rounding (" << roundedPayment
+                << ") will complete the "
+                   "loan in less than the specified number of payments ("
+                << computedPayments << " < " << paymentTotal << ")";
+            return tecPRECISION_LOSS;
+        }
     }
 
     // Check that the other computed values are valid

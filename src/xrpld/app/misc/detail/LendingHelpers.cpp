@@ -228,7 +228,7 @@ computeRoundedPrincipalComponent(
         asset,
         principalOutstanding - rawPrincipalOutstanding,
         scale,
-        Number::downward);
+        asset.integral() ? Number::downward : Number::towards_zero);
 
     // If the rounded principal outstanding is greater than the true
     // principal outstanding, we need to pay more principal to reduce
@@ -308,7 +308,7 @@ computeRoundedInterestComponent(
             asset,
             interestOutstanding - rawInterestOutstanding,
             scale,
-            Number::downward);
+            asset.integral() ? Number::downward : Number::towards_zero);
         roundedInterest += diff;
     }
 
@@ -358,7 +358,7 @@ computeRoundedInterestAndFeeComponents(
             asset,
             managementFeeOutstanding - rawManagementFeeOutstanding,
             scale,
-            Number::downward);
+            asset.integral() ? Number::downward : Number::towards_zero);
 
         roundedFee += diff;
 
@@ -383,18 +383,27 @@ computeRoundedInterestAndFeeComponents(
     roundedInterest = std::min(interestOutstanding, roundedInterest);
 
     // Make sure the parts don't add up to too much
-    Number excess = roundedPeriodicPayment - roundedPrincipal -
-        roundedInterest - roundedFee;
+    auto const initialTotal = roundedPrincipal + roundedInterest + roundedFee;
+    Number excess = roundedPeriodicPayment - initialTotal;
 
     XRPL_ASSERT_PARTS(
         isRounded(asset, excess, scale),
         "ripple::detail::computeRoundedInterestAndFeeComponents",
         "excess is rounded");
 
+#if LOANCOMPLETE
+    if (excess != beast::zero)
+        std::cout << "computeRoundedInterestAndFeeComponents excess is "
+                  << excess << std::endl;
+#endif
+
     if (excess < beast::zero)
     {
         // Take as much of the excess as we can out of the interest
-        auto part = std::min(roundedInterest, abs(excess));
+#if LOANCOMPLETE
+        std::cout << "\tApplying excess to interest\n";
+#endif
+        auto part = std::min(roundedInterest, -excess);
         roundedInterest -= part;
         excess += part;
 
@@ -407,7 +416,10 @@ computeRoundedInterestAndFeeComponents(
     {
         // If there's any left, take as much of the excess as we can out of the
         // fee
-        auto part = std::min(roundedFee, abs(excess));
+#if LOANCOMPLETE
+        std::cout << "\tApplying excess to fee\n";
+#endif
+        auto part = std::min(roundedFee, -excess);
         roundedFee -= part;
         excess += part;
     }
@@ -422,7 +434,7 @@ computeRoundedInterestAndFeeComponents(
              ((asset.integral() && excess < 3) ||
               (roundedPeriodicPayment.exponent() - excess.exponent() > 6))),
         "ripple::detail::computeRoundedInterestAndFeeComponents",
-        "excess is zero (fee)");
+        "excess is extremely small (fee)");
 
     XRPL_ASSERT_PARTS(
         roundedFee >= beast::zero,
@@ -596,8 +608,9 @@ tryOverpayment(
     auto const principalError = principalOutstanding - raw.principalOutstanding;
     auto const feeError = managementFeeOutstanding - raw.managementFeeDue;
 
-    auto const newRawPrincipal =
-        raw.principalOutstanding - overpaymentComponents.trackedPrincipalDelta;
+    auto const newRawPrincipal = std::max(
+        raw.principalOutstanding - overpaymentComponents.trackedPrincipalDelta,
+        Number{0});
 
     auto newLoanProperties = computeLoanProperties(
         asset,
@@ -1136,7 +1149,8 @@ computeOverpaymentComponents(
 {
     XRPL_ASSERT(
         overpayment > 0 && isRounded(asset, overpayment, loanScale),
-        "ripple::loanMakePayment : valid overpayment amount");
+        "ripple::detail::computeOverpaymentComponents : valid overpayment "
+        "amount");
 
     Number const fee = roundToAsset(
         asset, tenthBipsOfValue(overpayment, overpaymentFeeRate), loanScale);
@@ -1237,6 +1251,15 @@ calculateRawLoanState(
     std::uint32_t const paymentRemaining,
     TenthBips16 const managementFeeRate)
 {
+    if (paymentRemaining == 0)
+    {
+        return LoanState{
+            .valueOutstanding = 0,
+            .principalOutstanding = 0,
+            .interestOutstanding = 0,
+            .interestDue = 0,
+            .managementFeeDue = 0};
+    }
     Number const rawValueOutstanding = periodicPayment * paymentRemaining;
     Number const rawPrincipalOutstanding =
         detail::loanPrincipalFromPeriodicPayment(
@@ -1556,11 +1579,9 @@ loanMakePayment(
 
     Number const serviceFee = loan->at(sfLoanServiceFee);
     Number const latePaymentFee = loan->at(sfLatePaymentFee);
-    Number const closePaymentFee =
-        roundToAsset(asset, loan->at(sfClosePaymentFee), loanScale);
     TenthBips16 const managementFeeRate{brokerSle->at(sfManagementFeeRate)};
 
-    auto const periodicPayment = loan->at(sfPeriodicPayment);
+    Number const periodicPayment = loan->at(sfPeriodicPayment);
 
     auto prevPaymentDateProxy = loan->at(sfPreviousPaymentDate);
 
@@ -1655,7 +1676,8 @@ loanMakePayment(
 
     std::size_t numPayments = 1;
 
-    while (totalPaid < amount && paymentRemainingProxy > 0)
+    while (totalPaid < amount && paymentRemainingProxy > 0 &&
+           numPayments < loanMaximumPaymentsPerTransaction)
     {
         // Try to make more payments
         detail::PaymentComponentsPlus const nextPayment{
@@ -1718,13 +1740,18 @@ loanMakePayment(
     // -------------------------------------------------------------
     // overpayment handling
     if (overpaymentAllowed && loan->isFlag(lsfLoanOverpayment) &&
-        paymentRemainingProxy > 0 && nextDueDateProxy && totalPaid < amount)
+        paymentRemainingProxy > 0 && nextDueDateProxy && totalPaid < amount &&
+        numPayments < loanMaximumPaymentsPerTransaction)
     {
         TenthBips32 const overpaymentInterestRate{
             loan->at(sfOverpaymentInterestRate)};
         TenthBips32 const overpaymentFeeRate{loan->at(sfOverpaymentFee)};
 
-        Number const overpayment = amount - totalPaid;
+        // It shouldn't be possible for the overpayment to be greater than
+        // totalValueOutstanding, because that would have been processed as
+        // another normal payment. But cap it just in case.
+        Number const overpayment =
+            std::min(amount - totalPaid, *totalValueOutstandingProxy);
 
         detail::PaymentComponentsPlus const overpaymentComponents =
             detail::computeOverpaymentComponents(

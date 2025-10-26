@@ -23,6 +23,7 @@
 #include <xrpld/app/tx/detail/LoanManage.h>
 
 #include <xrpl/json/to_string.h>
+#include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/TxFlags.h>
 
 namespace ripple {
@@ -65,8 +66,6 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
         // payment
         return normalCost;
 
-    auto const paymentsPerFeeIncrement = 20;
-
     // The fee is based on the potential number of payments, unless the loan is
     // being fully paid off.
     auto const amount = tx[sfAmount];
@@ -77,10 +76,10 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
         // Let preclaim worry about the error for this
         return normalCost;
 
-    if (loanSle->at(sfPaymentRemaining) <= paymentsPerFeeIncrement)
+    if (loanSle->at(sfPaymentRemaining) <= loanPaymentsPerFeeIncrement)
     {
-        // If there are fewer than paymentsPerFeeIncrement payments left, we can
-        // skip the computations.
+        // If there are fewer than loanPaymentsPerFeeIncrement payments left to
+        // pay, we can skip the computations.
         return normalCost;
     }
 
@@ -93,30 +92,36 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
     if (!brokerSle)
         // Let preclaim worry about the error for this
         return normalCost;
-    auto const vaultSle = view.read(keylet::vault(loanSle->at(sfVaultID)));
+    auto const vaultSle = view.read(keylet::vault(brokerSle->at(sfVaultID)));
     if (!vaultSle)
         // Let preclaim worry about the error for this
         return normalCost;
 
     auto const asset = vaultSle->at(sfAsset);
+
+    if (asset != amount.asset())
+        // Let preclaim worry about the error for this
+        return normalCost;
+
     auto const scale = loanSle->at(sfLoanScale);
 
     auto const regularPayment =
         roundPeriodicPayment(asset, loanSle->at(sfPeriodicPayment), scale) +
         loanSle->at(sfLoanServiceFee);
 
-    if (amount < regularPayment * paymentsPerFeeIncrement)
-        // This is definitely paying fewer than paymentsPerFeeIncrement payments
-        return normalCost;
-
-    NumberRoundModeGuard mg(Number::downward);
-    // Figure out how many payments will be made
-    auto const numPaymentEstimate =
+    // If making an overpayment, count it as a full payment because it will do
+    // about the same amount of work, if not more.
+    NumberRoundModeGuard mg(
+        tx.isFlag(tfLoanOverpayment) ? Number::upward : Number::downward);
+    // Estimate how many payments will be made
+    Number const numPaymentEstimate =
         static_cast<std::int64_t>(amount / regularPayment);
-    // Charge one base fee per paymentsPerFeeIncrement payments - use integer
-    // math (round down), then add one to ensure all this extra math is worth
-    // it.
-    auto const feeIncrements = numPaymentEstimate / paymentsPerFeeIncrement + 1;
+    // Charge one base fee per paymentsPerFeeIncrement payments, rounding up.
+    Number::setround(Number::upward);
+    auto const feeIncrements = std::max(
+        1ll,
+        static_cast<std::int64_t>(
+            numPaymentEstimate / loanPaymentsPerFeeIncrement));
 
     return feeIncrements * normalCost;
 }

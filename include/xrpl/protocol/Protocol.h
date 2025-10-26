@@ -177,6 +177,41 @@ static_assert(maxCloseInterestRate == TenthBips32(100'000u));
 TenthBips32 constexpr maxOverpaymentInterestRate = percentageToTenthBips(100);
 static_assert(maxOverpaymentInterestRate == TenthBips32(100'000u));
 
+/** LoanPay transaction cost will be one base fee per X combined payments
+ *
+ * The number of payments is estimated based on the Amount paid and the Loan's
+ * Fixed Payment size. Overpayments (indicated with the tfLoanOverpayment flag)
+ * count as one more payment.
+ *
+ * This number was chosen arbitrarily, but should not be changed once released
+ * without an amendment
+ */
+static constexpr int loanPaymentsPerFeeIncrement = 5;
+
+/** Maximum number of combined payments that a LoanPay transaction will process
+ *
+ * This limit is enforced during the loan payment process, and thus is not
+ * estimated. If the limit is hit, no further payments or overpayments will be
+ * processed, no matter how much of the transation Amount is left, but the
+ * transaction will succeed with the payments that have been processed up to
+ * that point.
+ *
+ * This limit is independent of loanPaymentsPerFeeIncrement, so a transaction
+ * could potentially be charged for many more payments than actually get
+ * processed. Users should take care not to submit a transaction paying more
+ * than loanMaximumPaymentsPerTransaction * Loan.PeriodicPayment. Because
+ * overpayments are charged as a payment, if submitting
+ * loanMaximumPaymentsPerTransaction * Loan.PeriodicPayment, users should not
+ * set the tfLoanOverpayment flag.
+ *
+ * Even though they're independent, loanMaximumPaymentsPerTransaction should be
+ * a multiple of loanPaymentsPerFeeIncrement.
+ *
+ * This number was chosen arbitrarily, but should not be changed once released
+ * without an amendment
+ */
+static constexpr int loanMaximumPaymentsPerTransaction = 100;
+
 /** The maximum length of a URI inside an NFT */
 std::size_t constexpr maxTokenURILength = 256;
 
