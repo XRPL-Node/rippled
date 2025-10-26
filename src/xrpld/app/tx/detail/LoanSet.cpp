@@ -362,24 +362,25 @@ LoanSet::doApply()
         }
     }
 
+    auto const totalInterestOutstanding =
+        properties.totalValueOutstanding - principalRequested;
     // Guard 1: if there is no computed total interest over the life of the loan
     // for a non-zero interest rate, we cannot properly amortize the loan
-    if (interestRate > TenthBips32{0} &&
-        (properties.totalValueOutstanding - principalRequested) <= 0)
+    if (interestRate > TenthBips32{0} && totalInterestOutstanding <= 0)
     {
         // Unless this is a zero-interest loan, there must be some interest due
         // on the loan, even if it's (measurable) dust
-        JLOG(j_.warn()) << "Loan with " << interestRate
-                        << "% interest has no interest due";
+        JLOG(j_.warn()) << "Loan for " << principalRequested << " with "
+                        << interestRate << "% interest has no interest due";
         return tecPRECISION_LOSS;
     }
     // Guard 1a: If there is any interest computed over the life of the loan,
     // for a zero interest rate, something went sideways.
-    if (interestRate == TenthBips32{0} &&
-        (properties.totalValueOutstanding - principalRequested) > 0)
+    if (interestRate == TenthBips32{0} && totalInterestOutstanding > 0)
     {
         // LCOV_EXCL_START
-        JLOG(j_.warn()) << "Loan with 0% interest has interest due";
+        JLOG(j_.warn()) << "Loan for " << principalRequested
+                        << " with 0% interest has interest due";
         return tecINTERNAL;
         // LCOV_EXCL_STOP
     }
