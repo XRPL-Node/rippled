@@ -4145,6 +4145,102 @@ class Loan_test : public beast::unit_test::suite
              stateAfter.principalOutstanding));
     }
 
+    void
+    testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant()
+    {
+        // From FIND-008
+        testcase << "ripple::loanComputePaymentParts : loanValueChange rounded";
+
+        using namespace jtx;
+        using namespace std::chrono_literals;
+        Env env(*this, all);
+
+        Account const issuer{"issuer"};
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        env.fund(XRP(1'000'000), issuer, lender, borrower);
+        env.close();
+
+        PrettyAsset const iouAsset = issuer[iouCurrency];
+        auto trustLenderTx = env.json(trust(lender, iouAsset(1'000'000'000)));
+        env(trustLenderTx);
+        auto trustBorrowerTx =
+            env.json(trust(borrower, iouAsset(1'000'000'000)));
+        env(trustBorrowerTx);
+        auto payLenderTx = pay(issuer, lender, iouAsset(100'000'000));
+        env(payLenderTx);
+        auto payIssuerTx = pay(issuer, borrower, iouAsset(10'000'000));
+        env(payIssuerTx);
+        env.close();
+
+        BrokerInfo broker{createVaultAndBroker(env, iouAsset, lender)};
+        {
+            auto const coverDepositValue =
+                broker.asset(coverDepositParameter).value();
+            env(loanBroker::coverDeposit(
+                lender,
+                broker.brokerID,
+                STAmount{broker.asset, coverDepositValue * 10}));
+            env.close();
+        }
+
+        using namespace loan;
+
+        auto const loanSetFee = fee(env.current()->fees().base * 2);
+        Number const principalRequest{1, 3};
+
+        auto createJson = env.json(
+            set(borrower, broker.brokerID, principalRequest),
+            fee(loanSetFee),
+            json(sfCounterpartySignature, Json::objectValue));
+
+        createJson["ClosePaymentFee"] = "0";
+        createJson["GracePeriod"] = 0;
+        createJson["InterestRate"] = 12833;
+        createJson["LateInterestRate"] = 77048;
+        createJson["LatePaymentFee"] = "0";
+        createJson["LoanOriginationFee"] = "218";
+        createJson["LoanServiceFee"] = "0";
+        createJson["PaymentInterval"] = 752;
+        createJson["PaymentTotal"] = 5678;
+        createJson["PrincipalRequested"] = "9924.81";
+
+        auto const brokerStateBefore =
+            env.le(keylet::loanbroker(broker.brokerID));
+        auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+        auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+        createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
+        env(createJson, ter(tesSUCCESS));
+        env.close();
+
+        auto const baseFee = env.current()->fees().base;
+
+        auto const stateBefore = getCurrentState(env, broker, keylet);
+        BEAST_EXPECT(stateBefore.paymentRemaining == 5678);
+        BEAST_EXPECT(
+            stateBefore.paymentRemaining > loanMaximumPaymentsPerTransaction);
+
+        auto loanPayTx = env.json(
+            pay(borrower, keylet.key, STAmount{broker.asset, Number{}}));
+        Number const amount{9924'81, -2};
+        BEAST_EXPECT(to_string(amount) == "9924.81");
+        XRPAmount const payFee{
+            baseFee *
+            (amount / stateBefore.periodicPayment /
+                 loanPaymentsPerFeeIncrement +
+             1)};
+        loanPayTx["Amount"]["value"] = to_string(amount);
+        env(loanPayTx, fee(payFee), ter(tesSUCCESS));
+        env.close();
+
+        auto const stateAfter = getCurrentState(env, broker, keylet);
+        BEAST_EXPECT(
+            stateAfter.paymentRemaining ==
+            stateBefore.paymentRemaining - loanMaximumPaymentsPerTransaction);
+    }
+
 public:
     void
     run() override
@@ -4172,6 +4268,7 @@ public:
         testLoanPayComputePeriodicPaymentValidTotalInterestInvariant();
         testDosLoanPay();
         testLoanPayComputePeriodicPaymentValidTotalPrincipalPaidInvariant();
+        testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant();
     }
 };
 
