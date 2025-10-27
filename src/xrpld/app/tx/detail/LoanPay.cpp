@@ -119,7 +119,7 @@ LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
     // Charge one base fee per paymentsPerFeeIncrement payments, rounding up.
     Number::setround(Number::upward);
     auto const feeIncrements = std::max(
-        1ll,
+        std::int64_t(1),
         static_cast<std::int64_t>(
             numPaymentEstimate / loanPaymentsPerFeeIncrement));
 
