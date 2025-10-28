@@ -451,7 +451,7 @@ LoanSet::doApply()
 
         if (std::int64_t const computedPayments{
                 properties.totalValueOutstanding / roundedPayment};
-            computedPayments < paymentTotal)
+            computedPayments != paymentTotal)
         {
             JLOG(j_.warn())
                 << "Loan Periodic payment (" << properties.periodicPayment

@@ -213,6 +213,7 @@ loanAccruedInterest(
         paymentInterval;
 }
 
+#if LOANCOMPLETE
 Number
 computeRoundedPrincipalComponent(
     Asset const& asset,
@@ -448,6 +449,7 @@ computeRoundedInterestAndFeeComponents(
     return std::make_pair(
         std::max(Number{}, roundedInterest), std::max(Number{}, roundedFee));
 }
+#endif
 
 struct PaymentComponentsPlus : public PaymentComponents
 {
@@ -839,8 +841,10 @@ computeLatePayment(
         view.parentCloseTime(),
         nextDueDate);
 
+#if LOANCOMPLETE
     auto const [rawLateInterest, rawLateManagementFee] =
         computeInterestAndFeeParts(latePaymentInterest, managementFeeRate);
+#endif
     auto const [roundedLateInterest, roundedLateManagementFee] = [&]() {
         auto const interest =
             roundToAsset(asset, latePaymentInterest, loanScale);
@@ -859,7 +863,9 @@ computeLatePayment(
     // This preserves all the other fields without having to enumerate them.
     PaymentComponentsPlus const late = [&]() {
         auto inner = periodic;
+#if LOANCOMPLETE
         inner.rawInterest += rawLateInterest;
+#endif
 
         return PaymentComponentsPlus{
             inner,
@@ -932,8 +938,10 @@ computeFullPayment(
         startDate,
         closeInterestRate);
 
+#if LOANCOMPLETE
     auto const [rawFullInterest, rawFullManagementFee] =
         computeInterestAndFeeParts(fullPaymentInterest, managementFeeRate);
+#endif
 
     auto const [roundedFullInterest, roundedFullManagementFee] = [&]() {
         auto const interest =
@@ -947,9 +955,11 @@ computeFullPayment(
 
     PaymentComponentsPlus const full{
         PaymentComponents{
+#if LOANCOMPLETE
             .rawInterest = rawFullInterest,
             .rawPrincipal = rawPrincipalOutstanding,
             .rawManagementFee = rawFullManagementFee,
+#endif
             .trackedValueDelta = principalOutstanding +
                 totalInterestOutstanding + managementFeeOutstanding,
             .trackedPrincipalDelta = principalOutstanding,
@@ -1011,35 +1021,123 @@ computePaymentComponents(
             isRounded(asset, managementFeeOutstanding, scale),
         "ripple::detail::computePaymentComponents",
         "Outstanding values are rounded");
+    XRPL_ASSERT_PARTS(
+        paymentRemaining > 0,
+        "ripple::detail::computePaymentComponents",
+        "some payments remaining");
     auto const roundedPeriodicPayment =
         roundPeriodicPayment(asset, periodicPayment, scale);
 
-    LoanState const raw = calculateRawLoanState(
-        periodicPayment, periodicRate, paymentRemaining, managementFeeRate);
+    LoanState const trueTarget = calculateRawLoanState(
+        periodicPayment, periodicRate, paymentRemaining - 1, managementFeeRate);
+    LoanState const roundedTarget = LoanState{
+        .valueOutstanding =
+            roundToAsset(asset, trueTarget.valueOutstanding, scale),
+        .principalOutstanding =
+            roundToAsset(asset, trueTarget.principalOutstanding, scale),
+        .interestOutstanding =
+            roundToAsset(asset, trueTarget.interestOutstanding, scale),
+        .interestDue = roundToAsset(asset, trueTarget.interestDue, scale),
+        .managementFeeDue =
+            roundToAsset(asset, trueTarget.managementFeeDue, scale)};
+    LoanState const currentLedgerState = calculateRoundedLoanState(
+        totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
+
+    LoanDeltas deltas = currentLedgerState - roundedTarget;
+
+    // It should be impossible for any of the deltas to be negative, but do
+    // defensive checks
+    if (deltas.principalDelta < beast::zero)
+    {
+        // LCOV_EXCL_START
+        UNREACHABLE(
+            "ripple::detail::computePaymentComponents : negative principal "
+            "delta");
+        deltas.principalDelta = Number::zero;
+        // LCOV_EXCL_STOP
+    }
+    if (deltas.interestDueDelta < beast::zero)
+    {
+        // LCOV_EXCL_START
+        UNREACHABLE(
+            "ripple::detail::computePaymentComponents : negative interest "
+            "delta");
+        deltas.interestDueDelta = Number::zero;
+        // LCOV_EXCL_STOP
+    }
+    if (deltas.managementFeeDueDelta < beast::zero)
+    {
+        // LCOV_EXCL_START
+        UNREACHABLE(
+            "ripple::detail::computePaymentComponents : negative management "
+            "fee delta");
+        deltas.managementFeeDueDelta = Number::zero;
+        // LCOV_EXCL_STOP
+    }
+
+    // Adjust the deltas if necessary for data integrity
+    XRPL_ASSERT_PARTS(
+        deltas.principalDelta <= currentLedgerState.principalOutstanding,
+        "ripple::detail::computePaymentComponents",
+        "principal delta not greater than outstanding");
+    deltas.principalDelta = std::min(
+        deltas.principalDelta, currentLedgerState.principalOutstanding);
+    XRPL_ASSERT_PARTS(
+        deltas.interestDueDelta <= currentLedgerState.interestDue,
+        "ripple::detail::computePaymentComponents",
+        "interest due delta not greater than outstanding");
+    deltas.interestDueDelta = std::min(
+        {deltas.interestDueDelta,
+         std::max(Number::zero, roundedPeriodicPayment - deltas.principalDelta),
+         currentLedgerState.interestDue});
+    XRPL_ASSERT_PARTS(
+        deltas.managementFeeDueDelta <= currentLedgerState.managementFeeDue,
+        "ripple::detail::computePaymentComponents",
+        "management fee due delta not greater than outstanding");
+    deltas.managementFeeDueDelta = std::min(
+        {deltas.managementFeeDueDelta,
+         roundedPeriodicPayment -
+             (deltas.principalDelta + deltas.interestDueDelta),
+         currentLedgerState.managementFeeDue});
+
+    // In case any adjustments were made (or if the original rounding didn't
+    // quite add up right), recompute the total value delta
+    deltas.valueDelta = deltas.principalDelta + deltas.interestDueDelta +
+        deltas.managementFeeDueDelta;
 
     if (paymentRemaining == 1 ||
         totalValueOutstanding <= roundedPeriodicPayment)
     {
         // If there's only one payment left, we need to pay off each of the loan
-        // parts. It's probably impossible for the subtraction to result in a
-        // negative value, but don't leave anything to chance.
-        Number interest = std::max(
-            Number{},
-            totalValueOutstanding - principalOutstanding -
-                managementFeeOutstanding);
+        // parts.
+
+        XRPL_ASSERT(
+            deltas.valueDelta == totalValueOutstanding,
+            "ripple::detail::computePaymentComponents",
+            "last payment total value agrees");
+        XRPL_ASSERT(
+            deltas.principalDelta == principalOutstanding,
+            "ripple::detail::computePaymentComponents",
+            "last payment principal agrees");
+        XRPL_ASSERT(
+            deltas.managementFeeDueDelta == managementFeeOutstanding,
+            "ripple::detail::computePaymentComponents",
+            "last payment management fee agrees");
 
         // Pay everything off
         return PaymentComponents{
+#if LOANCOMPLETE
             .rawInterest = raw.interestOutstanding,
             .rawPrincipal = raw.principalOutstanding,
             .rawManagementFee = raw.managementFeeDue,
-            .trackedValueDelta =
-                interest + principalOutstanding + managementFeeOutstanding,
+#endif
+            .trackedValueDelta = totalValueOutstanding,
             .trackedPrincipalDelta = principalOutstanding,
             .trackedManagementFeeDelta = managementFeeOutstanding,
             .specialCase = PaymentSpecialCase::final};
     }
 
+#if LOANCOMPLETE
     /*
      * From the spec, once the periodicPayment is computed:
      *
@@ -1127,14 +1225,91 @@ computePaymentComponents(
             roundedPeriodicPayment,
         "ripple::detail::computePaymentComponents",
         "payment parts fit within payment limit");
+#endif
+
+    // Make sure the parts don't add up to too much
+    Number shortage = roundedPeriodicPayment - deltas.valueDelta;
+
+    XRPL_ASSERT_PARTS(
+        isRounded(asset, shortage, scale),
+        "ripple::detail::computePaymentComponents",
+        "excess is rounded");
+
+    // The shortage must never be negative, which indicates that the parts are
+    // trying to take more than the whole payment. The excess can be positive,
+    // which indicates that we're not going to take the whole payment amount,
+    // but if so, it must be small.
+    auto takeFrom = [](Number& total, Number& component, Number& excess) {
+        if (excess > beast::zero)
+        {
+            // Take as much of the excess as we can out of the provided part and
+            // the total
+            auto part = std::min(component, excess);
+            total -= part;
+            component -= part;
+            excess -= part;
+        }
+        // If the excess goes negative, we took too much, which should be
+        // impossible
+        XRPL_ASSERT_PARTS(
+            excess >= beast::zero,
+            "ripple::detail::computePaymentComponents",
+            "excess non-negative");
+    };
+    if (shortage < beast::zero)
+    {
+        Number excess = -shortage;
+
+        takeFrom(deltas.valueDelta, deltas.principalDelta, excess);
+        takeFrom(deltas.valueDelta, deltas.interestDueDelta, excess);
+        takeFrom(deltas.valueDelta, deltas.managementFeeDueDelta, excess);
+
+        shortage = -excess;
+    }
+
+    // The shortage should never be negative, which indicates that the parts are
+    // trying to take more than the whole payment. The shortage can be positive,
+    // which indicates that we're not going to take the whole payment amount,
+    // but if so, it must be small.
+    XRPL_ASSERT_PARTS(
+        shortage == beast::zero ||
+            (shortage > beast::zero &&
+             ((asset.integral() && shortage < 3) ||
+              (scale - shortage.exponent() > 14))),
+        "ripple::detail::computePaymentComponents",
+        "excess is extremely small");
+
+    XRPL_ASSERT(
+        deltas.valueDelta ==
+            deltas.principalDelta + deltas.interestDueDelta +
+                deltas.managementFeeDueDelta,
+        "ripple::detail::computePaymentComponents",
+        "total value adds up");
+
+    XRPL_ASSERT_PARTS(
+        deltas.principalDelta >= beast::zero,
+        "ripple::detail::computePaymentComponents",
+        "non-negative principal");
+    XRPL_ASSERT_PARTS(
+        deltas.interestDueDelta >= beast::zero,
+        "ripple::detail::computePaymentComponents",
+        "non-negative interest");
+    XRPL_ASSERT_PARTS(
+        deltas.managementFeeDueDelta >= beast::zero,
+        "ripple::detail::computePaymentComponents",
+        "non-negative fee");
 
     return PaymentComponents{
+#if LOANCOMPLETE
         .rawInterest = rawInterest - rawFee,
         .rawPrincipal = rawPrincipal,
         .rawManagementFee = rawFee,
-        .trackedValueDelta = roundedInterest + roundedPrincipal + roundedFee,
-        .trackedPrincipalDelta = roundedPrincipal,
-        .trackedManagementFeeDelta = roundedFee,
+#endif
+        // As a final safety check, don't return any negative values
+        .trackedValueDelta = std::max(deltas.valueDelta, Number::zero),
+        .trackedPrincipalDelta = std::max(deltas.principalDelta, Number::zero),
+        .trackedManagementFeeDelta =
+            std::max(deltas.managementFeeDueDelta, Number::zero),
     };
 }
 
@@ -1172,9 +1347,11 @@ computeOverpaymentComponents(
 
     return detail::PaymentComponentsPlus{
         detail::PaymentComponents{
+#if LOANCOMPLETE
             .rawInterest = rawOverpaymentInterest,
             .rawPrincipal = payment - rawOverpaymentInterest,
             .rawManagementFee = 0,
+#endif
             .trackedValueDelta = payment,
             .trackedPrincipalDelta = payment - roundedOverpaymentInterest -
                 roundedOverpaymentManagementFee,
@@ -1185,6 +1362,36 @@ computeOverpaymentComponents(
 }
 
 }  // namespace detail
+
+detail::LoanDeltas
+operator-(LoanState const& lhs, LoanState const& rhs)
+{
+    detail::LoanDeltas result{
+        .valueDelta = lhs.valueOutstanding - rhs.valueOutstanding,
+        .principalDelta = lhs.principalOutstanding - rhs.principalOutstanding,
+        .interestDueDelta = lhs.interestDue - rhs.interestDue,
+        .managementFeeDueDelta = lhs.managementFeeDue - rhs.managementFeeDue,
+    };
+
+    XRPL_ASSERT_PARTS(
+        result.valueDelta >= 0,
+        "ripple::operator-(LoanState,LoanState)",
+        "valueDelta difference non-negative");
+    XRPL_ASSERT_PARTS(
+        result.principalDelta >= 0,
+        "ripple::operator-(LoanState,LoanState)",
+        "principalDelta difference non-negative");
+    XRPL_ASSERT_PARTS(
+        result.interestDueDelta >= 0,
+        "ripple::operator-(LoanState,LoanState)",
+        "interestDueDelta difference non-negative");
+    XRPL_ASSERT_PARTS(
+        result.managementFeeDueDelta >= 0,
+        "ripple::operator-(LoanState,LoanState)",
+        "managementFeeDueDelta difference non-negative");
+
+    return result;
+}
 
 Number
 calculateFullPaymentInterest(
@@ -1404,20 +1611,21 @@ computeLoanProperties(
     auto const firstPaymentPrincipal = [&]() {
         // Compute the parts for the first payment. Ensure that the
         // principal payment will actually change the principal.
-        auto const paymentComponents = detail::computePaymentComponents(
-            asset,
-            loanScale,
-            totalValueOutstanding,
-            principalOutstanding,
-            feeOwedToBroker,
+        auto const startingState = calculateRawLoanState(
             periodicPayment,
             periodicRate,
             paymentsRemaining,
             managementFeeRate);
+        auto const firstPaymentState = calculateRawLoanState(
+            periodicPayment,
+            periodicRate,
+            paymentsRemaining - 1,
+            managementFeeRate);
 
         // The unrounded principal part needs to be large enough to affect the
         // principal. What to do if not is left to the caller
-        return paymentComponents.rawPrincipal;
+        return startingState.principalOutstanding -
+            firstPaymentState.principalOutstanding;
     }();
 
     return LoanProperties{
@@ -1696,12 +1904,14 @@ loanMakePayment(
             nextPayment.trackedPrincipalDelta >= 0,
             "ripple::loanMakePayment",
             "additional payment pays non-negative principal");
+#if LOANCOMPLETE
         XRPL_ASSERT(
             nextPayment.rawInterest <= periodic.rawInterest,
             "ripple::loanMakePayment : decreasing interest");
         XRPL_ASSERT(
-            nextPayment.rawPrincipal >= periodic.rawPrincipal,
+            nextPayment.rawPrinicpal >= periodic.rawPrincipal,
             "ripple::loanMakePayment : increasing principal");
+#endif
 
         if (amount < totalPaid + nextPayment.totalDue)
             // We're done making payments.
@@ -1764,8 +1974,7 @@ loanMakePayment(
 
         // Don't process an overpayment if the whole amount (or more!)
         // gets eaten by fees and interest.
-        if (overpaymentComponents.rawPrincipal > 0 &&
-            overpaymentComponents.trackedPrincipalDelta > 0)
+        if (overpaymentComponents.trackedPrincipalDelta > 0)
         {
             XRPL_ASSERT_PARTS(
                 overpaymentComponents.untrackedInterest >= beast::zero,

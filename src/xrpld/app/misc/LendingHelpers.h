@@ -170,10 +170,12 @@ enum class PaymentSpecialCase { none, final, extra };
 /// single loan payment
 struct PaymentComponents
 {
+#if LOANCOMPLETE
     // raw values are unrounded, and are based on pure math
     Number rawInterest;
     Number rawPrincipal;
     Number rawManagementFee;
+#endif
     // tracked values are rounded to the asset and loan scale, and correspond to
     // fields in the Loan ledger object.
     // trackedValueDelta modifies sfTotalValueOutstanding.
@@ -191,6 +193,14 @@ struct PaymentComponents
     trackedInterestPart() const;
 };
 
+struct LoanDeltas
+{
+    Number valueDelta;
+    Number principalDelta;
+    Number interestDueDelta;
+    Number managementFeeDueDelta;
+};
+
 PaymentComponents
 computePaymentComponents(
     Asset const& asset,
@@ -204,6 +214,9 @@ computePaymentComponents(
     TenthBips16 managementFeeRate);
 
 }  // namespace detail
+
+detail::LoanDeltas
+operator-(LoanState const& lhs, LoanState const& rhs);
 
 Number
 valueMinusFee(

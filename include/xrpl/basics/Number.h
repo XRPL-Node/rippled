@@ -58,6 +58,8 @@ public:
     explicit Number(rep mantissa, int exponent);
     explicit constexpr Number(rep mantissa, int exponent, unchecked) noexcept;
 
+    static Number const zero;
+
     constexpr rep
     mantissa() const noexcept;
     constexpr int
