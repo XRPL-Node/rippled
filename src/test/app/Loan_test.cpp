@@ -2025,7 +2025,7 @@ class Loan_test : public beast::unit_test::suite
                             paymentComponents.trackedManagementFeeDelta);
                     BEAST_EXPECT(
                         paymentComponents.trackedValueDelta <=
-                        state.periodicPayment);
+                        roundedPeriodicPayment);
 
                     BEAST_EXPECT(
                         state.paymentRemaining < 12 ||
