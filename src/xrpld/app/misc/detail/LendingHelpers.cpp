@@ -1111,15 +1111,15 @@ computePaymentComponents(
         // If there's only one payment left, we need to pay off each of the loan
         // parts.
 
-        XRPL_ASSERT(
+        XRPL_ASSERT_PARTS(
             deltas.valueDelta == totalValueOutstanding,
             "ripple::detail::computePaymentComponents",
             "last payment total value agrees");
-        XRPL_ASSERT(
+        XRPL_ASSERT_PARTS(
             deltas.principalDelta == principalOutstanding,
             "ripple::detail::computePaymentComponents",
             "last payment principal agrees");
-        XRPL_ASSERT(
+        XRPL_ASSERT_PARTS(
             deltas.managementFeeDueDelta == managementFeeOutstanding,
             "ripple::detail::computePaymentComponents",
             "last payment management fee agrees");
@@ -1227,14 +1227,6 @@ computePaymentComponents(
         "payment parts fit within payment limit");
 #endif
 
-    // Make sure the parts don't add up to too much
-    Number shortage = roundedPeriodicPayment - deltas.valueDelta;
-
-    XRPL_ASSERT_PARTS(
-        isRounded(asset, shortage, scale),
-        "ripple::detail::computePaymentComponents",
-        "excess is rounded");
-
     // The shortage must never be negative, which indicates that the parts are
     // trying to take more than the whole payment. The excess can be positive,
     // which indicates that we're not going to take the whole payment amount,
@@ -1256,13 +1248,35 @@ computePaymentComponents(
             "ripple::detail::computePaymentComponents",
             "excess non-negative");
     };
+    auto addressExcess = [&takeFrom](LoanDeltas& deltas, Number& excess) {
+        takeFrom(deltas.valueDelta, deltas.interestDueDelta, excess);
+        takeFrom(deltas.valueDelta, deltas.managementFeeDueDelta, excess);
+        takeFrom(deltas.valueDelta, deltas.principalDelta, excess);
+    };
+    Number totalOverpayment =
+        deltas.valueDelta - currentLedgerState.valueOutstanding;
+    if (totalOverpayment > 0)
+    {
+        // LCOV_EXCL_START
+        UNREACHABLE(
+            "ripple::detail::computePaymentComponents : payment exceeded loan "
+            "state");
+        addressExcess(deltas, totalOverpayment);
+        // LCOV_EXCL_STOP
+    }
+    // Make sure the parts don't add up to too much
+    Number shortage = roundedPeriodicPayment - deltas.valueDelta;
+
+    XRPL_ASSERT_PARTS(
+        isRounded(asset, shortage, scale),
+        "ripple::detail::computePaymentComponents",
+        "shortage is rounded");
+
     if (shortage < beast::zero)
     {
         Number excess = -shortage;
 
-        takeFrom(deltas.valueDelta, deltas.principalDelta, excess);
-        takeFrom(deltas.valueDelta, deltas.interestDueDelta, excess);
-        takeFrom(deltas.valueDelta, deltas.managementFeeDueDelta, excess);
+        addressExcess(deltas, excess);
 
         shortage = -excess;
     }
@@ -1279,7 +1293,7 @@ computePaymentComponents(
         "ripple::detail::computePaymentComponents",
         "excess is extremely small");
 
-    XRPL_ASSERT(
+    XRPL_ASSERT_PARTS(
         deltas.valueDelta ==
             deltas.principalDelta + deltas.interestDueDelta +
                 deltas.managementFeeDueDelta,
