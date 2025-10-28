@@ -418,8 +418,6 @@ TaggedCache<
         SharedPointerType const& data,
         R&& replaceCallback)
 {
-    // Return canonical value, store if needed, refresh in cache
-    // Return values: true=we had the data already
     std::lock_guard lock(m_mutex);
 
     auto cit = m_cache.find(key);
@@ -437,26 +435,26 @@ TaggedCache<
     Entry& entry = cit->second;
     entry.touch(m_clock.now());
 
-    auto shouldReplace = [&] {
+    auto replaceEntryIfNecessary = [&] {
+        bool shouldReplace = false;
         if constexpr (std::is_invocable_r_v<bool, R>)
         {
             // The reason for this extra complexity is for intrusive
             // strong/weak combo getting a strong is relatively expensive
             // and not needed for many cases.
-            return replaceCallback();
+            shouldReplace = replaceCallback();
         }
         else
         {
-            return replaceCallback(entry.ptr.getStrong());
+            shouldReplace = replaceCallback(entry.ptr.getStrong());
         }
+
+        if (shouldReplace) entry.ptr = data;
     };
 
     if (entry.isCached())
     {
-        if (shouldReplace())
-        {
-            entry.ptr = data;
-        }
+        replaceEntryIfNecessary();
         return std::make_pair(true, entry.ptr.getStrong());
     }
 
@@ -464,10 +462,7 @@ TaggedCache<
 
     if (cachedData)
     {
-        if (shouldReplace())
-        {
-            entry.ptr = data;
-        }
+        replaceEntryIfNecessary();
         entry.ptr.convertToStrong();
         ++m_cache_count;
         return std::make_pair(true, entry.ptr.getStrong());
