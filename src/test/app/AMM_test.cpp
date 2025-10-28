@@ -3572,7 +3572,7 @@ private:
                     env.current()->rules(),
                     tapNONE,
                     env.journal);
-                auto pf = AMMBid::preflight(pfctx);
+                auto pf = Transactor::invokePreflight<AMMBid>(pfctx);
                 BEAST_EXPECT(pf == temDISABLED);
                 env.app().config().features.insert(featureAMM);
             }
@@ -3587,7 +3587,7 @@ private:
                     env.current()->rules(),
                     tapNONE,
                     env.journal);
-                auto pf = AMMBid::preflight(pfctx);
+                auto pf = Transactor::invokePreflight<AMMBid>(pfctx);
                 BEAST_EXPECT(pf != tesSUCCESS);
             }
 
@@ -3602,7 +3602,7 @@ private:
                     env.current()->rules(),
                     tapNONE,
                     env.journal);
-                auto pf = AMMBid::preflight(pfctx);
+                auto pf = Transactor::invokePreflight<AMMBid>(pfctx);
                 BEAST_EXPECT(pf == temBAD_AMM_TOKENS);
             }
         }
@@ -3666,7 +3666,7 @@ private:
             auto const settleDelay = 100s;
             NetClock::time_point const cancelAfter =
                 env.current()->info().parentCloseTime + 200s;
-            env(create(
+            env(paychan::create(
                     carol,
                     ammAlice.ammAccount(),
                     XRP(1'000),
