@@ -211,18 +211,13 @@ constexpr std::uint32_t const tfMPTokenIssuanceDestroyMask  = ~tfUniversal;
 // issuer's reserve without bound.
 //
 // The fixRemoveNFTokenAutoTrustLine amendment disables minting with the
-// tfTrustLine flag as a way to prevent the attack.  But until the
-// amendment passes we still need to keep the old behavior available.
+// tfTrustLine flag as a way to prevent the attack. Since the amendment
+// has passed, we don't include tfTrustLine flag in tfNFTokenMintMask anymore.
+
 constexpr std::uint32_t const tfNFTokenMintMask =
     ~(tfUniversal | tfBurnable | tfOnlyXRP | tfTransferable);
 
-constexpr std::uint32_t const tfNFTokenMintOldMask =
-    ~( ~tfNFTokenMintMask | tfTrustLine);
-
-// if featureDynamicNFT enabled then new flag allowing mutable URI available.
-constexpr std::uint32_t const tfNFTokenMintOldMaskWithMutable =
-    ~( ~tfNFTokenMintOldMask | tfMutable);
-
+// if featureDynamicNFT enabled then flag allowing mutable URI available.
 constexpr std::uint32_t const tfNFTokenMintMaskWithMutable =
     ~( ~tfNFTokenMintMask | tfMutable);
 
