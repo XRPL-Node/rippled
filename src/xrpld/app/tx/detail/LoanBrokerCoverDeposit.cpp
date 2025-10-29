@@ -66,6 +66,11 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
         return tecNO_PERMISSION;
     }
     auto const vault = ctx.view.read(keylet::vault(sleBroker->at(sfVaultID)));
+    if (!vault)
+    {
+        JLOG(ctx.j.fatal()) << "Vault is missing for Broker " << brokerID;
+        return tefBAD_LEDGER;
+    }
     auto const vaultAsset = vault->at(sfAsset);
 
     if (amount.asset() != vaultAsset)
