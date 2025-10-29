@@ -19,6 +19,8 @@
 
 #include <test/jtx.h>
 
+#include <xrpld/app/tx/detail/LoanBrokerCoverDeposit.h>
+
 #include <xrpl/beast/unit_test/suite.h>
 
 namespace ripple {
@@ -1162,10 +1164,77 @@ class LoanBroker_test : public beast::unit_test::suite
         testLoanBroker({}, Set);
     }
 
+    void
+    testLoanBrokerCoverDepositNullVault()
+    {
+        // This test is lifted directly from
+        // https://bugs.immunefi.com/dashboard/submission/57808
+        using namespace jtx;
+        Env env(*this);
+
+        Account const alice{"alice"};
+        env.fund(XRP(10000), alice);
+        env.close();
+
+        // Create a Vault owned by alice with an XRP asset
+        PrettyAsset const asset{xrpIssue(), 1};
+        Vault vault{env};
+        auto const [createTx, vaultKeylet] =
+            vault.create({.owner = alice, .asset = asset});
+        env(createTx);
+        env.close();
+
+        // Predict LoanBroker key using alice's current sequence BEFORE submit
+        auto const brokerKeylet =
+            keylet::loanbroker(alice.id(), env.seq(alice));
+
+        // Create LoanBroker pointing to the vault
+        env(loanBroker::set(alice, vaultKeylet.key));
+        env.close();
+
+        // Build the CoverDeposit STTx directly
+        STTx tx{ttLOAN_BROKER_COVER_DEPOSIT, [](STObject&) {}};
+        tx.setAccountID(sfAccount, alice.id());
+        tx.setFieldH256(sfLoanBrokerID, brokerKeylet.key);
+        tx.setFieldAmount(sfAmount, asset(1));
+
+        // Create a writable view cloned from the current ledger and remove the
+        // vault SLE
+        OpenView ov{*env.current()};
+        test::StreamSink sink{beast::severities::kWarning};
+        beast::Journal jlog{sink};
+        ApplyContext ac{
+            env.app(),
+            ov,
+            tx,
+            tesSUCCESS,
+            env.current()->fees().base,
+            tapNONE,
+            jlog};
+
+        if (auto sleBroker =
+                ac.view().peek(keylet::loanbroker(brokerKeylet.key)))
+        {
+            auto const vaultID = (*sleBroker)[sfVaultID];
+            if (auto sleVault = ac.view().peek(keylet::vault(vaultID)))
+            {
+                ac.view().erase(sleVault);
+            }
+        }
+
+        // Invoke preclaim against the mutated (ApplyView) view; triggers
+        // nullptr deref
+        PreclaimContext pctx{
+            env.app(), ac.view(), tesSUCCESS, tx, tapNONE, jlog};
+        (void)LoanBrokerCoverDeposit::preclaim(pctx);
+    }
+
 public:
     void
     run() override
     {
+        testLoanBrokerCoverDepositNullVault();
+
         testDisabled();
         testLifecycle();
         testInvalidLoanBrokerCoverClawback();
