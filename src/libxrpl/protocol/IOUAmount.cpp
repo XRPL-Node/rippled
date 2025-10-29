@@ -35,32 +35,8 @@
 
 namespace ripple {
 
-namespace {
-
-// Use a static inside a function to help prevent order-of-initialzation issues
-LocalValue<bool>&
-getStaticSTNumberSwitchover()
-{
-    static LocalValue<bool> r{true};
-    return r;
-}
-}  // namespace
-
-bool
-getSTNumberSwitchover()
-{
-    return *getStaticSTNumberSwitchover();
-}
-
-void
-setSTNumberSwitchover(bool v)
-{
-    *getStaticSTNumberSwitchover() = v;
-}
-
 /* The range for the mantissa when normalized */
 static std::int64_t constexpr minMantissa = 1000000000000000ull;
-static std::int64_t constexpr maxMantissa = 9999999999999999ull;
 /* The range for the exponent when normalized */
 static int constexpr minExponent = -96;
 static int constexpr maxExponent = 80;
@@ -80,49 +56,13 @@ IOUAmount::normalize()
         return;
     }
 
-    if (getSTNumberSwitchover())
-    {
-        Number const v{mantissa_, exponent_};
-        mantissa_ = v.mantissa();
-        exponent_ = v.exponent();
-        if (exponent_ > maxExponent)
-            Throw<std::overflow_error>("value overflow");
-        if (exponent_ < minExponent)
-            *this = beast::zero;
-        return;
-    }
-
-    bool const negative = (mantissa_ < 0);
-
-    if (negative)
-        mantissa_ = -mantissa_;
-
-    while ((mantissa_ < minMantissa) && (exponent_ > minExponent))
-    {
-        mantissa_ *= 10;
-        --exponent_;
-    }
-
-    while (mantissa_ > maxMantissa)
-    {
-        if (exponent_ >= maxExponent)
-            Throw<std::overflow_error>("IOUAmount::normalize");
-
-        mantissa_ /= 10;
-        ++exponent_;
-    }
-
-    if ((exponent_ < minExponent) || (mantissa_ < minMantissa))
-    {
-        *this = beast::zero;
-        return;
-    }
-
+    Number const v{mantissa_, exponent_};
+    mantissa_ = v.mantissa();
+    exponent_ = v.exponent();
     if (exponent_ > maxExponent)
         Throw<std::overflow_error>("value overflow");
-
-    if (negative)
-        mantissa_ = -mantissa_;
+    if (exponent_ < minExponent)
+        *this = beast::zero;
 }
 
 IOUAmount::IOUAmount(Number const& other)
@@ -146,37 +86,7 @@ IOUAmount::operator+=(IOUAmount const& other)
         return *this;
     }
 
-    if (getSTNumberSwitchover())
-    {
-        *this = IOUAmount{Number{*this} + Number{other}};
-        return *this;
-    }
-    auto m = other.mantissa_;
-    auto e = other.exponent_;
-
-    while (exponent_ < e)
-    {
-        mantissa_ /= 10;
-        ++exponent_;
-    }
-
-    while (e < exponent_)
-    {
-        m /= 10;
-        ++e;
-    }
-
-    // This addition cannot overflow an std::int64_t but we may throw from
-    // normalize if the result isn't representable.
-    mantissa_ += m;
-
-    if (mantissa_ >= -10 && mantissa_ <= 10)
-    {
-        *this = beast::zero;
-        return *this;
-    }
-
-    normalize();
+    *this = IOUAmount{Number{*this} + Number{other}};
     return *this;
 }
 

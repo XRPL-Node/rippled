@@ -127,7 +127,8 @@ IOUAmount::operator=(beast::Zero)
     return *this;
 }
 
-inline IOUAmount::operator Number() const
+inline IOUAmount::
+operator Number() const
 {
     return Number{mantissa_, exponent_};
 }
@@ -157,7 +158,8 @@ IOUAmount::operator<(IOUAmount const& other) const
     return Number{*this} < Number{other};
 }
 
-inline IOUAmount::operator bool() const noexcept
+inline IOUAmount::
+operator bool() const noexcept
 {
     return mantissa_ != 0;
 }
@@ -194,38 +196,6 @@ mulRatio(
     std::uint32_t num,
     std::uint32_t den,
     bool roundUp);
-
-// Since many uses of the number class do not have access to a ledger,
-// getSTNumberSwitchover needs to be globally accessible.
-
-bool
-getSTNumberSwitchover();
-
-void
-setSTNumberSwitchover(bool v);
-
-/** RAII class to set and restore the Number switchover.
- */
-
-class NumberSO
-{
-    bool saved_;
-
-public:
-    ~NumberSO()
-    {
-        setSTNumberSwitchover(saved_);
-    }
-
-    NumberSO(NumberSO const&) = delete;
-    NumberSO&
-    operator=(NumberSO const&) = delete;
-
-    explicit NumberSO(bool v) : saved_(getSTNumberSwitchover())
-    {
-        setSTNumberSwitchover(v);
-    }
-};
 
 }  // namespace ripple
 

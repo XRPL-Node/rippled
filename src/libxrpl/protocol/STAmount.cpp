@@ -408,53 +408,9 @@ operator+(STAmount const& v1, STAmount const& v2)
     if (v1.holds<MPTIssue>())
         return {v1.mAsset, v1.mpt().value() + v2.mpt().value()};
 
-    if (getSTNumberSwitchover())
-    {
-        auto x = v1;
-        x = v1.iou() + v2.iou();
-        return x;
-    }
-
-    int ov1 = v1.exponent(), ov2 = v2.exponent();
-    std::int64_t vv1 = static_cast<std::int64_t>(v1.mantissa());
-    std::int64_t vv2 = static_cast<std::int64_t>(v2.mantissa());
-
-    if (v1.negative())
-        vv1 = -vv1;
-
-    if (v2.negative())
-        vv2 = -vv2;
-
-    while (ov1 < ov2)
-    {
-        vv1 /= 10;
-        ++ov1;
-    }
-
-    while (ov2 < ov1)
-    {
-        vv2 /= 10;
-        ++ov2;
-    }
-
-    // This addition cannot overflow an std::int64_t. It can overflow an
-    // STAmount and the constructor will throw.
-
-    std::int64_t fv = vv1 + vv2;
-
-    if ((fv >= -10) && (fv <= 10))
-        return {v1.getFName(), v1.asset()};
-
-    if (fv >= 0)
-        return STAmount{
-            v1.getFName(),
-            v1.asset(),
-            static_cast<std::uint64_t>(fv),
-            ov1,
-            false};
-
-    return STAmount{
-        v1.getFName(), v1.asset(), static_cast<std::uint64_t>(-fv), ov1, true};
+    auto x = v1;
+    x = v1.iou() + v2.iou();
+    return x;
 }
 
 STAmount
@@ -895,7 +851,7 @@ STAmount::canonicalize()
                 Throw<std::runtime_error>("MPT amount out of range");
         }
 
-        if (getSTNumberSwitchover() && getSTAmountCanonicalizeSwitchover())
+        if (getSTAmountCanonicalizeSwitchover())
         {
             Number num(
                 mIsNegative ? -mValue : mValue, mOffset, Number::unchecked{});
@@ -942,54 +898,7 @@ STAmount::canonicalize()
         return;
     }
 
-    if (getSTNumberSwitchover())
-    {
-        *this = iou();
-        return;
-    }
-
-    if (mValue == 0)
-    {
-        mOffset = -100;
-        mIsNegative = false;
-        return;
-    }
-
-    while ((mValue < cMinValue) && (mOffset > cMinOffset))
-    {
-        mValue *= 10;
-        --mOffset;
-    }
-
-    while (mValue > cMaxValue)
-    {
-        if (mOffset >= cMaxOffset)
-            Throw<std::runtime_error>("value overflow");
-
-        mValue /= 10;
-        ++mOffset;
-    }
-
-    if ((mOffset < cMinOffset) || (mValue < cMinValue))
-    {
-        mValue = 0;
-        mIsNegative = false;
-        mOffset = -100;
-        return;
-    }
-
-    if (mOffset > cMaxOffset)
-        Throw<std::runtime_error>("value overflow");
-
-    XRPL_ASSERT(
-        (mValue == 0) || ((mValue >= cMinValue) && (mValue <= cMaxValue)),
-        "ripple::STAmount::canonicalize : value inside range");
-    XRPL_ASSERT(
-        (mValue == 0) || ((mOffset >= cMinOffset) && (mOffset <= cMaxOffset)),
-        "ripple::STAmount::canonicalize : offset inside range");
-    XRPL_ASSERT(
-        (mValue != 0) || (mOffset != -100),
-        "ripple::STAmount::canonicalize : value or offset set");
+    *this = iou();
 }
 
 void
@@ -1368,44 +1277,8 @@ multiply(STAmount const& v1, STAmount const& v2, Asset const& asset)
         return STAmount(asset, minV * maxV);
     }
 
-    if (getSTNumberSwitchover())
-    {
-        auto const r = Number{v1} * Number{v2};
-        return STAmount{asset, r.mantissa(), r.exponent()};
-    }
-
-    std::uint64_t value1 = v1.mantissa();
-    std::uint64_t value2 = v2.mantissa();
-    int offset1 = v1.exponent();
-    int offset2 = v2.exponent();
-
-    if (v1.native() || v1.holds<MPTIssue>())
-    {
-        while (value1 < STAmount::cMinValue)
-        {
-            value1 *= 10;
-            --offset1;
-        }
-    }
-
-    if (v2.native() || v2.holds<MPTIssue>())
-    {
-        while (value2 < STAmount::cMinValue)
-        {
-            value2 *= 10;
-            --offset2;
-        }
-    }
-
-    // We multiply the two mantissas (each is between 10^15
-    // and 10^16), so their product is in the 10^30 to 10^32
-    // range. Dividing their product by 10^14 maintains the
-    // precision, by scaling the result to 10^16 to 10^18.
-    return STAmount(
-        asset,
-        muldiv(value1, value2, tenTo14) + 7,
-        offset1 + offset2 + 14,
-        v1.negative() != v2.negative());
+    auto const r = Number{v1} * Number{v2};
+    return STAmount{asset, r.mantissa(), r.exponent()};
 }
 
 // This is the legacy version of canonicalizeRound.  It's been in use

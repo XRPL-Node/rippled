@@ -139,7 +139,6 @@ ApplyResult
 apply(Application& app, OpenView& view, PreflightChecks&& preflightChecks)
 {
     STAmountSO stAmountSO{view.rules().enabled(fixSTAmountCanonicalize)};
-    NumberSO stNumberSO{view.rules().enabled(fixUniversalNumber)};
 
     return doApply(preclaim(preflightChecks(), app, view), app, view);
 }

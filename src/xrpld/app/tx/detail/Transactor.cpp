@@ -1166,7 +1166,6 @@ Transactor::operator()()
     // raii classes for the current ledger rules. fixSTAmountCanonicalize and
     // fixSTAmountCanonicalize predate the rulesGuard and should be replaced.
     STAmountSO stAmountSO{view().rules().enabled(fixSTAmountCanonicalize)};
-    NumberSO stNumberSO{view().rules().enabled(fixUniversalNumber)};
     CurrentTransactionRulesGuard currentTransctionRulesGuard(view().rules());
 
 #ifdef DEBUG

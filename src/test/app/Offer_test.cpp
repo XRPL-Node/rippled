@@ -2101,53 +2101,39 @@ public:
 
         using namespace jtx;
 
-        for (auto NumberSwitchOver : {false, true})
-        {
-            Env env{*this, features};
-            if (NumberSwitchOver)
-                env.enableFeature(fixUniversalNumber);
-            else
-                env.disableFeature(fixUniversalNumber);
+        Env env{*this, features};
 
-            auto const gw = Account{"gateway"};
-            auto const alice = Account{"alice"};
-            auto const bob = Account{"bob"};
-            auto const USD = gw["USD"];
+        auto const gw = Account{"gateway"};
+        auto const alice = Account{"alice"};
+        auto const bob = Account{"bob"};
+        auto const USD = gw["USD"];
 
-            env.fund(XRP(10000), gw, alice, bob);
-            env.close();
+        env.fund(XRP(10000), gw, alice, bob);
+        env.close();
 
-            env(rate(gw, 1.005));
+        env(rate(gw, 1.005));
 
-            env(trust(alice, USD(1000)));
-            env(trust(bob, USD(1000)));
-            env(trust(gw, alice["USD"](50)));
+        env(trust(alice, USD(1000)));
+        env(trust(bob, USD(1000)));
+        env(trust(gw, alice["USD"](50)));
 
-            env(pay(gw, bob, bob["USD"](1)));
-            env(pay(alice, gw, USD(50)));
+        env(pay(gw, bob, bob["USD"](1)));
+        env(pay(alice, gw, USD(50)));
 
-            env(trust(gw, alice["USD"](0)));
+        env(trust(gw, alice["USD"](0)));
 
-            env(offer(alice, USD(50), XRP(150000)));
-            env(offer(bob, XRP(100), USD(0.1)));
+        env(offer(alice, USD(50), XRP(150000)));
+        env(offer(bob, XRP(100), USD(0.1)));
 
-            auto jrr = ledgerEntryState(env, alice, gw, "USD");
-            BEAST_EXPECT(
-                jrr[jss::node][sfBalance.fieldName][jss::value] ==
-                "49.96666666666667");
+        auto jrr = ledgerEntryState(env, alice, gw, "USD");
+        BEAST_EXPECT(
+            jrr[jss::node][sfBalance.fieldName][jss::value] ==
+            "49.96666666666667");
 
-            jrr = ledgerEntryState(env, bob, gw, "USD");
-            Json::Value const bobsUSD =
-                jrr[jss::node][sfBalance.fieldName][jss::value];
-            if (!NumberSwitchOver)
-            {
-                BEAST_EXPECT(bobsUSD == "-0.966500000033334");
-            }
-            else
-            {
-                BEAST_EXPECT(bobsUSD == "-0.9665000000333333");
-            }
-        }
+        jrr = ledgerEntryState(env, bob, gw, "USD");
+        Json::Value const bobsUSD =
+            jrr[jss::node][sfBalance.fieldName][jss::value];
+        BEAST_EXPECT(bobsUSD == "-0.9665000000333333");
     }
 
     void
