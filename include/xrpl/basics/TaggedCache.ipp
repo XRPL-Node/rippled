@@ -449,7 +449,8 @@ TaggedCache<
             shouldReplace = replaceCallback(entry.ptr.getStrong());
         }
 
-        if (shouldReplace) entry.ptr = data;
+        if (shouldReplace)
+            entry.ptr = data;
     };
 
     if (entry.isCached())
