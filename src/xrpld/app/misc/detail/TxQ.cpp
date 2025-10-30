@@ -300,8 +300,6 @@ TxQ::MaybeTx::apply(Application& app, OpenView& view, beast::Journal j)
     // If the rules or flags change, preflight again
     XRPL_ASSERT(
         pfresult, "ripple::TxQ::MaybeTx::apply : preflight result is set");
-    STAmountSO stAmountSO{view.rules().enabled(fixSTAmountCanonicalize)};
-
     if (pfresult->rules != view.rules() || pfresult->flags != flags)
     {
         JLOG(j.debug()) << "Queued transaction " << txID
@@ -733,8 +731,6 @@ TxQ::apply(
     ApplyFlags flags,
     beast::Journal j)
 {
-    STAmountSO stAmountSO{view.rules().enabled(fixSTAmountCanonicalize)};
-
     // See if the transaction is valid, properly formed,
     // etc. before doing potentially expensive queue
     // replace and multi-transaction operations.

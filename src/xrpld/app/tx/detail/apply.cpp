@@ -138,8 +138,6 @@ template <typename PreflightChecks>
 ApplyResult
 apply(Application& app, OpenView& view, PreflightChecks&& preflightChecks)
 {
-    STAmountSO stAmountSO{view.rules().enabled(fixSTAmountCanonicalize)};
-
     return doApply(preclaim(preflightChecks(), app, view), app, view);
 }
 

@@ -1163,9 +1163,6 @@ Transactor::operator()()
 {
     JLOG(j_.trace()) << "apply: " << ctx_.tx.getTransactionID();
 
-    // raii classes for the current ledger rules. fixSTAmountCanonicalize and
-    // fixSTAmountCanonicalize predate the rulesGuard and should be replaced.
-    STAmountSO stAmountSO{view().rules().enabled(fixSTAmountCanonicalize)};
     CurrentTransactionRulesGuard currentTransctionRulesGuard(view().rules());
 
 #ifdef DEBUG
