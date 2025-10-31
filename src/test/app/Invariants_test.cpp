@@ -2010,7 +2010,7 @@ class Invariants_test : public beast::unit_test::suite
                 {
                     // Create the directory
                     BEAST_EXPECT(
-                        directory::createRoot(
+                        ::ripple::directory::createRoot(
                             ac.view(),
                             dirKeylet,
                             loanBrokerKeylet.key,
@@ -2037,7 +2037,7 @@ class Invariants_test : public beast::unit_test::suite
                         describeOwnerDir(slePseudo->at(sfAccount));
 
                     BEAST_EXPECT(
-                        directory::insertPage(
+                        ::ripple::directory::insertPage(
                             ac.view(),
                             0,
                             sleDir,
@@ -2070,7 +2070,7 @@ class Invariants_test : public beast::unit_test::suite
                     // Put some extra garbage into the directory
                     for (auto const& key : {slePseudo->key(), sleDir->key()})
                     {
-                        directory::insertKey(
+                        ::ripple::directory::insertKey(
                             ac.view(), sleDir, 0, false, indexes, key);
                     }
 
@@ -2101,7 +2101,7 @@ class Invariants_test : public beast::unit_test::suite
                     // Put one meaningless key into the directory
                     auto const key =
                         keylet::account(Account("random").id()).key;
-                    directory::insertKey(
+                    ::ripple::directory::insertKey(
                         ac.view(), sleDir, 0, false, indexes, key);
 
                     return true;
@@ -2127,7 +2127,7 @@ class Invariants_test : public beast::unit_test::suite
                     // failure.
                     STVector256 indexes;
 
-                    directory::insertKey(
+                    ::ripple::directory::insertKey(
                         ac.view(), sleDir, 0, false, indexes, slePseudo->key());
 
                     return true;
