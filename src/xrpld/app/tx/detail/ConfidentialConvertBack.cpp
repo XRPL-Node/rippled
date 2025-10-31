@@ -19,6 +19,7 @@
 
 #include <xrpld/app/tx/detail/ConfidentialConvertBack.h>
 
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/ConfidentialTransfer.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Indexes.h>
@@ -43,13 +44,17 @@ ConfidentialConvertBack::preflight(PreflightContext const& ctx)
         ctx.tx[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
         return temMALFORMED;
 
-    if (ctx.tx[sfMPTAmount] == 0)
+    if (ctx.tx[sfMPTAmount] == 0 || ctx.tx[sfMPTAmount] > maxMPTokenAmount)
         return temMALFORMED;
+
+    if (!isValidCiphertext(ctx.tx[sfHolderEncryptedAmount]) ||
+        !isValidCiphertext(ctx.tx[sfIssuerEncryptedAmount]))
+        return temBAD_CIPHERTEXT;
 
     // todo: update with correct size of proof since it might also contain range
     // proof
-    if (ctx.tx[sfZKProof].length() != ecEqualityProofLength)
-        return temMALFORMED;
+    // if (ctx.tx[sfZKProof].length() != ecEqualityProofLength)
+    //     return temMALFORMED;
 
     return tesSUCCESS;
 }
@@ -65,6 +70,11 @@ ConfidentialConvertBack::preclaim(PreclaimContext const& ctx)
 
     if (sleIssuance->isFlag(lsfMPTNoConfidentialTransfer))
         return tecNO_PERMISSION;
+
+    // already checked in preflight, but should also check that issuer on the
+    // issuance isn't the account either
+    if (sleIssuance->getAccountID(sfIssuer) == ctx.tx[sfAccount])
+        return tefINTERNAL;  // LCOV_EXCL_LINE
 
     auto const sleMptoken = ctx.view.read(
         keylet::mptoken(ctx.tx[sfMPTokenIssuanceID], ctx.tx[sfAccount]));
@@ -86,27 +96,41 @@ ConfidentialConvertBack::preclaim(PreclaimContext const& ctx)
         return tecINSUFFICIENT_FUNDS;
     }
 
-    // todo: need addtional parsing, the proof should contain multiple proofs
-    auto checkEqualityProof = [&](auto const& encryptedAmount,
-                                  auto const& pubKey) -> TER {
-        return proveEquality(
-            ctx.tx[sfZKProof],
-            encryptedAmount,
-            pubKey,
-            ctx.tx[sfMPTAmount],
-            ctx.tx.getTransactionID(),
-            (*sleMptoken)[~sfConfidentialBalanceVersion].value_or(0));
-    };
+    auto const mptIssuanceID = ctx.tx[sfMPTokenIssuanceID];
+    auto const account = ctx.tx[sfAccount];
 
-    if (!isTesSuccess(checkEqualityProof(
-            ctx.tx[sfHolderEncryptedAmount],
-            (*sleMptoken)[sfHolderElGamalPublicKey])) ||
-        !isTesSuccess(checkEqualityProof(
-            ctx.tx[sfIssuerEncryptedAmount],
-            (*sleIssuance)[sfIssuerElGamalPublicKey])))
-    {
-        return tecBAD_PROOF;
-    }
+    // Check lock
+    MPTIssue const mptIssue(mptIssuanceID);
+    if (auto const ter = checkFrozen(ctx.view, account, mptIssue);
+        ter != tesSUCCESS)
+        return ter;
+
+    // Check auth
+    if (auto const ter = requireAuth(ctx.view, mptIssue, account);
+        !isTesSuccess(ter))
+        return ter;
+
+    // todo: need addtional parsing, the proof should contain multiple proofs
+    // auto checkEqualityProof = [&](auto const& encryptedAmount,
+    //                               auto const& pubKey) -> TER {
+    //     return proveEquality(
+    //         ctx.tx[sfZKProof],
+    //         encryptedAmount,
+    //         pubKey,
+    //         ctx.tx[sfMPTAmount],
+    //         ctx.tx.getTransactionID(),
+    //         (*sleMptoken)[~sfConfidentialBalanceVersion].value_or(0));
+    // };
+
+    // if (!isTesSuccess(checkEqualityProof(
+    //         ctx.tx[sfHolderEncryptedAmount],
+    //         (*sleMptoken)[sfHolderElGamalPublicKey])) ||
+    //     !isTesSuccess(checkEqualityProof(
+    //         ctx.tx[sfIssuerEncryptedAmount],
+    //         (*sleIssuance)[sfIssuerElGamalPublicKey])))
+    // {
+    //     return tecBAD_PROOF;
+    // }
 
     // todo: also check range proof that
     // sfHolderEncryptedAmount <= sfConfidentialBalanceSpending AND
@@ -139,32 +163,31 @@ ConfidentialConvertBack::doApply()
     (*sleMptoken)[sfConfidentialBalanceVersion] =
         (*sleMptoken)[~sfConfidentialBalanceVersion].value_or(0u) + 1u;
 
-    // todo: support homomophic sub
-    // // homomorphically subtract holder's encrypted balance
-    // {
-    //     Buffer res(ecGamalEncryptedTotalLength);
-    //     if (TER const ter = homomorphicSub(
-    //             (*sleMptoken)[sfConfidentialBalanceSpending],
-    //             ctx_.tx[sfHolderEncryptedAmount],
-    //             res);
-    //         isTesSuccess(ter))
-    //         return tecINTERNAL;
+    // homomorphically subtract holder's encrypted balance
+    {
+        Buffer res(ecGamalEncryptedTotalLength);
+        if (TER const ter = homomorphicSubtract(
+                (*sleMptoken)[sfConfidentialBalanceSpending],
+                ctx_.tx[sfHolderEncryptedAmount],
+                res);
+            !isTesSuccess(ter))
+            return tecINTERNAL;
 
-    //     (*sleMptoken)[sfConfidentialBalanceSpending] = res;
-    // }
+        (*sleMptoken)[sfConfidentialBalanceSpending] = res;
+    }
 
-    // // homomorphically subtract issuer's encrypted balance
-    // {
-    //     Buffer res(ecGamalEncryptedTotalLength);
-    //     if (TER const ter = homomorphicSub(
-    //             (*sleMptoken)[sfIssuerEncryptedBalance],
-    //             ctx_.tx[sfIssuerEncryptedAmount],
-    //             res);
-    //         isTesSuccess(ter))
-    //         return tecINTERNAL;
+    // homomorphically subtract issuer's encrypted balance
+    {
+        Buffer res(ecGamalEncryptedTotalLength);
+        if (TER const ter = homomorphicSubtract(
+                (*sleMptoken)[sfIssuerEncryptedBalance],
+                ctx_.tx[sfIssuerEncryptedAmount],
+                res);
+            !isTesSuccess(ter))
+            return tecINTERNAL;
 
-    //     (*sleMptoken)[sfIssuerEncryptedBalance] = res;
-    // }
+        (*sleMptoken)[sfIssuerEncryptedBalance] = res;
+    }
 
     view().update(sleIssuance);
     view().update(sleMptoken);
