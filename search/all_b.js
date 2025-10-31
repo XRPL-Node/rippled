@@ -130,7 +130,7 @@ var searchData=
   ['delays_127',['delays',['../structripple_1_1test_1_1csf_1_1Peer.html#a9b69dfd5d69b0cb79fd2c713ac91536f',1,'ripple::test::csf::Peer']]],
   ['delegatable_128',['delegatable',['../namespaceripple.html#a363cfa5e5caa476560a24c0e226eaefdaa449f6812dcac1121cb5ff7d43e237b4',1,'ripple']]],
   ['delegatabletx_5f_129',['delegatableTx_',['../classripple_1_1Permission.html#a09cfd7a34572ad7e557259eaa0c3e730',1,'ripple::Permission']]],
-  ['delegate_130',['delegate',['../namespaceripple_1_1keylet.html#a151731f161a5d0dd5049636e1cdc7699',1,'ripple::keylet::delegate()'],['../namespaceripple.html#a22768e0a41b646442c98d38f2f2a307ba728f601ddf976d05ffa0d99cc27e8366',1,'ripple::DELEGATE'],['../structripple_1_1test_1_1jtx_1_1MPTSet.html#af7faabfea9d6205b9506413cf53a6f05',1,'ripple::test::jtx::MPTSet::delegate']]],
+  ['delegate_130',['delegate',['../namespaceripple.html#a22768e0a41b646442c98d38f2f2a307ba728f601ddf976d05ffa0d99cc27e8366',1,'ripple::DELEGATE'],['../namespaceripple_1_1keylet.html#a151731f161a5d0dd5049636e1cdc7699',1,'ripple::keylet::delegate()'],['../structripple_1_1test_1_1jtx_1_1MPTSet.html#af7faabfea9d6205b9506413cf53a6f05',1,'ripple::test::jtx::MPTSet::delegate']]],
   ['delegate_5f_131',['delegate_',['../structripple_1_1test_1_1jtx_1_1delegate_1_1as.html#a355ce01e4e149250a893c457c3b5496d',1,'ripple::test::jtx::delegate::as']]],
   ['delegate_5ftest_132',['Delegate_test',['../classripple_1_1test_1_1Delegate__test.html',1,'ripple::test']]],
   ['delegateset_133',['delegateset',['../classripple_1_1DelegateSet.html',1,'ripple::DelegateSet'],['../classripple_1_1DelegateSet.html#a4871bf12403e03b6c14130f79f462f59',1,'ripple::DelegateSet::DelegateSet()']]],
