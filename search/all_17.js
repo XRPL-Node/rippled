@@ -545,7 +545,7 @@ var searchData=
   ['print_5ftest_542',['print_test',['../classbeast_1_1unit__test_1_1print__test.html',1,'beast::unit_test']]],
   ['printf_543',['printf',['http://en.cppreference.com/w/cpp/io/c/fprintf.html',1,'std']]],
   ['printhelp_544',['printHelp',['../namespaceripple.html#ae01af1741b7be23974dfc58a0b5e6f44',1,'ripple']]],
-  ['printnftpages_545',['printnftpages',['../classripple_1_1NFTokenDir__test.html#a25a30345ef1362838b058edcb7e79971',1,'ripple::NFTokenDir_test::printNFTPages()'],['../classripple_1_1NFTokenBurnBaseUtil__test.html#abcb5e74929999bd9c8001b4fdaac6c40',1,'ripple::NFTokenBurnBaseUtil_test::printNFTPages()']]],
+  ['printnftpages_545',['printnftpages',['../classripple_1_1NFTokenDir__test.html#a25a30345ef1362838b058edcb7e79971',1,'ripple::NFTokenDir_test::printNFTPages()'],['../classripple_1_1NFTokenBurn__test.html#aa50811e3d79add5adb172903abf44b2c',1,'ripple::NFTokenBurn_test::printNFTPages()']]],
   ['printpeers_546',['printPeers',['../classripple_1_1test_1_1reduce__relay__test.html#aed485364b3786aa90005e695e37da0c0',1,'ripple::test::reduce_relay_test']]],
   ['prior_547',['prior',['../structripple_1_1test_1_1csf_1_1AcceptLedger.html#ab4f50c3a8b6836a7e94ee03aef980825',1,'ripple::test::csf::AcceptLedger::prior'],['../structripple_1_1test_1_1csf_1_1FullyValidateLedger.html#a207ad3730d14da483fc46e87b9d38fca',1,'ripple::test::csf::FullyValidateLedger::prior']]],
   ['priorbalance_548',['priorbalance',['../structripple_1_1MPTAuthorizeArgs.html#af88c6669bb90bb3b6a207ac6898b719f',1,'ripple::MPTAuthorizeArgs::priorBalance'],['../structripple_1_1MPTCreateArgs.html#a1a5751b5e4d4ad76394fed10307ed387',1,'ripple::MPTCreateArgs::priorBalance']]],

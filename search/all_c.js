@@ -252,7 +252,7 @@ var searchData=
   ['execute_249',['execute',['../structripple_1_1JobTypeData.html#aedeccf5038efc68b76340504be73114d',1,'ripple::JobTypeData']]],
   ['execute_5fon_5fdestruction_5f_250',['execute_on_destruction_',['../classripple_1_1scope__fail.html#aecdd5644734c3efd156c160671cb7729',1,'ripple::scope_fail::execute_on_destruction_'],['../classripple_1_1scope__exit.html#a93d29034a1f6f718bf475eacae6d9350',1,'ripple::scope_exit::execute_on_destruction_'],['../classripple_1_1scope__success.html#a4828166491efb93806680352c1a2a902',1,'ripple::scope_success::execute_on_destruction_']]],
   ['execution_251',['execution',['http://en.cppreference.com/w/cpp/header/execution.html',1,'']]],
-  ['exercisebrokenlinks_252',['exerciseBrokenLinks',['../classripple_1_1NFTokenBurnBaseUtil__test.html#a39aa7b820ecf0ee5d301179d4e040b6c',1,'ripple::NFTokenBurnBaseUtil_test']]],
+  ['exercisebrokenlinks_252',['exerciseBrokenLinks',['../classripple_1_1NFTokenBurn__test.html#a29c9d1f02c670c78f3f51ecca23e49c5',1,'ripple::NFTokenBurn_test']]],
   ['exercisename_253',['exerciseName',['../classripple_1_1test_1_1CurrentThreadName__test.html#a36b3b04509980288551e22a73e288816',1,'ripple::test::CurrentThreadName_test']]],
   ['existingacc_254',['existingAcc',['../classripple_1_1test_1_1ElementComboIter.html#a4a14ce172d72da140cb8ae49a8f132dca678ba7d9882ab0969cc2d9d4e0dc1487',1,'ripple::test::ElementComboIter']]],
   ['existingcur_255',['existingCur',['../classripple_1_1test_1_1ElementComboIter.html#a4a14ce172d72da140cb8ae49a8f132dca4ac32c221d711d8a114f1ef1ef7caaea',1,'ripple::test::ElementComboIter']]],
