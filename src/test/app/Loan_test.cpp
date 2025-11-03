@@ -4499,7 +4499,7 @@ class Loan_test : public beast::unit_test::suite
         env.close();
 
         BrokerInfo broker{
-            createVaultAndBroker(env, iouAsset, lender, Number(0), 0)};
+            createVaultAndBroker(env, iouAsset, lender, Number(0), 1)};
 
         using namespace loan;
 

@@ -56,6 +56,17 @@ LoanBrokerSet::preflight(PreflightContext const& ctx)
             return temINVALID;
     }
 
+    {
+        auto const minimumZero = tx[~sfCoverRateMinimum].value_or(0) == 0;
+        auto const liquidationZero =
+            tx[~sfCoverRateLiquidation].value_or(0) == 0;
+        // Both must be zero or non-zero.
+        if (minimumZero != liquidationZero)
+        {
+            return temINVALID;
+        }
+    }
+
     return tesSUCCESS;
 }
 
