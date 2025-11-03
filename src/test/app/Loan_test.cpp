@@ -1146,12 +1146,30 @@ class Loan_test : public beast::unit_test::suite
             sig(sfCounterpartySignature, lender),
             ter(telINSUF_FEE_P));
         // insufficient fee - multisign
+        env(signers(lender, 2, {{evan, 1}, {borrower, 1}}));
+        env(signers(borrower, 2, {{evan, 1}, {lender, 1}}));
         env(set(borrower, broker.brokerID, principalRequest),
             counterparty(lender),
             msig(evan, lender),
             msig(sfCounterpartySignature, evan, borrower),
             fee(env.current()->fees().base * 5 - 1),
             ter(telINSUF_FEE_P));
+        // Bad multisign signatures for borrower (Account)
+        env(set(borrower, broker.brokerID, principalRequest),
+            counterparty(lender),
+            msig(alice, issuer),
+            msig(sfCounterpartySignature, evan, borrower),
+            fee(env.current()->fees().base * 5),
+            ter(tefBAD_SIGNATURE));
+        // Bad multisign signatures for issuer (Counterparty)
+        env(set(borrower, broker.brokerID, principalRequest),
+            counterparty(lender),
+            msig(evan, lender),
+            msig(sfCounterpartySignature, alice, issuer),
+            fee(env.current()->fees().base * 5 - 1),
+            ter(tefBAD_SIGNATURE));
+        env(signers(lender, none));
+        env(signers(borrower, none));
         // multisign sufficient fee, but no signers set up
         env(set(borrower, broker.brokerID, principalRequest),
             counterparty(lender),
