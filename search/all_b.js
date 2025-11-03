@@ -504,7 +504,7 @@ var searchData=
   ['donftbuyoffers_501',['doNFTBuyOffers',['../namespaceripple.html#a28fa0eeff3b119427fbce8b701f71635',1,'ripple']]],
   ['donftselloffers_502',['doNFTSellOffers',['../namespaceripple.html#a67c54a4d2468423b6ea16761eb5bf347',1,'ripple']]],
   ['donoripplecheck_503',['doNoRippleCheck',['../namespaceripple.html#a2e3758a9867ccf48949ed8cce0e1da5a',1,'ripple']]],
-  ['door_504',['door',['../classripple_1_1Door.html#a43cc9558449ff1e6ad710ff5974a4a88',1,'ripple::Door::Door()'],['../classripple_1_1STXChainBridge.html#a01041e6341cb4fa361e70b189ea58899',1,'ripple::STXChainBridge::door()'],['../classripple_1_1Door.html',1,'ripple::Door&lt; Handler &gt;']]],
+  ['door_504',['door',['../classripple_1_1STXChainBridge.html#a01041e6341cb4fa361e70b189ea58899',1,'ripple::STXChainBridge::door()'],['../classripple_1_1Door.html#a43cc9558449ff1e6ad710ff5974a4a88',1,'ripple::Door::Door()'],['../classripple_1_1Door.html',1,'ripple::Door&lt; Handler &gt;']]],
   ['doora_505',['doorA',['../structripple_1_1test_1_1BridgeDef.html#a6fc122fc059154befe48690c779f7e11',1,'ripple::test::BridgeDef']]],
   ['doorb_506',['doorB',['../structripple_1_1test_1_1BridgeDef.html#a1f52da47344188f913be7bc9a06f2f08',1,'ripple::test::BridgeDef']]],
   ['doownerinfo_507',['doOwnerInfo',['../namespaceripple.html#aed533da4e0bc38cb6dcdcadef530f6d0',1,'ripple']]],
