@@ -124,7 +124,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno"><a class="line" href="classio__latency__probe__test.html#a306f92040b6aa71f94c22aa0dc026430">   40</a></span>    <span class="keyword">using </span><a class="code hl_typedef" href="classio__latency__probe__test.html#a306f92040b6aa71f94c22aa0dc026430">MyTimer</a> =</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        boost::asio::basic_waitable_timer&lt;std::chrono::steady_clock&gt;;</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#ifdef RIPPLED_RUNNING_IN_CI</span></div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">#ifdef XRPL_RUNNING_IN_CI</span></div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keyword">template</span> &lt;</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <span class="keyword">class </span>Clock,</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keyword">class </span>MeasureClock = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/chrono/high_resolution_clock.html">std::chrono::high_resolution_clock</a>&gt;</div>
@@ -278,7 +278,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        <span class="keywordtype">size_t</span> expected_probe_count_max = (probe_duration / interval);</div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>        <span class="keywordtype">size_t</span> expected_probe_count_min = expected_probe_count_max;</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor">#ifdef RIPPLED_RUNNING_IN_CI</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="preprocessor">#ifdef XRPL_RUNNING_IN_CI</span></div>
 <div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        <span class="comment">// adjust min expected based on measurements</span></div>
 <div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>        <span class="comment">// if running in CI/VM environment</span></div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>        measure_asio_timers&lt;steady_clock&gt; tt{interval};</div>
