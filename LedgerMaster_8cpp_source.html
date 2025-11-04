@@ -1127,10 +1127,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00993" name="l00993"></a><span class="lineno">  993</span>        <span class="comment">// Check if the majority of validators run a higher version rippled</span></div>
 <div class="line"><a id="l00994" name="l00994"></a><span class="lineno">  994</span>        <span class="comment">// software. If so print a warning.</span></div>
 <div class="line"><a id="l00995" name="l00995"></a><span class="lineno">  995</span>        <span class="comment">//</span></div>
-<div class="line"><a id="l00996" name="l00996"></a><span class="lineno">  996</span>        <span class="comment">// Once the HardenedValidations amendment is enabled, validators include</span></div>
-<div class="line"><a id="l00997" name="l00997"></a><span class="lineno">  997</span>        <span class="comment">// their rippled software version in the validation messages of every</span></div>
-<div class="line"><a id="l00998" name="l00998"></a><span class="lineno">  998</span>        <span class="comment">// (flag - 1) ledger. We wait for one ledger time before checking the</span></div>
-<div class="line"><a id="l00999" name="l00999"></a><span class="lineno">  999</span>        <span class="comment">// version information to accumulate more validation messages.</span></div>
+<div class="line"><a id="l00996" name="l00996"></a><span class="lineno">  996</span>        <span class="comment">// Validators include their rippled software version in the validation</span></div>
+<div class="line"><a id="l00997" name="l00997"></a><span class="lineno">  997</span>        <span class="comment">// messages of every (flag - 1) ledger. We wait for one ledger time</span></div>
+<div class="line"><a id="l00998" name="l00998"></a><span class="lineno">  998</span>        <span class="comment">// before checking the version information to accumulate more validation</span></div>
+<div class="line"><a id="l00999" name="l00999"></a><span class="lineno">  999</span>        <span class="comment">// messages.</span></div>
 <div class="line"><a id="l01000" name="l01000"></a><span class="lineno"> 1000</span> </div>
 <div class="line"><a id="l01001" name="l01001"></a><span class="lineno"> 1001</span>        <span class="keyword">auto</span> currentTime = <a class="code hl_variable" href="classripple_1_1LedgerMaster.html#a262ba48a2919950db79ae9434018b450">app_</a>.<a class="code hl_function" href="classripple_1_1Application.html#a6053f47d2aefc7800dc2bb1eda0cf91d">timeKeeper</a>().<a class="code hl_function" href="classripple_1_1TimeKeeper.html#a2a0090c133fcbeb544017a3c7eddab6e">now</a>();</div>
 <div class="line"><a id="l01002" name="l01002"></a><span class="lineno"> 1002</span>        <span class="keywordtype">bool</span> needPrint = <span class="keyword">false</span>;</div>
