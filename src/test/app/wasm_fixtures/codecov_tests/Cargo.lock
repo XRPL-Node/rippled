@@ -153,8 +153,8 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "xrpl-address-macro"
-version = "0.1.0"
-source = "git+https://github.com/ripple/xrpl-wasm-stdlib.git?branch=main#57538e714ee1185e40391ff7ec7620d0e74d775b"
+version = "0.7.1"
+source = "git+https://github.com/ripple/xrpl-wasm-stdlib.git#d27d3e0b4abf3c0215aade729d89053805efe48e"
 dependencies = [
  "bs58",
  "quote",
@@ -165,7 +165,7 @@ dependencies = [
 [[package]]
 name = "xrpl-wasm-stdlib"
 version = "0.7.1"
-source = "git+https://github.com/ripple/xrpl-wasm-stdlib.git?branch=main#57538e714ee1185e40391ff7ec7620d0e74d775b"
+source = "git+https://github.com/ripple/xrpl-wasm-stdlib.git#d27d3e0b4abf3c0215aade729d89053805efe48e"
 dependencies = [
  "xrpl-address-macro",
 ]
