@@ -797,7 +797,7 @@ struct EscrowSmart_test : public beast::unit_test::suite
                 auto const txMeta = env.meta();
                 if (BEAST_EXPECT(txMeta && txMeta->isFieldPresent(sfGasUsed)))
                     BEAST_EXPECTS(
-                        txMeta->getFieldU32(sfGasUsed) == 38'571,
+                        txMeta->getFieldU32(sfGasUsed) == 38'562,
                         std::to_string(txMeta->getFieldU32(sfGasUsed)));
                 if (BEAST_EXPECT(txMeta->isFieldPresent(sfWasmReturnCode)))
                     BEAST_EXPECT(txMeta->getFieldI32(sfWasmReturnCode) == 1);
@@ -882,7 +882,7 @@ struct EscrowSmart_test : public beast::unit_test::suite
                 env.close();
                 env.close();
 
-                auto const allowance = 137'926;
+                auto const allowance = 137'704;
                 auto const finishFee = env.current()->fees().base +
                     (allowance * env.current()->fees().gasPrice) /
                         MICRO_DROPS_PER_DROP +

@@ -26,6 +26,7 @@
 #include <xrpld/app/wasm/WasmVM.h>
 
 #include <xrpl/ledger/detail/ApplyViewBase.h>
+#include <xrpl/protocol/digest.h>
 
 namespace ripple {
 

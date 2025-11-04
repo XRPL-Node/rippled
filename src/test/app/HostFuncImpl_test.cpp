@@ -21,6 +21,8 @@
 
 #include <xrpld/app/wasm/HostFuncImpl.h>
 
+#include <xrpl/protocol/digest.h>
+
 namespace ripple {
 namespace test {
 
