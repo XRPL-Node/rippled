@@ -30,7 +30,7 @@ We will further set additional CMake arguments as follows:
 '''
 def generate_strategy_matrix(all: bool, config: Config) -> list:
     configurations = []
-    for architecture, os, build_type, cmake_args in itertools.product(config.architecture, config.os, config.build_type, config.cmake_args):
+    for architecture, os, build_type, cmake_args, sanitizers in itertools.product(config.architecture, config.os, config.build_type, config.cmake_args, config.sanitizers):
         # The default CMake target is 'all' for Linux and MacOS and 'install'
         # for Windows, but it can get overridden for certain configurations.
         cmake_target = 'install' if os["distro_name"] == 'windows' else 'all'
@@ -125,6 +125,11 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         if build_type == 'Release':
             cmake_args = f'{cmake_args} -Dassert=ON'
 
+        if sanitizers == 'Address':
+            cmake_args = f'{cmake_args} -fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow'
+        elif sanitizers == 'Thread':
+            cmake_args = f'{cmake_args} -fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow'
+
         # We skip all RHEL on arm64 due to a build failure that needs further
         # investigation.
         if os['distro_name'] == 'rhel' and architecture['platform'] == 'linux/arm64':
@@ -166,6 +171,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             'build_type': build_type,
             'os': os,
             'architecture': architecture,
+            'sanitizers': sanitizers
         })
 
     return configurations

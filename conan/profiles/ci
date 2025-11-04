@@ -1,0 +1,11 @@
+include(./default)
+
+[settings]
+{% set sanitizers = os.getenv("CMAKE_SANITIZERS") %}
+
+[conf]
+{% if sanitizers == "Address" %}
+tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow']
+{% elif sanitizers == "Thread" %}
+tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow']
+{% endif %}

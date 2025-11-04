@@ -19,6 +19,11 @@ on:
         description: "The CMake target to build."
         required: true
         type: string
+      sanitizers:
+        description: "The sanitizers to enable ('None', 'Address', 'Thread')."
+        required: true
+        type: string
+        default: "None"
 
       runs_on:
         description: Runner to run the job on as a JSON string
@@ -85,6 +90,7 @@ jobs:
           build_dir: ${{ inputs.build_dir }}
           build_nproc: ${{ steps.nproc.outputs.nproc }}
           build_type: ${{ inputs.build_type }}
+          sanitizers: ${{ inputs.sanitizers }}
           # Set the verbosity to "quiet" for Windows to avoid an excessive
           # amount of logs. For other OSes, the "verbose" logs are more useful.
           log_verbosity: ${{ runner.os == 'Windows' && 'quiet' || 'verbose' }}

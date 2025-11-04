@@ -24,6 +24,11 @@ on:
         description: "The CMake target to build."
         type: string
         required: true
+      sanitizers:
+        description: "The sanitizers to enable ('None', 'Address', 'Thread')."
+        required: true
+        type: string
+        default: "None"
 
       runs_on:
         description: Runner to run the job on as a JSON string
@@ -61,6 +66,7 @@ jobs:
       runs_on: ${{ inputs.runs_on }}
       image: ${{ inputs.image }}
       config_name: ${{ inputs.config_name }}
+      sanitizers: ${{ inputs.sanitizers }}
       nproc_subtract: ${{ inputs.nproc_subtract }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

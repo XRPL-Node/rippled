@@ -15,5 +15,6 @@
     }
   ],
   "build_type": ["Debug", "Release"],
-  "cmake_args": ["-Dunity=OFF", "-Dunity=ON"]
+  "cmake_args": ["-Dunity=OFF", "-Dunity=ON"],
+  "sanitizers": ["None", "Address", "Thread"]
 }
