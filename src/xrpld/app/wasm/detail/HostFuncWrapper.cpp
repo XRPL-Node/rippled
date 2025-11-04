@@ -1607,7 +1607,7 @@ traceAmount_wrap(
     {
         amount = std::nullopt;
     }
-    if (!amount || !amount.value())
+    if (!amount)
         return hfResult(results, HostFunctionError::INVALID_PARAMS);
 
     return returnResult(
