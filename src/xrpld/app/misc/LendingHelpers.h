@@ -98,14 +98,24 @@ struct LoanState
     Number valueOutstanding;
     /// Prinicipal still due to be paid by the borrower.
     Number principalOutstanding;
-    /// Interest still due to be paid by the borrower.
-    Number interestOutstanding;
     /// Interest still due to be paid TO the Vault.
     // This is a portion of interestOutstanding
     Number interestDue;
     /// Management fee still due to be paid TO the broker.
     // This is a portion of interestOutstanding
     Number managementFeeDue;
+
+    /// Interest still due to be paid by the borrower.
+    Number
+    interestOutstanding() const
+    {
+        XRPL_ASSERT_PARTS(
+            interestDue + managementFeeDue ==
+                valueOutstanding - principalOutstanding,
+            "ripple::LoanState::interestOutstanding",
+            "other values add up correctly");
+        return interestDue + managementFeeDue;
+    }
 };
 
 LoanState
@@ -113,7 +123,7 @@ calculateRawLoanState(
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t const paymentRemaining,
-    TenthBips16 const managementFeeRate);
+    TenthBips32 const managementFeeRate);
 
 LoanState
 calculateRawLoanState(
@@ -121,7 +131,7 @@ calculateRawLoanState(
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t const paymentRemaining,
-    TenthBips16 const managementFeeRate);
+    TenthBips32 const managementFeeRate);
 
 LoanState
 calculateRoundedLoanState(
@@ -136,7 +146,7 @@ Number
 computeFee(
     Asset const& asset,
     Number const& value,
-    TenthBips16 managementFeeRate,
+    TenthBips32 managementFeeRate,
     std::int32_t scale);
 
 Number
@@ -195,10 +205,18 @@ struct PaymentComponents
 
 struct LoanDeltas
 {
-    Number valueDelta;
     Number principalDelta;
     Number interestDueDelta;
     Number managementFeeDueDelta;
+
+    Number
+    valueDelta() const
+    {
+        return principalDelta + interestDueDelta + managementFeeDueDelta;
+    }
+
+    void
+    nonNegative();
 };
 
 PaymentComponents
@@ -218,6 +236,9 @@ computePaymentComponents(
 detail::LoanDeltas
 operator-(LoanState const& lhs, LoanState const& rhs);
 
+LoanState
+operator-(LoanState const& lhs, detail::LoanDeltas const& rhs);
+
 Number
 valueMinusFee(
     Asset const& asset,
@@ -232,7 +253,7 @@ computeLoanProperties(
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t paymentsRemaining,
-    TenthBips16 managementFeeRate);
+    TenthBips32 managementFeeRate);
 
 bool
 isRounded(Asset const& asset, Number const& value, std::int32_t scale);

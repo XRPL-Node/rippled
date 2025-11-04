@@ -374,6 +374,10 @@ LoanPay::doApply()
         paymentParts->principalPaid + paymentParts->interestPaid;
     auto const totalPaidToVaultRounded =
         roundToAsset(asset, totalPaidToVaultRaw, vaultScale, Number::downward);
+    XRPL_ASSERT_PARTS(
+        !asset.integral() || totalPaidToVaultRaw == totalPaidToVaultRounded,
+        "ripple::LoanPay::doApply",
+        "rounding does nothing for integral asset");
     auto const totalPaidToVaultForDebt =
         totalPaidToVaultRaw - paymentParts->valueChange;
 
@@ -405,7 +409,21 @@ LoanPay::doApply()
     // Vault object state changes
     view.update(vaultSle);
 
+    Number const assetsAvailableBefore = *assetsAvailableProxy;
+    Number const pseudoAccountBalanceBefore = accountHolds(
+        view,
+        vaultPseudoAccount,
+        asset,
+        FreezeHandling::fhIGNORE_FREEZE,
+        AuthHandling::ahIGNORE_AUTH,
+        j_);
+
     {
+        XRPL_ASSERT_PARTS(
+            assetsAvailableBefore == pseudoAccountBalanceBefore,
+            "ripple::LoanPay::doApply",
+            "vault pseudo balance agrees before");
+
         auto assetsTotalProxy = vaultSle->at(sfAssetsTotal);
 
         assetsAvailableProxy += totalPaidToVaultRounded;
@@ -415,6 +433,13 @@ LoanPay::doApply()
             *assetsAvailableProxy <= *assetsTotalProxy,
             "ripple::LoanPay::doApply",
             "assets available must not be greater than assets outstanding");
+
+        if (*assetsAvailableProxy > *assetsTotalProxy)
+        {
+            // LCOV_EXCL_START
+            return tecINTERNAL;
+            // LCOV_EXCL_STOP
+        }
     }
 
     // Move funds
@@ -487,6 +512,19 @@ LoanPay::doApply()
             j_,
             WaiveTransferFee::Yes))
         return ter;
+
+    Number const assetsAvailableAfter = *assetsAvailableProxy;
+    Number const pseudoAccountBalanceAfter = accountHolds(
+        view,
+        vaultPseudoAccount,
+        asset,
+        FreezeHandling::fhIGNORE_FREEZE,
+        AuthHandling::ahIGNORE_AUTH,
+        j_);
+    XRPL_ASSERT_PARTS(
+        assetsAvailableAfter == pseudoAccountBalanceAfter,
+        "ripple::LoanPay::doApply",
+        "vault pseudo balance agrees after");
 
 #if !NDEBUG
     auto const accountBalanceAfter = accountCanSend(

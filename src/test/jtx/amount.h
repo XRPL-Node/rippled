@@ -295,6 +295,21 @@ struct XRP_t
         return {TOut{v} * dropsPerXRP};
     }
 
+    /** Returns an amount of XRP as PrettyAmount,
+        which is trivially convertable to STAmount
+
+        @param v The Number of XRP (not drops). May be fractional.
+    */
+    PrettyAmount
+    operator()(Number v) const
+    {
+        auto const c = dropsPerXRP.drops();
+        auto const d = std::int64_t(v * c);
+        if (Number(d) / c != v)
+            Throw<std::domain_error>("unrepresentable");
+        return {d};
+    }
+
     PrettyAmount
     operator()(double v) const
     {
