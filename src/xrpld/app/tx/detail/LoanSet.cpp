@@ -503,8 +503,11 @@ LoanSet::doApply()
 
     adjustOwnerCount(view, borrowerSle, 1, j_);
     {
-        auto ownerCount = borrowerSle->at(sfOwnerCount);
-        if (mPriorBalance < view.fees().accountReserve(ownerCount))
+        auto const ownerCount = borrowerSle->at(sfOwnerCount);
+        auto const balance = account_ == borrower
+            ? mPriorBalance
+            : borrowerSle->at(sfBalance)->xrp();
+        if (balance < view.fees().accountReserve(ownerCount))
             return tecINSUFFICIENT_RESERVE;
     }
 
