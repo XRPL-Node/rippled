@@ -4,6 +4,10 @@
 #include <xrpl/basics/IntrusivePointer.ipp>
 #include <xrpl/basics/TaggedCache.h>
 
+#ifdef __GLIBC__
+#include <malloc.h>
+#endif
+
 namespace ripple {
 
 template <
@@ -326,6 +330,10 @@ TaggedCache<
                std::chrono::steady_clock::now() - start)
                .count()
         << "ms";
+
+#ifdef __GLIBC__
+    (void)malloc_trim(0);
+#endif
 }
 
 template <
