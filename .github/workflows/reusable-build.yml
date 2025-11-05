@@ -21,7 +21,7 @@ on:
         type: string
       sanitizers:
         description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-        required: false
+        required: true
         type: string
         default: ""
 

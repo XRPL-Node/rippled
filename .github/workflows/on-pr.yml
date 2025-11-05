@@ -115,7 +115,6 @@ jobs:
         os: [linux, macos, windows]
     with:
       os: ${{ matrix.os }}
-      sanitizers: ${{ matrix.sanitizers }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

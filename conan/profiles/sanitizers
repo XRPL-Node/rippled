@@ -2,6 +2,10 @@ include(./default)
 
 [settings]
 {% set sanitizers = os.getenv("SANITIZERS") %}
+{% if sanitizers == "Address" or sanitizers == "Thread" %}
+user.package:sanitizers={{ sanitizers }}
+tools.info.package_ids:confs+=["user.package:sanitizers"]
+{% endif %}
 
 [conf]
 {% if sanitizers == "Address" %}

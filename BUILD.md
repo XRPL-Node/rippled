@@ -365,7 +365,7 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    profile in the `conan install` command.
 
    ```
-   SANITIZERS=Address conan install .. --output-folder . --profile incsanitizers --build missing --settings build_type=Debug
+   SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Debug
    ```
 
    Available options for SANITIZERS: `Address` and `Thread`
