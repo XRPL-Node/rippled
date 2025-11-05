@@ -53,7 +53,8 @@ public:
     constexpr static rep maxMantissa = minMantissa * 10 - 1;
     static_assert(maxMantissa == 9'999'999'999'999'999LL);
 
-    constexpr static rep maxIntValue = minMantissa / 10;
+    constexpr static rep maxIntValue = maxMantissa / 10;
+    static_assert(maxIntValue == 999'999'999'999'999LL);
 
     // The range for the exponent when normalized
     constexpr static int minExponent = -32768;

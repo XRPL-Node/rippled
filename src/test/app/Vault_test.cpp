@@ -3597,7 +3597,32 @@ class Vault_test : public beast::unit_test::suite
         });
 
         testCase(18, [&, this](Env& env, Data d) {
-            testcase("Scale deposit overflow on second deposit");
+            testcase("MPT scale deposit overflow");
+            // The computed number of shares can not be represented as an MPT
+            // without truncation
+
+            {
+                auto tx = d.vault.deposit(
+                    {.depositor = d.depositor,
+                     .id = d.keylet.key,
+                     .amount = d.asset(5)});
+                env(tx, ter{tecPRECISION_LOSS});
+                env.close();
+            }
+        });
+
+        testCase(14, [&, this](Env& env, Data d) {
+            testcase("MPT scale deposit overflow on first deposit");
+            auto tx = d.vault.deposit(
+                {.depositor = d.depositor,
+                 .id = d.keylet.key,
+                 .amount = d.asset(10)});
+            env(tx, ter{tecPRECISION_LOSS});
+            env.close();
+        });
+
+        testCase(14, [&, this](Env& env, Data d) {
+            testcase("MPT scale deposit overflow on second deposit");
 
             {
                 auto tx = d.vault.deposit(
@@ -3618,8 +3643,8 @@ class Vault_test : public beast::unit_test::suite
             }
         });
 
-        testCase(18, [&, this](Env& env, Data d) {
-            testcase("Scale deposit overflow on total shares");
+        testCase(14, [&, this](Env& env, Data d) {
+            testcase("No MPT scale deposit overflow on total shares");
 
             {
                 auto tx = d.vault.deposit(
@@ -3635,7 +3660,7 @@ class Vault_test : public beast::unit_test::suite
                     {.depositor = d.depositor,
                      .id = d.keylet.key,
                      .amount = d.asset(5)});
-                env(tx, ter{tecPATH_DRY});
+                env(tx);
                 env.close();
             }
         });
@@ -3924,6 +3949,28 @@ class Vault_test : public beast::unit_test::suite
                     {.depositor = d.depositor,
                      .id = d.keylet.key,
                      .amount = d.asset(5)});
+                env(tx, ter{tecPRECISION_LOSS});
+                env.close();
+            }
+
+            {
+                auto tx = d.vault.withdraw(
+                    {.depositor = d.depositor,
+                     .id = d.keylet.key,
+                     .amount = STAmount(d.asset, Number(10, 0))});
+                env(tx, ter{tecPRECISION_LOSS});
+                env.close();
+            }
+        });
+
+        testCase(14, [&, this](Env& env, Data d) {
+            testcase("MPT scale withdraw overflow");
+
+            {
+                auto tx = d.vault.deposit(
+                    {.depositor = d.depositor,
+                     .id = d.keylet.key,
+                     .amount = d.asset(5)});
                 env(tx);
                 env.close();
             }
@@ -4136,6 +4183,29 @@ class Vault_test : public beast::unit_test::suite
 
         testCase(18, [&, this](Env& env, Data d) {
             testcase("Scale clawback overflow");
+
+            {
+                auto tx = d.vault.deposit(
+                    {.depositor = d.depositor,
+                     .id = d.keylet.key,
+                     .amount = d.asset(5)});
+                env(tx, ter(tecPRECISION_LOSS));
+                env.close();
+            }
+
+            {
+                auto tx = d.vault.clawback(
+                    {.issuer = d.issuer,
+                     .id = d.keylet.key,
+                     .holder = d.depositor,
+                     .amount = STAmount(d.asset, Number(10, 0))});
+                env(tx, ter{tecPRECISION_LOSS});
+                env.close();
+            }
+        });
+
+        testCase(14, [&, this](Env& env, Data d) {
+            testcase("MPT Scale clawback overflow");
 
             {
                 auto tx = d.vault.deposit(
