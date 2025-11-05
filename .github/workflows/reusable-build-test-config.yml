@@ -25,10 +25,9 @@ on:
         type: string
         required: true
       sanitizers:
-        description: "The sanitizers to enable ('None', 'Address', 'Thread')."
+        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
         required: true
-        type: string
-        default: "None"
+        default: ""
 
       runs_on:
         description: Runner to run the job on as a JSON string

@@ -124,11 +124,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             cmake_args = f'{cmake_args} -Dwextra=ON'
         if build_type == 'Release':
             cmake_args = f'{cmake_args} -Dassert=ON'
-
-        if sanitizers == 'Address':
-            cmake_args = f'{cmake_args} -fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow'
-        elif sanitizers == 'Thread':
-            cmake_args = f'{cmake_args} -fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow'
+        
+        if os['distro_version'] == 'bookworm':
+            if sanitizers == 'Address':
+                cmake_args += ' -fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow'
+            elif sanitizers == 'Thread':
+                cmake_args += ' -fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow'
 
         # We skip all RHEL on arm64 due to a build failure that needs further
         # investigation.

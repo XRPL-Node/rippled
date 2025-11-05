@@ -24,10 +24,9 @@ on:
         type: string
         default: "minimal"
       sanitizers:
-        description: "The sanitizers to enable ('None', 'Address', 'Thread')."
+        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
         required: true
-        type: string
-        default: "None"
+        default: ""
     secrets:
       CODECOV_TOKEN:
         description: "The Codecov token to use for uploading coverage reports."
