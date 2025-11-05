@@ -125,12 +125,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         if build_type == 'Release':
             cmake_args = f'{cmake_args} -Dassert=ON'
         
-        if os['distro_version'] == 'bookworm':
-            if sanitizers == 'Address':
-                cmake_args += ' -fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow'
-            elif sanitizers == 'Thread':
-                cmake_args += ' -fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow'
-
         # We skip all RHEL on arm64 due to a build failure that needs further
         # investigation.
         if os['distro_name'] == 'rhel' and architecture['platform'] == 'linux/arm64':
@@ -163,17 +157,39 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
 
         # Add the configuration to the list, with the most unique fields first,
         # so that they are easier to identify in the GitHub Actions UI, as long
-        # names get truncated.
-        configurations.append({
-            'config_name': config_name,
-            'cmake_args': cmake_args,
-            'cmake_target': cmake_target,
-            'build_only': build_only,
-            'build_type': build_type,
-            'os': os,
-            'architecture': architecture,
-            'sanitizers': sanitizers
-        })
+        # names get truncated. Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
+        if os['distro_version'] == 'bookworm':
+            configurations.append({
+                'config_name': config_name,
+                'cmake_args': cmake_args,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture,
+                'sanitizers': "Address"
+            })
+            configurations.append({
+                'config_name': config_name,
+                'cmake_args': cmake_args,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture,
+                'sanitizers': "Thread"
+            })
+        else:
+            configurations.append({
+                'config_name': config_name,
+                'cmake_args': cmake_args,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture,
+                'sanitizers': "None"
+            })
 
     return configurations
 

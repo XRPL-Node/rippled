@@ -37,7 +37,7 @@ runs:
         BUILD_OPTION: ${{ inputs.force_build == 'true' && '*' || 'missing' }}
         BUILD_TYPE: ${{ inputs.build_type }}
         LOG_VERBOSITY: ${{ inputs.log_verbosity }}
-        CMAKE_SANITIZERS: ${{ inputs.sanitizers }}
+        SANITIZERS: ${{ inputs.sanitizers }}
       run: |
         echo 'Installing dependencies.'
         mkdir -p "${BUILD_DIR}"
