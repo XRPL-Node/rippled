@@ -187,8 +187,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'build_only': build_only,
                 'build_type': build_type,
                 'os': os,
-                'architecture': architecture,
-                'sanitizers': "None"
+                'architecture': architecture
             })
 
     return configurations

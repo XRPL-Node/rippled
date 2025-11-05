@@ -23,7 +23,7 @@ inputs:
     default: "verbose"
   sanitizers:
     description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-    required: true
+    required: false
     type: string
     default: ""
 
