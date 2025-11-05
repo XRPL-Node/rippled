@@ -24,6 +24,7 @@ inputs:
   sanitizers:
     description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
     required: true
+    type: string
     default: ""
 
 runs:
