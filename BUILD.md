@@ -360,6 +360,16 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    conan install .. --output-folder . --build missing --settings build_type=Debug
    ```
 
+   If you would like to activate `asan+ubsan`(`Address`) or `tsan+ubsan`(`Thread`) for the build,
+   declare an env. variable as follows and simply use the `incsanitizers`
+   profile in the `conan install` command.
+
+   ```
+   SANITIZERS=Address conan install .. --output-folder . --profile incsanitizers --build missing --settings build_type=Debug
+   ```
+
+   Available options for SANITIZERS: `Address` and `Thread`
+
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`
 
    For a single-configuration generator, e.g. `Unix Makefiles` or `Ninja`,
