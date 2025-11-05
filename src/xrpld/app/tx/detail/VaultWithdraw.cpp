@@ -50,6 +50,9 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
     if (assets.asset() != vaultAsset && assets.asset() != vaultShare)
         return tecWRONG_ASSET;
 
+    if (!assets.validNumber())
+        return tecPRECISION_LOSS;
+
     if (vaultAsset.native())
         ;  // No special checks for XRP
     else if (vaultAsset.holds<MPTIssue>())
@@ -154,6 +157,8 @@ VaultWithdraw::doApply()
     MPTIssue const share{mptIssuanceID};
     STAmount sharesRedeemed = {share};
     STAmount assetsWithdrawn;
+    assetsWithdrawn.setIntegerEnforcement(Number::weak);
+    sharesRedeemed.setIntegerEnforcement(Number::weak);
     try
     {
         if (amount.asset() == vaultAsset)
@@ -167,13 +172,15 @@ VaultWithdraw::doApply()
                 sharesRedeemed = *maybeShares;
             }
 
-            if (sharesRedeemed == beast::zero)
+            if (sharesRedeemed == beast::zero || !sharesRedeemed.validNumber())
                 return tecPRECISION_LOSS;
             auto const maybeAssets =
                 sharesToAssetsWithdraw(vault, sleIssuance, sharesRedeemed);
             if (!maybeAssets)
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             assetsWithdrawn = *maybeAssets;
+            if (!assetsWithdrawn.validNumber())
+                return tecPRECISION_LOSS;
         }
         else if (amount.asset() == share)
         {
@@ -184,6 +191,8 @@ VaultWithdraw::doApply()
             if (!maybeAssets)
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             assetsWithdrawn = *maybeAssets;
+            if (!assetsWithdrawn.validNumber())
+                return tecPRECISION_LOSS;
         }
         else
             return tefINTERNAL;  // LCOV_EXCL_LINE
