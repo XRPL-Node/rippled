@@ -5637,6 +5637,162 @@ protected:
     }
 #endif
 
+    void
+    testDustManipulation()
+    {
+        using namespace jtx;
+        using namespace std::chrono_literals;
+        Env env(*this, all);
+
+        // Setup: Create accounts
+        Account issuer{"issuer"};
+        Account lender{"lender"};
+        Account borrower{"borrower"};
+        Account victim{"victim"};
+
+        env.fund(XRP(1'000'000'00), issuer, lender, borrower, victim);
+        env.close();
+
+        // Step 1: Create vault with IOU asset
+        auto asset = issuer["USD"];
+        env(trust(lender, asset(100000)));
+        env(trust(borrower, asset(100000)));
+        env(trust(victim, asset(100000)));
+        env(pay(issuer, lender, asset(50000)));
+        env(pay(issuer, borrower, asset(50000)));
+        env(pay(issuer, victim, asset(50000)));
+        env.close();
+
+        BrokerParameters brokerParams{
+            .vaultDeposit = 10000,
+            .debtMax = Number{0},
+            .coverRateMin = TenthBips32{1000},
+            .coverRateLiquidation = TenthBips32{2500}};
+
+        auto broker = createVaultAndBroker(env, asset, lender, brokerParams);
+
+        auto const loanKeyletOpt = [&]() -> std::optional<Keylet> {
+            auto const brokerSle = env.le(keylet::loanbroker(broker.brokerID));
+            if (!BEAST_EXPECT(brokerSle))
+                return std::nullopt;
+
+            // Broker has no loans
+            BEAST_EXPECT(brokerSle->at(sfOwnerCount) == 0);
+
+            // The loan keylet is based on the LoanSequence of the
+            // _LOAN_BROKER_ object.
+            auto const loanSequence = brokerSle->at(sfLoanSequence);
+            return keylet::loan(broker.brokerID, loanSequence);
+        }();
+        if (!loanKeyletOpt)
+            return;
+
+        auto const vaultKeyletOpt = [&]() -> std::optional<Keylet> {
+            auto const brokerSle = env.le(keylet::loanbroker(broker.brokerID));
+            if (!BEAST_EXPECT(brokerSle))
+                return std::nullopt;
+            return keylet::vault(brokerSle->at(sfVaultID));
+        }();
+        if (!BEAST_EXPECT(vaultKeyletOpt))
+            return;
+        auto const& vaultKeylet = *vaultKeyletOpt;
+
+        {
+            auto const vaultSle = env.le(vaultKeylet);
+            Number assetsTotal = vaultSle->at(sfAssetsTotal);
+            Number assetsAvail = vaultSle->at(sfAssetsAvailable);
+
+            log << "Before loan creation:" << std::endl;
+            log << "  AssetsTotal: " << assetsTotal << std::endl;
+            log << "  AssetsAvailable: " << assetsAvail << std::endl;
+            log << "  Difference: " << (assetsTotal - assetsAvail) << std::endl;
+
+            // before the loan the assets total and available should be equal
+            BEAST_EXPECT(assetsAvail == assetsTotal);
+            BEAST_EXPECT(
+                assetsAvail ==
+                broker.asset(brokerParams.vaultDeposit).number());
+        }
+
+        Keylet const& loanKeylet = *loanKeyletOpt;
+
+        LoanParameters const loanParams{
+            .account = lender,
+            .counter = borrower,
+            .principalRequest = Number{100},
+            .interest = TenthBips32{1922},
+            .payTotal = 5816,
+            .payInterval = 86400 * 6,
+            .gracePd = 86400 * 5,
+        };
+
+        env(loanParams(env, broker));
+        env.close();
+
+        // Wait for loan to be late enough to default
+        env.close(std::chrono::seconds(86400 * 40));  // 40 days
+
+        {
+            auto const vaultSle = env.le(vaultKeylet);
+            Number assetsTotal = vaultSle->at(sfAssetsTotal);
+            Number assetsAvail = vaultSle->at(sfAssetsAvailable);
+
+            log << "After loan creation:" << std::endl;
+            log << "  AssetsTotal: " << assetsTotal << std::endl;
+            log << "  AssetsAvailable: " << assetsAvail << std::endl;
+            log << "  Difference: " << (assetsTotal - assetsAvail) << std::endl;
+
+            auto const loanSle = env.le(loanKeylet);
+            if (!BEAST_EXPECT(loanSle))
+                return;
+            auto const state = calculateRoundedLoanState(loanSle);
+
+            log << "Loan state:" << std::endl;
+            log << "  ValueOutstanding: " << state.valueOutstanding
+                << std::endl;
+            log << "  PrincipalOutstanding: " << state.principalOutstanding
+                << std::endl;
+            log << "  InterestOutstanding: " << state.interestOutstanding()
+                << std::endl;
+            log << "  InterestDue: " << state.interestDue << std::endl;
+            log << "  FeeDue: " << state.managementFeeDue << std::endl;
+
+            // after loan creation the assets total and available should
+            // reflect the value of the loan
+            BEAST_EXPECT(assetsAvail < assetsTotal);
+            BEAST_EXPECT(
+                assetsAvail ==
+                broker
+                    .asset(
+                        brokerParams.vaultDeposit - loanParams.principalRequest)
+                    .number());
+            BEAST_EXPECT(
+                assetsTotal ==
+                broker.asset(brokerParams.vaultDeposit + state.interestDue)
+                    .number());
+        }
+
+        // Step 7: Trigger default (dust adjustment will occur)
+        env(jtx::loan::manage(lender, loanKeylet.key, tfLoanDefault));
+        env.close();
+
+        // Step 8: Verify phantom assets created
+        {
+            auto const vaultSle2 = env.le(vaultKeylet);
+            Number assetsTotal2 = vaultSle2->at(sfAssetsTotal);
+            Number assetsAvail2 = vaultSle2->at(sfAssetsAvailable);
+
+            log << "After default:" << std::endl;
+            log << "  AssetsTotal: " << assetsTotal2 << std::endl;
+            log << "  AssetsAvailable: " << assetsAvail2 << std::endl;
+            log << "  Difference: " << (assetsTotal2 - assetsAvail2)
+                << std::endl;
+
+            // after a default the assets total and available should be equal
+            BEAST_EXPECT(assetsAvail2 == assetsTotal2);
+        }
+    }
+
 public:
     void
     run() override
@@ -5647,6 +5803,7 @@ public:
         testPoC_UnsignedUnderflowOnFullPayAfterEarlyPeriodic();
         testLoanCoverMinimumRoundingExploit();
 #endif
+        testDustManipulation();
 
         testIssuerLoan();
         testDisabled();
