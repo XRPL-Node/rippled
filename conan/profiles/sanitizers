@@ -8,22 +8,20 @@ tools.info.package_ids:confs+=["user.package:sanitizers"]
 {% endif %}
 
 [conf]
-{% if compiler == "clang" %}
-
-{% if sanitizers == "Address" %}
-rippled:tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,unsigned-integer-overflow']
-{% elif sanitizers == "Thread" %}
-rippled:tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,unsigned-integer-overflow']
-{% endif %}
-
-{% endif %}
-
 {% if compiler == "gcc" %}
 
 {% if sanitizers == "Address" %}
 rippled:tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow']
 {% elif sanitizers == "Thread" %}
 rippled:tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow']
+{% endif %}
+
+{% else %}
+
+{% if sanitizers == "Address" %}
+rippled:tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow']
+{% elif sanitizers == "Thread" %}
+rippled:tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow']
 {% endif %}
 
 {% endif %}
