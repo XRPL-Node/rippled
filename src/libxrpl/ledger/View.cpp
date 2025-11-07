@@ -2878,6 +2878,8 @@ assetsToSharesDeposit(
 
     Number const assetTotal = vault->at(sfAssetsTotal);
     STAmount shares{vault->at(sfShareMPTID)};
+    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
+    // type.
     shares.setIntegerEnforcement(Number::weak);
     if (assetTotal == 0)
         return STAmount{
@@ -2910,6 +2912,8 @@ sharesToAssetsDeposit(
 
     Number const assetTotal = vault->at(sfAssetsTotal);
     STAmount assets{vault->at(sfAsset)};
+    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
+    // type.
     assets.setIntegerEnforcement(Number::weak);
     if (assetTotal == 0)
         return STAmount{
@@ -2944,6 +2948,8 @@ assetsToSharesWithdraw(
     Number assetTotal = vault->at(sfAssetsTotal);
     assetTotal -= vault->at(sfLossUnrealized);
     STAmount shares{vault->at(sfShareMPTID)};
+    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
+    // type.
     shares.setIntegerEnforcement(Number::weak);
     if (assetTotal == 0)
         return shares;
@@ -2975,6 +2981,8 @@ sharesToAssetsWithdraw(
     Number assetTotal = vault->at(sfAssetsTotal);
     assetTotal -= vault->at(sfLossUnrealized);
     STAmount assets{vault->at(sfAsset)};
+    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
+    // type.
     assets.setIntegerEnforcement(Number::weak);
     if (assetTotal == 0)
         return assets;

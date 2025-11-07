@@ -150,8 +150,11 @@ VaultClawback::doApply()
         amount.asset() == vaultAsset,
         "ripple::VaultClawback::doApply : matching asset");
 
+    // Both of these values are going to be decreased in this transaction,
+    // so the limit doesn't really matter.
     auto assetsAvailable = vault->at(sfAssetsAvailable);
     auto assetsTotal = vault->at(sfAssetsTotal);
+
     [[maybe_unused]] auto const lossUnrealized = vault->at(sfLossUnrealized);
     XRPL_ASSERT(
         lossUnrealized <= (assetsTotal - assetsAvailable),
@@ -161,6 +164,8 @@ VaultClawback::doApply()
     MPTIssue const share{mptIssuanceID};
     STAmount sharesDestroyed = {share};
     STAmount assetsRecovered;
+    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
+    // type.
     assetsRecovered.setIntegerEnforcement(Number::weak);
     sharesDestroyed.setIntegerEnforcement(Number::weak);
     try

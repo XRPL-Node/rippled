@@ -270,7 +270,8 @@ STAmount::integerEnforcement() const noexcept
 bool
 STAmount::validNumber() const noexcept
 {
-    Number n = toNumber(Number::EnforceInteger::weak);
+    // compatible will not throw.
+    Number n = toNumber(Number::EnforceInteger::compatible);
     return n.valid();
 }
 
