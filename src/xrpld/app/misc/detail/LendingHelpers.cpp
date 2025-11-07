@@ -601,7 +601,8 @@ tryOverpayment(
         interestRate,
         paymentInterval,
         paymentRemaining,
-        managementFeeRate);
+        managementFeeRate,
+        loanScale);
 
     auto const newRaw = calculateRawLoanState(
         newLoanProperties.periodicPayment,
@@ -1547,7 +1548,8 @@ computeLoanProperties(
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t paymentsRemaining,
-    TenthBips32 managementFeeRate)
+    TenthBips32 managementFeeRate,
+    std::int32_t minimumScale)
 {
     auto const periodicRate = loanPeriodicRate(interestRate, paymentInterval);
     XRPL_ASSERT(
@@ -1556,12 +1558,12 @@ computeLoanProperties(
 
     auto const periodicPayment = detail::loanPeriodicPayment(
         principalOutstanding, periodicRate, paymentsRemaining);
-    STAmount const totalValueOutstanding = [&]() {
+    auto const [totalValueOutstanding, loanScale] = [&]() {
         NumberRoundModeGuard mg(Number::to_nearest);
         // Use STAmount's internal rounding instead of roundToAsset, because
         // we're going to use this result to determine the scale for all the
         // other rounding.
-        return STAmount{
+        STAmount amount{
             asset,
             /*
              * This formula is from the XLS-66 spec, section 3.2.4.2 (Total
@@ -1569,18 +1571,23 @@ computeLoanProperties(
              * = ..."
              */
             periodicPayment * paymentsRemaining};
+
+        // Base the loan scale on the total value, since that's going to be the
+        // biggest number involved (barring unusual parameters for late, full,
+        // or over payments)
+        auto const loanScale = std::max(minimumScale, amount.exponent());
+        XRPL_ASSERT_PARTS(
+            (amount.integral() && loanScale == 0) ||
+                (!amount.integral() &&
+                 loanScale >= static_cast<Number>(amount).exponent()),
+            "ripple::computeLoanProperties",
+            "loanScale value fits expectations");
+
+        // We may need to truncate the total value because of the minimum scale
+        amount = roundToAsset(asset, amount, loanScale, Number::to_nearest);
+
+        return std::make_pair(amount, loanScale);
     }();
-    // Base the loan scale on the total value, since that's going to be the
-    // biggest number involved (barring unusual parameters for late, full, or
-    // over payments)
-    auto const loanScale = totalValueOutstanding.exponent();
-    XRPL_ASSERT_PARTS(
-        (totalValueOutstanding.integral() && loanScale == 0) ||
-            (!totalValueOutstanding.integral() &&
-             loanScale ==
-                 static_cast<Number>(totalValueOutstanding).exponent()),
-        "ripple::computeLoanProperties",
-        "loanScale value fits expectations");
 
     // Since we just figured out the loan scale, we haven't been able to
     // validate that the principal fits in it, so to allow this function to

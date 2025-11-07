@@ -418,8 +418,10 @@ LoanSet::doApply()
     }
     auto const principalRequested = tx[sfPrincipalRequested];
 
-    if (auto const assetsAvailable = vaultSle->at(sfAssetsAvailable);
-        assetsAvailable < principalRequested)
+    auto vaultAvailableProxy = vaultSle->at(sfAssetsAvailable);
+    auto vaultTotalProxy = vaultSle->at(sfAssetsTotal);
+    auto const vaultScale = vaultTotalProxy->value().exponent();
+    if (vaultAvailableProxy < principalRequested)
     {
         JLOG(j_.warn())
             << "Insufficient assets available in the Vault to fund the loan.";
@@ -438,7 +440,8 @@ LoanSet::doApply()
         interestRate,
         paymentInterval,
         paymentTotal,
-        TenthBips16{brokerSle->at(sfManagementFeeRate)});
+        TenthBips16{brokerSle->at(sfManagementFeeRate)},
+        vaultScale);
 
     // Check that relevant values won't lose precision. This is mostly only
     // relevant for IOU assets.
@@ -623,10 +626,10 @@ LoanSet::doApply()
     view.insert(loan);
 
     // Update the balances in the vault
-    vaultSle->at(sfAssetsAvailable) -= principalRequested;
-    vaultSle->at(sfAssetsTotal) += state.interestDue;
+    vaultAvailableProxy -= principalRequested;
+    vaultTotalProxy += state.interestDue;
     XRPL_ASSERT_PARTS(
-        *vaultSle->at(sfAssetsAvailable) <= *vaultSle->at(sfAssetsTotal),
+        *vaultAvailableProxy <= *vaultTotalProxy,
         "ripple::LoanSet::doApply",
         "assets available must not be greater than assets outstanding");
     view.update(vaultSle);
