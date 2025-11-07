@@ -5333,6 +5333,65 @@ protected:
         }
     }
 
+    void
+    testRequireAuth()
+    {
+        testcase("Require Auth - Implicit Pseudo-account authorization");
+        using namespace jtx;
+        using namespace loan;
+        Account const lender{"lender"};
+        Account const issuer{"issuer"};
+        Account const borrower{"borrower"};
+        Env env(*this);
+
+        env.fund(XRP(100'000), issuer, lender, borrower);
+        env.close();
+
+        auto asset = MPTTester({
+            .env = env,
+            .issuer = issuer,
+            .holders = {lender, borrower},
+            .flags = MPTDEXFlags | tfMPTRequireAuth | tfMPTCanClawback |
+                tfMPTCanLock,
+            .authHolder = true,
+        });
+
+        env(pay(issuer, lender, asset(5'000'000)));
+        BrokerInfo brokerInfo{createVaultAndBroker(env, asset, lender)};
+
+        auto const loanSetFee = fee(env.current()->fees().base * 2);
+        STAmount const debtMaximumRequest = brokerInfo.asset(1'000).value();
+
+        auto forUnauthAuth = [&](auto&& doTx) {
+            for (auto const flag : {tfMPTUnauthorize, 0u})
+            {
+                asset.authorize(
+                    {.account = issuer, .holder = borrower, .flags = flag});
+                env.close();
+                doTx(flag == 0);
+                env.close();
+            }
+        };
+
+        // Can't create a loan if the borrower is not authorized
+        forUnauthAuth([&](bool authorized) {
+            auto const err = !authorized ? ter(tecNO_AUTH) : ter(tesSUCCESS);
+            env(set(borrower, brokerInfo.brokerID, debtMaximumRequest),
+                sig(sfCounterpartySignature, lender),
+                loanSetFee,
+                err);
+        });
+
+        std::uint32_t constexpr loanSequence = 1;
+        auto const loanKeylet = keylet::loan(brokerInfo.brokerID, loanSequence);
+
+        // Can't loan pay if the borrower is not authorized
+        forUnauthAuth([&](bool authorized) {
+            auto const err = !authorized ? ter(tecNO_AUTH) : ter(tesSUCCESS);
+            env(pay(borrower, loanKeylet.key, debtMaximumRequest), err);
+        });
+    }
+
 #if LOANTODO
     void
     testCoverDepositAllowsNonTransferableMPT()
@@ -6193,6 +6252,8 @@ public:
         testLoanPayComputePeriodicPaymentValidTotalPrincipalPaidInvariant();
         testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant();
         testLoanNextPaymentDueDateOverflow();
+
+        testRequireAuth();
     }
 };
 
