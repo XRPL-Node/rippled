@@ -192,8 +192,8 @@ LoanSet::preclaim(PreclaimContext const& ctx)
 
     {
         // Check for numeric overflow of the schedule before we load any
-        // objects. NextPaymentDue date for the last payment is:
-        //      startDate + (paymentInterval * paymentTotal).
+        // objects. The Grace Period for the last payment ends at:
+        //     startDate + (paymentInterval * paymentTotal) + gracePeriod.
         // If that value is larger than "maxTime", the value
         // overflows, and we kill the transaction.
         using timeType = decltype(sfNextPaymentDueDate)::type::value_type;
@@ -207,6 +207,13 @@ LoanSet::preclaim(PreclaimContext const& ctx)
             ctx.tx.at(~sfPaymentInterval).value_or(defaultPaymentInterval);
         auto const total =
             ctx.tx.at(~sfPaymentTotal).value_or(defaultPaymentTotal);
+        auto const grace =
+            ctx.tx.at(~sfGracePeriod).value_or(defaultGracePeriod);
+
+        // The grace period can't be larger than the interval. Check it first,
+        // mostly so that unit tests can test that specific case.
+        if (grace > timeAvailable)
+            return tecKILLED;
 
         if (interval > timeAvailable)
             return tecKILLED;
@@ -214,7 +221,9 @@ LoanSet::preclaim(PreclaimContext const& ctx)
         if (total > timeAvailable)
             return tecKILLED;
 
-        if (timeAvailable / interval < total)
+        auto const timeLastPayment = timeAvailable - grace;
+
+        if (timeLastPayment / interval < total)
             return tecKILLED;
     }
 
