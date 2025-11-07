@@ -107,13 +107,42 @@ protected:
     {
         jtx::PrettyAsset asset;
         uint256 brokerID;
+        uint256 vaultID;
         BrokerParameters params;
         BrokerInfo(
             jtx::PrettyAsset const& asset_,
-            uint256 const& brokerID_,
+            Keylet const& brokerKeylet_,
+            Keylet const& vaultKeylet_,
             BrokerParameters const& p)
-            : asset(asset_), brokerID(brokerID_), params(p)
+            : asset(asset_)
+            , brokerID(brokerKeylet_.key)
+            , vaultID(vaultKeylet_.key)
+            , params(p)
         {
+        }
+
+        Keylet
+        brokerKeylet() const
+        {
+            return keylet::loanbroker(brokerID);
+        }
+        Keylet
+        vaultKeylet() const
+        {
+            return keylet::vault(vaultID);
+        }
+
+        int
+        vaultScale(jtx::Env const& env) const
+        {
+            using namespace jtx;
+
+            auto const vaultSle = env.le(keylet::vault(vaultID));
+            if (!vaultSle)
+                // This function is not important enough to return an optional.
+                // Return an impossibly small number
+                return STAmount::cMinOffset - 1;
+            return vaultSle->at(sfAssetsTotal).exponent();
         }
     };
 
@@ -448,7 +477,7 @@ protected:
 
         env.close();
 
-        return {asset, keylet.key, params};
+        return {asset, keylet, vaultKeylet, params};
     }
 
     /// Get the state without checking anything
@@ -502,9 +531,12 @@ protected:
         BEAST_EXPECT(state.paymentRemaining == 12);
         BEAST_EXPECT(state.principalOutstanding == broker.asset(1000).value());
         BEAST_EXPECT(
-            state.loanScale ==
-            (broker.asset.integral() ? 0
-                                     : state.principalOutstanding.exponent()));
+            state.loanScale >=
+            (broker.asset.integral()
+                 ? 0
+                 : std::max(
+                       broker.vaultScale(env),
+                       state.principalOutstanding.exponent())));
         BEAST_EXPECT(state.paymentInterval == 600);
         BEAST_EXPECT(
             state.totalValue ==
@@ -759,9 +791,12 @@ protected:
                 startDate + *loanParams.payInterval);
             BEAST_EXPECT(loan->at(sfPaymentRemaining) == *loanParams.payTotal);
             BEAST_EXPECT(
-                loan->at(sfLoanScale) ==
-                (broker.asset.integral() ? 0
-                                         : principalRequestAmount.exponent()));
+                loan->at(sfLoanScale) >=
+                (broker.asset.integral()
+                     ? 0
+                     : std::max(
+                           broker.vaultScale(env),
+                           principalRequestAmount.exponent())));
             BEAST_EXPECT(
                 loan->at(sfPrincipalOutstanding) == principalRequestAmount);
         }
@@ -774,13 +809,14 @@ protected:
             state.interestRate,
             state.paymentInterval,
             state.paymentRemaining,
-            broker.params.managementFeeRate);
+            broker.params.managementFeeRate,
+            state.loanScale);
 
         verifyLoanStatus(
             0,
             startDate + *loanParams.payInterval,
             *loanParams.payTotal,
-            broker.asset.integral() ? 0 : principalRequestAmount.exponent(),
+            state.loanScale,
             loanProperties.totalValueOutstanding,
             principalRequestAmount,
             loanProperties.managementFeeOwedToBroker,
@@ -837,7 +873,7 @@ protected:
             0,
             nextDueDate,
             *loanParams.payTotal,
-            broker.asset.integral() ? 0 : principalRequestAmount.exponent(),
+            loanProperties.loanScale,
             loanProperties.totalValueOutstanding,
             principalRequestAmount,
             loanProperties.managementFeeOwedToBroker,
@@ -1394,10 +1430,12 @@ protected:
                 BEAST_EXPECT(brokerSle))
             {
                 BEAST_EXPECT(
-                    state.loanScale ==
+                    state.loanScale >=
                     (broker.asset.integral()
                          ? 0
-                         : state.principalOutstanding.exponent()));
+                         : std::max(
+                               broker.vaultScale(env),
+                               state.principalOutstanding.exponent())));
                 auto const defaultAmount = roundToAsset(
                     broker.asset,
                     std::min(
@@ -1688,7 +1726,10 @@ protected:
                     state.loanScale);
                 BEAST_EXPECT(
                     payoffAmount ==
-                    broker.asset(Number(1040000114155251, -12)));
+                    roundToAsset(
+                        broker.asset,
+                        broker.asset(Number(1040000114155251, -12)).number(),
+                        state.loanScale));
 
                 // The terms of this loan actually make the early payoff
                 // more expensive than just making payments
@@ -5687,15 +5728,7 @@ protected:
         if (!loanKeyletOpt)
             return;
 
-        auto const vaultKeyletOpt = [&]() -> std::optional<Keylet> {
-            auto const brokerSle = env.le(keylet::loanbroker(broker.brokerID));
-            if (!BEAST_EXPECT(brokerSle))
-                return std::nullopt;
-            return keylet::vault(brokerSle->at(sfVaultID));
-        }();
-        if (!BEAST_EXPECT(vaultKeyletOpt))
-            return;
-        auto const& vaultKeylet = *vaultKeyletOpt;
+        auto const& vaultKeylet = broker.vaultKeylet();
 
         {
             auto const vaultSle = env.le(vaultKeylet);
@@ -6096,7 +6129,8 @@ failed with assertion error: Both principal and interest rounded are zero 0 + 0
                 loanParams.payInterval.value_or(
                     LoanSet::defaultPaymentInterval),
                 loanParams.payTotal.value_or(LoanSet::defaultPaymentTotal),
-                brokerParams.managementFeeRate);
+                brokerParams.managementFeeRate,
+                asset(brokerParams.vaultDeposit).number().exponent());
             log << "Loan properties:\n"
                 << "\tPeriodic Payment: " << props.periodicPayment << std::endl
                 << "\tTotal Value: " << props.totalValueOutstanding << std::endl
