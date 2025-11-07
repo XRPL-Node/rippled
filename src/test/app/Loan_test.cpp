@@ -5154,11 +5154,6 @@ protected:
             return createJson;
         }();
 
-        auto const brokerStateBefore =
-            env.le(keylet::loanbroker(broker.brokerID));
-        auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
-        auto const keylet = keylet::loan(broker.brokerID, loanSequence);
-
         auto const baseFee = env.current()->fees().base;
 
         auto parentCloseTime = [&]() {
@@ -5173,7 +5168,7 @@ protected:
         };
 
         {
-            // straight-up overflow
+            // straight-up overflow: interval
             auto const interval = maxLoanTime() + 1;
             auto const total = 1;
             auto createJson = env.json(
@@ -5185,13 +5180,31 @@ protected:
             env.close();
         }
         {
-            // straight-up overflow
+            // straight-up overflow: total
             // min interval is 60
             auto const interval = 60;
             auto const total = maxLoanTime() + 1;
             auto createJson = env.json(
                 baseJson, paymentInterval(interval), paymentTotal(total));
 
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
+            // straight-up overflow: grace period
+            // min interval is 60
+            auto const interval = maxLoanTime() + 1;
+            auto const total = 1;
+            auto const grace = interval;
+            auto createJson = env.json(
+                baseJson,
+                paymentInterval(interval),
+                paymentTotal(total),
+                gracePeriod(grace));
+
+            // The grace period can't be larger than the interval.
             env(createJson,
                 sig(sfCounterpartySignature, lender),
                 ter(tecKILLED));
@@ -5223,11 +5236,37 @@ protected:
             env.close();
         }
         {
+            // Overflow with an absurdly large grace period
+            // min interval is 60
+            auto const total = 60;
+            auto const interval = (maxLoanTime() - total) / total;
+            auto const grace = interval;
+            auto createJson = env.json(
+                baseJson,
+                paymentInterval(interval),
+                paymentTotal(total),
+                gracePeriod(grace));
+
+            env(createJson,
+                sig(sfCounterpartySignature, lender),
+                ter(tecKILLED));
+            env.close();
+        }
+        {
             // Start date when the ledger is closed will be larger
-            auto const interval = maxLoanTime();
+            auto const brokerStateBefore =
+                env.le(keylet::loanbroker(broker.brokerID));
+            auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+            auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
+            auto const grace = 100;
+            auto const interval = maxLoanTime() - grace;
             auto const total = 1;
             auto createJson = env.json(
-                baseJson, paymentInterval(interval), paymentTotal(total));
+                baseJson,
+                paymentInterval(interval),
+                paymentTotal(total),
+                gracePeriod(grace));
 
             env(createJson,
                 sig(sfCounterpartySignature, lender),
@@ -5248,11 +5287,20 @@ protected:
         }
         {
             // Start date when the ledger is closed will be larger
+            auto const brokerStateBefore =
+                env.le(keylet::loanbroker(broker.brokerID));
+            auto const loanSequence = brokerStateBefore->at(sfLoanSequence);
+            auto const keylet = keylet::loan(broker.brokerID, loanSequence);
+
             auto const closeStartDate = (parentCloseTime() / 10 + 1) * 10;
-            auto const interval = maxTime - closeStartDate;
+            auto const grace = 5'000;
+            auto const interval = maxTime - closeStartDate - grace;
             auto const total = 1;
             auto createJson = env.json(
-                baseJson, paymentInterval(interval), paymentTotal(total));
+                baseJson,
+                paymentInterval(interval),
+                paymentTotal(total),
+                gracePeriod(grace));
 
             env(createJson,
                 sig(sfCounterpartySignature, lender),
@@ -5268,7 +5316,7 @@ protected:
 
             // This loan exists
             auto const afterState = getCurrentState(env, broker, keylet);
-            BEAST_EXPECT(afterState.nextPaymentDate == maxTime);
+            BEAST_EXPECT(afterState.nextPaymentDate == maxTime - grace);
             BEAST_EXPECT(afterState.previousPaymentDate == 0);
             BEAST_EXPECT(afterState.paymentRemaining == 1);
         }
@@ -5279,7 +5327,8 @@ protected:
 
             // Start date when the ledger is closed will be larger
             auto const closeStartDate = (parentCloseTime() / 10 + 1) * 10;
-            auto const maxLoanTime = maxTime - closeStartDate;
+            auto const grace = 5'000;
+            auto const maxLoanTime = maxTime - closeStartDate - grace;
             auto const total = [&]() {
                 if (maxLoanTime % 5 == 0)
                     return 5;
@@ -5300,7 +5349,10 @@ protected:
 
             auto const interval = maxLoanTime / total;
             auto createJson = env.json(
-                baseJson, paymentInterval(interval), paymentTotal(total));
+                baseJson,
+                paymentInterval(interval),
+                paymentTotal(total),
+                gracePeriod(grace));
 
             env(createJson,
                 sig(sfCounterpartySignature, lender),
@@ -5327,8 +5379,9 @@ protected:
 
             // The loan is on the last payment
             auto const afterState = getCurrentState(env, broker, keylet);
-            BEAST_EXPECT(afterState.nextPaymentDate == maxTime);
-            BEAST_EXPECT(afterState.previousPaymentDate == maxTime - interval);
+            BEAST_EXPECT(afterState.nextPaymentDate == maxTime - grace);
+            BEAST_EXPECT(
+                afterState.previousPaymentDate == maxTime - grace - interval);
             BEAST_EXPECT(afterState.paymentRemaining == 1);
         }
     }
@@ -6174,10 +6227,8 @@ protected:
             log << "loan after create: " << to_string(loan->getJson())
                 << std::endl;
 
-            env.close(
-                tp{
-                    d{loan->at(sfNextPaymentDueDate) + loan->at(sfGracePeriod) +
-                      1}});
+            env.close(tp{d{
+                loan->at(sfNextPaymentDueDate) + loan->at(sfGracePeriod) + 1}});
         }
 
         topUpBorrower(
