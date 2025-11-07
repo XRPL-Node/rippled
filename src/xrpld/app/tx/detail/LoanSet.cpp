@@ -420,7 +420,7 @@ LoanSet::doApply()
 
     auto vaultAvailableProxy = vaultSle->at(sfAssetsAvailable);
     auto vaultTotalProxy = vaultSle->at(sfAssetsTotal);
-    auto const vaultScale = vaultTotalProxy->value().exponent();
+    auto const vaultScale = vaultTotalProxy.value().exponent();
     if (vaultAvailableProxy < principalRequested)
     {
         JLOG(j_.warn())
@@ -513,7 +513,7 @@ LoanSet::doApply()
         auto const ownerCount = borrowerSle->at(sfOwnerCount);
         auto const balance = account_ == borrower
             ? mPriorBalance
-            : borrowerSle->at(sfBalance)->xrp();
+            : borrowerSle->at(sfBalance).value().xrp();
         if (balance < view.fees().accountReserve(ownerCount))
             return tecINSUFFICIENT_RESERVE;
     }
