@@ -175,7 +175,7 @@ LoanManage::defaultLoan(
         // The vault may be at a different scale than the loan. Reduce rounding
         // errors during the accounting by rounding some of the values to that
         // scale.
-        auto const vaultScale = vaultTotalProxy->value().exponent();
+        auto const vaultScale = vaultTotalProxy.value().exponent();
 
         if (vaultTotalProxy < vaultDefaultAmount)
         {
@@ -197,13 +197,12 @@ LoanManage::defaultLoan(
             auto const difference = vaultAvailableProxy - vaultTotalProxy;
             JLOG(j.debug())
                 << "Vault assets available: " << *vaultAvailableProxy << "("
-                << vaultAvailableProxy->value().exponent()
+                << vaultAvailableProxy.value().exponent()
                 << "), Total: " << *vaultTotalProxy << "("
-                << vaultTotalProxy->value().exponent()
+                << vaultTotalProxy.value().exponent()
                 << "), Difference: " << difference << "("
                 << difference.exponent() << ")";
-            if (vaultAvailableProxy->value().exponent() -
-                    difference.exponent() >
+            if (vaultAvailableProxy.value().exponent() - difference.exponent() >
                 13)
             {
                 // If the difference is dust, bring the total up to match
