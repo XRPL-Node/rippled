@@ -654,14 +654,17 @@ createPseudoAccount(
     uint256 const& pseudoOwnerKey,
     SField const& ownerField);
 
-// Returns true iff sleAcct is a pseudo-account.
+// Returns true iff sleAcct is a pseudo-account or specific
+// pseudo-accounts in pseudoFieldFilter.
 //
 // Returns false if sleAcct is
 // * NOT a pseudo-account OR
 // * NOT a ltACCOUNT_ROOT OR
 // * null pointer
 [[nodiscard]] bool
-isPseudoAccount(std::shared_ptr<SLE const> sleAcct);
+isPseudoAccount(
+    std::shared_ptr<SLE const> sleAcct,
+    std::set<SField const*> const& pseudoFieldFilter = {});
 
 // Returns the list of fields that define an ACCOUNT_ROOT as a pseudo-account if
 // set
@@ -675,9 +678,13 @@ isPseudoAccount(std::shared_ptr<SLE const> sleAcct);
 getPseudoAccountFields();
 
 [[nodiscard]] inline bool
-isPseudoAccount(ReadView const& view, AccountID const& accountId)
+isPseudoAccount(
+    ReadView const& view,
+    AccountID const& accountId,
+    std::set<SField const*> const& pseudoFieldFilter = {})
 {
-    return isPseudoAccount(view.read(keylet::account(accountId)));
+    return isPseudoAccount(
+        view.read(keylet::account(accountId)), pseudoFieldFilter);
 }
 
 [[nodiscard]] TER
@@ -1001,7 +1008,8 @@ requireAuth(
  * purely defensive, as we currently do not allow such vaults to be created.
  *
  * If StrongAuth then return tecNO_AUTH if MPToken doesn't exist or
- * lsfMPTRequireAuth is set and MPToken is not authorized.
+ * lsfMPTRequireAuth is set and MPToken is not authorized. Vault and LoanBroker
+ * pseudo-accounts are implicitly authorized.
  *
  * If WeakAuth then return tecNO_AUTH if lsfMPTRequireAuth is set and MPToken
  * doesn't exist or is not authorized (explicitly or via credentials, if
