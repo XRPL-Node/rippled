@@ -73,6 +73,12 @@ computePaymentFactor(
     Number const& periodicRate,
     std::uint32_t paymentsRemaining)
 {
+    // periodicRate should never be zero in this function, but if it is,
+    // then 1/paymentRemaining is the most accurate factor that avoids
+    // divide by 0.
+    if (periodicRate == beast::zero)
+        return Number{1} / paymentsRemaining;
+
     /*
      * This formula is from the XLS-66 spec, section 3.2.4.1.1 (Regular
      * Payment), though "raisedRate" is computed only once and used twice.
