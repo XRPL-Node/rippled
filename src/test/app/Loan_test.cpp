@@ -6072,18 +6072,18 @@ failed with assertion error: Both principal and interest rounded are zero 0 + 0
         */
 
         BrokerParameters const brokerParams{
-            .vaultDeposit = 1'000'000'000,
+            .vaultDeposit = 10000,
             .debtMax = 0,
             .coverRateMin = TenthBips32{0},
-            .managementFeeRate = TenthBips16{5919},
+            // .managementFeeRate = TenthBips16{5919},
             .coverRateLiquidation = TenthBips32{0}};
         LoanParameters const loanParams{
             .account = Account("lender"),
             .counter = Account("borrower"),
-            .principalRequest = Number{1255438, -6},
-            .interest = TenthBips32{1922},
-            .payTotal = 5816,
-            .payInterval = 29193};
+            .principalRequest = Number{10000, 0},
+            // .interest = TenthBips32{0},
+            // .payTotal = 5816,
+            .payInterval = 150};
 
         {
             Env env(*this, beast::severities::kWarning);
@@ -6092,9 +6092,10 @@ failed with assertion error: Both principal and interest rounded are zero 0 + 0
             auto const props = computeLoanProperties(
                 asset,
                 asset(loanParams.principalRequest).number(),
-                *loanParams.interest,
-                *loanParams.payInterval,
-                *loanParams.payTotal,
+                loanParams.interest.value_or(TenthBips32{}),
+                loanParams.payInterval.value_or(
+                    LoanSet::defaultPaymentInterval),
+                loanParams.payTotal.value_or(LoanSet::defaultPaymentTotal),
                 brokerParams.managementFeeRate);
             log << "Loan properties:\n"
                 << "\tPeriodic Payment: " << props.periodicPayment << std::endl
@@ -6108,9 +6109,9 @@ failed with assertion error: Both principal and interest rounded are zero 0 + 0
             // checkGuards returns a TER, so success is 0
             BEAST_EXPECT(!LoanSet::checkGuards(
                 asset,
-                loanParams.principalRequest,
-                *loanParams.interest,
-                *loanParams.payTotal,
+                asset(loanParams.principalRequest).number(),
+                loanParams.interest.value_or(TenthBips32{}),
+                loanParams.payTotal.value_or(LoanSet::defaultPaymentTotal),
                 props,
                 env.journal));
         }
