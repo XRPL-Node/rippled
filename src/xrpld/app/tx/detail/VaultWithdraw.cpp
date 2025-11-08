@@ -207,6 +207,8 @@ VaultWithdraw::doApply()
         return tecINSUFFICIENT_FUNDS;
     }
 
+    // These values are only going to decrease, and can't be less than 0, so
+    // there's no need for integer range enforcement.
     auto assetsAvailable = vault->at(sfAssetsAvailable);
     auto assetsTotal = vault->at(sfAssetsTotal);
     [[maybe_unused]] auto const lossUnrealized = vault->at(sfLossUnrealized);

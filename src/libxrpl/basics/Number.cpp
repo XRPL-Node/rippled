@@ -227,6 +227,8 @@ Number::checkInteger(char const* what) const
 {
     if (enforceInteger_ == strong && !valid())
         throw std::overflow_error(what);
+    if (enforceInteger_ == weak && !representable())
+        throw std::overflow_error(what);
 }
 
 void
@@ -273,10 +275,38 @@ Number::normalize()
 bool
 Number::valid() const noexcept
 {
-    if (enforceInteger_ != none)
+    return valid(enforceInteger_);
+}
+
+bool
+Number::valid(EnforceInteger enforce)
+{
+    setIntegerEnforcement(enforce);
+    return valid();
+}
+
+bool
+Number::valid(EnforceInteger enforce) const
+{
+    if (enforce != none)
     {
         static Number const max = maxIntValue;
         static Number const maxNeg = -maxIntValue;
+        // Avoid making a copy
+        if (mantissa_ < 0)
+            return *this >= maxNeg;
+        return *this <= max;
+    }
+    return true;
+}
+
+bool
+Number::representable() const noexcept
+{
+    if (enforceInteger_ != none)
+    {
+        static Number const max = maxMantissa;
+        static Number const maxNeg = -maxMantissa;
         // Avoid making a copy
         if (mantissa_ < 0)
             return *this >= maxNeg;

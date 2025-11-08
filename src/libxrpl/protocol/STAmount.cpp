@@ -270,7 +270,9 @@ STAmount::integerEnforcement() const noexcept
 bool
 STAmount::validNumber() const noexcept
 {
-    Number n = toNumber(Number::EnforceInteger::weak);
+    // compatible will not throw. IOUs will ignore the flag, and will
+    // always be valid.
+    Number n = toNumber(Number::EnforceInteger::compatible);
     return n.valid();
 }
 

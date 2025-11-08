@@ -846,28 +846,87 @@ public:
             Number a{100};
             BEAST_EXPECT(a.integerEnforcement() == Number::none);
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
             a = Number{1, 30};
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
             a = -100;
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
+        }
+        {
+            Number a{100, Number::compatible};
+            BEAST_EXPECT(a.integerEnforcement() == Number::compatible);
+            BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
+            a = Number{1, 15};
+            BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(a.representable());
+            a = Number{1, 30, Number::none};
+            BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(!a.representable());
+            a = -100;
+            BEAST_EXPECT(a.integerEnforcement() == Number::compatible);
+            BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
+            a = Number{5, Number::weak};
+            BEAST_EXPECT(a.integerEnforcement() == Number::weak);
+            BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
+            a = Number{5, Number::strong};
+            BEAST_EXPECT(a.integerEnforcement() == Number::strong);
+            BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
         }
         {
             Number a{100, Number::weak};
             BEAST_EXPECT(a.integerEnforcement() == Number::weak);
             BEAST_EXPECT(a.valid());
-            a = Number{1, 30, Number::none};
+            BEAST_EXPECT(a.representable());
+            a = Number{1, 15};
             BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(a.representable());
+            try
+            {
+                a = Number{1, 30, Number::compatible};
+                BEAST_EXPECT(false);
+            }
+            catch (std::overflow_error const& e)
+            {
+                BEAST_EXPECT(e.what() == "Number::operator= integer overflow"s);
+                // The throw is done _after_ the number is updated.
+                BEAST_EXPECT((a == Number{1, 30}));
+            }
+            BEAST_EXPECT(a.integerEnforcement() == Number::weak);
+            BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(!a.representable());
             a = -100;
             BEAST_EXPECT(a.integerEnforcement() == Number::weak);
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
             a = Number{5, Number::strong};
             BEAST_EXPECT(a.integerEnforcement() == Number::strong);
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
         }
         {
             Number a{100, Number::strong};
             BEAST_EXPECT(a.integerEnforcement() == Number::strong);
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
+            try
+            {
+                a = Number{1, 15, Number::compatible};
+                BEAST_EXPECT(false);
+            }
+            catch (std::overflow_error const& e)
+            {
+                BEAST_EXPECT(e.what() == "Number::operator= integer overflow"s);
+                // The throw is done _after_ the number is updated.
+                BEAST_EXPECT((a == Number{1, 15}));
+            }
+            BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(a.representable());
             try
             {
                 a = Number{1, 30};
@@ -880,15 +939,19 @@ public:
                 BEAST_EXPECT((a == Number{1, 30}));
             }
             BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(!a.representable());
             a = -100;
             BEAST_EXPECT(a.integerEnforcement() == Number::strong);
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
         }
         {
-            Number a{INITIAL_XRP.drops(), Number::weak};
+            Number a{INITIAL_XRP.drops(), Number::compatible};
             BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(!a.representable());
             a = -a;
             BEAST_EXPECT(!a.valid());
+            BEAST_EXPECT(!a.representable());
 
             try
             {
@@ -904,6 +967,7 @@ public:
                 // assigned to the Number
                 BEAST_EXPECT(a == -INITIAL_XRP);
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(!a.representable());
             }
             try
             {
@@ -917,6 +981,7 @@ public:
                 // assigned to the Number
                 BEAST_EXPECT(a == -INITIAL_XRP);
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(!a.representable());
             }
             a = Number::maxIntValue;
             try
@@ -930,6 +995,7 @@ public:
                 // This time, the throw is done _after_ the number is updated.
                 BEAST_EXPECT(a == Number::maxIntValue + 1);
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(a.representable());
             }
             a = -Number::maxIntValue;
             try
@@ -943,6 +1009,7 @@ public:
                 // This time, the throw is done _after_ the number is updated.
                 BEAST_EXPECT(a == -Number::maxIntValue - 1);
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(a.representable());
             }
             a = Number(1, 10);
             try
@@ -957,6 +1024,7 @@ public:
                 // The throw is done _after_ the number is updated.
                 BEAST_EXPECT((a == Number{1, 20}));
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(!a.representable());
             }
             try
             {
@@ -969,6 +1037,7 @@ public:
                 // The throw is done _after_ the number is updated.
                 BEAST_EXPECT((a == Number::maxIntValue * 2));
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(a.representable());
             }
             try
             {
@@ -981,6 +1050,7 @@ public:
                 // The Number doesn't get updated because the ctor throws
                 BEAST_EXPECT((a == Number::maxIntValue * 2));
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(a.representable());
             }
             a = Number(1, 10);
             try
@@ -994,10 +1064,12 @@ public:
                 // The throw is done _after_ the number is updated.
                 BEAST_EXPECT((a == Number{1, 20}));
                 BEAST_EXPECT(!a.valid());
+                BEAST_EXPECT(!a.representable());
             }
             a /= Number(1, 15);
             BEAST_EXPECT((a == Number{1, 5}));
             BEAST_EXPECT(a.valid());
+            BEAST_EXPECT(a.representable());
         }
     }
 
