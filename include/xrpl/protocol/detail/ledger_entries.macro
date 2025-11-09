@@ -540,7 +540,7 @@ LEDGER_ENTRY(ltLOAN, 0x0089, Loan, loan, ({
     {sfOverpaymentInterestRate, soeDEFAULT},
     {sfStartDate,            soeREQUIRED},
     {sfPaymentInterval,      soeREQUIRED},
-    {sfGracePeriod,          soeREQUIRED},
+    {sfGracePeriod,          soeDEFAULT},
     {sfPreviousPaymentDate,  soeDEFAULT},
     {sfNextPaymentDueDate,   soeOPTIONAL},
     // The loan object tracks these values:
