@@ -6437,6 +6437,67 @@ protected:
         }
     }
 
+    void
+    testRIPD3901()
+    {
+        testcase("Crash with tfLoanOverpayment");
+        using namespace jtx;
+        using namespace loan;
+        Account const lender{"lender"};
+        Account const issuer{"issuer"};
+        Account const borrower{"borrower"};
+        Account const depositor{"depositor"};
+        auto const txfee = fee(XRP(100));
+
+        Env env(*this);
+        Vault vault(env);
+
+        env.fund(XRP(10'000), lender, issuer, borrower, depositor);
+        env.close();
+
+        auto [tx, vaultKeyLet] =
+            vault.create({.owner = lender, .asset = xrpIssue()});
+        env(tx, txfee);
+        env.close();
+
+        env(vault.deposit(
+                {.depositor = depositor,
+                 .id = vaultKeyLet.key,
+                 .amount = XRP(1'000)}),
+            txfee);
+        env.close();
+
+        auto const brokerKeyLet =
+            keylet::loanbroker(lender.id(), env.seq(lender));
+
+        env(loanBroker::set(lender, vaultKeyLet.key), txfee);
+        env.close();
+
+        // BrokerInfo brokerInfo{xrpIssue(), keylet, vaultKeyLet, {}};
+
+        STAmount const debtMaximumRequest = XRPAmount(200'000);
+
+        env(set(borrower, brokerKeyLet.key, debtMaximumRequest),
+            sig(sfCounterpartySignature, lender),
+            interestRate(TenthBips32(50'000)),
+            paymentTotal(2),
+            paymentInterval(150),
+            txflags(tfLoanOverpayment),
+            txfee);
+        env.close();
+
+        std::uint32_t const loanSequence = 1;
+        auto const loanKeylet = keylet::loan(brokerKeyLet.key, loanSequence);
+
+        if (auto loan = env.le(loanKeylet); env.test.BEAST_EXPECT(loan))
+        {
+            env(loan::pay(borrower, loanKeylet.key, XRPAmount(150'001)),
+                txflags(tfLoanOverpayment),
+                txfee);
+            env.close();
+        }
+    }
+
 public:
     void
     run() override
@@ -6479,6 +6540,7 @@ public:
 
         testRIPD3831();
         testRIPD3459();
+        testRIPD3901();
     }
 };
 

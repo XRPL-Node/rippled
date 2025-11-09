@@ -332,7 +332,7 @@ LoanPay::doApply()
         // It should not be possible to pay 0 total
         paymentParts->principalPaid + paymentParts->interestPaid > 0,
         "ripple::LoanPay::doApply",
-        "valid principal paid");
+        "valid total paid");
     XRPL_ASSERT_PARTS(
         paymentParts->feePaid >= 0,
         "ripple::LoanPay::doApply",
