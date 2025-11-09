@@ -663,9 +663,9 @@ tryOverpayment(
     auto const valueChange =
         newRounded.interestOutstanding() - rounded.interestOutstanding();
     XRPL_ASSERT_PARTS(
-        valueChange < beast::zero,
+        valueChange <= beast::zero,
         "ripple::detail::tryOverpayment",
-        "principal overpayment reduced value of loan");
+        "principal overpayment did not increase value of loan");
 
     return LoanPaymentParts{
         .principalPaid =
