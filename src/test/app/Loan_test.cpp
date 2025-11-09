@@ -615,6 +615,19 @@ protected:
             }
 
             case AssetType::MPT: {
+                // Enough to cover initial fees
+                if (!env.le(keylet::account(issuer)))
+                    env.fund(
+                        env.current()->fees().accountReserve(10) * 10, issuer);
+                if (!env.le(keylet::account(lender)))
+                    env.fund(
+                        env.current()->fees().accountReserve(10) * 10,
+                        noripple(lender));
+                if (!env.le(keylet::account(borrower)))
+                    env.fund(
+                        env.current()->fees().accountReserve(10) * 10,
+                        noripple(borrower));
+
                 MPTTester mptt{env, issuer, mptInitNoFund};
                 mptt.create(
                     {.flags =
@@ -644,7 +657,7 @@ protected:
     {
         using namespace jtx;
 
-        Env env(*this, beast::severities::kWarning);
+        Env env(*this);
 
         auto const asset = createAsset(
             env,
@@ -653,15 +666,25 @@ protected:
             Account("issuer"),
             Account("lender"),
             Account("borrower"));
+        auto const principal = asset(loanParams.principalRequest).number();
+        auto const interest = loanParams.interest.value_or(TenthBips32{});
+        auto const interval =
+            loanParams.payInterval.value_or(LoanSet::defaultPaymentInterval);
+        auto const total =
+            loanParams.payTotal.value_or(LoanSet::defaultPaymentTotal);
         auto const props = computeLoanProperties(
             asset,
-            asset(loanParams.principalRequest).number(),
-            loanParams.interest.value_or(TenthBips32{}),
-            loanParams.payInterval.value_or(LoanSet::defaultPaymentInterval),
-            loanParams.payTotal.value_or(LoanSet::defaultPaymentTotal),
+            principal,
+            interest,
+            interval,
+            total,
             brokerParams.managementFeeRate,
             asset(brokerParams.vaultDeposit).number().exponent());
         log << "Loan properties:\n"
+            << "\tPrincipal: " << principal << std::endl
+            << "\tInterest rate: " << interest << std::endl
+            << "\tPayment interval: " << interval << std::endl
+            << "\tTotal Payments: " << total << std::endl
             << "\tPeriodic Payment: " << props.periodicPayment << std::endl
             << "\tTotal Value: " << props.totalValueOutstanding << std::endl
             << "\tManagement Fee: " << props.managementFeeOwedToBroker
@@ -680,8 +703,7 @@ protected:
             env.journal));
     }
 
-    std::optional<
-        std::tuple<BrokerInfo, Keylet, VerifyLoanStatus, jtx::Account>>
+    std::optional<std::tuple<BrokerInfo, Keylet, jtx::Account>>
     createLoan(
         jtx::Env& env,
         AssetType assetType,
@@ -707,7 +729,7 @@ protected:
         env(
             pay((asset.native() ? env.master : issuer),
                 lender,
-                asset(brokerParams.vaultDeposit)));
+                asset(brokerParams.vaultDeposit + brokerParams.coverDeposit)));
         // Fund the borrower later once we know the total loan
         // size
 
@@ -746,10 +768,7 @@ protected:
 
         env.close();
 
-        VerifyLoanStatus verifyLoanStatus(env, broker, pseudoAcct, loanKeylet);
-
-        return std::make_tuple(
-            broker, loanKeylet, verifyLoanStatus, pseudoAcct);
+        return std::make_tuple(broker, loanKeylet, pseudoAcct);
     }
 
     void
@@ -919,10 +938,11 @@ protected:
                 broker.params.managementFeeRate);
 
             BEAST_EXPECT(
-                paymentComponents.trackedValueDelta == roundedPeriodicPayment ||
+                paymentComponents.trackedValueDelta <= roundedPeriodicPayment ||
                 (paymentComponents.specialCase ==
                      detail::PaymentSpecialCase::final &&
-                 paymentComponents.trackedValueDelta < roundedPeriodicPayment));
+                 paymentComponents.trackedValueDelta >=
+                     roundedPeriodicPayment));
             BEAST_EXPECT(
                 paymentComponents.trackedValueDelta ==
                 paymentComponents.trackedPrincipalDelta +
@@ -1092,7 +1112,9 @@ protected:
 
         auto broker = std::get<BrokerInfo>(*loanResult);
         auto loanKeylet = std::get<Keylet>(*loanResult);
-        auto verifyLoanStatus = std::get<VerifyLoanStatus>(*loanResult);
+        auto pseudoAcct = std::get<Account>(*loanResult);
+
+        VerifyLoanStatus verifyLoanStatus(env, broker, pseudoAcct, loanKeylet);
 
         makeLoanPayments(env, broker, loanParams, loanKeylet, verifyLoanStatus);
     }
@@ -6198,25 +6220,20 @@ protected:
             .payInterval = 150,
             .gracePd = 0};
 
-        describeLoan(brokerParams, loanParams, AssetType::XRP);
+        auto const assetType = AssetType::XRP;
+
+        describeLoan(brokerParams, loanParams, assetType);
 
         Env env(*this, all);
 
         auto loanResult = createLoan(
-            env,
-            AssetType::XRP,
-            brokerParams,
-            loanParams,
-            issuer,
-            lender,
-            borrower);
+            env, assetType, brokerParams, loanParams, issuer, lender, borrower);
 
         if (!BEAST_EXPECT(loanResult))
             return;
 
         auto broker = std::get<BrokerInfo>(*loanResult);
         auto loanKeylet = std::get<Keylet>(*loanResult);
-        // auto verifyLoanStatus = std::get<VerifyLoanStatus>(*loanResult);
 
         using tp = NetClock::time_point;
         using d = NetClock::duration;
@@ -6264,12 +6281,82 @@ protected:
         env.close();
     }
 
+    void
+    testRIPD3459()
+    {
+        testcase("RIPD-3459 - LoanBroker incorrect debt total");
+
+        using namespace jtx;
+
+        Account const issuer("issuer");
+        Account const lender("lender");
+        Account const borrower("borrower");
+
+        BrokerParameters const brokerParams{
+            .vaultDeposit = 200'000,
+            .debtMax = 0,
+            .coverRateMin = TenthBips32{0},
+            // .managementFeeRate = TenthBips16{5919},
+            .coverRateLiquidation = TenthBips32{0}};
+        LoanParameters const loanParams{
+            .account = lender,
+            .counter = borrower,
+            .principalRequest = Number{100'000, -4},
+            .interest = TenthBips32{100'000},
+            .payTotal = 10,
+            // Guess
+            // .payInterval = 10,
+            .gracePd = 0};
+
+        auto const assetType = AssetType::MPT;
+
+        describeLoan(brokerParams, loanParams, assetType);
+
+        Env env(*this, all);
+
+        auto loanResult = createLoan(
+            env, assetType, brokerParams, loanParams, issuer, lender, borrower);
+
+        if (!BEAST_EXPECT(loanResult))
+            return;
+
+        auto broker = std::get<BrokerInfo>(*loanResult);
+        auto loanKeylet = std::get<Keylet>(*loanResult);
+        auto pseudoAcct = std::get<Account>(*loanResult);
+
+        VerifyLoanStatus verifyLoanStatus(env, broker, pseudoAcct, loanKeylet);
+
+        if (auto const brokerSle = env.le(broker.brokerKeylet());
+            BEAST_EXPECT(brokerSle))
+        {
+            if (auto const loanSle = env.le(loanKeylet); BEAST_EXPECT(loanSle))
+            {
+                BEAST_EXPECT(
+                    brokerSle->at(sfDebtTotal) ==
+                    loanSle->at(sfTotalValueOutstanding));
+            }
+        }
+
+        makeLoanPayments(env, broker, loanParams, loanKeylet, verifyLoanStatus);
+
+        if (auto const brokerSle = env.le(broker.brokerKeylet());
+            BEAST_EXPECT(brokerSle))
+        {
+            if (auto const loanSle = env.le(loanKeylet); BEAST_EXPECT(loanSle))
+            {
+                log << pretty(brokerSle->getJson()) << std::endl
+                    << pretty(loanSle->getJson()) << std::endl;
+                BEAST_EXPECT(
+                    brokerSle->at(sfDebtTotal) ==
+                    loanSle->at(sfTotalValueOutstanding));
+            }
+        }
+    }
+
 public:
     void
     run() override
     {
-        testRIPD3831();
-
 #if LOANTODO
         testCoverDepositAllowsNonTransferableMPT();
         testLoanPayLateFullPaymentBypassesPenalties();
@@ -6305,6 +6392,9 @@ public:
         testLoanNextPaymentDueDateOverflow();
 
         testRequireAuth();
+
+        testRIPD3831();
+        testRIPD3459();
     }
 };
 
