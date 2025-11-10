@@ -253,12 +253,16 @@ LoanPay::doApply()
     //
     // Normally freeze status is checked in preflight, but we do it here to
     // avoid duplicating the check. It'll claim a fee either way.
-    bool const sendBrokerFeeToOwner = coverAvailableProxy >=
-            roundToAsset(asset,
-                         tenthBipsOfValue(
-                             debtTotalProxy.value(), coverRateMinimum),
-                         loanScale) &&
-        !isDeepFrozen(view, brokerOwner, asset);
+    bool const sendBrokerFeeToOwner = [&]() {
+        // Always round the minimum required up.
+        NumberRoundModeGuard mg(Number::upward);
+        return coverAvailableProxy >=
+            roundToAsset(
+                   asset,
+                   tenthBipsOfValue(debtTotalProxy.value(), coverRateMinimum),
+                   loanScale) &&
+            !isDeepFrozen(view, brokerOwner, asset);
+    }();
 
     auto const brokerPayee =
         sendBrokerFeeToOwner ? brokerOwner : brokerPseudoAccount;

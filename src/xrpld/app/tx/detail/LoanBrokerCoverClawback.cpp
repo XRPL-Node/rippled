@@ -133,9 +133,15 @@ determineClawAmount(
     Asset const& vaultAsset,
     std::optional<STAmount> const& amount)
 {
-    auto const maxClawAmount = sleBroker[sfCoverAvailable] -
-        tenthBipsOfValue(sleBroker[sfDebtTotal],
-                         TenthBips32(sleBroker[sfCoverRateMinimum]));
+    auto const maxClawAmount = [&]() {
+        // Always round the minimum required up
+        NumberRoundModeGuard mg1(Number::upward);
+        auto const minRequiredCover = tenthBipsOfValue(
+            sleBroker[sfDebtTotal], TenthBips32(sleBroker[sfCoverRateMinimum]));
+        // The subtraction probably won't round, but round down if it does.
+        NumberRoundModeGuard mg2(Number::downward);
+        return sleBroker[sfCoverAvailable] - minRequiredCover;
+    }();
     if (maxClawAmount <= beast::zero)
         return Unexpected(tecINSUFFICIENT_FUNDS);
 

@@ -86,6 +86,7 @@ protected:
         Number
         maxCoveredLoanValue(Number const& currentDebt) const
         {
+            NumberRoundModeGuard mg(Number::downward);
             auto debtLimit =
                 coverDeposit * tenthBipsPerUnity.value() / coverRateMin.value();
 
@@ -2059,6 +2060,7 @@ protected:
                          : std::max(
                                broker.vaultScale(env),
                                state.principalOutstanding.exponent())));
+                NumberRoundModeGuard mg(Number::upward);
                 auto const defaultAmount = roundToAsset(
                     broker.asset,
                     std::min(
@@ -6499,6 +6501,94 @@ protected:
         }
     }
 
+    void
+    testRoundingAllowsUndercoverage()
+    {
+        testcase("Minimum cover rounding allows undercoverage (XRP)");
+
+        using namespace jtx;
+        using namespace loanBroker;
+
+        Env env(*this, all);
+
+        Account const lender{"lender"};
+        Account const borrower{"borrower"};
+
+        auto const asset = xrpIssue();
+
+        env.fund(XRP(200'000), lender, borrower);
+        env.close();
+
+        // Vault with XRP asset
+        Vault vault{env};
+        auto [vaultCreate, vaultKeylet] =
+            vault.create({.owner = lender, .asset = xrpIssue()});
+        env(vaultCreate);
+        env.close();
+        BEAST_EXPECT(env.le(vaultKeylet));
+
+        // Seed the vault with XRP so it can fund the loan principal
+        PrettyAsset const xrpAsset{xrpIssue(), 1};
+
+        BrokerParameters const brokerParams{
+            .vaultDeposit = 1'000,
+            .debtMax = Number{0},
+            .coverRateMin = TenthBips32{10'000},
+            .coverDeposit = 82,
+        };
+
+        auto const brokerInfo =
+            createVaultAndBroker(env, xrpAsset, lender, brokerParams);
+        // Create a loan with principal 804 XRP and 0% interest (so
+        // DebtTotal increases by exactly 804)
+        env(loan::set(borrower, brokerInfo.brokerID, xrpAsset(804).value()),
+            loan::interestRate(TenthBips32(0)),
+            sig(sfCounterpartySignature, lender),
+            fee(env.current()->fees().base * 2));
+        BEAST_EXPECT(env.ter() == tesSUCCESS);
+        env.close();
+
+        // Verify DebtTotal is exactly 804
+        if (auto const brokerSle =
+                env.le(keylet::loanbroker(brokerInfo.brokerID));
+            BEAST_EXPECT(brokerSle))
+        {
+            std::cout << *brokerSle << std::endl;
+            BEAST_EXPECT(brokerSle->at(sfDebtTotal) == Number(804));
+        }
+
+        // Attempt to withdraw 2 XRP to self, leaving 80 XRP CoverAvailable.
+        // The minimum is 80.4 XRP, which rounds up to 81 XRP, so this fails.
+        env(coverWithdraw(lender, brokerInfo.brokerID, xrpAsset(2).value()),
+            ter(tecINSUFFICIENT_FUNDS));
+        BEAST_EXPECT(env.ter() == tecINSUFFICIENT_FUNDS);
+        env.close();
+
+        // Attempt to withdraw 1 XRP to self, leaving 81 XRP CoverAvailable.
+        // because that leaves sufficient cover, this succeeds
+        env(coverWithdraw(lender, brokerInfo.brokerID, xrpAsset(1).value()));
+        BEAST_EXPECT(env.ter() == tesSUCCESS);
+        env.close();
+
+        // Validate CoverAvailable == 80 XRP and DebtTotal remains 804
+        if (auto const brokerSle =
+                env.le(keylet::loanbroker(brokerInfo.brokerID));
+            BEAST_EXPECT(brokerSle))
+        {
+            std::cout << *brokerSle << std::endl;
+            BEAST_EXPECT(
+                brokerSle->at(sfCoverAvailable) == xrpAsset(81).value());
+            BEAST_EXPECT(brokerSle->at(sfDebtTotal) == Number(804));
+
+            // Also demonstrate that the true minimum (804 * 10%) exceeds 80
+            auto const theoreticalMin =
+                tenthBipsOfValue(Number(804), TenthBips32(10'000));
+            std::cout << "Theoretical min cover: " << theoreticalMin
+                      << std::endl;
+            BEAST_EXPECT(Number(804, -1) == theoreticalMin);
+        }
+    }
+
 public:
     void
     run() override
@@ -6542,6 +6632,7 @@ public:
         testRIPD3831();
         testRIPD3459();
         testRIPD3901();
+        testRoundingAllowsUndercoverage();
     }
 };
 

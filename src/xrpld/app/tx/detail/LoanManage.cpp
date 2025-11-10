@@ -148,20 +148,24 @@ LoanManage::defaultLoan(
     TenthBips32 const coverRateMinimum{brokerSle->at(sfCoverRateMinimum)};
     TenthBips32 const coverRateLiquidation{
         brokerSle->at(sfCoverRateLiquidation)};
-    auto const defaultCovered = roundToAsset(
-        vaultAsset,
-        /*
-         * This formula is from the XLS-66 spec, section 3.2.3.2 (State
-         * Changes), specifically "if the `tfLoanDefault` flag is set" / "Apply
-         * the First-Loss Capital to the Default Amount"
-         */
-        std::min(
-            tenthBipsOfValue(
-                tenthBipsOfValue(
-                    brokerDebtTotalProxy.value(), coverRateMinimum),
-                coverRateLiquidation),
-            totalDefaultAmount),
-        loanScale);
+    auto const defaultCovered = [&]() {
+        // Always round the minimum required up.
+        NumberRoundModeGuard mg(Number::upward);
+        auto const minimumCover =
+            tenthBipsOfValue(brokerDebtTotalProxy.value(), coverRateMinimum);
+        // Round the liquidation amount up, too
+        return roundToAsset(
+            vaultAsset,
+            /*
+             * This formula is from the XLS-66 spec, section 3.2.3.2 (State
+             * Changes), specifically "if the `tfLoanDefault` flag is set" /
+             * "Apply the First-Loss Capital to the Default Amount"
+             */
+            std::min(
+                tenthBipsOfValue(minimumCover, coverRateLiquidation),
+                totalDefaultAmount),
+            loanScale);
+    }();
 
     auto const vaultDefaultAmount = totalDefaultAmount - defaultCovered;
 
