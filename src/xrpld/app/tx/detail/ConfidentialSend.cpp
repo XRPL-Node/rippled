@@ -20,6 +20,7 @@
 #include <xrpld/app/misc/DelegateUtils.h>
 #include <xrpld/app/tx/detail/ConfidentialSend.h>
 
+#include <xrpl/ledger/CredentialHelpers.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/ConfidentialTransfer.h>
 #include <xrpl/protocol/Feature.h>
@@ -87,7 +88,7 @@ ConfidentialSend::preclaim(PreclaimContext const& ctx)
 
     // Check if the issuance allows transfer
     if (!sleIssuance->isFlag(lsfMPTCanTransfer))
-        return tecLOCKED;
+        return tecNO_AUTH;
 
     // Check if issuance allows confidential transfer
     if (sleIssuance->isFlag(lsfMPTNoConfidentialTransfer))
@@ -129,11 +130,11 @@ ConfidentialSend::preclaim(PreclaimContext const& ctx)
     // Check lock
     MPTIssue const mptIssue(mptIssuanceID);
     if (auto const ter = checkFrozen(ctx.view, account, mptIssue);
-        ter != tesSUCCESS)
+        !isTesSuccess(ter))
         return ter;
 
     if (auto const ter = checkFrozen(ctx.view, destination, mptIssue);
-        ter != tesSUCCESS)
+        !isTesSuccess(ter))
         return ter;
 
     // Check auth
@@ -169,15 +170,26 @@ TER
 ConfidentialSend::doApply()
 {
     auto const mptIssuanceID = ctx_.tx[sfMPTokenIssuanceID];
-    auto const account = ctx_.tx[sfAccount];
     auto const destination = ctx_.tx[sfDestination];
 
-    auto sleSender = view().peek(keylet::mptoken(mptIssuanceID, account));
+    auto sleSender = view().peek(keylet::mptoken(mptIssuanceID, account_));
     auto sleDestination =
         view().peek(keylet::mptoken(mptIssuanceID, destination));
 
-    if (!sleSender || !sleDestination)
+    auto sleDestAcct = view().peek(keylet::account(destination));
+
+    if (!sleSender || !sleDestination || !sleDestAcct)
         return tecINTERNAL;
+
+    if (auto err = verifyDepositPreauth(
+            ctx_.tx,
+            ctx_.view(),
+            account_,
+            destination,
+            sleDestAcct,
+            ctx_.journal);
+        !isTesSuccess(err))
+        return err;
 
     Slice const senderEc = ctx_.tx[sfSenderEncryptedAmount];
     Slice const destEc = ctx_.tx[sfDestinationEncryptedAmount];

@@ -178,6 +178,14 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  Buffer{badCiphertext, ecGamalEncryptedTotalLength},
              .err = temBAD_CIPHERTEXT});
 
+        // invalid pub key
+        mptAlice.convert(
+            {.account = bob,
+             .amt = 10,
+             .proof = "123",
+             .holderPubKey = Buffer{},
+             .err = temMALFORMED});
+
         // todo: change to to check proof size
         // mptAlice.convert(
         //     {.account = bob,
@@ -216,6 +224,30 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 {.account = alice,
                  .pubKey = mptAlice.getPubKey(alice),
                  .err = temDISABLED});
+        }
+
+        // pub key is invalid
+        {
+            Env env{*this, features};
+            Account const alice("alice");
+            Account const bob("bob");
+            MPTTester mptAlice(env, alice, {.holders = {bob}});
+
+            mptAlice.create(
+                {.ownerCount = 1,
+                 .holderCount = 0,
+                 .flags = tfMPTCanTransfer | tfMPTCanLock});
+
+            mptAlice.authorize({.account = bob});
+            env.close();
+            mptAlice.pay(alice, bob, 100);
+            env.close();
+
+            mptAlice.generateKeyPair(alice);
+            mptAlice.generateKeyPair(bob);
+
+            mptAlice.set(
+                {.account = alice, .pubKey = Buffer{}, .err = temMALFORMED});
         }
 
         // issuance has disabled confidential transfer
@@ -1190,6 +1222,64 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             mptAlice.send(
                 {.account = bob, .dest = carol, .amt = 5, .proof = "123"});
         }
+
+        // cannot send when MPTCanTransfer is not set
+        {
+            Env env{*this, features};
+            Account const alice("alice");
+            Account const bob("bob");
+            Account const carol("carol");
+            MPTTester mptAlice(env, alice, {.holders = {bob, carol}});
+
+            mptAlice.create(
+                {.ownerCount = 1, .holderCount = 0, .flags = tfMPTCanLock});
+
+            mptAlice.authorize({.account = bob});
+            mptAlice.authorize({.account = carol});
+
+            mptAlice.pay(alice, bob, 100);
+            mptAlice.pay(alice, carol, 50);
+
+            mptAlice.generateKeyPair(alice);
+            mptAlice.generateKeyPair(bob);
+            mptAlice.generateKeyPair(carol);
+
+            mptAlice.set(
+                {.account = alice, .pubKey = mptAlice.getPubKey(alice)});
+
+            // Convert 60 out of 100
+            mptAlice.convert(
+                {.account = bob,
+                 .amt = 60,
+                 .proof = "123",
+                 .holderPubKey = mptAlice.getPubKey(bob),
+                 .err = tesSUCCESS});
+
+            // bob merge inbox
+            mptAlice.mergeInbox({
+                .account = bob,
+            });
+
+            mptAlice.convert(
+                {.account = carol,
+                 .amt = 20,
+                 .proof = "123",
+                 .holderPubKey = mptAlice.getPubKey(carol),
+                 .err = tesSUCCESS});
+
+            // carol merge inbox
+            mptAlice.mergeInbox({
+                .account = carol,
+            });
+
+            // bob sends 10 to carol
+            mptAlice.send(
+                {.account = bob,
+                 .dest = carol,
+                 .amt = 10,  // will be encrypted internally
+                 .proof = "123",
+                 .err = tecNO_AUTH});
+        }
     }
 
     void
@@ -1759,6 +1849,142 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     }
 
     void
+    testSendDepositPreauth(FeatureBitset features)
+    {
+        testcase("Send deposit preauth");
+        using namespace test::jtx;
+        Env env(*this, features);
+
+        using namespace std::chrono;
+
+        Account const alice("alice");  // issuer
+        Account const bob("bob");      // holder
+        Account const carol("carol");
+        Account const dpIssuer("dpIssuer");  // holder
+
+        env.fund(XRP(50000), dpIssuer);
+        env.close();
+        char const credType[] = "abcde";
+        MPTTester mptAlice(env, alice, {.holders = {bob, carol}});
+
+        mptAlice.create(
+            {.ownerCount = 1,
+             .holderCount = 0,
+             .flags = tfMPTCanTransfer | tfMPTCanLock});
+
+        mptAlice.authorize({.account = bob});
+        mptAlice.authorize({.account = carol});
+
+        mptAlice.pay(alice, bob, 100);
+        mptAlice.pay(alice, carol, 50);
+
+        mptAlice.generateKeyPair(alice);
+        mptAlice.generateKeyPair(bob);
+        mptAlice.generateKeyPair(carol);
+
+        mptAlice.set({.account = alice, .pubKey = mptAlice.getPubKey(alice)});
+
+        // Bob require preauthorization
+        env(fset(bob, asfDepositAuth));
+        env.close();
+
+        mptAlice.convert(
+            {.account = carol,
+             .amt = 50,
+             .proof = "123",
+             .holderPubKey = mptAlice.getPubKey(carol),
+             .err = tesSUCCESS});
+        mptAlice.convert(
+            {.account = bob,
+             .amt = 50,
+             .proof = "123",
+             .holderPubKey = mptAlice.getPubKey(bob),
+             .err = tesSUCCESS});
+
+        // carol merge inbox
+        mptAlice.mergeInbox({
+            .account = carol,
+        });
+
+        // bob merge inbox
+        mptAlice.mergeInbox({
+            .account = bob,
+        });
+
+        // carol sends 10 to bob, but not authorized
+        mptAlice.send(
+            {.account = carol,
+             .dest = bob,
+             .amt = 10,  // will be encrypted internally
+             .proof = "123",
+             .err = tecNO_PERMISSION});
+
+        // Bob authorize alice
+        env(deposit::auth(bob, carol));
+        env.close();
+
+        mptAlice.send({
+            .account = carol,
+            .dest = bob,
+            .amt = 10,  // will be encrypted internally
+            .proof = "123",
+        });
+
+        // Create credentials
+        env(credentials::create(bob, dpIssuer, credType));
+        env.close();
+        env(credentials::accept(bob, dpIssuer, credType));
+        env.close();
+        auto const jv = credentials::ledgerEntry(env, bob, dpIssuer, credType);
+        std::string const credIdx = jv[jss::result][jss::index].asString();
+
+        mptAlice.send(
+            {.account = carol,
+             .dest = bob,
+             .amt = 10,  // will be encrypted internally
+             .proof = "123",
+             .credentials = {{credIdx}}});
+
+        // Bob revoke authorization
+        env(deposit::unauth(bob, carol));
+        env.close();
+
+        mptAlice.send(
+            {.account = carol,
+             .dest = bob,
+             .amt = 10,  // will be encrypted internally
+             .proof = "123",
+             .err = tecNO_PERMISSION});
+
+        mptAlice.send(
+            {.account = carol,
+             .dest = bob,
+             .amt = 10,  // will be encrypted internally
+             .proof = "123",
+             .credentials = {{credIdx}},
+             .err = tecNO_PERMISSION});
+
+        // Bob authorize credentials
+        env(deposit::authCredentials(bob, {{dpIssuer, credType}}));
+        env.close();
+
+        mptAlice.send(
+            {.account = carol,
+             .dest = bob,
+             .amt = 10,  // will be encrypted internally
+             .proof = "123",
+             .err = tecNO_PERMISSION});
+
+        mptAlice.send({
+            .account = carol,
+            .dest = bob,
+            .amt = 10,  // will be encrypted internally
+            .proof = "123",
+            .credentials = {{credIdx}},
+        });
+    }
+
+    void
     testWithFeats(FeatureBitset features)
     {
         testConvert(features);
@@ -1775,6 +2001,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
         testSend(features);
         testSendPreflight(features);
         testSendPreclaim(features);
+        testSendDepositPreauth(features);
 
         testDelete(features);
 
