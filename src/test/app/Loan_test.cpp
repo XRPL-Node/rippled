@@ -473,7 +473,8 @@ protected:
             coverRateMinimum(coverRateMinValue),
             coverRateLiquidation(TenthBips32(params.coverRateLiquidation)));
 
-        env(coverDeposit(lender, keylet.key, coverDepositValue));
+        if (coverDepositValue != beast::zero)
+            env(coverDeposit(lender, keylet.key, coverDepositValue));
 
         env.close();
 
@@ -496,7 +497,7 @@ protected:
             return LoanState{
                 .previousPaymentDate = loan->at(sfPreviousPaymentDate),
                 .startDate = tp{d{loan->at(sfStartDate)}},
-                .nextPaymentDate = loan->at(sfNextPaymentDueDate),
+                .nextPaymentDate = loan->at(~sfNextPaymentDueDate).value_or(0),
                 .paymentRemaining = loan->at(sfPaymentRemaining),
                 .loanScale = loan->at(sfLoanScale),
                 .totalValue = loan->at(sfTotalValueOutstanding),
