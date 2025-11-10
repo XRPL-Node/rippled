@@ -175,7 +175,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             else:
                 cmake_args_flags = f'{cmake_args}'
             configurations.append({
-                'config_name': config_name + "_ASAN",
+                'config_name': config_name + "_asan",
                 'cmake_args': cmake_args_flags,
                 'cmake_target': cmake_target,
                 'build_only': build_only,
@@ -189,7 +189,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             else:
                 cmake_args_flags = f'{cmake_args}'
             configurations.append({
-                'config_name': config_name+ "_TSAN",
+                'config_name': config_name+ "_tsan",
                 'cmake_args': cmake_args_flags,
                 'cmake_target': cmake_target,
                 'build_only': build_only,
