@@ -11,17 +11,21 @@ tools.info.package_ids:confs+=["user.package:sanitizers"]
 {% if compiler == "gcc" %}
 
 {% if sanitizers == "Address" %}
-rippled:tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow']
+tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow
+-fno-omit-frame-pointer -O1']
 {% elif sanitizers == "Thread" %}
-rippled:tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow']
+tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow -fno-omit-frame-pointer
+-O1']
 {% endif %}
 
-{% else %}
+{% elif compiler == "clang" %}
 
 {% if sanitizers == "Address" %}
-rippled:tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow']
+tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
+-fno-omit-frame-pointer -O1']
 {% elif sanitizers == "Thread" %}
-rippled:tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow']
+tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
+-fno-omit-frame-pointer -O1']
 {% endif %}
 
 {% endif %}

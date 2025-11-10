@@ -69,7 +69,6 @@ IndentFunctionDeclarationAfterType: false
 IndentRequiresClause: true
 IndentWidth: 4
 IndentWrappedFunctionNames: false
-InsertNewlineAtEOF: true
 NamespaceIndentation: None
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: false
