@@ -28,6 +28,7 @@ on:
         description: "The CMake target to build."
         type: string
         required: true
+
       sanitizers:
         description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
         required: true
@@ -48,12 +49,6 @@ on:
         description: "The configuration string (used for naming artifacts and such)."
         required: true
         type: string
-
-      sanitizers:
-        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-        required: true
-        type: string
-        default: ""
 
       nproc_subtract:
         description: "The number of processors to subtract when calculating parallelism."
