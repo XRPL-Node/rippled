@@ -190,7 +190,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'architecture': architecture,
                 'sanitizers': "Address"
             })
-            # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings. 
+            # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-tsan'
             if cxx_flags:
