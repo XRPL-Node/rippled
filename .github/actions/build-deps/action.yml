@@ -31,13 +31,15 @@ runs:
   steps:
     - name: Install Conan dependencies
       shell: bash
+      with:
+        workspace: $GITHUB_WORKSPACE
       env:
         BUILD_DIR: ${{ inputs.build_dir }}
         BUILD_NPROC: ${{ inputs.build_nproc }}
         BUILD_OPTION: ${{ inputs.force_build == 'true' && '*' || 'missing' }}
         BUILD_TYPE: ${{ inputs.build_type }}
         LOG_VERBOSITY: ${{ inputs.log_verbosity }}
-        ASAN_OPTIONS: suppressions=${{ GITHUB_WORKSPACE }}/external/asan_suppressions.txt
+        ASAN_OPTIONS: suppressions=${workspace}/external/asan_suppressions.txt
       run: |
         echo 'Installing dependencies.'
         echo $ASAN_OPTIONS
