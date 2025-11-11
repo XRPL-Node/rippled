@@ -165,13 +165,15 @@ jobs:
 
       - name: Run the separate tests
         if: ${{ !inputs.build_only }}
+        with:
+          sanitizers_supp_dir: ${{ github.workspace }}/external/
         working-directory: ${{ inputs.build_dir }}
         # Windows locks some of the build files while running tests, and parallel jobs can collide
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
-          ASAN_OPTIONS: "suppressions=${{ github.workspace }}/external/asan_suppressions.txt"
-          TSAN_OPTIONS: "suppressions=${{ github.workspace }}/external/tsan_suppressions.txt"
+          ASAN_OPTIONS: "suppressions=${{ sanitizers_supp_dir }}/asan_suppressions.txt"
+          TSAN_OPTIONS: "suppressions=${{ sanitizers_supp_dir }}/tsan_suppressions.txt"
         shell: bash
         run: |
           ctest \
