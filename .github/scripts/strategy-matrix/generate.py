@@ -168,22 +168,20 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # Use medium code model to avoid relocation errors with large binaries
             extra_warning_flags = '-mcmodel=medium'
             # Linker also needs to know about the code model
-            linker_flags = '-mcmodel=medium'
+            linker_flags = '-DCMAKE_EXE_LINKER_FLAGS="-mcmodel=medium" -DCMAKE_SHARED_LINKER_FLAGS="-mcmodel=medium"'
             # Suppress false positive warnings in GCC with stringop-overflow
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-stringop-overflow'
+                # Somc functions are too complex and huge for gcc compiler to handle variable tracking.
+                # Hence disable it.
+                cxx_flags += " -fno-var-tracking-assignments"
 
             if "-O0" in cxx_flags:
                 cxx_flags.replace("-O0", "-O1")
             else:
                 cxx_flags += " -O1"
 
-            # Somc functions are too complex and huge for compiler to handle variable tracking.
-            # Hence disable it.
-            if cxx_flags:
-                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer -fno-var-tracking-assignments {cxx_flags} {extra_warning_flags}" -DCMAKE_EXE_LINKER_FLAGS="{linker_flags}" -DCMAKE_SHARED_LINKER_FLAGS="{linker_flags}"'
-            else:
-                cmake_args_flags = f'{cmake_args}'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
             configurations.append({
                 'config_name': config_name + "_asan",
                 'cmake_args': cmake_args_flags,
@@ -197,10 +195,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-tsan'
-            if cxx_flags:
-                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer -fno-var-tracking-assignments {cxx_flags} {extra_warning_flags}" -DCMAKE_EXE_LINKER_FLAGS="{linker_flags}" -DCMAKE_SHARED_LINKER_FLAGS="{linker_flags}"'
-            else:
-                cmake_args_flags = f'{cmake_args}'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
             configurations.append({
                 'config_name': config_name+ "_tsan",
                 'cmake_args': cmake_args_flags,
