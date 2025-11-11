@@ -361,11 +361,8 @@ protected:
                     loan->at(sfPreviousPaymentDate) == previousPaymentDate);
                 env.test.BEAST_EXPECT(
                     loan->at(sfPaymentRemaining) == paymentRemaining);
-                if (paymentRemaining == 0)
-                    env.test.BEAST_EXPECT(!loan->at(~sfNextPaymentDueDate));
-                else
-                    env.test.BEAST_EXPECT(
-                        loan->at(sfNextPaymentDueDate) == nextPaymentDate);
+                env.test.BEAST_EXPECT(
+                    loan->at(sfNextPaymentDueDate) == nextPaymentDate);
                 env.test.BEAST_EXPECT(loan->at(sfLoanScale) == loanScale);
                 env.test.BEAST_EXPECT(
                     loan->at(sfTotalValueOutstanding) == totalValue);
@@ -498,7 +495,7 @@ protected:
             return LoanState{
                 .previousPaymentDate = loan->at(sfPreviousPaymentDate),
                 .startDate = tp{d{loan->at(sfStartDate)}},
-                .nextPaymentDate = loan->at(~sfNextPaymentDueDate).value_or(0),
+                .nextPaymentDate = loan->at(sfNextPaymentDueDate),
                 .paymentRemaining = loan->at(sfPaymentRemaining),
                 .loanScale = loan->at(sfLoanScale),
                 .totalValue = loan->at(sfTotalValueOutstanding),
@@ -1110,6 +1107,7 @@ protected:
                 detail::PaymentSpecialCase::final)
             {
                 state.paymentRemaining = 0;
+                state.nextPaymentDate = 0;
             }
             else
             {
@@ -2169,6 +2167,7 @@ protected:
                 state.totalValue = 0;
                 state.principalOutstanding = 0;
                 state.managementFeeOutstanding = 0;
+                state.nextPaymentDate = 0;
                 verifyLoanStatus(state);
 
                 // Once a loan is defaulted, it can't be managed
@@ -2313,6 +2312,7 @@ protected:
             state.managementFeeOutstanding = 0;
             state.previousPaymentDate = state.nextPaymentDate +
                 state.paymentInterval * (numPayments - 1);
+            state.nextPaymentDate = 0;
             verifyLoanStatus(state);
 
             verifyLoanStatus.checkPayment(
@@ -2815,6 +2815,7 @@ protected:
                         detail::PaymentSpecialCase::final)
                     {
                         state.paymentRemaining = 0;
+                        state.nextPaymentDate = 0;
                     }
                     else
                     {
