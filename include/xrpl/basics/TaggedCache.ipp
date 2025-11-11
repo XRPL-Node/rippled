@@ -2,11 +2,8 @@
 #define XRPL_BASICS_TAGGEDCACHE_IPP_INCLUDED
 
 #include <xrpl/basics/IntrusivePointer.ipp>
+#include <xrpl/basics/MallocTrim.h>
 #include <xrpl/basics/TaggedCache.h>
-
-#ifdef __GLIBC__
-#include <malloc.h>
-#endif
 
 namespace ripple {
 
@@ -331,9 +328,7 @@ TaggedCache<
                .count()
         << "ms";
 
-#ifdef __GLIBC__
-    (void)malloc_trim(0);
-#endif
+    mallocTrim(std::optional<std::string>(m_name), m_journal);
 }
 
 template <
