@@ -610,8 +610,11 @@ protected:
             case AssetType::IOU: {
                 PrettyAsset const asset{issuer[iouCurrency]};
 
-                env(trust(lender, asset(brokerParams.vaultDeposit)));
-                env(trust(borrower, asset(brokerParams.vaultDeposit)));
+                auto const limit = asset(
+                    100 *
+                    (brokerParams.vaultDeposit + brokerParams.coverDeposit));
+                env(trust(lender, limit));
+                env(trust(borrower, limit));
 
                 return asset;
             }
@@ -947,8 +950,14 @@ protected:
                 borrowerInitialBalance - totalSpent);
         };
 
-        auto truncate = [](Number const& n, int places = 3) {
-            auto const factor = Number{1, places};
+        auto const defaultRound = broker.asset.integral() ? 3 : 0;
+        auto truncate = [defaultRound](
+                            Number const& n,
+                            std::optional<int> places = std::nullopt) {
+            auto const p = places.value_or(defaultRound);
+            if (p == 0)
+                return n;
+            auto const factor = Number{1, p};
             return (n * factor).truncate() / factor;
         };
         while (state.paymentRemaining > 0)
@@ -6589,6 +6598,52 @@ protected:
         }
     }
 
+    void
+    testRIPD3902()
+    {
+        testcase("RIPD-3902 - 1 IOU loan payments");
+
+        using namespace jtx;
+
+        Account const issuer("issuer");
+        Account const lender("lender");
+        Account const borrower("borrower");
+
+        BrokerParameters const brokerParams{
+            .vaultDeposit = 10,
+            .debtMax = 0,
+            .coverRateMin = TenthBips32{0},
+            .managementFeeRate = TenthBips16{0},
+            .coverRateLiquidation = TenthBips32{0}};
+        LoanParameters const loanParams{
+            .account = lender,
+            .counter = borrower,
+            .principalRequest = Number{1, 0},
+            .interest = TenthBips32{100'000},
+            .payTotal = 5,
+            .payInterval = 150,
+            .gracePd = 60};
+
+        auto const assetType = AssetType::IOU;
+
+        Env env(*this, all);
+
+        auto loanResult = createLoan(
+            env, assetType, brokerParams, loanParams, issuer, lender, borrower);
+
+        if (!BEAST_EXPECT(loanResult))
+            return;
+
+        auto broker = std::get<BrokerInfo>(*loanResult);
+        auto loanKeylet = std::get<Keylet>(*loanResult);
+        auto pseudoAcct = std::get<Account>(*loanResult);
+
+        VerifyLoanStatus verifyLoanStatus(env, broker, pseudoAcct, loanKeylet);
+
+        makeLoanPayments(
+            env, broker, loanParams, loanKeylet, verifyLoanStatus, true);
+    }
+
 public:
     void
     run() override
@@ -6632,6 +6687,7 @@ public:
         testRIPD3831();
         testRIPD3459();
         testRIPD3901();
+        testRIPD3902();
         testRoundingAllowsUndercoverage();
     }
 };
