@@ -114,7 +114,10 @@ jobs:
         working-directory: ${{ inputs.build_dir }}
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
+          ASAN_OPTIONS: suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt
+          TSAN_OPTIONS: suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt
         run: |
+          echo "$ASAN_OPTIONS $TSAN_OPTIONS"
           cmake .. \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
             -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
