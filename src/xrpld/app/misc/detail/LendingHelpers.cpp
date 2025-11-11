@@ -518,9 +518,9 @@ doPayment(
         paymentRemainingProxy = 0;
 
         prevPaymentDateProxy = *nextDueDateProxy;
-        // Remove the field. This is the only condition where nextDueDate is
-        // allowed to be removed.
-        nextDueDateProxy = std::nullopt;
+        // Zero out the next due date. Since it's default, it'll be removed from
+        // the object.
+        nextDueDateProxy = 0;
 
         // Always zero out the the tracked values on a final payment
         principalOutstandingProxy = 0;
@@ -533,10 +533,8 @@ doPayment(
         {
             paymentRemainingProxy -= 1;
 
-            prevPaymentDateProxy = *nextDueDateProxy;
-            // STObject::OptionalField does not define operator+=, so do it the
-            // old-fashioned way.
-            nextDueDateProxy = *nextDueDateProxy + paymentInterval;
+            prevPaymentDateProxy = nextDueDateProxy;
+            nextDueDateProxy += paymentInterval;
         }
         XRPL_ASSERT_PARTS(
             principalOutstandingProxy > payment.trackedPrincipalDelta,
@@ -1699,8 +1697,8 @@ loanMakePayment(
     auto managementFeeOutstandingProxy = loan->at(sfManagementFeeOutstanding);
 
     // Next payment due date must be set unless the loan is complete
-    auto nextDueDateProxy = loan->at(~sfNextPaymentDueDate);
-    if (!nextDueDateProxy)
+    auto nextDueDateProxy = loan->at(sfNextPaymentDueDate);
+    if (*nextDueDateProxy == 0)
     {
         JLOG(j.warn()) << "Loan next payment due date is not set.";
         return Unexpected(tecINTERNAL);
@@ -1743,7 +1741,7 @@ loanMakePayment(
                "flag to make a late payment. Loan was created on "
             << startDate << ", prev payment due date is "
             << prevPaymentDateProxy << ", next payment due date is "
-            << *nextDueDateProxy << ", ledger time is "
+            << nextDueDateProxy << ", ledger time is "
             << view.parentCloseTime().time_since_epoch().count();
         return Unexpected(tecEXPIRED);
     }
@@ -1833,7 +1831,7 @@ loanMakePayment(
                 asset,
                 view,
                 principalOutstandingProxy,
-                *nextDueDateProxy,
+                nextDueDateProxy,
                 periodic,
                 lateInterestRate,
                 loanScale,
@@ -1948,8 +1946,7 @@ loanMakePayment(
     // overpayment handling
     if (paymentType == LoanPaymentType::overpayment &&
         loan->isFlag(lsfLoanOverpayment) && paymentRemainingProxy > 0 &&
-        nextDueDateProxy && totalPaid < amount &&
-        numPayments < loanMaximumPaymentsPerTransaction)
+        totalPaid < amount && numPayments < loanMaximumPaymentsPerTransaction)
     {
         TenthBips32 const overpaymentInterestRate{
             loan->at(sfOverpaymentInterestRate)};
