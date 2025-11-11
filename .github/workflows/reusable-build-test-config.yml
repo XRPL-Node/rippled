@@ -114,10 +114,7 @@ jobs:
         working-directory: ${{ inputs.build_dir }}
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
-          ASAN_OPTIONS: suppressions="$GITHUB_WORKSPACE"/external/asan_suppressions.txt
-          TSAN_OPTIONS: suppressions="$GITHUB_WORKSPACE"/external/tsan_suppressions.txt
         run: |
-          echo "$ASAN_OPTIONS $TSAN_OPTIONS"
           cmake .. \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
             -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
@@ -173,10 +170,10 @@ jobs:
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
-          ASAN_OPTIONS: suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt
-          TSAN_OPTIONS: suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt
         run: |
-          echo "$ASAN_OPTIONS $TSAN_OPTIONS"
+          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt"
+          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt"
+          echo "ASAN_OPTIONS=$ASAN_OPTIONS TSAN_OPTIONS=$TSAN_OPTIONS"
           ctest \
             --output-on-failure \
             -C "${BUILD_TYPE}" \
@@ -188,6 +185,9 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
+          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt"
+          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt"
+          echo "ASAN_OPTIONS=$ASAN_OPTIONS TSAN_OPTIONS=$TSAN_OPTIONS"
           ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
