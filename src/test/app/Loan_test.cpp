@@ -6523,8 +6523,6 @@ protected:
         Account const lender{"lender"};
         Account const borrower{"borrower"};
 
-        auto const asset = xrpIssue();
-
         env.fund(XRP(200'000), lender, borrower);
         env.close();
 
