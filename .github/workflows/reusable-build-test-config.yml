@@ -170,8 +170,8 @@ jobs:
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
-          ASAN_OPTIONS: suppressions=${{ inputs.build_dir }}/../external/asan_suppressions.txt
-          TSAN_OPTIONS: suppressions=${{ inputs.build_dir }}/../external/tsan_suppressions.txt
+          ASAN_OPTIONS: "suppressions=${{ github.workspace }}/external/asan_suppressions.txt"
+          TSAN_OPTIONS: "suppressions=${{ github.workspace }}/external/tsan_suppressions.txt"
         shell: bash
         run: |
           ctest \
@@ -211,8 +211,8 @@ jobs:
         shell: bash
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
-          ASAN_OPTIONS: suppressions=${working-directory}/../external/asan_suppressions.txt
-          TSAN_OPTIONS: suppressions=${working-directory}/../external/tsan_suppressions.txt
+          ASAN_OPTIONS: "suppressions=${{ github.workspace }}/external/asan_suppressions.txt"
+          TSAN_OPTIONS: "suppressions=${{ github.workspace }}/external/tsan_suppressions.txt"
         run: |
           ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
 
