@@ -165,9 +165,9 @@ jobs:
 
       - name: Run the separate tests
         if: ${{ !inputs.build_only }}
+        working-directory: ${{ inputs.build_dir }}
         with:
           sanitizers_supp_dir: ${{ github.workspace }}/external/
-        working-directory: ${{ inputs.build_dir }}
         # Windows locks some of the build files while running tests, and parallel jobs can collide
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
