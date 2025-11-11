@@ -3,26 +3,19 @@
 
 #include <boost/predef.h>
 
-#include <atomic>
-#include <chrono>
 #include <cstdio>
 #include <fstream>
 
 #if defined(__GLIBC__) && BOOST_OS_LINUX
 #include <malloc.h>
 #include <unistd.h>
+
+namespace {
+pid_t const cachedPid = ::getpid();
+}  // namespace
 #endif
 
 namespace ripple {
-
-namespace {
-#if defined(__GLIBC__) && BOOST_OS_LINUX
-std::atomic<bool> isTrimming{false};
-std::atomic<int64_t> lastTrimTimeMs{0};
-constexpr int64_t minTrimIntervalMs = 5000;  // TODO: derive from somewhere
-pid_t const cachedPid = ::getpid();
-#endif
-}  // namespace
 
 namespace detail {
 
@@ -73,38 +66,6 @@ mallocTrim(
 
     report.supported = true;
 
-    auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     std::chrono::steady_clock::now().time_since_epoch())
-                     .count();
-
-    if (nowMs - lastTrimTimeMs.load(std::memory_order_relaxed) <
-        minTrimIntervalMs)
-    {
-        JLOG(journal.debug()) << "malloc_trim skipped - rate limited";
-        return report;
-    }
-
-    bool expected = false;
-    if (!isTrimming.compare_exchange_strong(
-            expected, true, std::memory_order_acquire))
-    {
-        JLOG(journal.debug()) << "malloc_trim skipped - already in progress";
-        return report;
-    }
-
-    nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now().time_since_epoch())
-                .count();
-
-    if (nowMs - lastTrimTimeMs.load(std::memory_order_relaxed) <
-        minTrimIntervalMs)
-    {
-        isTrimming.store(false, std::memory_order_release);
-        JLOG(journal.debug())
-            << "malloc_trim skipped - rate limited (double check)";
-        return report;
-    }
-
     if (journal.debug())
     {
         std::string const tagStr = tag.value_or("default");
@@ -129,9 +90,6 @@ mallocTrim(
     {
         report.trimResult = ::malloc_trim(0);
     }
-
-    lastTrimTimeMs.store(nowMs, std::memory_order_relaxed);
-    isTrimming.store(false, std::memory_order_release);
 
     return report;
 #endif
