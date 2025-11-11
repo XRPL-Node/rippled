@@ -37,7 +37,10 @@ runs:
         BUILD_OPTION: ${{ inputs.force_build == 'true' && '*' || 'missing' }}
         BUILD_TYPE: ${{ inputs.build_type }}
         LOG_VERBOSITY: ${{ inputs.log_verbosity }}
+        ASAN_OPTIONS: suppressions="$GITHUB_WORKSPACE"/external/asan_suppressions.txt
+        TSAN_OPTIONS: suppressions="$GITHUB_WORKSPACE"/external/tsan_suppressions.txt
       run: |
+        echo "$ASAN_OPTIONS $TSAN_OPTIONS"
         echo 'Installing dependencies.'
         echo 'github.workspace === ${{ github.workspace }}'
         echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
