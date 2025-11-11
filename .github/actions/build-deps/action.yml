@@ -23,7 +23,7 @@ inputs:
     default: "verbose"
   sanitizers:
     description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-    required: true
+    required: false
     default: ""
 
 runs:
@@ -37,7 +37,6 @@ runs:
         BUILD_OPTION: ${{ inputs.force_build == 'true' && '*' || 'missing' }}
         BUILD_TYPE: ${{ inputs.build_type }}
         LOG_VERBOSITY: ${{ inputs.log_verbosity }}
-        SANITIZERS: ${{ inputs.sanitizers }}
       run: |
         echo 'Installing dependencies.'
         mkdir -p "${BUILD_DIR}"
