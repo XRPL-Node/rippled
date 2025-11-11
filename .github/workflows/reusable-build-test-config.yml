@@ -170,8 +170,8 @@ jobs:
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
-          ASAN_OPTIONS: "suppressions=${{GITHUB_WORKSPACE}}/external/asan_suppressions.txt"
-          TSAN_OPTIONS: "suppressions=${{GITHUB_WORKSPACE}}/external/tsan_suppressions.txt"
+          ASAN_OPTIONS: suppressions=${GITHUB_WORKSPACE}/external/asan_suppressions.txt
+          TSAN_OPTIONS: suppressions=${GITHUB_WORKSPACE}/external/tsan_suppressions.txt
         shell: bash
         run: |
           ctest \
