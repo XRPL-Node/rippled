@@ -12,20 +12,28 @@ tools.info.package_ids:confs+=["user.package:sanitizers"]
 
 {% if sanitizers == "Address" %}
 tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow
--fno-omit-frame-pointer -O1']
+-fno-omit-frame-pointer -O1 -Wno-stringop-overflow -mcmodel=medium']
+tools.build:sharedlinkflags+=['-mcmodel=medium']
+tools.build:exelinkflags+=['-mcmodel=medium']
 {% elif sanitizers == "Thread" %}
 tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow -fno-omit-frame-pointer
--O1']
+-O1 -Wno-stringop-overflow -Wno-tsan -mcmodel=medium']
+tools.build:sharedlinkflags+=['-mcmodel=medium']
+tools.build:exelinkflags+=['-mcmodel=medium']
 {% endif %}
 
 {% elif compiler == "clang" %}
 
 {% if sanitizers == "Address" %}
 tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -O1']
+-fno-omit-frame-pointer -O1 -mcmodel=medium']
+tools.build:sharedlinkflags+=['-mcmodel=medium']
+tools.build:exelinkflags+=['-mcmodel=medium']
 {% elif sanitizers == "Thread" %}
 tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -O1']
+-fno-omit-frame-pointer -O1 -mcmodel=medium']
+tools.build:sharedlinkflags+=['-mcmodel=medium']
+tools.build:exelinkflags+=['-mcmodel=medium']
 {% endif %}
 
 {% endif %}

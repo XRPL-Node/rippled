@@ -165,13 +165,19 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # so that they are easier to identify in the GitHub Actions UI, as long
         # names get truncated. Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
         if os['distro_version'] == 'bookworm':
+            # Use medium code model to avoid relocation errors with large binaries
+            extra_warning_flags = '-mcmodel=medium'
+            # Suppress false positive warnings in GCC with stringop-overflow
+            if os['compiler_name'] == 'gcc':
+                extra_warning_flags += ' -Wno-stringop-overflow'
+
             if "-O0" in cxx_flags:
                 cxx_flags.replace("-O0", "-O1")
             else:
                 cxx_flags += " -O1"
 
             if cxx_flags:
-                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags}"'
+                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
             else:
                 cmake_args_flags = f'{cmake_args}'
             configurations.append({
@@ -184,8 +190,11 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'architecture': architecture,
                 'sanitizers': "Address"
             })
+            # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings. 
+            if os['compiler_name'] == 'gcc':
+                extra_warning_flags += ' -Wno-tsan'
             if cxx_flags:
-                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags}"'
+                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
             else:
                 cmake_args_flags = f'{cmake_args}'
             configurations.append({
