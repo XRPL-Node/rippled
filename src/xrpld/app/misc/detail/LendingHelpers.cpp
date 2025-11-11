@@ -1732,66 +1732,10 @@ loanMakePayment(
 
     view.update(loan);
 
-    detail::PaymentComponentsPlus periodic{
-        detail::computePaymentComponents(
-            asset,
-            loanScale,
-            totalValueOutstandingProxy,
-            principalOutstandingProxy,
-            managementFeeOutstandingProxy,
-            periodicPayment,
-            periodicRate,
-            paymentRemainingProxy,
-            managementFeeRate),
-        serviceFee};
-    XRPL_ASSERT_PARTS(
-        periodic.trackedPrincipalDelta >= 0,
-        "ripple::loanMakePayment",
-        "regular payment valid principal");
-
     // -------------------------------------------------------------
-    // late payment handling
-    if (paymentType == LoanPaymentType::late)
-    {
-        TenthBips32 const lateInterestRate{loan->at(sfLateInterestRate)};
-        Number const latePaymentFee = loan->at(sfLatePaymentFee);
-
-        if (auto const latePaymentComponents = detail::computeLatePayment(
-                asset,
-                view,
-                principalOutstandingProxy,
-                *nextDueDateProxy,
-                periodic,
-                lateInterestRate,
-                loanScale,
-                latePaymentFee,
-                amount,
-                managementFeeRate,
-                j))
-        {
-            return doPayment(
-                *latePaymentComponents,
-                totalValueOutstandingProxy,
-                principalOutstandingProxy,
-                managementFeeOutstandingProxy,
-                paymentRemainingProxy,
-                prevPaymentDateProxy,
-                nextDueDateProxy,
-                paymentInterval);
-        }
-        else if (latePaymentComponents.error())
-        {
-            // error() will be the TER returned if a payment is not made. It
-            // will only evaluate to true if it's unsuccessful.
-            return Unexpected(latePaymentComponents.error());
-        }
-
-        // LCOV_EXCL_START
-        UNREACHABLE("ripple::loanMakePayment : invalid late payment result");
-        return Unexpected(tecINTERNAL);
-        // LCOV_EXCL_STOP
-    }
-    else if (hasExpired(view, nextDueDateProxy))
+    // A late payment not flagged as late overrides all other options.
+    if (paymentType != LoanPaymentType::late &&
+        hasExpired(view, nextDueDateProxy))
     {
         // If the payment is late, and the late flag was not set, it's not valid
         JLOG(j.warn())
@@ -1854,6 +1798,69 @@ loanMakePayment(
 
         // LCOV_EXCL_START
         UNREACHABLE("ripple::loanMakePayment : invalid full payment result");
+        return Unexpected(tecINTERNAL);
+        // LCOV_EXCL_STOP
+    }
+
+    // -------------------------------------------------------------
+    // compute the periodic payment info that will be needed whether the payment
+    // is late or regular
+    detail::PaymentComponentsPlus periodic{
+        detail::computePaymentComponents(
+            asset,
+            loanScale,
+            totalValueOutstandingProxy,
+            principalOutstandingProxy,
+            managementFeeOutstandingProxy,
+            periodicPayment,
+            periodicRate,
+            paymentRemainingProxy,
+            managementFeeRate),
+        serviceFee};
+    XRPL_ASSERT_PARTS(
+        periodic.trackedPrincipalDelta >= 0,
+        "ripple::loanMakePayment",
+        "regular payment valid principal");
+
+    // -------------------------------------------------------------
+    // late payment handling
+    if (paymentType == LoanPaymentType::late)
+    {
+        TenthBips32 const lateInterestRate{loan->at(sfLateInterestRate)};
+        Number const latePaymentFee = loan->at(sfLatePaymentFee);
+
+        if (auto const latePaymentComponents = detail::computeLatePayment(
+                asset,
+                view,
+                principalOutstandingProxy,
+                *nextDueDateProxy,
+                periodic,
+                lateInterestRate,
+                loanScale,
+                latePaymentFee,
+                amount,
+                managementFeeRate,
+                j))
+        {
+            return doPayment(
+                *latePaymentComponents,
+                totalValueOutstandingProxy,
+                principalOutstandingProxy,
+                managementFeeOutstandingProxy,
+                paymentRemainingProxy,
+                prevPaymentDateProxy,
+                nextDueDateProxy,
+                paymentInterval);
+        }
+        else if (latePaymentComponents.error())
+        {
+            // error() will be the TER returned if a payment is not made. It
+            // will only evaluate to true if it's unsuccessful.
+            return Unexpected(latePaymentComponents.error());
+        }
+
+        // LCOV_EXCL_START
+        UNREACHABLE("ripple::loanMakePayment : invalid late payment result");
         return Unexpected(tecINTERNAL);
         // LCOV_EXCL_STOP
     }
