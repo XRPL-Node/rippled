@@ -1059,8 +1059,7 @@ protected:
             // Make the payment
             env(pay(borrower, loanKeylet.key, transactionAmount));
 
-            env.close(
-                d{(state.previousPaymentDate + state.nextPaymentDate) / 2});
+            env.close(d{state.paymentInterval / 2});
 
             // Need to account for fees if the loan is in XRP
             PrettyAmount adjustment = broker.asset(0);
@@ -2227,13 +2226,28 @@ protected:
                         (Number{15, -1} / loanPaymentsPerFeeIncrement + 1)}),
                     ter(temINVALID_FLAG));
             }
-            // Try to send a payment marked as both full payment and
-            // overpayment. Do not include `txFlags`, so we don't duplicate the
-            // prior test transaction.
+            // Try to send a payment marked as multiple mutually exclusive
+            // payment types. Do not include `txFlags`, so we don't duplicate
+            // the prior test transaction.
+            env(pay(borrower,
+                    loanKeylet.key,
+                    broker.asset(state.periodicPayment * 2),
+                    tfLoanLatePayment | tfLoanFullPayment),
+                ter(temINVALID_FLAG));
+            env(pay(borrower,
+                    loanKeylet.key,
+                    broker.asset(state.periodicPayment * 2),
+                    tfLoanLatePayment | tfLoanOverpayment),
+                ter(temINVALID_FLAG));
             env(pay(borrower,
                     loanKeylet.key,
                     broker.asset(state.periodicPayment * 2),
                     tfLoanOverpayment | tfLoanFullPayment),
+                ter(temINVALID_FLAG));
+            env(pay(borrower,
+                    loanKeylet.key,
+                    broker.asset(state.periodicPayment * 2),
+                    tfLoanLatePayment | tfLoanOverpayment | tfLoanFullPayment),
                 ter(temINVALID_FLAG));
 
             {
@@ -4562,7 +4576,11 @@ protected:
             issuer, lender["IOU"](1'000), tfClearFreeze | tfClearDeepFreeze));
         env.close();
 
-        env(pay(borrower, loanKeylet.key, debtMaximumRequest));
+        // The payment is late by this point
+        env(pay(borrower, loanKeylet.key, debtMaximumRequest), ter(tecEXPIRED));
+        env.close();
+        env(pay(
+            borrower, loanKeylet.key, debtMaximumRequest, tfLoanLatePayment));
         env.close();
 
         // preclaim: tecKILLED
@@ -6777,11 +6795,10 @@ public:
         testPoC_UnsignedUnderflowOnFullPayAfterEarlyPeriodic();
         testLoanCoverMinimumRoundingExploit();
 #endif
-        testDustManipulation();
 
-        testIssuerLoan();
         testDisabled();
         testSelfLoan();
+        testIssuerLoan();
         testLoanSet();
         testLifecycle();
         testServiceFeeOnBrokerDeepFreeze();
@@ -6806,6 +6823,7 @@ public:
         testLoanNextPaymentDueDateOverflow();
 
         testRequireAuth();
+        testDustManipulation();
 
         testRIPD3831();
         testRIPD3459();
