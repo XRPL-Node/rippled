@@ -111,6 +111,7 @@ jobs:
         working-directory: ${{ inputs.build_dir }}
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
+          ASAN_OPTIONS: suppressions=${GITHUB_WORKSPACE}/external/asan_suppressions.txt
         run: |
           cmake .. \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
