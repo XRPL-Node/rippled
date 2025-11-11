@@ -67,7 +67,7 @@ var searchData=
   ['readcomment_64',['readComment',['../classJson_1_1Reader.html#ad2690e860a1b3332c5401fb0850ba065',1,'Json::Reader']]],
   ['readcppstylecomment_65',['readCppStyleComment',['../classJson_1_1Reader.html#a6716ef6290b0f469efaf8d379c357967',1,'Json::Reader']]],
   ['readcstylecomment_66',['readCStyleComment',['../classJson_1_1Reader.html#ae0ffe796abdc3c5851589ee500e28c79',1,'Json::Reader']]],
-  ['reader_67',['reader',['../classripple_1_1json__body_1_1reader.html#a152a69c57a7782af9941e619ab1de008',1,'ripple::json_body::reader::reader()'],['../classJson_1_1Reader.html#a066396d9d9f074e443c119259c3679d5',1,'Json::Reader::Reader()']]],
+  ['reader_67',['reader',['../classJson_1_1Reader.html#a066396d9d9f074e443c119259c3679d5',1,'Json::Reader::Reader()'],['../classripple_1_1json__body_1_1reader.html#a152a69c57a7782af9941e619ab1de008',1,'ripple::json_body::reader::reader()']]],
   ['readlimitfield_68',['readLimitField',['../namespaceripple_1_1RPC.html#a8ee18e94aa5290134fbc7f373ded485e',1,'ripple::RPC']]],
   ['readnumber_69',['readNumber',['../classJson_1_1Reader.html#ae65d2b26a07c9359cc330d5949dc6bde',1,'Json::Reader']]],
   ['readobject_70',['readObject',['../classJson_1_1Reader.html#aedd19bd38b90c9854259f7ee33201879',1,'Json::Reader']]],
