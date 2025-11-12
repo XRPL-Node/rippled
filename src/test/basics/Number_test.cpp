@@ -745,6 +745,8 @@ public:
         Number maxInt64{std::numeric_limits<std::int64_t>::max()};
         BEAST_EXPECT(maxInt64.exponent() <= 0);
 
+        // TODO: square maxInt64 and square Number::max()
+
         using namespace boost::multiprecision;
         // maxint64          9,223,372,036,854,775,808
         int128_t minMantissa{1'000'000'000'000'000'000LL};

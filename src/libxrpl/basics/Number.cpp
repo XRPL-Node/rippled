@@ -63,6 +63,12 @@ public:
     // add a digit
     void
     push(numberuint128 d) noexcept;
+#ifdef _MSC_VER
+    void
+    push(numberint128 d) noexcept;
+    void
+    push(std::int64_t d) noexcept;
+#endif
 
     // recover a digit
     unsigned
@@ -102,6 +108,20 @@ Number::Guard::push(numberuint128 d128) noexcept
     digits_ >>= 4;
     digits_ |= (d & 0x0000'0000'0000'000FULL) << 60;
 }
+
+#ifdef _MSC_VER
+void
+Number::Guard::push(numberint128 d) noexcept
+{
+    push(static_cast<numberuint128>(d));
+}
+
+void
+Number::Guard::push(std::int64_t d) noexcept
+{
+    push(static_cast<numberuint128>(d));
+}
+#endif
 
 inline unsigned
 Number::Guard::pop() noexcept
