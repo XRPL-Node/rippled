@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2025 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/tx/detail/VaultWithdraw.h>
 
 #include <xrpl/ledger/CredentialHelpers.h>
@@ -51,12 +32,6 @@ VaultWithdraw::preflight(PreflightContext const& ctx)
                 << "VaultWithdraw: zero/empty destination account.";
             return temMALFORMED;
         }
-    }
-    else if (ctx.tx.isFieldPresent(sfDestinationTag))
-    {
-        JLOG(ctx.j.debug()) << "VaultWithdraw: sfDestinationTag is set but "
-                               "sfDestination is not";
-        return temMALFORMED;
     }
 
     return tesSUCCESS;
@@ -116,37 +91,28 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
     }
 
     auto const account = ctx.tx[sfAccount];
-    auto const dstAcct = [&]() -> AccountID {
-        if (ctx.tx.isFieldPresent(sfDestination))
-            return ctx.tx.getAccountID(sfDestination);
-        return account;
-    }();
+    auto const dstAcct = ctx.tx[~sfDestination].value_or(account);
+    auto const sleDst = ctx.view.read(keylet::account(dstAcct));
+    if (sleDst == nullptr)
+        return account == dstAcct ? tecINTERNAL : tecNO_DST;
+
+    if (sleDst->isFlag(lsfRequireDestTag) &&
+        !ctx.tx.isFieldPresent(sfDestinationTag))
+        return tecDST_TAG_NEEDED;  // Cannot send without a tag
 
     // Withdrawal to a 3rd party destination account is essentially a transfer,
     // via shares in the vault. Enforce all the usual asset transfer checks.
-    AuthType authType = AuthType::Legacy;
-    if (account != dstAcct)
+    if (account != dstAcct && sleDst->isFlag(lsfDepositAuth))
     {
-        auto const sleDst = ctx.view.read(keylet::account(dstAcct));
-        if (sleDst == nullptr)
-            return tecNO_DST;
-
-        if (sleDst->isFlag(lsfRequireDestTag) &&
-            !ctx.tx.isFieldPresent(sfDestinationTag))
-            return tecDST_TAG_NEEDED;  // Cannot send without a tag
-
-        if (sleDst->isFlag(lsfDepositAuth))
-        {
-            if (!ctx.view.exists(keylet::depositPreauth(dstAcct, account)))
-                return tecNO_PERMISSION;
-        }
-        // The destination account must have consented to receive the asset by
-        // creating a RippleState or MPToken
-        authType = AuthType::StrongAuth;
+        if (!ctx.view.exists(keylet::depositPreauth(dstAcct, account)))
+            return tecNO_PERMISSION;
     }
 
-    // Destination MPToken (for an MPT) or trust line (for an IOU) must exist
-    // if not sending to Account.
+    // If sending to Account (i.e. not a transfer), we will also create (only
+    // if authorized) a trust line or MPToken as needed, in doApply().
+    // Destination MPToken or trust line must exist if _not_ sending to Account.
+    AuthType const authType =
+        account == dstAcct ? AuthType::WeakAuth : AuthType::StrongAuth;
     if (auto const ter = requireAuth(ctx.view, vaultAsset, dstAcct, authType);
         !isTesSuccess(ter))
         return ter;
@@ -307,11 +273,16 @@ VaultWithdraw::doApply()
         // else quietly ignore, account balance is not zero
     }
 
-    auto const dstAcct = [&]() -> AccountID {
-        if (ctx_.tx.isFieldPresent(sfDestination))
-            return ctx_.tx.getAccountID(sfDestination);
-        return account_;
-    }();
+    auto const dstAcct = ctx_.tx[~sfDestination].value_or(account_);
+    if (!vaultAsset.native() &&               //
+        dstAcct != vaultAsset.getIssuer() &&  //
+        dstAcct == account_)
+    {
+        if (auto const ter = addEmptyHolding(
+                view(), account_, mPriorBalance, vaultAsset, j_);
+            !isTesSuccess(ter) && ter != tecDUPLICATE)
+            return ter;
+    }
 
     // Transfer assets from vault to depositor or destination account.
     if (auto const ter = accountSend(
