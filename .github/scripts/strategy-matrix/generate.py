@@ -182,9 +182,9 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             if architecture['platform'] == 'linux/amd64':
                 # Add -mcmodel=medium to both compiler AND linker flags
                 # This is needed because sanitizers create very large binaries
-                cxx_flags += ' -mcmodel=medium'
-                exe_linker_flags+=' -mcmodel=medium'
-                shared_linker_flags += ' -mcmodel=medium'
+                cxx_flags += ' -mcmodel=large'
+                exe_linker_flags+=' -mcmodel=large'
+                shared_linker_flags += ' -mcmodel=large'
 
             if "-O0" in cxx_flags:
                 cxx_flags.replace("-O0", "-O1")
