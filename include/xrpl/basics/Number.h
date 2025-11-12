@@ -86,7 +86,7 @@ public:
     explicit constexpr Number() = default;
 
     Number(rep mantissa);
-    explicit Number(rep mantissa, int exponent);
+    explicit Number(internalrep mantissa, int exponent);
     explicit constexpr Number(
         internalrep mantissa,
         int exponent,
@@ -300,8 +300,6 @@ private:
     constexpr bool
     isnormal(MantissaRange const& range) const noexcept;
 
-    explicit Number(internalrep mantissa, int exponent);
-
     friend Number
     root(Number f, unsigned d);
     friend Number
@@ -316,12 +314,6 @@ inline constexpr Number::Number(
     unchecked) noexcept
     : mantissa_{mantissa}, exponent_{exponent}
 {
-}
-
-inline Number::Number(rep mantissa, int exponent)
-    : mantissa_{mantissa}, exponent_{exponent}
-{
-    normalize();
 }
 
 inline Number::Number(internalrep mantissa, int exponent)
