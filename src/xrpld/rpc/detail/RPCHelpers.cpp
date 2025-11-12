@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012-2014 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/ledger/OpenLedger.h>
@@ -24,11 +5,11 @@
 #include <xrpld/app/paths/TrustLine.h>
 #include <xrpld/app/rdb/RelationalDatabase.h>
 #include <xrpld/app/tx/detail/NFTokenUtils.h>
-#include <xrpld/ledger/View.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/DeliveredAmount.h>
 #include <xrpld/rpc/detail/RPCHelpers.h>
 
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/AccountID.h>
 #include <xrpl/protocol/RPCErr.h>
 #include <xrpl/protocol/nftPageMask.h>
@@ -190,7 +171,7 @@ getAccountObjects(
 
     auto& jvObjects = (jvResult[jss::account_objects] = Json::arrayValue);
 
-    // this is a mutable version of limit, used to seemlessly switch
+    // this is a mutable version of limit, used to seamlessly switch
     // to iterating directory entries when nftokenpages are exhausted
     uint32_t mlimit = limit;
 
@@ -373,7 +354,7 @@ ledgerFromRequest(T& ledger, JsonContext& context)
             indexValue = legacyLedger;
     }
 
-    if (hashValue)
+    if (!hashValue.isNull())
     {
         if (!hashValue.isString())
             return {rpcINVALID_PARAMS, "ledgerHashNotString"};
@@ -383,6 +364,9 @@ ledgerFromRequest(T& ledger, JsonContext& context)
             return {rpcINVALID_PARAMS, "ledgerHashMalformed"};
         return getLedger(ledger, ledgerHash, context);
     }
+
+    if (!indexValue.isConvertibleTo(Json::stringValue))
+        return {rpcINVALID_PARAMS, "ledgerIndexMalformed"};
 
     auto const index = indexValue.asString();
 
@@ -395,11 +379,11 @@ ledgerFromRequest(T& ledger, JsonContext& context)
     if (index == "closed")
         return getLedger(ledger, LedgerShortcut::CLOSED, context);
 
-    std::uint32_t iVal;
-    if (beast::lexicalCastChecked(iVal, index))
-        return getLedger(ledger, iVal, context);
+    std::uint32_t val;
+    if (!beast::lexicalCastChecked(val, index))
+        return {rpcINVALID_PARAMS, "ledgerIndexMalformed"};
 
-    return {rpcINVALID_PARAMS, "ledgerIndexMalformed"};
+    return getLedger(ledger, val, context);
 }
 }  // namespace
 
@@ -586,7 +570,7 @@ getLedger(T& ledger, LedgerShortcut shortcut, Context& context)
     return Status::OK;
 }
 
-// Explicit instantiaion of above three functions
+// Explicit instantiation of above three functions
 template Status
 getLedger<>(std::shared_ptr<ReadView const>&, uint32_t, Context&);
 
@@ -701,15 +685,21 @@ readLimitField(
     JsonContext const& context)
 {
     limit = range.rdefault;
-    if (auto const& jvLimit = context.params[jss::limit])
-    {
-        if (!(jvLimit.isUInt() || (jvLimit.isInt() && jvLimit.asInt() >= 0)))
-            return RPC::expected_field_error(jss::limit, "unsigned integer");
+    if (!context.params.isMember(jss::limit) ||
+        context.params[jss::limit].isNull())
+        return std::nullopt;
 
-        limit = jvLimit.asUInt();
-        if (!isUnlimited(context.role))
-            limit = std::max(range.rmin, std::min(range.rmax, limit));
-    }
+    auto const& jvLimit = context.params[jss::limit];
+    if (!(jvLimit.isUInt() || (jvLimit.isInt() && jvLimit.asInt() >= 0)))
+        return RPC::expected_field_error(jss::limit, "unsigned integer");
+
+    limit = jvLimit.asUInt();
+    if (limit == 0)
+        return RPC::invalid_field_error(jss::limit);
+
+    if (!isUnlimited(context.role))
+        limit = std::max(range.rmin, std::min(range.rmax, limit));
+
     return std::nullopt;
 }
 
@@ -938,7 +928,7 @@ chooseLedgerEntryType(Json::Value const& params)
 #pragma push_macro("LEDGER_ENTRY")
 #undef LEDGER_ENTRY
 
-#define LEDGER_ENTRY(tag, value, name, rpcName, fields) \
+#define LEDGER_ENTRY(tag, value, name, rpcName, ...) \
     {jss::name, jss::rpcName, tag},
 
 #include <xrpl/protocol/detail/ledger_entries.macro>
@@ -996,31 +986,6 @@ isAccountObjectsValidType(LedgerEntryType const& type)
         default:
             return true;
     }
-}
-
-beast::SemanticVersion const firstVersion("1.0.0");
-beast::SemanticVersion const goodVersion("1.0.0");
-beast::SemanticVersion const lastVersion("1.0.0");
-
-unsigned int
-getAPIVersionNumber(Json::Value const& jv, bool betaEnabled)
-{
-    static Json::Value const minVersion(RPC::apiMinimumSupportedVersion);
-    static Json::Value const invalidVersion(RPC::apiInvalidVersion);
-
-    Json::Value const maxVersion(
-        betaEnabled ? RPC::apiBetaVersion : RPC::apiMaximumSupportedVersion);
-    Json::Value requestedVersion(RPC::apiVersionIfUnspecified);
-    if (jv.isObject())
-    {
-        requestedVersion = jv.get(jss::api_version, requestedVersion);
-    }
-    if (!(requestedVersion.isInt() || requestedVersion.isUInt()) ||
-        requestedVersion < minVersion || requestedVersion > maxVersion)
-    {
-        requestedVersion = invalidVersion;
-    }
-    return requestedVersion.asUInt();
 }
 
 std::variant<std::shared_ptr<Ledger const>, Json::Value>

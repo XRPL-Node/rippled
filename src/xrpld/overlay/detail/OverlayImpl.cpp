@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/ValidatorList.h>
@@ -41,6 +22,7 @@
 #include <xrpl/server/SimpleWriter.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/asio/executor_work_guard.hpp>
 
 namespace ripple {
 
@@ -68,7 +50,7 @@ OverlayImpl::Child::~Child()
 //------------------------------------------------------------------------------
 
 OverlayImpl::Timer::Timer(OverlayImpl& overlay)
-    : Child(overlay), timer_(overlay_.io_service_)
+    : Child(overlay), timer_(overlay_.io_context_)
 {
 }
 
@@ -85,8 +67,10 @@ void
 OverlayImpl::Timer::async_wait()
 {
     timer_.expires_after(std::chrono::seconds(1));
-    timer_.async_wait(overlay_.strand_.wrap(std::bind(
-        &Timer::on_timer, shared_from_this(), std::placeholders::_1)));
+    timer_.async_wait(boost::asio::bind_executor(
+        overlay_.strand_,
+        std::bind(
+            &Timer::on_timer, shared_from_this(), std::placeholders::_1)));
 }
 
 void
@@ -121,19 +105,19 @@ OverlayImpl::OverlayImpl(
     ServerHandler& serverHandler,
     Resource::Manager& resourceManager,
     Resolver& resolver,
-    boost::asio::io_service& io_service,
+    boost::asio::io_context& io_context,
     BasicConfig const& config,
     beast::insight::Collector::ptr const& collector)
     : app_(app)
-    , io_service_(io_service)
-    , work_(std::in_place, std::ref(io_service_))
-    , strand_(io_service_)
+    , io_context_(io_context)
+    , work_(std::in_place, boost::asio::make_work_guard(io_context_))
+    , strand_(boost::asio::make_strand(io_context_))
     , setup_(setup)
     , journal_(app_.journal("Overlay"))
     , serverHandler_(serverHandler)
     , m_resourceManager(resourceManager)
     , m_peerFinder(PeerFinder::make_Manager(
-          io_service,
+          io_context,
           stopwatch(),
           app_.journal("PeerFinder"),
           config,
@@ -192,14 +176,16 @@ OverlayImpl::onHandoff(
     if (consumer.disconnect(journal))
         return handoff;
 
-    auto const slot = m_peerFinder->new_inbound_slot(
+    auto const [slot, result] = m_peerFinder->new_inbound_slot(
         beast::IPAddressConversion::from_asio(local_endpoint),
         beast::IPAddressConversion::from_asio(remote_endpoint));
 
     if (slot == nullptr)
     {
-        // self-connect, close
+        // connection refused either IP limit exceeded or self-connect
         handoff.moved = false;
+        JLOG(journal.debug())
+            << "Peer " << remote_endpoint << " refused, " << to_string(result);
         return handoff;
     }
 
@@ -256,6 +242,8 @@ OverlayImpl::onHandoff(
             setup_.public_ip,
             remote_endpoint.address(),
             app_);
+
+        consumer.setPublicKey(publicKey);
 
         {
             // The node gets a reserved slot if it is in our cluster
@@ -399,16 +387,17 @@ OverlayImpl::connect(beast::IP::Endpoint const& remote_endpoint)
         return;
     }
 
-    auto const slot = peerFinder().new_outbound_slot(remote_endpoint);
+    auto const [slot, result] = peerFinder().new_outbound_slot(remote_endpoint);
     if (slot == nullptr)
     {
-        JLOG(journal_.debug()) << "Connect: No slot for " << remote_endpoint;
+        JLOG(journal_.debug()) << "Connect: No slot for " << remote_endpoint
+                               << ": " << to_string(result);
         return;
     }
 
     auto const p = std::make_shared<ConnectAttempt>(
         app_,
-        io_service_,
+        io_context_,
         beast::IPAddressConversion::to_asio_endpoint(remote_endpoint),
         usage,
         setup_.context,
@@ -428,6 +417,9 @@ OverlayImpl::connect(beast::IP::Endpoint const& remote_endpoint)
 void
 OverlayImpl::add_active(std::shared_ptr<PeerImp> const& peer)
 {
+    beast::WrappedSink sink{journal_.sink(), peer->prefix()};
+    beast::Journal journal{sink};
+
     std::lock_guard lock(mutex_);
 
     {
@@ -451,11 +443,7 @@ OverlayImpl::add_active(std::shared_ptr<PeerImp> const& peer)
 
     list_.emplace(peer.get(), peer);
 
-    JLOG(journal_.debug()) << "activated " << peer->getRemoteAddress() << " ("
-                           << peer->id() << ":"
-                           << toBase58(
-                                  TokenType::NodePublic, peer->getNodePublic())
-                           << ")";
+    JLOG(journal.debug()) << "activated";
 
     // As we are not on the strand, run() must be called
     // while holding the lock, otherwise new I/O can be
@@ -560,7 +548,7 @@ OverlayImpl::start()
 void
 OverlayImpl::stop()
 {
-    strand_.dispatch(std::bind(&OverlayImpl::stopChildren, this));
+    boost::asio::dispatch(strand_, std::bind(&OverlayImpl::stopChildren, this));
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
         cond_.wait(lock, [this] { return list_.empty(); });
@@ -599,6 +587,9 @@ OverlayImpl::onWrite(beast::PropertyStream::Map& stream)
 void
 OverlayImpl::activate(std::shared_ptr<PeerImp> const& peer)
 {
+    beast::WrappedSink sink{journal_.sink(), peer->prefix()};
+    beast::Journal journal{sink};
+
     // Now track this peer
     {
         std::lock_guard lock(mutex_);
@@ -612,11 +603,7 @@ OverlayImpl::activate(std::shared_ptr<PeerImp> const& peer)
         (void)result.second;
     }
 
-    JLOG(journal_.debug()) << "activated " << peer->getRemoteAddress() << " ("
-                           << peer->id() << ":"
-                           << toBase58(
-                                  TokenType::NodePublic, peer->getNodePublic())
-                           << ")";
+    JLOG(journal.debug()) << "activated";
 
     // We just accepted this peer so we have non-zero active peers
     XRPL_ASSERT(size(), "ripple::OverlayImpl::activate : nonzero peers");
@@ -1222,7 +1209,16 @@ OverlayImpl::relay(
     {
         auto& txn = tx->get();
         SerialIter sit(makeSlice(txn.rawtransaction()));
-        relay = !isPseudoTx(STTx{sit});
+        try
+        {
+            relay = !isPseudoTx(STTx{sit});
+        }
+        catch (std::exception const&)
+        {
+            // Could not construct STTx, not relaying
+            JLOG(journal_.debug()) << "Could not construct STTx: " << hash;
+            return;
+        }
     }
 
     Overlay::PeerSequence peers = {};
@@ -1498,7 +1494,7 @@ setup_Overlay(BasicConfig const& config)
         if (!ip.empty())
         {
             boost::system::error_code ec;
-            setup.public_ip = beast::IP::Address::from_string(ip, ec);
+            setup.public_ip = boost::asio::ip::make_address(ip, ec);
             if (ec || beast::IP::is_private(setup.public_ip))
                 Throw<std::runtime_error>("Configured public IP is invalid");
         }
@@ -1592,7 +1588,7 @@ make_Overlay(
     ServerHandler& serverHandler,
     Resource::Manager& resourceManager,
     Resolver& resolver,
-    boost::asio::io_service& io_service,
+    boost::asio::io_context& io_context,
     BasicConfig const& config,
     beast::insight::Collector::ptr const& collector)
 {
@@ -1602,7 +1598,7 @@ make_Overlay(
         serverHandler,
         resourceManager,
         resolver,
-        io_service,
+        io_context,
         config,
         collector);
 }

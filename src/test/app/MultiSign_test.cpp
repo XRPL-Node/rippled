@@ -1,20 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx.h>
 
 #include <xrpld/core/ConfigSections.h>
@@ -63,7 +46,7 @@ class MultiSign_test : public beast::unit_test::suite
 
 public:
     void
-    test_noReserve(FeatureBitset features)
+    testNoReserve(FeatureBitset features)
     {
         testcase("No Reserve");
 
@@ -133,7 +116,7 @@ public:
     }
 
     void
-    test_signerListSet(FeatureBitset features)
+    testSignerListSet(FeatureBitset features)
     {
         testcase("SignerListSet");
 
@@ -215,7 +198,7 @@ public:
     }
 
     void
-    test_phantomSigners(FeatureBitset features)
+    testPhantomSigners(FeatureBitset features)
     {
         testcase("Phantom Signers");
 
@@ -282,7 +265,7 @@ public:
     }
 
     void
-    test_fee(FeatureBitset features)
+    testFee(FeatureBitset features)
     {
         testcase("Fee");
 
@@ -346,7 +329,7 @@ public:
     }
 
     void
-    test_misorderedSigners(FeatureBitset features)
+    testMisorderedSigners(FeatureBitset features)
     {
         testcase("Misordered Signers");
 
@@ -374,7 +357,7 @@ public:
     }
 
     void
-    test_masterSigners(FeatureBitset features)
+    testMasterSigners(FeatureBitset features)
     {
         testcase("Master Signers");
 
@@ -429,7 +412,7 @@ public:
     }
 
     void
-    test_regularSigners(FeatureBitset features)
+    testRegularSigners(FeatureBitset features)
     {
         testcase("Regular Signers");
 
@@ -494,7 +477,7 @@ public:
     }
 
     void
-    test_regularSignersUsingSubmitMulti(FeatureBitset features)
+    testRegularSignersUsingSubmitMulti(FeatureBitset features)
     {
         testcase("Regular Signers Using submit_multisigned");
 
@@ -734,7 +717,7 @@ public:
     }
 
     void
-    test_heterogeneousSigners(FeatureBitset features)
+    testHeterogeneousSigners(FeatureBitset features)
     {
         testcase("Heterogenious Signers");
 
@@ -881,7 +864,7 @@ public:
     // We want to always leave an account signable.  Make sure the that we
     // disallow removing the last way a transaction may be signed.
     void
-    test_keyDisable(FeatureBitset features)
+    testKeyDisable(FeatureBitset features)
     {
         testcase("Key Disable");
 
@@ -963,7 +946,7 @@ public:
     // Verify that the first regular key can be made for free using the
     // master key, but not when multisigning.
     void
-    test_regKey(FeatureBitset features)
+    testRegKey(FeatureBitset features)
     {
         testcase("Regular Key");
 
@@ -1000,7 +983,7 @@ public:
 
     // See if every kind of transaction can be successfully multi-signed.
     void
-    test_txTypes(FeatureBitset features)
+    testTxTypes(FeatureBitset features)
     {
         testcase("Transaction Types");
 
@@ -1089,7 +1072,7 @@ public:
     }
 
     void
-    test_badSignatureText(FeatureBitset features)
+    testBadSignatureText(FeatureBitset features)
     {
         testcase("Bad Signature Text");
 
@@ -1285,7 +1268,7 @@ public:
     }
 
     void
-    test_noMultiSigners(FeatureBitset features)
+    testNoMultiSigners(FeatureBitset features)
     {
         testcase("No Multisigners");
 
@@ -1304,7 +1287,7 @@ public:
     }
 
     void
-    test_multisigningMultisigner(FeatureBitset features)
+    testMultisigningMultisigner(FeatureBitset features)
     {
         testcase("Multisigning multisigner");
 
@@ -1381,7 +1364,7 @@ public:
     }
 
     void
-    test_signForHash(FeatureBitset features)
+    testSignForHash(FeatureBitset features)
     {
         testcase("sign_for Hash");
 
@@ -1464,7 +1447,7 @@ public:
     }
 
     void
-    test_amendmentTransition()
+    testAmendmentTransition()
     {
         testcase("Amendment Transition");
 
@@ -1559,7 +1542,7 @@ public:
     }
 
     void
-    test_signersWithTickets(FeatureBitset features)
+    testSignersWithTickets(FeatureBitset features)
     {
         testcase("Signers With Tickets");
 
@@ -1600,7 +1583,7 @@ public:
     }
 
     void
-    test_signersWithTags(FeatureBitset features)
+    testSignersWithTags(FeatureBitset features)
     {
         if (!features[featureExpandedSignerList])
             return;
@@ -1680,7 +1663,7 @@ public:
     }
 
     void
-    test_signerListSetFlags(FeatureBitset features)
+    testSignerListSetFlags(FeatureBitset features)
     {
         using namespace test::jtx;
 
@@ -1703,26 +1686,56 @@ public:
     }
 
     void
+    testSignerListObject(FeatureBitset features)
+    {
+        testcase("SignerList Object");
+
+        // Verify that the SignerList object is created correctly.
+        using namespace jtx;
+        Env env{*this, features};
+        Account const alice{"alice", KeyType::ed25519};
+        env.fund(XRP(1000), alice);
+        env.close();
+
+        // Attach phantom signers to alice.
+        env(signers(alice, 1, {{bogie, 1}, {demon, 1}}));
+        env.close();
+
+        // Verify that the SignerList object was created correctly.
+        auto const& sle = env.le(keylet::signers(alice.id()));
+        BEAST_EXPECT(sle);
+        BEAST_EXPECT(sle->getFieldArray(sfSignerEntries).size() == 2);
+        if (features[fixIncludeKeyletFields])
+        {
+            BEAST_EXPECT((*sle)[sfOwner] == alice.id());
+        }
+        else
+        {
+            BEAST_EXPECT(!sle->isFieldPresent(sfOwner));
+        }
+    }
+
+    void
     testAll(FeatureBitset features)
     {
-        test_noReserve(features);
-        test_signerListSet(features);
-        test_phantomSigners(features);
-        test_fee(features);
-        test_misorderedSigners(features);
-        test_masterSigners(features);
-        test_regularSigners(features);
-        test_regularSignersUsingSubmitMulti(features);
-        test_heterogeneousSigners(features);
-        test_keyDisable(features);
-        test_regKey(features);
-        test_txTypes(features);
-        test_badSignatureText(features);
-        test_noMultiSigners(features);
-        test_multisigningMultisigner(features);
-        test_signForHash(features);
-        test_signersWithTickets(features);
-        test_signersWithTags(features);
+        testNoReserve(features);
+        testSignerListSet(features);
+        testPhantomSigners(features);
+        testFee(features);
+        testMisorderedSigners(features);
+        testMasterSigners(features);
+        testRegularSigners(features);
+        testRegularSignersUsingSubmitMulti(features);
+        testHeterogeneousSigners(features);
+        testKeyDisable(features);
+        testRegKey(features);
+        testTxTypes(features);
+        testBadSignatureText(features);
+        testNoMultiSigners(features);
+        testMultisigningMultisigner(features);
+        testSignForHash(features);
+        testSignersWithTickets(features);
+        testSignersWithTags(features);
     }
 
     void
@@ -1739,10 +1752,13 @@ public:
         testAll(all - featureExpandedSignerList);
         testAll(all);
 
-        test_signerListSetFlags(all - fixInvalidTxFlags);
-        test_signerListSetFlags(all);
+        testSignerListSetFlags(all - fixInvalidTxFlags);
+        testSignerListSetFlags(all);
 
-        test_amendmentTransition();
+        testSignerListObject(all - fixIncludeKeyletFields);
+        testSignerListObject(all);
+
+        testAmendmentTransition();
     }
 };
 

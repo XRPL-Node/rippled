@@ -34,7 +34,7 @@ class Xrpl(ConanFile):
     ]
 
     test_requires = [
-        'doctest/2.4.11',
+        'doctest/2.4.12',
     ]
 
     tool_requires = [
@@ -102,11 +102,13 @@ class Xrpl(ConanFile):
     def configure(self):
         if self.settings.compiler == 'apple-clang':
             self.options['boost'].visibility = 'global'
+        if self.settings.compiler in ['clang', 'gcc']:
+            self.options['boost'].without_cobalt = True
 
     def requirements(self):
         # Conan 2 requires transitive headers to be specified
         transitive_headers_opt = {'transitive_headers': True} if conan_version.split('.')[0] == '2' else {}
-        self.requires('boost/1.86.0', force=True, **transitive_headers_opt)
+        self.requires('boost/1.88.0', force=True, **transitive_headers_opt)
         self.requires('date/3.0.4', **transitive_headers_opt)
         self.requires('lz4/1.10.0', force=True)
         self.requires('protobuf/3.21.12', force=True)
@@ -114,7 +116,7 @@ class Xrpl(ConanFile):
         if self.options.jemalloc:
             self.requires('jemalloc/5.3.0')
         if self.options.rocksdb:
-            self.requires('rocksdb/10.0.1')
+            self.requires('rocksdb/10.5.1')
         self.requires('xxhash/0.8.3', **transitive_headers_opt)
 
     exports_sources = (
@@ -177,6 +179,7 @@ class Xrpl(ConanFile):
             'boost::filesystem',
             'boost::json',
             'boost::program_options',
+            'boost::process',
             'boost::regex',
             'boost::system',
             'boost::thread',
