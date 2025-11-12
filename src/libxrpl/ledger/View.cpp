@@ -3467,7 +3467,7 @@ assetsToSharesDeposit(
     Number const shareTotal{
         unsafe_cast<std::int64_t>(issuance->at(sfOutstandingAmount)),
         Number::strong};
-    shares = (shareTotal * (assets / assetTotal)).truncate();
+    shares = ((shareTotal * assets) / assetTotal).truncate();
     return shares;
 }
 
@@ -3501,7 +3501,7 @@ sharesToAssetsDeposit(
     Number const shareTotal{
         unsafe_cast<std::int64_t>(issuance->at(sfOutstandingAmount)),
         Number::strong};
-    assets = assetTotal * (shares / shareTotal);
+    assets = (assetTotal * shares) / shareTotal;
     return assets;
 }
 
@@ -3532,7 +3532,7 @@ assetsToSharesWithdraw(
     Number const shareTotal{
         unsafe_cast<std::int64_t>(issuance->at(sfOutstandingAmount)),
         Number::strong};
-    Number result = shareTotal * (assets / assetTotal);
+    Number result = (shareTotal * assets) / assetTotal;
     if (truncate == TruncateShares::yes)
         result = result.truncate();
     shares = result;
@@ -3565,7 +3565,7 @@ sharesToAssetsWithdraw(
     Number const shareTotal{
         unsafe_cast<std::int64_t>(issuance->at(sfOutstandingAmount)),
         Number::strong};
-    assets = assetTotal * (shares / shareTotal);
+    assets = (assetTotal * shares) / shareTotal;
     return assets;
 }
 
