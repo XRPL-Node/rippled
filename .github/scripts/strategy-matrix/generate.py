@@ -180,11 +180,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # shared_linker_flags += '-static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64':
-                # Add -mcmodel=medium to both compiler AND linker flags
+                # Add -mcmodel=medium and -fPIC to both compiler AND linker flags
                 # This is needed because sanitizers create very large binaries
-                cxx_flags += ' -mcmodel=medium'
-                exe_linker_flags+='-mcmodel=medium'
-                shared_linker_flags += '-mcmodel=medium'
+                # -fPIC enables position independent code to avoid relocation range issues
+                cxx_flags += ' -mcmodel=medium -fPIC'
+                exe_linker_flags+='-mcmodel=medium -fPIC'
+                shared_linker_flags += '-mcmodel=medium -fPIC'
 
             if "-O0" in cxx_flags:
                 cxx_flags = cxx_flags.replace("-O0", "-O1")

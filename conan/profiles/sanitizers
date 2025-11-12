@@ -12,29 +12,29 @@ tools.info.package_ids:confs+=["user.package:sanitizers"]
 
 {% if sanitizers == "Address" %}
 tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -Wno-stringop-overflow -mcmodel=medium']
-tools.build:sharedlinkflags+=['-mcmodel=medium']
-tools.build:exelinkflags+=['-mcmodel=medium']
+-fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -Wno-stringop-overflow -mcmodel=medium -fPIC']
+tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
+tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
 {% elif sanitizers == "Thread" %}
 tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow -fno-omit-frame-pointer
 -fno-var-tracking-assignments
--O1 -Wno-stringop-overflow -Wno-tsan -mcmodel=medium']
-tools.build:sharedlinkflags+=['-mcmodel=medium']
-tools.build:exelinkflags+=['-mcmodel=medium']
+-O1 -Wno-stringop-overflow -Wno-tsan -mcmodel=medium -fPIC']
+tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
+tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
 {% endif %}
 
 {% elif compiler == "clang" %}
 
 {% if sanitizers == "Address" %}
 tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium']
-tools.build:sharedlinkflags+=['-mcmodel=medium']
-tools.build:exelinkflags+=['-mcmodel=medium']
+-fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium -fPIC']
+tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
+tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
 {% elif sanitizers == "Thread" %}
 tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium']
-tools.build:sharedlinkflags+=['-mcmodel=medium']
-tools.build:exelinkflags+=['-mcmodel=medium']
+-fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium -fPIC']
+tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
+tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
 {% endif %}
 
 {% endif %}
