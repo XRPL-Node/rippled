@@ -90,7 +90,6 @@ class Xrpl(ConanFile):
     }
 
     def set_version(self):
-        subprocess.run(["conan", "export", f'{self.recipe_folder}/external/openssl-3.6.0/'])
         if self.version is None:
             path = f'{self.recipe_folder}/src/libxrpl/protocol/BuildInfo.cpp'
             regex = r'versionString\s?=\s?\"(.*)\"'
