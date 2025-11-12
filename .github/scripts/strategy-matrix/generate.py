@@ -182,20 +182,20 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             if architecture['platform'] == 'linux/amd64':
                 # Add -mcmodel=medium to both compiler AND linker flags
                 # This is needed because sanitizers create very large binaries
-                cxx_flags += ' -mcmodel=large'
-                exe_linker_flags+=' -mcmodel=large'
-                shared_linker_flags += ' -mcmodel=large'
+                cxx_flags += ' -mcmodel=medium'
+                exe_linker_flags+=' -mcmodel=medium'
+                shared_linker_flags += ' -mcmodel=medium'
 
             if "-O0" in cxx_flags:
-                cxx_flags.replace("-O0", "-O1")
+                cxx_flags = cxx_flags.replace("-O0", "-O1")
             else:
                 cxx_flags += " -O1"
 
             cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
             if exe_linker_flags:
-                cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{exe_linker_flags}"'
+                cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS={exe_linker_flags}'
             if shared_linker_flags:
-                cmake_args_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{shared_linker_flags}"'
+                cmake_args_flags += f' -DCMAKE_SHARED_LINKER_FLAGS={shared_linker_flags}'
 
             configurations.append({
                 'config_name': config_name + "_asan",
