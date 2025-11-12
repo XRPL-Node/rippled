@@ -168,18 +168,27 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # Use medium code model to avoid relocation errors with large binaries
             # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=medium
             extra_warning_flags = ''
-            linker_flags = ''
-            if architecture['platform'] == 'linux/amd64':
-                # Add -mcmodel=medium to both compiler AND linker flags
-                # This is needed because sanitizers create very large binaries
-                cxx_flags += ' -mcmodel=medium'
-                linker_flags = ' -DCMAKE_EXE_LINKER_FLAGS=-mcmodel=medium -DCMAKE_SHARED_LINKER_FLAGS=-mcmodel=medium'
+            exe_linker_flags = ''
+            shared_linker_flags = ''
             # Suppress false positive warnings in GCC with stringop-overflow
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-stringop-overflow'
                 # Somc functions are too complex and huge for gcc compiler to handle variable tracking.
                 # Hence disable it.
                 cxx_flags += " -fno-var-tracking-assignments"
+                exe_linker_flags += '-static-libubsan,-static-libasan,-static-libtsan'
+                shared_linker_flags += '-static-libubsan,-static-libasan,-static-libtsan'
+
+            if architecture['platform'] == 'linux/amd64':
+                # Add -mcmodel=medium to both compiler AND linker flags
+                # This is needed because sanitizers create very large binaries
+                cxx_flags += ' -mcmodel=medium'
+                if exe_linker_flags:
+                    exe_linker_flags +=','
+                exe_linker_flags+='-mcmodel=medium'
+                if shared_linker_flags:
+                    shared_linker_flags +=','
+                shared_linker_flags += '-mcmodel=medium'
 
             if "-O0" in cxx_flags:
                 cxx_flags.replace("-O0", "-O1")
@@ -187,8 +196,11 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 cxx_flags += " -O1"
 
             cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
-            if linker_flags:
-                cmake_args_flags +=linker_flags
+            if exe_linker_flags:
+                cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS={exe_linker_flags}'
+            if shared_linker_flags:
+                cmake_args_flags += f' -DCMAKE_SHARED_LINKER_FLAGS={shared_linker_flags}'
+
             configurations.append({
                 'config_name': config_name + "_asan",
                 'cmake_args': cmake_args_flags,
@@ -203,8 +215,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-tsan'
             cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
-            if linker_flags:
-                cmake_args_flags +=linker_flags
+
+            if exe_linker_flags:
+                cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS={exe_linker_flags}'
+            if shared_linker_flags:
+                cmake_args_flags += f' -DCMAKE_SHARED_LINKER_FLAGS={shared_linker_flags}'
+
             configurations.append({
                 'config_name': config_name+ "_tsan",
                 'cmake_args': cmake_args_flags,
