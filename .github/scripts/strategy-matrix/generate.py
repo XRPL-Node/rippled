@@ -164,14 +164,16 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add the configuration to the list, with the most unique fields first,
         # so that they are easier to identify in the GitHub Actions UI, as long
         # names get truncated. Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
-        if os['distro_version'] == 'bookworm':
+        if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
             # Use medium code model to avoid relocation errors with large binaries
             # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=medium
             extra_warning_flags = ''
             linker_flags = ''
             if architecture['platform'] == 'linux/amd64':
+                # Add -mcmodel=medium to both compiler AND linker flags
+                # This is needed because sanitizers create very large binaries
                 cxx_flags += ' -mcmodel=medium'
-                linker_flags = ' -DCMAKE_EXE_LINKER_FLAGS="-mcmodel=medium" -DCMAKE_SHARED_LINKER_FLAGS="-mcmodel=medium"'
+                linker_flags = ' -DCMAKE_EXE_LINKER_FLAGS=-mcmodel=medium -DCMAKE_SHARED_LINKER_FLAGS=-mcmodel=medium'
             # Suppress false positive warnings in GCC with stringop-overflow
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-stringop-overflow'

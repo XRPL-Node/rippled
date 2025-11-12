@@ -1,4 +1,4 @@
 # Suppress voilations in Boost libraries
-interceptor_via_lib:libboost_.*
+interceptor_via_lib:^libboost_.*
 # Suprpress voilations in external code
 interceptor_name:^external/*
