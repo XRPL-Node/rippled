@@ -1384,15 +1384,14 @@ private:
         // equal asset deposit: unit test to exercise the rounding-down of
         // LPTokens in the AMMHelpers.cpp: adjustLPTokens calculations
         // The LPTokens need to have 16 significant digits and a fractional part
-        for (Number const deltaLPTokens :
+        for (Number const& deltaLPTokens :
              {Number{UINT64_C(100000'0000000009), -10},
               Number{UINT64_C(100000'0000000001), -10}})
         {
             testAMM([&](AMM& ammAlice, Env& env) {
                 // initial LPToken balance
                 IOUAmount const initLPToken = ammAlice.getLPTokensBalance();
-                IOUAmount const newLPTokens{
-                    deltaLPTokens.mantissa(), deltaLPTokens.exponent()};
+                IOUAmount const newLPTokens{deltaLPTokens};
 
                 // carol performs a two-asset deposit
                 ammAlice.deposit(
@@ -1417,11 +1416,9 @@ private:
                 Number const deltaXRP = fr * 1e10;
                 Number const deltaUSD = fr * 1e4;
 
-                STAmount const depositUSD =
-                    STAmount{USD, deltaUSD.mantissa(), deltaUSD.exponent()};
+                STAmount const depositUSD = STAmount{USD, deltaUSD};
 
-                STAmount const depositXRP =
-                    STAmount{XRP, deltaXRP.mantissa(), deltaXRP.exponent()};
+                STAmount const depositXRP = STAmount{XRP, deltaXRP};
 
                 // initial LPTokens (1e7) + newLPTokens
                 BEAST_EXPECT(ammAlice.expectBalances(

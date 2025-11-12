@@ -14,15 +14,14 @@
 
 #ifdef _MSC_VER
 #pragma message("Using boost::multiprecision::uint128_t")
-#include <boost/multiprecision/cpp_int.hpp>
-using uint128_t = boost::multiprecision::uint128_t;
-#else   // !defined(_MSC_VER)
-using uint128_t = __uint128_t;
-#endif  // !defined(_MSC_VER)
+#endif
 
 namespace ripple {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
+// TODO: Once the Rules switching is implemented, default to largeRange
+thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
+    smallRange;  // largeRange;
 
 Number::rounding_mode
 Number::getround()
@@ -63,7 +62,7 @@ public:
 
     // add a digit
     void
-    push(unsigned d) noexcept;
+    push(numberuint128 d) noexcept;
 
     // recover a digit
     unsigned
@@ -95,8 +94,10 @@ Number::Guard::is_negative() const noexcept
 }
 
 inline void
-Number::Guard::push(unsigned d) noexcept
+Number::Guard::push(numberuint128 d128) noexcept
 {
+    unsigned d = static_cast<unsigned>(d128);
+
     xbit_ = xbit_ || (digits_ & 0x0000'0000'0000'000F) != 0;
     digits_ >>= 4;
     digits_ |= (d & 0x0000'0000'0000'000FULL) << 60;
@@ -153,14 +154,42 @@ Number::Guard::round() noexcept
 
 // Number
 
-constexpr Number one{1000000000000000, -15, Number::unchecked{}};
+constexpr Number
+Number::oneSmall()
+{
+    return Number{
+        Number::smallRange.min, -Number::smallRange.power, Number::unchecked{}};
+};
 
+constexpr Number
+Number::oneLarge()
+{
+    return Number{
+        Number::largeRange.min, -Number::largeRange.power, Number::unchecked{}};
+};
+
+Number
+Number::one()
+{
+    if (&range_.get() == &smallRange)
+        return oneSmall();
+    XRPL_ASSERT(&range_.get() == &largeRange, "Number::one() : valid range_");
+    return oneLarge();
+}
+
+// Use the member names in this static function for now so the diff is cleaner
 void
-Number::normalize()
+Number::normalize(
+    internalrep& mantissa_,
+    int& exponent_,
+    internalrep const& minMantissa,
+    internalrep const& maxMantissa)
 {
     if (mantissa_ == 0)
     {
-        *this = Number{};
+        constexpr Number zero = Number{};
+        mantissa_ = zero.mantissa_;
+        exponent_ = zero.exponent_;
         return;
     }
     bool const negative = (mantissa_ < 0);
@@ -186,7 +215,9 @@ Number::normalize()
     mantissa_ = m;
     if ((exponent_ < minExponent) || (mantissa_ < minMantissa))
     {
-        *this = Number{};
+        constexpr Number zero = Number{};
+        mantissa_ = zero.mantissa_;
+        exponent_ = zero.exponent_;
         return;
     }
 
@@ -207,6 +238,13 @@ Number::normalize()
         mantissa_ = -mantissa_;
 }
 
+void
+Number::normalize()
+{
+    normalize(
+        mantissa_, exponent_, Number::minMantissa(), Number::maxMantissa());
+}
+
 Number&
 Number::operator+=(Number const& y)
 {
@@ -223,7 +261,7 @@ Number::operator+=(Number const& y)
         return *this;
     }
     XRPL_ASSERT(
-        isnormal() && y.isnormal(),
+        isnormal(Number::range_) && y.isnormal(Number::range_),
         "ripple::Number::operator+=(Number) : is normal");
     auto xm = mantissa();
     auto xe = exponent();
@@ -266,6 +304,8 @@ Number::operator+=(Number const& y)
     }
     if (xn == yn)
     {
+        auto const maxMantissa = Number::maxMantissa();
+
         xm += ym;
         if (xm > maxMantissa)
         {
@@ -288,6 +328,8 @@ Number::operator+=(Number const& y)
     }
     else
     {
+        auto const minMantissa = Number::minMantissa();
+
         if (xm > ym)
         {
             xm = xm - ym;
@@ -332,7 +374,7 @@ Number::operator+=(Number const& y)
 // Derived from Hacker's Delight Second Edition Chapter 10
 // by Henry S. Warren, Jr.
 static inline unsigned
-divu10(uint128_t& u)
+divu10(numberuint128& u)
 {
     // q = u * 0.75
     auto q = (u >> 1) + (u >> 2);
@@ -364,7 +406,7 @@ Number::operator*=(Number const& y)
         return *this;
     }
     XRPL_ASSERT(
-        isnormal() && y.isnormal(),
+        isnormal(Number::range_) && y.isnormal(Number::range_),
         "ripple::Number::operator*=(Number) : is normal");
     auto xm = mantissa();
     auto xe = exponent();
@@ -382,12 +424,15 @@ Number::operator*=(Number const& y)
         ym = -ym;
         yn = -1;
     }
-    auto zm = uint128_t(xm) * uint128_t(ym);
+    auto zm = numberuint128(xm) * numberuint128(ym);
     auto ze = xe + ye;
     auto zn = xn * yn;
     Guard g;
     if (zn == -1)
         g.set_negative();
+
+    auto const maxMantissa = Number::maxMantissa();
+
     while (zm > maxMantissa)
     {
         // The following is optimization for:
@@ -420,7 +465,7 @@ Number::operator*=(Number const& y)
     mantissa_ = xm * zn;
     exponent_ = xe;
     XRPL_ASSERT(
-        isnormal() || *this == Number{},
+        isnormal(Number::range_) || *this == Number{},
         "ripple::Number::operator*=(Number) : result is normal");
     return *this;
 }
@@ -448,10 +493,13 @@ Number::operator/=(Number const& y)
         dm = -dm;
         dp = -1;
     }
-    // Shift by 10^17 gives greatest precision while not overflowing uint128_t
-    // or the cast back to int64_t
-    uint128_t const f = 100'000'000'000'000'000;
-    mantissa_ = static_cast<std::int64_t>(uint128_t(nm) * f / uint128_t(dm));
+    // Shift by 10^17 gives greatest precision while not overflowing
+    // numberuint128 or the cast back to int64_t
+    // TODO: Can/should this be made bigger for largeRange?
+    constexpr numberuint128 f = 100'000'000'000'000'000;
+    static_assert(f == smallRange.min * 100);
+    static_assert(smallRange.power == 15);
+    mantissa_ = numberuint128(nm) * f / numberuint128(dm);
     exponent_ = ne - de - 17;
     mantissa_ *= np * dp;
     normalize();
@@ -460,7 +508,7 @@ Number::operator/=(Number const& y)
 
 Number::operator rep() const
 {
-    rep drops = mantissa_;
+    internalrep drops = mantissa_;
     int offset = exponent_;
     Guard g;
     if (drops != 0)
@@ -477,10 +525,12 @@ Number::operator rep() const
         }
         for (; offset > 0; --offset)
         {
-            if (drops > std::numeric_limits<decltype(drops)>::max() / 10)
+            if (drops > std::numeric_limits<rep>::max() / 10)
                 throw std::overflow_error("Number::operator rep() overflow");
             drops *= 10;
         }
+        if (drops > std::numeric_limits<rep>::max() / 10)
+            throw std::overflow_error("Number::operator rep() overflow");
         auto r = g.round();
         if (r == 1 || (r == 0 && (drops & 1) == 1))
         {
@@ -489,7 +539,7 @@ Number::operator rep() const
         if (g.is_negative())
             drops = -drops;
     }
-    return drops;
+    return static_cast<rep>(drops);
 }
 
 std::string
@@ -503,9 +553,11 @@ to_string(Number const& amount)
     auto mantissa = amount.mantissa();
 
     // Use scientific notation for exponents that are too small or too large
-    if (((exponent != 0) && ((exponent < -25) || (exponent > -5))))
+    auto const rangePower = Number::mantissaPower();
+    if (((exponent != 0) &&
+         ((exponent < -(rangePower + 10)) || (exponent > -(rangePower - 10)))))
     {
-        std::string ret = std::to_string(mantissa);
+        std::string ret = to_string(mantissa);
         ret.append(1, 'e');
         ret.append(std::to_string(exponent));
         return ret;
@@ -525,7 +577,7 @@ to_string(Number const& amount)
     ptrdiff_t const pad_prefix = 27;
     ptrdiff_t const pad_suffix = 23;
 
-    std::string const raw_value(std::to_string(mantissa));
+    std::string const raw_value(to_string(mantissa));
     std::string val;
 
     val.reserve(raw_value.length() + pad_prefix + pad_suffix);
@@ -594,7 +646,7 @@ Number
 power(Number const& f, unsigned n)
 {
     if (n == 0)
-        return one;
+        return Number::one();
     if (n == 1)
         return f;
     auto r = power(f, n / 2);
@@ -616,6 +668,8 @@ power(Number const& f, unsigned n)
 Number
 root(Number f, unsigned d)
 {
+    auto const one = Number::one();
+
     if (f == one || d == 1)
         return f;
     if (d == 0)
@@ -681,6 +735,8 @@ root(Number f, unsigned d)
 Number
 root2(Number f)
 {
+    auto const one = Number::one();
+
     if (f == one)
         return f;
     if (f < Number{})
@@ -721,6 +777,8 @@ root2(Number f)
 Number
 power(Number const& f, unsigned n, unsigned d)
 {
+    auto const one = Number::one();
+
     if (f == one)
         return f;
     auto g = std::gcd(n, d);

@@ -40,11 +40,17 @@ setSTNumberSwitchover(bool v)
 }
 
 /* The range for the mantissa when normalized */
-static std::int64_t constexpr minMantissa = 1000000000000000ull;
-static std::int64_t constexpr maxMantissa = 9999999999999999ull;
+static std::int64_t constexpr minMantissa = 1'000'000'000'000'000ull;
+static std::int64_t constexpr maxMantissa = minMantissa * 10 - 1;
 /* The range for the exponent when normalized */
 static int constexpr minExponent = -96;
 static int constexpr maxExponent = 80;
+
+std::pair<IOUAmount::mantissa_type, IOUAmount::exponent_type>
+IOUAmount::scaleNumber(Number const& number)
+{
+    return number.normalizeToRange(minMantissa, maxMantissa);
+}
 
 IOUAmount
 IOUAmount::minPositiveAmount()
@@ -64,8 +70,7 @@ IOUAmount::normalize()
     if (getSTNumberSwitchover())
     {
         Number const v{mantissa_, exponent_};
-        mantissa_ = v.mantissa();
-        exponent_ = v.exponent();
+        std::tie(mantissa_, exponent_) = scaleNumber(v);
         if (exponent_ > maxExponent)
             Throw<std::overflow_error>("value overflow");
         if (exponent_ < minExponent)
@@ -106,8 +111,7 @@ IOUAmount::normalize()
         mantissa_ = -mantissa_;
 }
 
-IOUAmount::IOUAmount(Number const& other)
-    : mantissa_(other.mantissa()), exponent_(other.exponent())
+IOUAmount::IOUAmount(Number const& other) : IOUAmount(scaleNumber(other))
 {
     if (exponent_ > maxExponent)
         Throw<std::overflow_error>("value overflow");

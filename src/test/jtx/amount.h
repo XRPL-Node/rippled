@@ -192,6 +192,12 @@ public:
         return to_json(asset_);
     }
 
+    bool
+    integral() const
+    {
+        return asset_.integral();
+    }
+
     template <std::integral T>
     PrettyAmount
     operator()(T v, Number::rounding_mode rounding = Number::getround()) const
@@ -240,6 +246,12 @@ struct XRP_t
     operator Issue() const
     {
         return xrpIssue();
+    }
+
+    bool
+    integral() const
+    {
+        return true;
     }
 
     /** Returns an amount of XRP as PrettyAmount,
@@ -366,6 +378,11 @@ public:
     {
         return issue();
     }
+    bool
+    integral() const
+    {
+        return issue().integral();
+    }
 
     /** Implicit conversion to Issue or Asset.
 
@@ -455,6 +472,11 @@ public:
     asset() const
     {
         return mptIssue();
+    }
+    bool
+    integral() const
+    {
+        return true;
     }
 
     /** Implicit conversion to MPTIssue or asset.

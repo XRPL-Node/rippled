@@ -1323,7 +1323,7 @@ multiply(STAmount const& v1, STAmount const& v2, Asset const& asset)
     if (getSTNumberSwitchover())
     {
         auto const r = Number{v1} * Number{v2};
-        return STAmount{asset, r.mantissa(), r.exponent()};
+        return STAmount{asset, r};
     }
 
     std::uint64_t value1 = v1.mantissa();

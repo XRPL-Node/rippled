@@ -47,9 +47,11 @@ public:
     static int const cMaxOffset = 80;
 
     // Maximum native value supported by the code
-    static std::uint64_t const cMinValue = 1000000000000000ull;
-    static std::uint64_t const cMaxValue = 9999999999999999ull;
-    static std::uint64_t const cMaxNative = 9000000000000000000ull;
+    constexpr static std::uint64_t cMinValue = 1'000'000'000'000'000ull;
+    static_assert(isPowerOfTen(cMinValue));
+    constexpr static std::uint64_t cMaxValue = cMinValue * 10 - 1;
+    static_assert(cMaxValue == 9'999'999'999'999'999ull);
+    static std::uint64_t const cMaxNative = 9'000'000'000'000'000'000ull;
 
     // Max native value on network.
     static std::uint64_t const cMaxNativeN = 100000000000000000ull;
@@ -136,7 +138,7 @@ public:
 
     template <AssetType A>
     STAmount(A const& asset, Number const& number)
-        : STAmount(asset, number.mantissa(), number.exponent())
+        : STAmount(asset, scaleNumber(asset, number))
     {
     }
 
@@ -154,6 +156,9 @@ public:
 
     int
     exponent() const noexcept;
+
+    bool
+    integral() const noexcept;
 
     bool
     native() const noexcept;
@@ -277,6 +282,22 @@ public:
     mpt() const;
 
 private:
+    template <AssetType A>
+    STAmount(
+        A const& asset,
+        std::tuple<mantissa_type, exponent_type, bool> parts)
+        : STAmount(
+              asset,
+              std::get<mantissa_type>(parts),
+              std::get<exponent_type>(parts),
+              std::get<bool>(parts))
+    {
+    }
+
+    template <AssetType A>
+    static std::tuple<mantissa_type, exponent_type, bool>
+    scaleNumber(A const& asset, Number const& number);
+
     static std::unique_ptr<STAmount>
     construct(SerialIter&, SField const& name);
 
@@ -436,6 +457,12 @@ STAmount::exponent() const noexcept
 }
 
 inline bool
+STAmount::integral() const noexcept
+{
+    return mAsset.integral();
+}
+
+inline bool
 STAmount::native() const noexcept
 {
     return mAsset.native();
@@ -531,12 +558,29 @@ STAmount::operator=(XRPAmount const& amount)
     return *this;
 }
 
+template <AssetType A>
+inline std::tuple<STAmount::mantissa_type, STAmount::exponent_type, bool>
+STAmount::scaleNumber(A const& asset, Number const& number)
+{
+    bool const negative = number.mantissa() < 0;
+    if (asset.integral())
+    {
+        return std::make_tuple(std::int64_t(number), 0, negative);
+    }
+    else
+    {
+        Number const working{negative ? -number : number};
+        auto const [mantissa, exponent] =
+            working.normalizeToRange(cMinValue, cMaxValue);
+
+        return std::make_tuple(mantissa, exponent, negative);
+    }
+}
+
 inline STAmount&
 STAmount::operator=(Number const& number)
 {
-    mIsNegative = number.mantissa() < 0;
-    mValue = mIsNegative ? -number.mantissa() : number.mantissa();
-    mOffset = number.exponent();
+    std::tie(mValue, mOffset, mIsNegative) = scaleNumber(mAsset, number);
     canonicalize();
     return *this;
 }
@@ -553,7 +597,7 @@ STAmount::clear()
 {
     // The -100 is used to allow 0 to sort less than a small positive values
     // which have a negative exponent.
-    mOffset = native() ? 0 : -100;
+    mOffset = integral() ? 0 : -100;
     mValue = 0;
     mIsNegative = false;
 }

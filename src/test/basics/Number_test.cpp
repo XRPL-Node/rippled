@@ -2,6 +2,7 @@
 #include <xrpl/beast/unit_test.h>
 #include <xrpl/protocol/IOUAmount.h>
 #include <xrpl/protocol/STAmount.h>
+#include <xrpl/protocol/SystemParameters.h>
 
 #include <sstream>
 #include <tuple>
@@ -685,19 +686,19 @@ public:
         Issue const issue;
         Number const n{7'518'783'80596, -5};
         saveNumberRoundMode const save{Number::setround(Number::to_nearest)};
-        auto res2 = STAmount{issue, n.mantissa(), n.exponent()};
+        auto res2 = STAmount{issue, n};
         BEAST_EXPECT(res2 == STAmount{7518784});
 
         Number::setround(Number::towards_zero);
-        res2 = STAmount{issue, n.mantissa(), n.exponent()};
+        res2 = STAmount{issue, n};
         BEAST_EXPECT(res2 == STAmount{7518783});
 
         Number::setround(Number::downward);
-        res2 = STAmount{issue, n.mantissa(), n.exponent()};
+        res2 = STAmount{issue, n};
         BEAST_EXPECT(res2 == STAmount{7518783});
 
         Number::setround(Number::upward);
-        res2 = STAmount{issue, n.mantissa(), n.exponent()};
+        res2 = STAmount{issue, n};
         BEAST_EXPECT(res2 == STAmount{7518784});
     }
 
@@ -726,6 +727,33 @@ public:
     }
 
     void
+    testInt64()
+    {
+        testcase("std::int64_t");
+
+        // Control case
+        BEAST_EXPECT(Number::maxMantissa() > 10);
+        Number ten{10};
+        BEAST_EXPECT(ten.exponent() <= 0);
+
+        BEAST_EXPECT(
+            std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
+        BEAST_EXPECT(Number::maxMantissa() > INITIAL_XRP.drops());
+        Number initalXrp{INITIAL_XRP};
+        BEAST_EXPECT(initalXrp.exponent() <= 0);
+
+        Number maxInt64{std::numeric_limits<std::int64_t>::max()};
+        BEAST_EXPECT(maxInt64.exponent() <= 0);
+
+        using namespace boost::multiprecision;
+        // maxint64          9,223,372,036,854,775,808
+        int128_t minMantissa{1'000'000'000'000'000'000LL};
+        int128_t maxMantissa{minMantissa * 10 - 1};
+        BEAST_EXPECT(minMantissa < std::numeric_limits<std::int64_t>::max());
+        BEAST_EXPECT(maxMantissa > std::numeric_limits<std::int64_t>::max());
+    }
+
+    void
     run() override
     {
         testZero();
@@ -746,6 +774,7 @@ public:
         test_inc_dec();
         test_toSTAmount();
         test_truncate();
+        testInt64();
     }
 };
 

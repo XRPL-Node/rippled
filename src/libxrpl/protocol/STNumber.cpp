@@ -50,8 +50,11 @@ STNumber::add(Serializer& s) const
     XRPL_ASSERT(
         getFName().fieldType == getSType(),
         "ripple::STNumber::add : field type match");
-    s.add64(value_.mantissa());
-    s.add32(value_.exponent());
+    constexpr std::int64_t min = 100'000'000'000'000'000LL;
+    constexpr std::int64_t max = min * 10 - 1;
+    auto const [mantissa, exponent] = value_.normalizeToRange(min, max);
+    s.add64(mantissa);
+    s.add32(exponent);
 }
 
 Number const&
