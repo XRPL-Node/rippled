@@ -21,16 +21,6 @@ namespace detail {
 
 #if defined(__GLIBC__) && BOOST_OS_LINUX
 
-std::string
-readFile(std::string const& path)
-{
-    std::ifstream ifs(path);
-    if (!ifs.is_open())
-        return {};
-    return std::string(
-        std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
-}
-
 long
 parseVmRSSkB(std::string const& status)
 {
@@ -68,16 +58,25 @@ mallocTrim(
 
     if (journal.debug())
     {
+        auto readFile = [](std::string const& path) -> std::string {
+            std::ifstream ifs(path);
+            if (!ifs.is_open())
+                return {};
+            return std::string(
+                std::istreambuf_iterator<char>(ifs),
+                std::istreambuf_iterator<char>());
+        };
+
         std::string const tagStr = tag.value_or("default");
         std::string const statusPath =
             "/proc/" + std::to_string(cachedPid) + "/status";
 
-        auto const statusBefore = detail::readFile(statusPath);
+        auto const statusBefore = readFile(statusPath);
         report.rssBeforeKB = detail::parseVmRSSkB(statusBefore);
 
         report.trimResult = ::malloc_trim(0);
 
-        auto const statusAfter = detail::readFile(statusPath);
+        auto const statusAfter = readFile(statusPath);
         report.rssAfterKB = detail::parseVmRSSkB(statusAfter);
 
         JLOG(journal.debug())
