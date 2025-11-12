@@ -5,6 +5,7 @@
 
 #include <xrpld/app/misc/LendingHelpers.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
+#include <xrpld/app/tx/detail/Batch.h>
 #include <xrpld/app/tx/detail/LoanSet.h>
 
 #include <xrpl/beast/xor_shift_engine.h>
@@ -3801,6 +3802,11 @@ protected:
         // From FIND-001
         testcase << "Batch Bypass Counterparty";
 
+        bool const lendingBatchEnabled = !std::any_of(
+            Batch::disabledTxTypes.begin(),
+            Batch::disabledTxTypes.end(),
+            [](auto const& disabled) { return disabled == ttLOAN_BROKER_SET; });
+
         using namespace jtx;
         using namespace std::chrono_literals;
         Env env(*this, all);
@@ -3846,7 +3852,8 @@ protected:
         env(batch::outer(borrower, seq, batchFee, tfAllOrNothing),
             batch::inner(forgedLoanSet, seq + 1),
             batch::inner(pay(borrower, lender, XRP(1)), seq + 2),
-            ter(temBAD_SIGNATURE));
+            ter(lendingBatchEnabled ? temBAD_SIGNATURE
+                                    : temINVALID_INNER_BATCH));
         env.close();
 
         // ? Check that the loan was NOT created
