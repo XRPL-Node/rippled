@@ -171,9 +171,9 @@ jobs:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
         run: |
-          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt"
-          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt"
-          echo "ASAN_OPTIONS=$ASAN_OPTIONS TSAN_OPTIONS=$TSAN_OPTIONS"
+          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
+          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
+          export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
           ctest \
             --output-on-failure \
             -C "${BUILD_TYPE}" \
@@ -185,9 +185,9 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan_suppressions.txt"
-          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan_suppressions.txt"
-          echo "ASAN_OPTIONS=$ASAN_OPTIONS TSAN_OPTIONS=$TSAN_OPTIONS"
+          export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
+          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
+          export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
           ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
