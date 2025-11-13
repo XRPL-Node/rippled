@@ -179,8 +179,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Disable mold linker - it's too strict about relocations with GCC runtime libs
                 # Use default linker (bfd/ld) which is more lenient with mixed code models
                 cmake_args += ' -Duse_mold=OFF'
-                exe_linker_flags += '  -fuse-ld=bfd'#-static-libubsan -static-libasan -static-libtsan'
-                shared_linker_flags += ' -fuse-ld=bfd'#-static-libubsan -static-libasan -static-libtsan'
+                exe_linker_flags += ' -fuse-ld=bfd -static-libubsan -static-libasan -static-libtsan'
+                shared_linker_flags += ' -fuse-ld=bfd -static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
                 # Add -mcmodel=large and -fPIC to both compiler AND linker flags
@@ -202,6 +202,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             if shared_linker_flags:
                 cmake_args_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{shared_linker_flags} -fsanitize=address,{sanitizers_flags}"'
 
+            # Add config with asan
             configurations.append({
                 'config_name': config_name + "_asan",
                 'cmake_args': cmake_args_flags,
@@ -212,9 +213,16 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'architecture': architecture,
                 'sanitizers': "Address"
             })
+            # Update configs for tsan
             # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
+            # Also tsan doesn't work well mcmode=large and bfd linker
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-tsan'
+                exe_linker_flags = exe_linker_flags.replace('-fuse-ld=bfd', '-fuse-ld=gold')
+                shared_linker_flags = shared_linker_flags.replace('-fuse-ld=bfd', '-fuse-ld=gold')
+                exe_linker_flags = exe_linker_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                shared_linker_flags = shared_linker_flags.replace('-mcmodel=large', '-mcmodel=medium')
+
             cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
 
             if exe_linker_flags:
