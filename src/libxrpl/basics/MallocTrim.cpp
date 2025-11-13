@@ -24,18 +24,43 @@ namespace detail {
 long
 parseVmRSSkB(std::string const& status)
 {
-    // "VmRSS:      123456 kB"
-    auto pos = status.find("VmRSS:");
-    if (pos == std::string::npos)
+    std::istringstream iss(status);
+    std::string line;
+
+    while (std::getline(iss, line))
+    {
+        // Allow leading spaces/tabs before the key.
+        auto const firstNonWs = line.find_first_not_of(" \t");
+        if (firstNonWs == std::string::npos)
+            continue;
+
+        constexpr char key[] = "VmRSS:";
+        constexpr auto keyLen = sizeof(key) - 1;
+
+        // Require the line (after leading whitespace) to start with "VmRSS:".
+        // Check if we have enough characters and the substring matches.
+        if (firstNonWs + keyLen > line.size() ||
+            line.substr(firstNonWs, keyLen) != key)
+            continue;
+
+        // Move past "VmRSS:" and any following whitespace.
+        auto pos = firstNonWs + keyLen;
+        while (pos < line.size() &&
+               std::isspace(static_cast<unsigned char>(line[pos])))
+        {
+            ++pos;
+        }
+
+        long value = -1;
+        if (std::sscanf(line.c_str() + pos, "%ld", &value) == 1)
+            return value;
+
+        // Found the key but couldn't parse a number.
         return -1;
+    }
 
-    pos += 6;  // past "VmRSS:"
-    while (pos < status.size() && status[pos] == ' ')
-        ++pos;
-
-    long value = -1;
-    std::sscanf(status.c_str() + pos, "%ld", &value);
-    return value;  // in kB
+    // No VmRSS line found.
+    return -1;
 }
 
 #endif  // __GLIBC__ && BOOST_OS_LINUX
