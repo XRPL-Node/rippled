@@ -64,7 +64,7 @@ public:
 
     operator Number() const noexcept
     {
-        return {value(), Number::strong};
+        return value();
     }
 
     /** Return the sign of the amount */
