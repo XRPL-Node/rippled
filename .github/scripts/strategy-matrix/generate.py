@@ -182,7 +182,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 #exe_linker_flags += '  -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
                 #shared_linker_flags += ' -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
 
-            if architecture['platform'] == 'linux/amd64':
+            if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
                 # Add -mcmodel=large and -fPIC to both compiler AND linker flags
                 # This is needed because sanitizers create very large binaries
                 # -fPIC enables position independent code to avoid relocation range issues
