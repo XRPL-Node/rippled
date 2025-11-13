@@ -223,13 +223,6 @@ Number::Guard::doRound(rep& drops)
 constexpr Number one{1000000000000000, -15, Number::unchecked{}};
 
 void
-Number::checkInteger(char const* what) const
-{
-    if (enforceInteger_ == strong && !valid())
-        throw std::overflow_error(what);
-}
-
-void
 Number::normalize()
 {
     if (mantissa_ == 0)
@@ -270,27 +263,9 @@ Number::normalize()
         mantissa_ = -mantissa_;
 }
 
-bool
-Number::valid() const noexcept
-{
-    if (enforceInteger_ != none)
-    {
-        static Number const max = maxIntValue;
-        static Number const maxNeg = -maxIntValue;
-        // Avoid making a copy
-        if (mantissa_ < 0)
-            return *this >= maxNeg;
-        return *this <= max;
-    }
-    return true;
-}
-
 Number&
 Number::operator+=(Number const& y)
 {
-    // The strictest setting prevails
-    enforceInteger_ = std::max(enforceInteger_, y.enforceInteger_);
-
     if (y == Number{})
         return *this;
     if (*this == Number{})
@@ -378,9 +353,6 @@ Number::operator+=(Number const& y)
     }
     mantissa_ = xm * xn;
     exponent_ = xe;
-
-    checkInteger("Number::addition integer overflow");
-
     return *this;
 }
 
@@ -415,9 +387,6 @@ divu10(uint128_t& u)
 Number&
 Number::operator*=(Number const& y)
 {
-    // The strictest setting prevails
-    enforceInteger_ = std::max(enforceInteger_, y.enforceInteger_);
-
     if (*this == Number{})
         return *this;
     if (y == Number{})
@@ -469,18 +438,12 @@ Number::operator*=(Number const& y)
     XRPL_ASSERT(
         isnormal() || *this == Number{},
         "ripple::Number::operator*=(Number) : result is normal");
-
-    checkInteger("Number::multiplication integer overflow");
-
     return *this;
 }
 
 Number&
 Number::operator/=(Number const& y)
 {
-    // The strictest setting prevails
-    enforceInteger_ = std::max(enforceInteger_, y.enforceInteger_);
-
     if (y == Number{})
         throw std::overflow_error("Number: divide by 0");
     if (*this == Number{})
@@ -508,9 +471,6 @@ Number::operator/=(Number const& y)
     exponent_ = ne - de - 17;
     mantissa_ *= np * dp;
     normalize();
-
-    checkInteger("Number::division integer overflow");
-
     return *this;
 }
 
