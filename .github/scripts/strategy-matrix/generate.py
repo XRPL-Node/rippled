@@ -179,8 +179,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Disable mold linker - it's too strict about relocations with GCC runtime libs
                 # Use gold or default linker instead
                 cmake_args += ' -Duse_mold=OFF'
-                exe_linker_flags += '  -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
-                shared_linker_flags += ' -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
+                exe_linker_flags += '  -fuse-ld=lld'#-static-libubsan -static-libasan -static-libtsan'
+                shared_linker_flags += ' -fuse-ld=lld'#-static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64':
                 # Add -mcmodel=medium and -fPIC to both compiler AND linker flags
