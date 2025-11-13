@@ -356,7 +356,7 @@ Number::operator-() const noexcept
 inline Number&
 Number::operator++()
 {
-    *this += Number{1000000000000000, -15, unchecked{}};
+    *this += one();
     return *this;
 }
 
@@ -371,7 +371,7 @@ Number::operator++(int)
 inline Number&
 Number::operator--()
 {
-    *this -= Number{1000000000000000, -15, unchecked{}};
+    *this -= one();
     return *this;
 }
 

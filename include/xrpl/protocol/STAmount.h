@@ -563,13 +563,13 @@ inline std::tuple<STAmount::mantissa_type, STAmount::exponent_type, bool>
 STAmount::scaleNumber(A const& asset, Number const& number)
 {
     bool const negative = number.mantissa() < 0;
+    Number const working{negative ? -number : number};
     if (asset.integral())
     {
-        return std::make_tuple(std::int64_t(number), 0, negative);
+        return std::make_tuple(std::int64_t(working), 0, negative);
     }
     else
     {
-        Number const working{negative ? -number : number};
         auto const [mantissa, exponent] =
             working.normalizeToRange(cMinValue, cMaxValue);
 
