@@ -1,8 +1,10 @@
+#include <xrpl/protocol/IOUAmount.h>
+//
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/Number.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/Zero.h>
-#include <xrpl/protocol/IOUAmount.h>
+#include <xrpl/protocol/STAmount.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -40,11 +42,13 @@ setSTNumberSwitchover(bool v)
 }
 
 /* The range for the mantissa when normalized */
-static std::int64_t constexpr minMantissa = 1'000'000'000'000'000ull;
-static std::int64_t constexpr maxMantissa = minMantissa * 10 - 1;
+// log(2^63,10) ~ 18.96
+//
+static std::int64_t constexpr minMantissa = STAmount::cMinValue;
+static std::int64_t constexpr maxMantissa = STAmount::cMaxValue;
 /* The range for the exponent when normalized */
-static int constexpr minExponent = -96;
-static int constexpr maxExponent = 80;
+static int constexpr minExponent = STAmount::cMinOffset;
+static int constexpr maxExponent = STAmount::cMaxOffset;
 
 std::pair<IOUAmount::mantissa_type, IOUAmount::exponent_type>
 IOUAmount::scaleNumber(Number const& number)

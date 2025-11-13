@@ -50,11 +50,25 @@ STNumber::add(Serializer& s) const
     XRPL_ASSERT(
         getFName().fieldType == getSType(),
         "ripple::STNumber::add : field type match");
-    constexpr std::int64_t min = 100'000'000'000'000'000LL;
-    constexpr std::int64_t max = min * 10 - 1;
-    auto const [mantissa, exponent] = value_.normalizeToRange(min, max);
-    s.add64(mantissa);
-    s.add32(exponent);
+    if (value_.mantissa() <= std::numeric_limits<std::int64_t>::max() &&
+        value_.mantissa() >= std::numeric_limits<std::int64_t>::min())
+    {
+        // If the mantissa fits in the range of std::int64_t, write it directly.
+        // This preserves the maximum available precision.
+        // With the small range, all numbers should be written this way. With
+        // the large range, it's likely that most numbers will be written this
+        // way.
+        s.add64(static_cast<std::int64_t>(value_.mantissa()));
+        s.add32(value_.exponent());
+    }
+    else
+    {
+        constexpr std::int64_t min = 100'000'000'000'000'000LL;
+        constexpr std::int64_t max = min * 10 - 1;
+        auto const [mantissa, exponent] = value_.normalizeToRange(min, max);
+        s.add64(mantissa);
+        s.add32(exponent);
+    }
 }
 
 Number const&

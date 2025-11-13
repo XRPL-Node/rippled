@@ -310,8 +310,8 @@ STAmount&
 STAmount::operator=(IOUAmount const& iou)
 {
     XRPL_ASSERT(
-        native() == false,
-        "ripple::STAmount::operator=(IOUAmount) : is not XRP");
+        integral() == false,
+        "ripple::STAmount::operator=(IOUAmount) : is not integral");
     mOffset = iou.exponent();
     mIsNegative = iou < beast::zero;
     if (mIsNegative)
@@ -851,8 +851,9 @@ STAmount::canonicalize()
 
         if (getSTNumberSwitchover())
         {
+            auto const value = unsafe_cast<std::int64_t>(mValue);
             Number num(
-                mIsNegative ? -mValue : mValue, mOffset, Number::unchecked{});
+                mIsNegative ? -value : value, mOffset, Number::unchecked{});
             auto set = [&](auto const& val) {
                 mIsNegative = val.value() < 0;
                 mValue = mIsNegative ? -val.value() : val.value();

@@ -22,14 +22,14 @@ template <typename T>
 constexpr std::optional<int>
 logTen(T value)
 {
-    int power = 0;
+    int log = 0;
     while (value >= 10 && value % 10 == 0)
     {
         value /= 10;
-        ++power;
+        ++log;
     }
     if (value == 1)
-        return power;
+        return log;
     return std::nullopt;
 }
 
@@ -50,16 +50,16 @@ using numberint128 = __int128_t;
 
 struct MantissaRange
 {
-    using rep = numberint128;
+    using internalrep = numberint128;
 
-    explicit constexpr MantissaRange(rep min_)
-        : min(min_), max(min_ * 10 - 1), power(logTen(min).value_or(-1))
+    explicit constexpr MantissaRange(internalrep min_)
+        : min(min_), max(min_ * 10 - 1), log(logTen(min).value_or(-1))
     {
     }
 
-    rep min;
-    rep max;
-    int power;
+    internalrep min;
+    internalrep max;
+    int log;
 };
 
 class Number
@@ -68,7 +68,7 @@ class Number
     using int128_t = numberint128;
 
     using rep = std::int64_t;
-    using internalrep = MantissaRange::rep;
+    using internalrep = MantissaRange::internalrep;
     internalrep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
 
@@ -121,11 +121,11 @@ public:
     operator/=(Number const& x);
 
     static constexpr Number
-    min(MantissaRange const& range) noexcept;
+    min() noexcept;
     static constexpr Number
-    max(MantissaRange const& range) noexcept;
+    max() noexcept;
     static constexpr Number
-    lowest(MantissaRange const& range) noexcept;
+    lowest() noexcept;
 
     /** Conversions to Number are implicit and conversions away from Number
      *  are explicit. This design encourages and facilitates the use of Number
@@ -194,7 +194,7 @@ public:
         while (ret.exponent_ < 0 && ret.mantissa_ != 0)
         {
             ret.exponent_ += 1;
-            ret.mantissa_ /= rep(10);
+            ret.mantissa_ /= internalrep(10);
         }
         // We are guaranteed that normalize() will never throw an exception
         // because exponent is either negative or zero at this point.
@@ -249,17 +249,21 @@ public:
         return range_.get().max;
     }
 
-    inline static internalrep
-    mantissaPower()
+    inline static int
+    mantissaLog()
     {
-        return range_.get().power;
+        return range_.get().log;
     }
 
+    /// oneSmall is needed because the ranges are private
     constexpr static Number
     oneSmall();
+    /// oneLarge is needed because the ranges are private
     constexpr static Number
     oneLarge();
 
+    // And one is needed because it needs to choose between oneSmall and
+    // oneLarge based on the current range
     static Number
     one();
 
@@ -275,10 +279,12 @@ private:
     constexpr static MantissaRange smallRange{1'000'000'000'000'000LL};
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
+    static_assert(smallRange.log == 15);
     // maxint64                               9,223,372,036,854,775,808
     constexpr static MantissaRange largeRange{1'000'000'000'000'000'000LL};
     static_assert(isPowerOfTen(largeRange.min));
     static_assert(largeRange.max == internalrep(9'999'999'999'999'999'999ULL));
+    static_assert(largeRange.log == 18);
     static_assert(largeRange.min < std::numeric_limits<std::int64_t>::max());
     static_assert(largeRange.max > std::numeric_limits<std::int64_t>::max());
 
@@ -298,12 +304,7 @@ private:
         internalrep const& maxMantissa);
 
     constexpr bool
-    isnormal(MantissaRange const& range) const noexcept;
-
-    friend Number
-    root(Number f, unsigned d);
-    friend Number
-    root2(Number f);
+    isnormal() const noexcept;
 
     class Guard;
 };
@@ -421,26 +422,27 @@ operator/(Number const& x, Number const& y)
 }
 
 inline constexpr Number
-Number::min(MantissaRange const& range) noexcept
+Number::min() noexcept
 {
-    return Number{range.min, minExponent, unchecked{}};
+    return Number{range_.get().min, minExponent, unchecked{}};
 }
 
 inline constexpr Number
-Number::max(MantissaRange const& range) noexcept
+Number::max() noexcept
 {
-    return Number{range.max, maxExponent, unchecked{}};
+    return Number{range_.get().max, maxExponent, unchecked{}};
 }
 
 inline constexpr Number
-Number::lowest(MantissaRange const& range) noexcept
+Number::lowest() noexcept
 {
-    return -Number{range.max, maxExponent, unchecked{}};
+    return -Number{range_.get().max, maxExponent, unchecked{}};
 }
 
 inline constexpr bool
-Number::isnormal(MantissaRange const& range) const noexcept
+Number::isnormal() const noexcept
 {
+    MantissaRange const& range = range_;
     auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
     return range.min <= abs_m && abs_m <= range.max &&
         minExponent <= exponent_ && exponent_ <= maxExponent;

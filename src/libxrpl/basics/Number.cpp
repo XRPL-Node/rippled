@@ -14,7 +14,22 @@
 
 #ifdef _MSC_VER
 #pragma message("Using boost::multiprecision::uint128_t")
-#endif
+#include <boost/multiprecision/cpp_int.hpp>
+using uint128_t = boost::multiprecision::uint128_t;
+#else   // !defined(_MSC_VER)
+using uint128_t = __uint128_t;
+#endif  // !defined(_MSC_VER)
+static_assert(std::is_same_v<uint128_t, ripple::numberuint128>);
+
+namespace std {
+
+template <>
+struct make_unsigned<ripple::numberint128>
+{
+    using type = typename uint128_t;
+};
+
+}  // namespace std
 
 namespace ripple {
 
@@ -61,14 +76,9 @@ public:
     is_negative() const noexcept;
 
     // add a digit
+    template <class T>
     void
-    push(numberuint128 d) noexcept;
-#ifdef _MSC_VER
-    void
-    push(numberint128 d) noexcept;
-    void
-    push(std::int64_t d) noexcept;
-#endif
+    push(T d) noexcept;
 
     // recover a digit
     unsigned
@@ -79,6 +89,10 @@ public:
     // tie, round towards even.
     int
     round() noexcept;
+
+private:
+    void
+    doPush(unsigned d) noexcept;
 };
 
 inline void
@@ -100,28 +114,19 @@ Number::Guard::is_negative() const noexcept
 }
 
 inline void
-Number::Guard::push(numberuint128 d128) noexcept
+Number::Guard::doPush(unsigned d) noexcept
 {
-    unsigned d = static_cast<unsigned>(d128);
-
     xbit_ = xbit_ || (digits_ & 0x0000'0000'0000'000F) != 0;
     digits_ >>= 4;
     digits_ |= (d & 0x0000'0000'0000'000FULL) << 60;
 }
 
-#ifdef _MSC_VER
-void
-Number::Guard::push(numberint128 d) noexcept
+template <class T>
+inline void
+Number::Guard::push(T d) noexcept
 {
-    push(static_cast<numberuint128>(d));
+    doPush(static_cast<unsigned>(d));
 }
-
-void
-Number::Guard::push(std::int64_t d) noexcept
-{
-    push(static_cast<numberuint128>(d));
-}
-#endif
 
 inline unsigned
 Number::Guard::pop() noexcept
@@ -178,23 +183,27 @@ constexpr Number
 Number::oneSmall()
 {
     return Number{
-        Number::smallRange.min, -Number::smallRange.power, Number::unchecked{}};
+        Number::smallRange.min, -Number::smallRange.log, Number::unchecked{}};
 };
+
+constexpr Number oneSml = Number::oneSmall();
 
 constexpr Number
 Number::oneLarge()
 {
     return Number{
-        Number::largeRange.min, -Number::largeRange.power, Number::unchecked{}};
+        Number::largeRange.min, -Number::largeRange.log, Number::unchecked{}};
 };
+
+constexpr Number oneLrg = Number::oneLarge();
 
 Number
 Number::one()
 {
     if (&range_.get() == &smallRange)
-        return oneSmall();
+        return oneSml;
     XRPL_ASSERT(&range_.get() == &largeRange, "Number::one() : valid range_");
-    return oneLarge();
+    return oneLrg;
 }
 
 // Use the member names in this static function for now so the diff is cleaner
@@ -205,17 +214,16 @@ Number::normalize(
     internalrep const& minMantissa,
     internalrep const& maxMantissa)
 {
+    constexpr Number zero = Number{};
     if (mantissa_ == 0)
     {
-        constexpr Number zero = Number{};
         mantissa_ = zero.mantissa_;
         exponent_ = zero.exponent_;
         return;
     }
     bool const negative = (mantissa_ < 0);
-    auto m = static_cast<std::make_unsigned_t<rep>>(mantissa_);
-    if (negative)
-        m = -m;
+    auto m = static_cast<std::make_unsigned_t<internalrep>>(
+        negative ? -mantissa_ : mantissa_);
     while ((m < minMantissa) && (exponent_ > minExponent))
     {
         m *= 10;
@@ -235,7 +243,6 @@ Number::normalize(
     mantissa_ = m;
     if ((exponent_ < minExponent) || (mantissa_ < minMantissa))
     {
-        constexpr Number zero = Number{};
         mantissa_ = zero.mantissa_;
         exponent_ = zero.exponent_;
         return;
@@ -281,7 +288,7 @@ Number::operator+=(Number const& y)
         return *this;
     }
     XRPL_ASSERT(
-        isnormal(Number::range_) && y.isnormal(Number::range_),
+        isnormal() && y.isnormal(),
         "ripple::Number::operator+=(Number) : is normal");
     auto xm = mantissa();
     auto xe = exponent();
@@ -394,7 +401,7 @@ Number::operator+=(Number const& y)
 // Derived from Hacker's Delight Second Edition Chapter 10
 // by Henry S. Warren, Jr.
 static inline unsigned
-divu10(numberuint128& u)
+divu10(uint128_t& u)
 {
     // q = u * 0.75
     auto q = (u >> 1) + (u >> 2);
@@ -426,7 +433,7 @@ Number::operator*=(Number const& y)
         return *this;
     }
     XRPL_ASSERT(
-        isnormal(Number::range_) && y.isnormal(Number::range_),
+        isnormal() && y.isnormal(),
         "ripple::Number::operator*=(Number) : is normal");
     auto xm = mantissa();
     auto xe = exponent();
@@ -444,7 +451,7 @@ Number::operator*=(Number const& y)
         ym = -ym;
         yn = -1;
     }
-    auto zm = numberuint128(xm) * numberuint128(ym);
+    auto zm = uint128_t(xm) * uint128_t(ym);
     auto ze = xe + ye;
     auto zn = xn * yn;
     Guard g;
@@ -461,7 +468,7 @@ Number::operator*=(Number const& y)
         g.push(divu10(zm));
         ++ze;
     }
-    xm = static_cast<rep>(zm);
+    xm = static_cast<internalrep>(zm);
     xe = ze;
     auto r = g.round();
     if (r == 1 || (r == 0 && (xm & 1) == 1))
@@ -485,7 +492,7 @@ Number::operator*=(Number const& y)
     mantissa_ = xm * zn;
     exponent_ = xe;
     XRPL_ASSERT(
-        isnormal(Number::range_) || *this == Number{},
+        isnormal() || *this == Number{},
         "ripple::Number::operator*=(Number) : result is normal");
     return *this;
 }
@@ -514,12 +521,15 @@ Number::operator/=(Number const& y)
         dp = -1;
     }
     // Shift by 10^17 gives greatest precision while not overflowing
-    // numberuint128 or the cast back to int64_t
+    // uint128_t or the cast back to int64_t
     // TODO: Can/should this be made bigger for largeRange?
-    constexpr numberuint128 f = 100'000'000'000'000'000;
+    // log(2^127,10) ~ 38.2
+    // largeRange.log = 18
+    // f can be up to 10^(37-18) = 10^19 safely
+    constexpr uint128_t f = 100'000'000'000'000'000;
     static_assert(f == smallRange.min * 100);
-    static_assert(smallRange.power == 15);
-    mantissa_ = numberuint128(nm) * f / numberuint128(dm);
+    static_assert(smallRange.log == 15);
+    mantissa_ = uint128_t(nm) * f / uint128_t(dm);
     exponent_ = ne - de - 17;
     mantissa_ *= np * dp;
     normalize();
@@ -543,14 +553,19 @@ Number::operator rep() const
             g.push(drops % 10);
             drops /= 10;
         }
+        if (offset == 0 && drops > std::numeric_limits<rep>::max())
+        {
+            // If offset == 0, then the loop won't run, and the overflow check
+            // won't be made, but a int128 can overflow int64 by itself, so
+            // check here.
+            throw std::overflow_error("Number::operator rep() overflow");
+        }
         for (; offset > 0; --offset)
         {
             if (drops > std::numeric_limits<rep>::max() / 10)
                 throw std::overflow_error("Number::operator rep() overflow");
             drops *= 10;
         }
-        if (drops > std::numeric_limits<rep>::max() / 10)
-            throw std::overflow_error("Number::operator rep() overflow");
         auto r = g.round();
         if (r == 1 || (r == 0 && (drops & 1) == 1))
         {
@@ -573,9 +588,9 @@ to_string(Number const& amount)
     auto mantissa = amount.mantissa();
 
     // Use scientific notation for exponents that are too small or too large
-    auto const rangePower = Number::mantissaPower();
+    auto const rangeLog = Number::mantissaLog();
     if (((exponent != 0) &&
-         ((exponent < -(rangePower + 10)) || (exponent > -(rangePower - 10)))))
+         ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
         std::string ret = to_string(mantissa);
         ret.append(1, 'e');
@@ -591,11 +606,12 @@ to_string(Number const& amount)
         negative = true;
     }
 
+    // TODO: These numbers are probably wrong for largeRange
     XRPL_ASSERT(
         exponent + 43 > 0, "ripple::to_string(Number) : minimum exponent");
 
-    ptrdiff_t const pad_prefix = 27;
-    ptrdiff_t const pad_suffix = 23;
+    ptrdiff_t const pad_prefix = Number::mantissaLog() + 12;
+    ptrdiff_t const pad_suffix = Number::mantissaLog() + 8;
 
     std::string const raw_value(to_string(mantissa));
     std::string val;
@@ -605,7 +621,7 @@ to_string(Number const& amount)
     val.append(raw_value);
     val.append(pad_suffix, '0');
 
-    ptrdiff_t const offset(exponent + 43);
+    ptrdiff_t const offset(exponent + pad_prefix + 16);
 
     auto pre_from(val.begin());
     auto const pre_to(val.begin() + offset);

@@ -17,14 +17,15 @@ public:
     {
         testcase("zero");
 
-        Number const z{0, 0};
+        for (Number const& z : {Number{0, 0}, Number{0}})
+        {
+            BEAST_EXPECT(z.mantissa() == 0);
+            BEAST_EXPECT(z.exponent() == Number{}.exponent());
 
-        BEAST_EXPECT(z.mantissa() == 0);
-        BEAST_EXPECT(z.exponent() == Number{}.exponent());
-
-        BEAST_EXPECT((z + z) == z);
-        BEAST_EXPECT((z - z) == z);
-        BEAST_EXPECT(z == -z);
+            BEAST_EXPECT((z + z) == z);
+            BEAST_EXPECT((z - z) == z);
+            BEAST_EXPECT(z == -z);
+        }
     }
 
     void
@@ -738,12 +739,12 @@ public:
 
         BEAST_EXPECT(
             std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
-        BEAST_EXPECT(Number::maxMantissa() > INITIAL_XRP.drops());
+        BEAST_EXPECT(Number::maxMantissa() < INITIAL_XRP.drops());
         Number initalXrp{INITIAL_XRP};
-        BEAST_EXPECT(initalXrp.exponent() <= 0);
+        BEAST_EXPECT(initalXrp.exponent() > 0);
 
         Number maxInt64{std::numeric_limits<std::int64_t>::max()};
-        BEAST_EXPECT(maxInt64.exponent() <= 0);
+        BEAST_EXPECT(maxInt64.exponent() > 0);
 
         // TODO: square maxInt64 and square Number::max()
 
