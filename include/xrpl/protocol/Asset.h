@@ -84,6 +84,12 @@ public:
         return holds<Issue>() && get<Issue>().native();
     }
 
+    bool
+    integral() const
+    {
+        return !holds<Issue>() || get<Issue>().native();
+    }
+
     friend constexpr bool
     operator==(Asset const& lhs, Asset const& rhs);
 

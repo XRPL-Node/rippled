@@ -158,6 +158,9 @@ public:
     exponent() const noexcept;
 
     bool
+    integral() const noexcept;
+
+    bool
     native() const noexcept;
 
     template <ValidIssueType TIss>
@@ -435,6 +438,12 @@ inline int
 STAmount::exponent() const noexcept
 {
     return mOffset;
+}
+
+inline bool
+STAmount::integral() const noexcept
+{
+    return mAsset.integral();
 }
 
 inline bool
