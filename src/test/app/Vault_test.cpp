@@ -4554,8 +4554,7 @@ class Vault_test : public beast::unit_test::suite
             BEAST_EXPECT(checkString(vault, sfAssetsAvailable, "50"));
             BEAST_EXPECT(checkString(vault, sfAssetsMaximum, "1000"));
             BEAST_EXPECT(checkString(vault, sfAssetsTotal, "50"));
-            // Since this field is default, it is not returned.
-            BEAST_EXPECT(!vault.isMember(sfLossUnrealized.getJsonName()));
+            BEAST_EXPECT(checkString(vault, sfLossUnrealized, "0"));
 
             auto const strShareID = strHex(sle->at(sfShareMPTID));
             BEAST_EXPECT(checkString(vault, sfShareMPTID, strShareID));
