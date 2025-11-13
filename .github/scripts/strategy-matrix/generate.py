@@ -178,17 +178,18 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 cxx_flags += " -fno-var-tracking-assignments"
                 # Disable mold linker - it's too strict about relocations with GCC runtime libs
                 # Use gold or default linker instead
-                cmake_args += ' -Duse_mold=OFF'
-                exe_linker_flags += '  -fuse-ld=lld'#-static-libubsan -static-libasan -static-libtsan'
-                shared_linker_flags += ' -fuse-ld=lld'#-static-libubsan -static-libasan -static-libtsan'
+                #cmake_args += ' -Duse_mold=OFF'
+                #exe_linker_flags += '  -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
+                #shared_linker_flags += ' -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64':
-                # Add -mcmodel=medium and -fPIC to both compiler AND linker flags
+                # Add -mcmodel=large and -fPIC to both compiler AND linker flags
                 # This is needed because sanitizers create very large binaries
                 # -fPIC enables position independent code to avoid relocation range issues
-                cxx_flags += ' -mcmodel=medium -fPIC'
-                exe_linker_flags+=' -mcmodel=medium -fPIC'
-                shared_linker_flags += ' -mcmodel=medium -fPIC'
+                # large model removes the 2GB limitation that medium model has
+                cxx_flags += ' -mcmodel=large -fPIC'
+                exe_linker_flags+=' -mcmodel=large -fPIC'
+                shared_linker_flags += ' -mcmodel=large -fPIC'
 
             if "-O0" in cxx_flags:
                 cxx_flags = cxx_flags.replace("-O0", "-O1")
