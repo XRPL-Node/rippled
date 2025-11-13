@@ -177,10 +177,10 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Hence disable it.
                 cxx_flags += " -fno-var-tracking-assignments"
                 # Disable mold linker - it's too strict about relocations with GCC runtime libs
-                # Use gold or default linker instead
-                #cmake_args += ' -Duse_mold=OFF'
-                #exe_linker_flags += '  -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
-                #shared_linker_flags += ' -fuse-ld=gold'#-static-libubsan -static-libasan -static-libtsan'
+                # Use default linker (bfd/ld) which is more lenient with mixed code models
+                cmake_args += ' -Duse_mold=OFF'
+                exe_linker_flags += '  -fuse-ld=bfd'#-static-libubsan -static-libasan -static-libtsan'
+                shared_linker_flags += ' -fuse-ld=bfd'#-static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
                 # Add -mcmodel=large and -fPIC to both compiler AND linker flags
