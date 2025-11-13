@@ -51,7 +51,6 @@ mallocTrim(
 
 #if !(defined(__GLIBC__) && BOOST_OS_LINUX)
     JLOG(journal.debug()) << "malloc_trim not supported on this platform";
-    return report;
 #else
 
     report.supported = true;
@@ -89,9 +88,9 @@ mallocTrim(
     {
         report.trimResult = ::malloc_trim(0);
     }
+#endif
 
     return report;
-#endif
 }
 
 }  // namespace ripple
