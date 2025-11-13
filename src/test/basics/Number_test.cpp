@@ -967,7 +967,7 @@ public:
             {
                 BEAST_EXPECT(e.what() == "Number::operator= integer overflow"s);
                 // The throw is done _after_ the number is updated.
-                BEAST_EXPECT((a == Number::maxIntValue * 2));
+                BEAST_EXPECT((a == Number{2, 14}));
                 BEAST_EXPECT(!a.valid());
             }
             try
@@ -979,7 +979,7 @@ public:
             {
                 BEAST_EXPECT(e.what() == "Number::Number integer overflow"s);
                 // The Number doesn't get updated because the ctor throws
-                BEAST_EXPECT((a == Number::maxIntValue * 2));
+                BEAST_EXPECT((a == Number{2, 14}));
                 BEAST_EXPECT(!a.valid());
             }
             a = Number(1, 10);

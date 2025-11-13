@@ -71,13 +71,9 @@ VaultClawback::preclaim(PreclaimContext const& ctx)
     }
 
     Asset const vaultAsset = vault->at(sfAsset);
-    if (auto const amount = ctx.tx[~sfAmount])
-    {
-        if (vaultAsset != amount->asset())
-            return tecWRONG_ASSET;
-        else if (!amount->validNumber())
-            return tecPRECISION_LOSS;
-    }
+    if (auto const amount = ctx.tx[~sfAmount];
+        amount && vaultAsset != amount->asset())
+        return tecWRONG_ASSET;
 
     if (vaultAsset.native())
     {
@@ -161,8 +157,6 @@ VaultClawback::doApply()
     MPTIssue const share{mptIssuanceID};
     STAmount sharesDestroyed = {share};
     STAmount assetsRecovered;
-    assetsRecovered.setIntegerEnforcement(Number::weak);
-    sharesDestroyed.setIntegerEnforcement(Number::weak);
     try
     {
         if (amount == beast::zero)
@@ -174,9 +168,6 @@ VaultClawback::doApply()
                 FreezeHandling::fhIGNORE_FREEZE,
                 AuthHandling::ahIGNORE_AUTH,
                 j_);
-
-            if (!sharesDestroyed.validNumber())
-                return tecPRECISION_LOSS;
 
             auto const maybeAssets =
                 sharesToAssetsWithdraw(vault, sleIssuance, sharesDestroyed);
@@ -193,8 +184,6 @@ VaultClawback::doApply()
                 if (!maybeShares)
                     return tecINTERNAL;  // LCOV_EXCL_LINE
                 sharesDestroyed = *maybeShares;
-                if (!sharesDestroyed.validNumber())
-                    return tecPRECISION_LOSS;
             }
 
             auto const maybeAssets =
@@ -203,8 +192,6 @@ VaultClawback::doApply()
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             assetsRecovered = *maybeAssets;
         }
-        if (!assetsRecovered.validNumber())
-            return tecPRECISION_LOSS;
 
         // Clamp to maximum.
         if (assetsRecovered > *assetsAvailable)

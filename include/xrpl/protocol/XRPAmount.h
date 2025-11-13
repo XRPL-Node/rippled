@@ -146,12 +146,6 @@ public:
         return {drops(), Number::weak};
     }
 
-    Number
-    toNumber(Number::EnforceInteger enforce) const
-    {
-        return {value(), enforce};
-    }
-
     /** Return the sign of the amount */
     constexpr int
     signum() const noexcept
