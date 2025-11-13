@@ -1,4 +1,5 @@
 #include <xrpl/basics/Number.h>
+//
 #include <xrpl/beast/utility/instrumentation.h>
 
 #include <algorithm>
@@ -26,7 +27,7 @@ namespace std {
 template <>
 struct make_unsigned<ripple::numberint128>
 {
-    using type = typename uint128_t;
+    using type = uint128_t;
 };
 
 }  // namespace std
@@ -585,25 +586,31 @@ to_string(Number const& amount)
         return "0";
 
     auto const exponent = amount.exponent();
-    auto mantissa = amount.mantissa();
+
+    bool const negative = amount.mantissa() < 0;
+
+    auto const mantissa = [&]() {
+        auto mantissa = amount.mantissa();
+        if (negative)
+        {
+            mantissa = -mantissa;
+        }
+        XRPL_ASSERT(
+            mantissa < std::numeric_limits<std::uint64_t>::max(),
+            "ripple::to_string(Number) : mantissa fits in uin64_t");
+        return static_cast<std::uint64_t>(mantissa);
+    }();
 
     // Use scientific notation for exponents that are too small or too large
     auto const rangeLog = Number::mantissaLog();
     if (((exponent != 0) &&
          ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
-        std::string ret = to_string(mantissa);
+        std::string ret = negative ? "-" : "";
+        ret.append(std::to_string(mantissa));
         ret.append(1, 'e');
         ret.append(std::to_string(exponent));
         return ret;
-    }
-
-    bool negative = false;
-
-    if (mantissa < 0)
-    {
-        mantissa = -mantissa;
-        negative = true;
     }
 
     // TODO: These numbers are probably wrong for largeRange
@@ -613,7 +620,7 @@ to_string(Number const& amount)
     ptrdiff_t const pad_prefix = Number::mantissaLog() + 12;
     ptrdiff_t const pad_suffix = Number::mantissaLog() + 8;
 
-    std::string const raw_value(to_string(mantissa));
+    std::string const raw_value(std::to_string(mantissa));
     std::string val;
 
     val.reserve(raw_value.length() + pad_prefix + pad_suffix);
