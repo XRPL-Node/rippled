@@ -3727,7 +3727,7 @@ class Vault_test : public beast::unit_test::suite
             }
         });
 
-        testCase(13, [&, this](Env& env, Data d) {
+        testCase(14, [&, this](Env& env, Data d) {
             testcase("MPT scale deposit overflow on first deposit");
             auto tx = d.vault.deposit(
                 {.depositor = d.depositor,
@@ -3737,7 +3737,7 @@ class Vault_test : public beast::unit_test::suite
             env.close();
         });
 
-        testCase(13, [&, this](Env& env, Data d) {
+        testCase(14, [&, this](Env& env, Data d) {
             testcase("MPT scale deposit overflow on second deposit");
 
             {
@@ -3759,7 +3759,7 @@ class Vault_test : public beast::unit_test::suite
             }
         });
 
-        testCase(13, [&, this](Env& env, Data d) {
+        testCase(14, [&, this](Env& env, Data d) {
             testcase("No MPT scale deposit overflow on total shares");
 
             {
@@ -4079,7 +4079,7 @@ class Vault_test : public beast::unit_test::suite
             }
         });
 
-        testCase(13, [&, this](Env& env, Data d) {
+        testCase(14, [&, this](Env& env, Data d) {
             testcase("MPT scale withdraw overflow");
 
             {
@@ -4320,7 +4320,7 @@ class Vault_test : public beast::unit_test::suite
             }
         });
 
-        testCase(13, [&, this](Env& env, Data d) {
+        testCase(14, [&, this](Env& env, Data d) {
             testcase("MPT Scale clawback overflow");
 
             {

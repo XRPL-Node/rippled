@@ -143,7 +143,7 @@ public:
 
     operator Number() const noexcept
     {
-        return {drops(), Number::compatible};
+        return {drops(), Number::weak};
     }
 
     Number

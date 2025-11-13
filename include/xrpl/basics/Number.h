@@ -28,17 +28,12 @@ public:
     /** Describes whether and how to enforce this number as an integer.
      *
      * - none: No enforcement. The value may vary freely. This is the default.
-     * - compatible: If the absolute value is greater than maxIntValue, valid()
-     *   will return false. Needed for backward compatibility with XRP used in
-     *   AMMs, and available for functions that will do their own checking. This
-     *   is the default for automatic conversions from XRPAmount to Number.
-     * - weak: Like compatible, plus, if the value is unrepresentable (larger
-     *   than maxMantissa), assignment and other operations will throw.
-     * - strong: Like weak, plus, if the absolute value is invalid (larger than
-     *   maxIntValue), assignment and other operations will throw. This is the
-     *   defalut for automatic conversions from MPTAmount to Number.
+     * - weak: If the absolute value is greater than maxIntValue, valid() will
+     *   return false.
+     * - strong: Assignment operations will throw if the absolute value is above
+     *   maxIntValue.
      */
-    enum EnforceInteger { none, compatible, weak, strong };
+    enum EnforceInteger { none, weak, strong };
 
 private:
     using rep = std::int64_t;
@@ -47,7 +42,8 @@ private:
 
     // The enforcement setting is not serialized, and does not affect the
     // ledger. If not "none", the value is checked to be within the valid
-    // integer range. See the enum description for more detail.
+    // integer range. With "strong", the checks will be made as automatic as
+    // possible.
     EnforceInteger enforceInteger_ = none;
 
 public:
@@ -57,8 +53,8 @@ public:
     constexpr static rep maxMantissa = minMantissa * 10 - 1;
     static_assert(maxMantissa == 9'999'999'999'999'999LL);
 
-    constexpr static rep maxIntValue = maxMantissa / 100;
-    static_assert(maxIntValue == 99'999'999'999'999LL);
+    constexpr static rep maxIntValue = maxMantissa / 10;
+    static_assert(maxIntValue == 999'999'999'999'999LL);
 
     // The range for the exponent when normalized
     constexpr static int minExponent = -32768;
@@ -97,15 +93,6 @@ public:
 
     bool
     valid() const noexcept;
-    bool
-    representable() const noexcept;
-    /// Combines setIntegerEnforcement(EnforceInteger) and valid()
-    bool
-    valid(EnforceInteger enforce);
-    /// Because this function is const, it should only be used for one-off
-    /// checks
-    bool
-    valid(EnforceInteger enforce) const;
 
     constexpr Number
     operator+() const noexcept;

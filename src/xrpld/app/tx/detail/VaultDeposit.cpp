@@ -220,8 +220,6 @@ VaultDeposit::doApply()
     }
 
     STAmount sharesCreated = {vault->at(sfShareMPTID)}, assetsDeposited;
-    // STAmount will ignore enforcement for IOUs, so we can set it regardless of
-    // type.
     sharesCreated.setIntegerEnforcement(Number::weak);
     try
     {
