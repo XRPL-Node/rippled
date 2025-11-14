@@ -1,4 +1,8 @@
 called_from_lib:^libboost_.*
+# Suppress race in Boost ASIO scheduler detected by GCC-15
+# This is a false positive in Boost's internal pipe() synchronization
+race:.*/boost/asio/.*
+
 race:.*/src/libxrpl/basics/make_SSLContext.cpp
 race:.*/src/libxrpl/json/json_value.cpp
 race:.*/src/libxrpl/json/to_string.cpp
