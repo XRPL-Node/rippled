@@ -2,3 +2,8 @@
 interceptor_via_lib:^libboost_.*
 # Suprpress voilations in external code
 interceptor_name:^external/.*
+
+# Leaks in Doctests
+interceptor_name:.*/xrpl/net/AutoSocket.h
+interceptor_name:.*/xrpl/net/HTTPClientSSLContext.h
+interceptor_name:.*/src/libxrpl/net/RegisterSSLCerts.cpp

@@ -80,3 +80,8 @@ nullability-arg:*/boost/*
 vptr:*/boost/*
 cfi:*/boost/*
 vptr_check:*/boost/*
+
+
+unsigned-integer-overflow:src/libxrpl/basics/base64.cpp
+unsigned-integer-overflow:src/tests/libxrpl/basics/RangeSet.cpp
+unsigned-integer-overflow:src/libxrpl/json/json_value.cpp
