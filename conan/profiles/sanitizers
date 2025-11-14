@@ -1,40 +1,50 @@
 include(./default)
+{% set compiler, version, compiler_exe = detect_api.detect_default_compiler() %}
+
+{% set default_sanitizer_flags = "undefined,float-divide-by-zero,signed-integer-overflow" %}
+{% set sanitizers = os.getenv("SANITIZERS") %}
 
 [settings]
-{% set sanitizers = os.getenv("SANITIZERS") %}
 {% if sanitizers == "Address" or sanitizers == "Thread" %}
 user.package:sanitizers={{ sanitizers }}
 tools.info.package_ids:confs+=["user.package:sanitizers"]
 {% endif %}
 
 [conf]
+
 {% if compiler == "gcc" %}
 
+{% set asan_sanitizer_flags = "-fsanitize=address,"~default_sanitizer_flags~" -mcmodel=large -fPIC" %}
+{% set tsan_sanitizer_flags = "-fsanitize=thread,"~default_sanitizer_flags~" -mcmodel=medium -fPIC" %}
+
 {% if sanitizers == "Address" %}
-tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -Wno-stringop-overflow -mcmodel=medium -fPIC']
-tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
-tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
+tools.build:cxxflags+=['{{asan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -Wno-stringop-overflow']
+tools.build:sharedlinkflags+=['{{asan_sanitizer_flags}}']
+tools.build:exelinkflags+=['{{asan_sanitizer_flags}}']
+tools.cmake.cmaketoolchain:extra_variables={"use_mold": "OFF", "use_gold": "OFF", "use_lld": "OFF"}
+
 {% elif sanitizers == "Thread" %}
-tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow -fno-omit-frame-pointer
--fno-var-tracking-assignments
--O1 -Wno-stringop-overflow -Wno-tsan -mcmodel=medium -fPIC']
-tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
-tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
+tools.build:cxxflags+=['{{tsan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -Wno-stringop-overflow -Wno-tsan']
+tools.build:sharedlinkflags+=['{{tsan_sanitizer_flags}}']
+tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
+
 {% endif %}
 
-{% elif compiler == "clang" %}
+{% elif compiler == "apple-clang" or compiler == "clang" %}
 
+{% set asan_sanitizer_flags = "-fsanitize=address,"~default_sanitizer_flags~",unsigned-integer-overflow -fPIC" %}
+{% set tsan_sanitizer_flags = "-fsanitize=thread,"~default_sanitizer_flags~",unsigned-integer-overflow -fPIC" %}
 {% if sanitizers == "Address" %}
-tools.build:cxxflags+=['-fsanitize=address,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium -fPIC']
-tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
-tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
+tools.build:cxxflags+=['{{asan_sanitizer_flags}} -fno-omit-frame-pointer -O1']
+tools.build:sharedlinkflags+=['{{asan_sanitizer_flags}}']
+tools.build:exelinkflags+=['{{asan_sanitizer_flags}}']
+
 {% elif sanitizers == "Thread" %}
-tools.build:cxxflags+=['-fsanitize=thread,undefined,float-divide-by-zero,signed-integer-overflow,unsigned-integer-overflow
--fno-omit-frame-pointer -fno-var-tracking-assignments -O1 -mcmodel=medium -fPIC']
-tools.build:sharedlinkflags+=['-mcmodel=medium -fPIC']
-tools.build:exelinkflags+=['-mcmodel=medium -fPIC']
+tools.build:cxxflags+=['{{tsan_sanitizer_flags}} -fno-omit-frame-pointer -O1']
+tools.build:sharedlinkflags+=['{{tsan_sanitizer_flags}}']
+tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
+
+
 {% endif %}
 
 {% endif %}
