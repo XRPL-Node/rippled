@@ -132,13 +132,18 @@ public:
                 test(Number::max(), "9999999999999999e32768");
                 test(Number::lowest(), "-9999999999999999e32768");
                 {
-                    NumberRoundModeGuard mg(Number::downward);
+                    NumberRoundModeGuard mg(Number::towards_zero);
 
                     test(
                         Number{
                             numberuint128(9'999'999'999'999'999) * 1000 + 999,
                             -3},
                         "9999999999999999");
+                    test(
+                        -(Number{
+                            numberuint128(9'999'999'999'999'999) * 1000 + 999,
+                            -3}),
+                        "-9999999999999999");
                 }
                 break;
             case Number::large:
@@ -156,13 +161,18 @@ public:
                 test(Number::max(), "9999999999999999999e32768");
                 test(Number::lowest(), "-9999999999999999999e32768");
                 {
-                    NumberRoundModeGuard mg(Number::downward);
+                    NumberRoundModeGuard mg(Number::towards_zero);
 
                     test(
                         Number{
                             numberuint128(9'999'999'999'999'999) * 1000 + 999,
                             0},
                         "9999999999999999999");
+                    test(
+                        -(Number{
+                            numberuint128(9'999'999'999'999'999) * 1000 + 999,
+                            0}),
+                        "-9999999999999999999");
                 }
                 break;
                 break;
@@ -391,59 +401,68 @@ public:
         };
         saveNumberRoundMode save{Number::setround(Number::to_nearest)};
         {
-            auto const cSmall = std::to_array<Case>(
-                {{Number{7}, Number{8}, Number{56}},
-                 {Number{1414213562373095, -15},
-                  Number{1414213562373095, -15},
-                  Number{2000000000000000, -15}},
-                 {Number{-1414213562373095, -15},
-                  Number{1414213562373095, -15},
-                  Number{-2000000000000000, -15}},
-                 {Number{-1414213562373095, -15},
-                  Number{-1414213562373095, -15},
-                  Number{2000000000000000, -15}},
-                 {Number{3214285714285706, -15},
-                  Number{3111111111111119, -15},
-                  Number{1000000000000000, -14}},
-                 {Number{1000000000000000, -32768},
-                  Number{1000000000000000, -32768},
-                  Number{0}}});
-            auto const cLarge = std::to_array<Case>(
+            auto const cSmall = std::to_array<Case>({
+                {Number{7}, Number{8}, Number{56}},
+                {Number{1414213562373095, -15},
+                 Number{1414213562373095, -15},
+                 Number{2000000000000000, -15}},
+                {Number{-1414213562373095, -15},
+                 Number{1414213562373095, -15},
+                 Number{-2000000000000000, -15}},
+                {Number{-1414213562373095, -15},
+                 Number{-1414213562373095, -15},
+                 Number{2000000000000000, -15}},
+                {Number{3214285714285706, -15},
+                 Number{3111111111111119, -15},
+                 Number{1000000000000000, -14}},
+                {Number{1000000000000000, -32768},
+                 Number{1000000000000000, -32768},
+                 Number{0}},
+                // Maximum mantissa range
+                {Number{9'999'999'999'999'999, 0},
+                 Number{9'999'999'999'999'999, 0},
+                 Number{9'999'999'999'999'998, 16}},
+            });
+            auto const cLarge = std::to_array<Case>({
                 // Note that items with extremely large mantissas need to be
                 // calculated, because otherwise they overflow uint64. Items
                 // from C with larger mantissa
-                {{Number{7}, Number{8}, Number{56}},
-                 {Number{1414213562373095, -15},
-                  Number{1414213562373095, -15},
-                  Number{1999999999999999862, -18}},
-                 {Number{-1414213562373095, -15},
-                  Number{1414213562373095, -15},
-                  Number{-1999999999999999862, -18}},
-                 {Number{-1414213562373095, -15},
-                  Number{-1414213562373095, -15},
-                  Number{1999999999999999862, -18}},
-                 {Number{3214285714285706, -15},
-                  Number{3111111111111119, -15},
-                  Number{
-                      numberint128(9'999'999'999'999'999) * 1000 + 579, -18}},
-                 {Number{1000000000000000000, -32768},
-                  Number{1000000000000000000, -32768},
-                  Number{0}},
-                 // Items from cSmall expanded for the larger mantissa, except
-                 // duplicates.
-                 // Sadly, it looks like sqrt(2)^2 != 2 with higher precision
-                 {Number{1414213562373095049, -18},
-                  Number{1414213562373095049, -18},
-                  Number{2000000000000000001, -18}},
-                 {Number{-1414213562373095048, -18},
-                  Number{1414213562373095048, -18},
-                  Number{-1999999999999999998, -18}},
-                 {Number{-1414213562373095048, -18},
-                  Number{-1414213562373095049, -18},
-                  Number{1999999999999999999, -18}},
-                 {Number{3214285714285714278, -18},
-                  Number{3111111111111111119, -18},
-                  Number{10, 0}}});
+                {Number{7}, Number{8}, Number{56}},
+                {Number{1414213562373095, -15},
+                 Number{1414213562373095, -15},
+                 Number{1999999999999999862, -18}},
+                {Number{-1414213562373095, -15},
+                 Number{1414213562373095, -15},
+                 Number{-1999999999999999862, -18}},
+                {Number{-1414213562373095, -15},
+                 Number{-1414213562373095, -15},
+                 Number{1999999999999999862, -18}},
+                {Number{3214285714285706, -15},
+                 Number{3111111111111119, -15},
+                 Number{numberint128(9'999'999'999'999'999) * 1000 + 579, -18}},
+                {Number{1000000000000000000, -32768},
+                 Number{1000000000000000000, -32768},
+                 Number{0}},
+                // Items from cSmall expanded for the larger mantissa,
+                // except duplicates. Sadly, it looks like sqrt(2)^2 != 2
+                // with higher precision
+                {Number{1414213562373095049, -18},
+                 Number{1414213562373095049, -18},
+                 Number{2000000000000000001, -18}},
+                {Number{-1414213562373095048, -18},
+                 Number{1414213562373095048, -18},
+                 Number{-1999999999999999998, -18}},
+                {Number{-1414213562373095048, -18},
+                 Number{-1414213562373095049, -18},
+                 Number{1999999999999999999, -18}},
+                {Number{3214285714285714278, -18},
+                 Number{3111111111111111119, -18},
+                 Number{10, 0}},
+                // Maximum mantissa range
+                {Number{numberint128(9'999'999'999'999'999) * 1000 + 999, 0},
+                 Number{numberint128(9'999'999'999'999'999) * 1000 + 999, 0},
+                 Number{numberint128(9'999'999'999'999'999) * 1000 + 998, 19}},
+            });
             tests(cSmall, cLarge);
         }
         Number::setround(Number::towards_zero);
@@ -541,7 +560,8 @@ public:
                   Number{1999999999999999861, -18}},
                  {Number{3214285714285706, -15},
                   Number{3111111111111119, -15},
-                  Number{numberint128(9999999999999999) + 1000 + 579, -18}},
+                  Number{
+                      numberint128(9'999'999'999'999'999) * 1000 + 579, -18}},
                  {Number{1000000000000000000, -32768},
                   Number{1000000000000000000, -32768},
                   Number{0}},
