@@ -36,6 +36,7 @@ namespace ripple {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
 // TODO: Once the Rules switching is implemented, default to largeRange
+thread_local Number::mantissa_scale Number::scale_ = small;  // large;
 thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
     smallRange;  // largeRange;
 
@@ -49,6 +50,22 @@ Number::rounding_mode
 Number::setround(rounding_mode mode)
 {
     return std::exchange(mode_, mode);
+}
+
+Number::mantissa_scale
+Number::getMantissaScale()
+{
+    return scale_;
+}
+
+void
+Number::setMantissaScale(mantissa_scale scale)
+{
+    // scale_ and range_ MUST stay in lockstep
+    if (scale != mantissa_scale::small && scale != mantissa_scale::large)
+        LogicError("Unknown mantissa scale");
+    scale_ = scale;
+    range_ = scale == mantissa_scale::small ? smallRange : largeRange;
 }
 
 // Guard
@@ -524,14 +541,61 @@ Number::operator/=(Number const& y)
     // Shift by 10^17 gives greatest precision while not overflowing
     // uint128_t or the cast back to int64_t
     // TODO: Can/should this be made bigger for largeRange?
-    // log(2^127,10) ~ 38.2
-    // largeRange.log = 18
-    // f can be up to 10^(37-18) = 10^19 safely
-    constexpr uint128_t f = 100'000'000'000'000'000;
-    static_assert(f == smallRange.min * 100);
+    // log(2^128,10) ~ 38.5
+    // largeRange.log = 18, fits in 10^19
+    // f can be up to 10^(38-19) = 10^19 safely
+    bool small = Number::scale_ == Number::small;
+    uint128_t const f =
+        small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000;
+    XRPL_ASSERT_PARTS(
+        f >= Number::minMantissa() * 10,
+        "Number::operator/=",
+        "factor expected size");
+
+    // unsigned denominator
+    uint128_t const dmu{dm};
+    // correctionFactor can be anything between 10 and f, depending on how much
+    // extra precision we want to only use for rounding.
+    uint128_t const correctionFactor = 1'000;
+
+    auto const numerator = uint128_t(nm) * f;
+
     static_assert(smallRange.log == 15);
-    mantissa_ = uint128_t(nm) * f / uint128_t(dm);
-    exponent_ = ne - de - 17;
+    static_assert(largeRange.log == 18);
+    mantissa_ = numerator / dmu;
+    exponent_ = ne - de - (small ? 17 : 19);
+    if (!small)
+    {
+        // Virtually multiply numerator by correctionFactor. Since that would
+        // overflow, we'll do that part separately.
+        // The math for this would work for small mantissas, but we need to
+        // preserve existing behavior.
+        //
+        // Consider:
+        // ((numerator * correctionFactor) / dmu) / correctionFactor
+        // = ((numerator / dmu) * correctionFactor) / correctionFactor)
+        //
+        // But that assumes infinite precision. With integer math, this is
+        // equivalent to
+        //
+        // = ((numerator / dmu * correctionFactor)
+        //   + ((numerator % dmu) * correctionFactor) / dmu) / correctionFactor
+        //
+        // We have already set `mantissa_ = numerator / dmu`. Now we
+        // compute `remainder = numerator % dmu`, and if it is
+        // nonzero, we do the rest of the arithmetic. If it's zero, we can skip
+        // it.
+        auto const remainder = (numerator % dmu);
+        if (remainder != 0)
+        {
+            mantissa_ *= correctionFactor;
+            auto const correction = remainder * correctionFactor / dmu;
+            mantissa_ += correction;
+            // divide by 1000 by moving the exponent, so we don't lose the
+            // integer value we just computed
+            exponent_ -= 3;
+        }
+    }
     mantissa_ *= np * dp;
     normalize();
     return *this;
@@ -617,8 +681,10 @@ to_string(Number const& amount)
     XRPL_ASSERT(
         exponent + 43 > 0, "ripple::to_string(Number) : minimum exponent");
 
-    ptrdiff_t const pad_prefix = Number::mantissaLog() + 12;
-    ptrdiff_t const pad_suffix = Number::mantissaLog() + 8;
+    auto const mantissaLog = Number::mantissaLog();
+
+    ptrdiff_t const pad_prefix = mantissaLog + 12;
+    ptrdiff_t const pad_suffix = mantissaLog + 8;
 
     std::string const raw_value(std::to_string(mantissa));
     std::string val;
@@ -628,7 +694,7 @@ to_string(Number const& amount)
     val.append(raw_value);
     val.append(pad_suffix, '0');
 
-    ptrdiff_t const offset(exponent + pad_prefix + 16);
+    ptrdiff_t const offset(exponent + pad_prefix + mantissaLog + 1);
 
     auto pre_from(val.begin());
     auto const pre_to(val.begin() + offset);

@@ -234,8 +234,11 @@ public:
     static rounding_mode
     setround(rounding_mode mode);
 
+    enum mantissa_scale { small, large };
+    static mantissa_scale
+    getMantissaScale();
     static void
-    setLargeMantissa(bool large);
+    setMantissaScale(mantissa_scale scale);
 
     inline static internalrep
     minMantissa()
@@ -291,6 +294,7 @@ private:
     // The range for the mantissa when normalized.
     // Use reference_wrapper to avoid making copies, and prevent accidentally
     // changing the values inside the range.
+    static thread_local mantissa_scale scale_;
     static thread_local std::reference_wrapper<MantissaRange const> range_;
 
     void
@@ -534,6 +538,32 @@ public:
 
     NumberRoundModeGuard&
     operator=(NumberRoundModeGuard const&) = delete;
+};
+
+// Sets the new scale and restores the old scale when it leaves scope.  Since
+// Number doesn't have that facility, we'll build it here.
+//
+// This class may only end up needed in tests
+class NumberMantissaScaleGuard
+{
+    Number::mantissa_scale saved_;
+
+public:
+    explicit NumberMantissaScaleGuard(Number::mantissa_scale scale) noexcept
+        : saved_{Number::getMantissaScale()}
+    {
+        Number::setMantissaScale(scale);
+    }
+
+    ~NumberMantissaScaleGuard()
+    {
+        Number::setMantissaScale(saved_);
+    }
+
+    NumberMantissaScaleGuard(NumberMantissaScaleGuard const&) = delete;
+
+    NumberMantissaScaleGuard&
+    operator=(NumberMantissaScaleGuard const&) = delete;
 };
 
 }  // namespace ripple
