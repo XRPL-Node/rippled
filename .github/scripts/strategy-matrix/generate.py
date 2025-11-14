@@ -178,9 +178,9 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 cxx_flags += " -fno-var-tracking-assignments"
                 # Disable mold linker - it's too strict about relocations with GCC runtime libs
                 # Use default linker (bfd/ld) which is more lenient with mixed code models
-                cmake_args += ' -Duse_mold=OFF'
-                exe_linker_flags += ' -fuse-ld=lld'# -static-libubsan -static-libasan -static-libtsan'
-                shared_linker_flags += ' -fuse-ld=lld'# -static-libubsan -static-libasan -static-libtsan'
+                cmake_args += ' -Duse_mold=OFF -Duse_gold=OFF -Duse_lld=OFF'
+                #exe_linker_flags += ' -fuse-ld=lld'# -static-libubsan -static-libasan -static-libtsan'
+                #shared_linker_flags += ' -fuse-ld=lld'# -static-libubsan -static-libasan -static-libtsan'
 
             if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
                 # Add -mcmodel=large and -fPIC to both compiler AND linker flags
@@ -196,7 +196,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             else:
                 cxx_flags += " -O1"
 
-            cmake_args_flags = f'{cmake_args} -DLLVM_ENABLE_PROJECTS=lld -DLLVM_USE_LINKER=lld -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
             if exe_linker_flags:
                 cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{exe_linker_flags} -fsanitize=address,{sanitizers_flags}"'
             if shared_linker_flags:
