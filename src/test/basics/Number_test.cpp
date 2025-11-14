@@ -45,10 +45,10 @@ public:
     void
     test_limits()
     {
-        testcase << "test_limits " << to_string(Number::getMantissaScale());
+        auto const scale = Number::getMantissaScale();
+        testcase << "test_limits " << to_string(scale);
         bool caught = false;
         auto const minMantissa = Number::minMantissa();
-        auto const scale = Number::getMantissaScale();
         try
         {
             Number x{minMantissa * 10, 32768};
@@ -96,15 +96,13 @@ public:
     void
     testToString()
     {
-        testcase << "testToString " << to_string(Number::getMantissaScale());
-
         auto const scale = Number::getMantissaScale();
+        testcase << "testToString " << to_string(scale);
 
         auto test = [this](Number const& n, std::string const& expected) {
             auto const result = to_string(n);
             std::stringstream ss;
             ss << "to_string(" << result << "). Expected: " << expected;
-            log << ss.str() << std::endl;
             BEAST_EXPECTS(result == expected, ss.str());
         };
 
@@ -184,8 +182,9 @@ public:
     void
     test_add()
     {
-        testcase << "test_add " << to_string(Number::getMantissaScale());
         auto const scale = Number::getMantissaScale();
+        testcase << "test_add " << to_string(scale);
+        auto const minMantissa = Number::minMantissa();
 
         using Case = std::tuple<Number, Number, Number>;
         auto const cSmall = std::to_array<Case>(
@@ -305,8 +304,9 @@ public:
     void
     test_sub()
     {
-        testcase << "test_sub " << to_string(Number::getMantissaScale());
         auto const scale = Number::getMantissaScale();
+        testcase << "test_sub " << to_string(scale);
+        auto const minMantissa = Number::minMantissa();
 
         using Case = std::tuple<Number, Number, Number>;
         auto const cSmall = std::to_array<Case>(
@@ -380,8 +380,8 @@ public:
     void
     test_mul()
     {
-        testcase << "test_mul " << to_string(Number::getMantissaScale());
         auto const scale = Number::getMantissaScale();
+        testcase << "test_mul " << to_string(scale);
 
         using Case = std::tuple<Number, Number, Number>;
         auto test = [this](auto const& c) {
@@ -679,8 +679,8 @@ public:
     void
     test_div()
     {
-        testcase << "test_div " << to_string(Number::getMantissaScale());
         auto const scale = Number::getMantissaScale();
+        testcase << "test_div " << to_string(scale);
 
         using Case = std::tuple<Number, Number, Number>;
         auto test = [this](auto const& c) {
@@ -909,7 +909,8 @@ public:
     void
     test_root()
     {
-        testcase << "test_root " << to_string(Number::getMantissaScale());
+        auto const scale = Number::getMantissaScale();
+        testcase << "test_root " << to_string(scale);
 
         using Case = std::tuple<Number, unsigned, Number>;
         auto test = [this](auto const& c) {
@@ -919,7 +920,6 @@ public:
                 std::stringstream ss;
                 ss << "root(" << x << ", " << y << ") = " << result
                    << ". Expected: " << z;
-                log << ss.str() << std::endl;
                 BEAST_EXPECTS(result == z, ss.str());
             }
         };
@@ -933,8 +933,8 @@ public:
 
         auto const cSmall = std::to_array<Case>(
             {{Number{2}, 2, Number{1414213562373095049, -18}},
-             {Number{2'000'000}, 2, Number{1414213562373095, -12}},
-             {Number{2, -30}, 2, Number{1414213562373095, -30}},
+             {Number{2'000'000}, 2, Number{1414213562373095049, -15}},
+             {Number{2, -30}, 2, Number{1414213562373095049, -33}},
              {Number{-27}, 3, Number{-3}},
              {Number{1}, 5, Number{1}},
              {Number{-1}, 0, Number{1}},
@@ -975,7 +975,13 @@ public:
             {Number{64}, 2, Number{4096}},
             {Number{-64}, 2, Number{4096}},
             {Number{64}, 3, Number{262144}},
-            {Number{-64}, 3, Number{-262144}}};
+            {Number{-64}, 3, Number{-262144}},
+            {Number{64},
+             11,
+             Number{numberint128(73786976294838206) * 1000 + 464, 0}},
+            {Number{-64},
+             11,
+             Number{-(numberint128(73786976294838206) * 1000 + 464), 0}}};
         for (auto const& [x, y, z] : c)
             BEAST_EXPECT((power(x, y) == z));
     }
@@ -1317,30 +1323,53 @@ public:
     void
     testInt64()
     {
-        testcase << "std::int64_t " << to_string(Number::getMantissaScale());
+        auto const scale = Number::getMantissaScale();
+        testcase << "std::int64_t " << to_string(scale);
 
         // Control case
         BEAST_EXPECT(Number::maxMantissa() > 10);
         Number ten{10};
         BEAST_EXPECT(ten.exponent() <= 0);
 
-        BEAST_EXPECT(
-            std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
-        BEAST_EXPECT(Number::maxMantissa() < INITIAL_XRP.drops());
-        Number initalXrp{INITIAL_XRP};
-        BEAST_EXPECT(initalXrp.exponent() > 0);
+        if (scale == Number::small)
+        {
+            BEAST_EXPECT(
+                std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
+            BEAST_EXPECT(Number::maxMantissa() < INITIAL_XRP.drops());
+            Number const initalXrp{INITIAL_XRP};
+            BEAST_EXPECT(initalXrp.exponent() > 0);
 
-        Number maxInt64{std::numeric_limits<std::int64_t>::max()};
-        BEAST_EXPECT(maxInt64.exponent() > 0);
+            Number const maxInt64{std::numeric_limits<std::int64_t>::max()};
+            BEAST_EXPECT(maxInt64.exponent() > 0);
+            // 85'070'591'730'234'615'865'843'651'857'942'052'864 - 38 digits
+            BEAST_EXPECT(
+                (power(maxInt64, 2) == Number{85'070'591'730'234'62, 22}));
 
-        // TODO: square maxInt64 and square Number::max()
+            Number const max = Number{Number::maxMantissa(), 0};
+            BEAST_EXPECT(max.exponent() <= 0);
+            // 99'999'999'999'999'980'000'000'000'000'001 - 32 digits
+            BEAST_EXPECT((power(max, 2) == Number{99'999'999'999'999'98, 16}));
+        }
+        else
+        {
+            BEAST_EXPECT(
+                std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
+            BEAST_EXPECT(Number::maxMantissa() > INITIAL_XRP.drops());
+            Number const initalXrp{INITIAL_XRP};
+            BEAST_EXPECT(initalXrp.exponent() <= 0);
 
-        using namespace boost::multiprecision;
-        // maxint64          9,223,372,036,854,775,808
-        int128_t minMantissa{1'000'000'000'000'000'000LL};
-        int128_t maxMantissa{minMantissa * 10 - 1};
-        BEAST_EXPECT(minMantissa < std::numeric_limits<std::int64_t>::max());
-        BEAST_EXPECT(maxMantissa > std::numeric_limits<std::int64_t>::max());
+            Number const maxInt64{std::numeric_limits<std::int64_t>::max()};
+            BEAST_EXPECT(maxInt64.exponent() <= 0);
+            // 85'070'591'730'234'615'847'396'907'784'232'501'249 - 38 digits
+            BEAST_EXPECT(
+                (power(maxInt64, 2) == Number{85'070'591'730'234'615'85, 19}));
+
+            Number const max = Number{Number::maxMantissa(), 0};
+            BEAST_EXPECT(max.exponent() <= 0);
+            // 99999999999999999980000000000000000001 - also 38 digits
+            BEAST_EXPECT(
+                (power(max, 2) == Number{99'999'999'999'999'999'98, 19}));
+        }
     }
 
     void
