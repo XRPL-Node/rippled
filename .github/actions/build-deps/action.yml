@@ -21,10 +21,6 @@ inputs:
     description: "The logging verbosity."
     required: false
     default: "verbose"
-  sanitizers:
-    description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-    required: false
-    default: ""
 
 runs:
   using: composite
@@ -39,10 +35,6 @@ runs:
         LOG_VERBOSITY: ${{ inputs.log_verbosity }}
       run: |
         echo 'Installing dependencies.'
-        echo 'github.workspace === ${{ github.workspace }}'
-        echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
-        echo 'runner.workspace === ${{ runner.workspace }}'
-        echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
         mkdir -p "${BUILD_DIR}"
         cd "${BUILD_DIR}"
         conan install \

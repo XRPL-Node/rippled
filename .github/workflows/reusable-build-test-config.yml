@@ -29,12 +29,6 @@ on:
         type: string
         required: true
 
-      sanitizers:
-        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
-        required: true
-        type: string
-        default: ""
-
       runs_on:
         description: Runner to run the job on as a JSON string
         required: true
@@ -105,7 +99,6 @@ jobs:
           build_dir: ${{ inputs.build_dir }}
           build_nproc: ${{ steps.nproc.outputs.nproc }}
           build_type: ${{ inputs.build_type }}
-          sanitizers: ${{ inputs.sanitizers }}
           # Set the verbosity to "quiet" for Windows to avoid an excessive
           # amount of logs. For other OSes, the "verbose" logs are more useful.
           log_verbosity: ${{ runner.os == 'Windows' && 'quiet' || 'verbose' }}
@@ -146,7 +139,7 @@ jobs:
           if-no-files-found: error
 
       - name: Check linking (Linux)
-        if: ${{ runner.os == 'Linux' && inputs.sanitizers == '' }}
+        if: ${{ runner.os == 'Linux' }}
         working-directory: ${{ inputs.build_dir }}
         run: |
           ldd ./rippled

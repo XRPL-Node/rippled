@@ -75,7 +75,6 @@ jobs:
         os: [linux, macos, windows]
     with:
       os: ${{ matrix.os }}
-      sanitizers: ${{ matrix.sanitizers }}
       strategy_matrix: ${{ github.event_name == 'schedule' && 'all' || 'minimal' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
