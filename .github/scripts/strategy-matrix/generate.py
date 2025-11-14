@@ -196,7 +196,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             else:
                 cxx_flags += " -O1"
 
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
+            cmake_args_flags = f'{cmake_args} -DLLVM_ENABLE_PROJECTS=lld -DLLVM_USE_LINKER=lld -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
             if exe_linker_flags:
                 cmake_args_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{exe_linker_flags} -fsanitize=address,{sanitizers_flags}"'
             if shared_linker_flags:
