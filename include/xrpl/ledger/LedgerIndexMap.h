@@ -1,5 +1,5 @@
-#ifndef RIPPLE_APP_LEDGER_INDEX_MAP_H_INCLUDED
-#define RIPPLE_APP_LEDGER_INDEX_MAP_H_INCLUDED
+#ifndef XRPL_APP_LEDGER_INDEX_MAP_H_INCLUDED
+#define XRPL_APP_LEDGER_INDEX_MAP_H_INCLUDED
 
 #include <algorithm>
 #include <mutex>
@@ -116,4 +116,4 @@ private:
 
 }  // namespace ripple
 
-#endif  // RIPPLE_APP_LEDGER_INDEX_MAP_H_INCLUDED
+#endif  // XRPL_APP_LEDGER_INDEX_MAP_H_INCLUDED

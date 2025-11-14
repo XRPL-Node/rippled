@@ -144,8 +144,8 @@ test.toplevel > test.csf
 test.toplevel > xrpl.json
 test.unit_test > xrpl.basics
 tests.libxrpl > xrpl.basics
-tests.libxrpl > xrpl.ledger
 tests.libxrpl > xrpl.json
+tests.libxrpl > xrpl.ledger
 tests.libxrpl > xrpl.net
 xrpl.json > xrpl.basics
 xrpl.ledger > xrpl.basics
