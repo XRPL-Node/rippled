@@ -100,44 +100,71 @@ public:
 
         auto const scale = Number::getMantissaScale();
 
-        BEAST_EXPECT(to_string(Number(-2, 0)) == "-2");
-        BEAST_EXPECT(to_string(Number(0, 0)) == "0");
-        BEAST_EXPECT(to_string(Number(2, 0)) == "2");
-        BEAST_EXPECT(to_string(Number(25, -3)) == "0.025");
-        BEAST_EXPECT(to_string(Number(-25, -3)) == "-0.025");
-        BEAST_EXPECT(to_string(Number(25, 1)) == "250");
-        BEAST_EXPECT(to_string(Number(-25, 1)) == "-250");
+        auto test = [this](Number const& n, std::string const& expected) {
+            auto const result = to_string(n);
+            std::stringstream ss;
+            ss << "to_string(" << result << "). Expected: " << expected;
+            log << ss.str() << std::endl;
+            BEAST_EXPECTS(result == expected, ss.str());
+        };
+
+        test(Number(-2, 0), "-2");
+        test(Number(0, 0), "0");
+        test(Number(2, 0), "2");
+        test(Number(25, -3), "0.025");
+        test(Number(-25, -3), "-0.025");
+        test(Number(25, 1), "250");
+        test(Number(-25, 1), "-250");
         switch (scale)
         {
             case Number::small:
-                BEAST_EXPECT(to_string(Number(2, 20)) == "2000000000000000e5");
-                BEAST_EXPECT(
-                    to_string(Number(-2, -20)) == "-2000000000000000e-35");
+                test(Number(2, 20), "2000000000000000e5");
+                test(Number(-2, -20), "-2000000000000000e-35");
                 // Test the edges
                 // ((exponent < -(25)) || (exponent > -(5)))))
-                BEAST_EXPECT(to_string(Number(2, -10)) == "0.0000000002");
-                BEAST_EXPECT(
-                    to_string(Number(2, -11)) == "2000000000000000e-26");
+                test(Number(2, -10), "0.0000000002");
+                test(Number(2, -11), "2000000000000000e-26");
 
-                BEAST_EXPECT(to_string(Number(-2, 10)) == "-20000000000");
-                BEAST_EXPECT(
-                    to_string(Number(-2, 11)) == "-2000000000000000e-4");
+                test(Number(-2, 10), "-20000000000");
+                test(Number(-2, 11), "-2000000000000000e-4");
 
+                test(Number::min(), "1000000000000000e-32768");
+                test(Number::max(), "9999999999999999e32768");
+                test(Number::lowest(), "-9999999999999999e32768");
+                {
+                    NumberRoundModeGuard mg(Number::downward);
+
+                    test(
+                        Number{
+                            numberuint128(9'999'999'999'999'999) * 1000 + 999,
+                            -3},
+                        "9999999999999999");
+                }
                 break;
             case Number::large:
-                BEAST_EXPECT(
-                    to_string(Number(2, 20)) == "2000000000000000000e2");
-                BEAST_EXPECT(
-                    to_string(Number(-2, -20)) == "-2000000000000000000e-38");
+                test(Number(2, 20), "2000000000000000000e2");
+                test(Number(-2, -20), "-2000000000000000000e-38");
                 // Test the edges
                 // ((exponent < -(28)) || (exponent > -(8)))))
-                BEAST_EXPECT(to_string(Number(2, -10)) == "0.0000000002");
-                BEAST_EXPECT(
-                    to_string(Number(2, -11)) == "2000000000000000000e-29");
+                test(Number(2, -10), "0.0000000002");
+                test(Number(2, -11), "2000000000000000000e-29");
 
-                BEAST_EXPECT(to_string(Number(-2, 10)) == "-20000000000");
-                BEAST_EXPECT(
-                    to_string(Number(-2, 11)) == "-2000000000000000000e-7");
+                test(Number(-2, 10), "-20000000000");
+                test(Number(-2, 11), "-2000000000000000000e-7");
+
+                test(Number::min(), "1000000000000000000e-32768");
+                test(Number::max(), "9999999999999999999e32768");
+                test(Number::lowest(), "-9999999999999999999e32768");
+                {
+                    NumberRoundModeGuard mg(Number::downward);
+
+                    test(
+                        Number{
+                            numberuint128(9'999'999'999'999'999) * 1000 + 999,
+                            0},
+                        "9999999999999999999");
+                }
+                break;
                 break;
             default:
                 BEAST_EXPECT(false);
