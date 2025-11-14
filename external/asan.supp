@@ -4,7 +4,7 @@ interceptor_via_lib:^libboost_.*
 interceptor_name:^external/.*
 
 # Leaks in Doctests
-interceptor_name:xrpl/net/AutoSocket.h
-interceptor_name:xrpl/net/HTTPClientSSLContext.h
-interceptor_name:src/libxrpl/net/RegisterSSLCerts.cpp
-interceptor_name:src/tests/libxrpl/net/HTTPClient.cpp
+interceptor_name:.*/xrpl/net/AutoSocket.h
+interceptor_name:.*/xrpl/net/HTTPClientSSLContext.h
+interceptor_name:.*/src/libxrpl/net/RegisterSSLCerts.cpp
+interceptor_name:.*/src/tests/libxrpl/net/HTTPClient.cpp
