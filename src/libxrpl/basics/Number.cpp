@@ -1,5 +1,6 @@
 #include <xrpl/basics/Number.h>
 //
+#include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
 
 #include <algorithm>
@@ -544,30 +545,32 @@ Number::operator/=(Number const& y)
     // log(2^128,10) ~ 38.5
     // largeRange.log = 18, fits in 10^19
     // f can be up to 10^(38-19) = 10^19 safely
+    static_assert(smallRange.log == 15);
+    static_assert(largeRange.log == 18);
     bool small = Number::scale_ == Number::small;
     uint128_t const f =
-        small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000;
+        small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000ULL;
     XRPL_ASSERT_PARTS(
         f >= Number::minMantissa() * 10,
         "Number::operator/=",
         "factor expected size");
 
     // unsigned denominator
-    uint128_t const dmu{dm};
+    auto const dmu = static_cast<uint128_t>(dm);
     // correctionFactor can be anything between 10 and f, depending on how much
-    // extra precision we want to only use for rounding.
+    // extra precision we want to only use for rounding with the
+    // largeMantissa. Three digits seems like plenty, and is more than
+    // the smallMantissa uses.
     uint128_t const correctionFactor = 1'000;
 
     auto const numerator = uint128_t(nm) * f;
 
-    static_assert(smallRange.log == 15);
-    static_assert(largeRange.log == 18);
     mantissa_ = numerator / dmu;
     exponent_ = ne - de - (small ? 17 : 19);
     if (!small)
     {
         // Virtually multiply numerator by correctionFactor. Since that would
-        // overflow, we'll do that part separately.
+        // overflow in the existing uint128_t, we'll do that part separately.
         // The math for this would work for small mantissas, but we need to
         // preserve existing behavior.
         //

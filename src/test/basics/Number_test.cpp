@@ -148,7 +148,6 @@ public:
     test_add()
     {
         testcase << "test_add " << to_string(Number::getMantissaScale());
-        auto const minMantissa = Number::minMantissa();
         auto const scale = Number::getMantissaScale();
 
         using Case = std::tuple<Number, Number, Number>;
@@ -254,7 +253,8 @@ public:
             bool caught = false;
             try
             {
-                Number{9'999'999'999'999'999'999, 32768} +
+                Number{
+                    numberuint128(9'999'999'999'999'999) * 1000 + 999, 32768} +
                     Number{5'000'000'000'000'000'000, 32767};
             }
             catch (std::overflow_error const&)
@@ -269,7 +269,6 @@ public:
     test_sub()
     {
         testcase << "test_sub " << to_string(Number::getMantissaScale());
-        auto const minMantissa = Number::minMantissa();
         auto const scale = Number::getMantissaScale();
 
         using Case = std::tuple<Number, Number, Number>;
@@ -398,7 +397,8 @@ public:
                   Number{1999999999999999862, -18}},
                  {Number{3214285714285706, -15},
                   Number{3111111111111119, -15},
-                  Number{9999999999999999579, -18}},
+                  Number{
+                      numberint128(9'999'999'999'999'999) * 1000 + 579, -18}},
                  {Number{1000000000000000000, -32768},
                   Number{1000000000000000000, -32768},
                   Number{0}},
@@ -456,7 +456,7 @@ public:
                   Number{1999999999999999861, -18}},
                  {Number{3214285714285706, -15},
                   Number{3111111111111119, -15},
-                  Number{9999999999999999579, -18}},
+                  Number{numberint128(9999999999999999) * 1000 + 579, -18}},
                  {Number{1000000000000000000, -32768},
                   Number{1000000000000000000, -32768},
                   Number{0}},
@@ -514,7 +514,7 @@ public:
                   Number{1999999999999999861, -18}},
                  {Number{3214285714285706, -15},
                   Number{3111111111111119, -15},
-                  Number{9999999999999999579, -18}},
+                  Number{numberint128(9999999999999999) + 1000 + 579, -18}},
                  {Number{1000000000000000000, -32768},
                   Number{1000000000000000000, -32768},
                   Number{0}},
@@ -617,7 +617,8 @@ public:
             bool caught = false;
             try
             {
-                Number{9'999'999'999'999'999'999, 32768} +
+                Number{
+                    numberint128(9'999'999'999'999'999) * 1000 + 999, 32768} +
                     Number{5'000'000'000'000'000'000, 32767};
             }
             catch (std::overflow_error const&)
@@ -862,7 +863,6 @@ public:
     test_root()
     {
         testcase << "test_root " << to_string(Number::getMantissaScale());
-        auto const scale = Number::getMantissaScale();
 
         using Case = std::tuple<Number, unsigned, Number>;
         auto test = [this](auto const& c) {
@@ -885,7 +885,7 @@ public:
         */
 
         auto const cSmall = std::to_array<Case>(
-            {{Number{2}, 2, Number{1414213562373095049, -15}},
+            {{Number{2}, 2, Number{1414213562373095049, -18}},
              {Number{2'000'000}, 2, Number{1414213562373095, -12}},
              {Number{2, -30}, 2, Number{1414213562373095, -30}},
              {Number{-27}, 3, Number{-3}},
