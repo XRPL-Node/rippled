@@ -2548,7 +2548,7 @@ NetworkOPsImp::setMode(OperatingMode om)
     if (mMode == om)
         return;
 
-    auto const oldMode = mMode;
+    auto const oldMode = mMode.load(std::memory_order_relaxed);
     mMode = om;
 
     accounting_.mode(om);
