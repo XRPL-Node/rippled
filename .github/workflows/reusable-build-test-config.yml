@@ -68,6 +68,7 @@ jobs:
     env:
       ENABLED_VOIDSTAR: ${{ contains(inputs.cmake_args, '-Dvoidstar=ON') }}
       ENABLED_COVERAGE: ${{ contains(inputs.cmake_args, '-Dcoverage=ON') }}
+      ENABLED_SANITIZERS: ${{ contains(inputs.cmake_args, '-fsanitize') }}
     steps:
       - name: Cleanup workspace (macOS and Windows)
         if: ${{ runner.os == 'macOS' || runner.os == 'Windows' }}
@@ -139,7 +140,7 @@ jobs:
           if-no-files-found: error
 
       - name: Check linking (Linux)
-        if: ${{ runner.os == 'Linux' }}
+        if: ${{ runner.os == 'Linux' && env.ENABLED_SANITIZERS == 'false' }}
         working-directory: ${{ inputs.build_dir }}
         run: |
           ldd ./rippled
