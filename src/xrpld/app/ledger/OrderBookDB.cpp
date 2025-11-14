@@ -7,6 +7,7 @@
 #include <xrpld/core/JobQueue.h>
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/basics/MallocTrim.h>
 #include <xrpl/protocol/Indexes.h>
 
 namespace ripple {
@@ -154,6 +155,8 @@ OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
     }
 
     app_.getLedgerMaster().newOrderBookDB();
+
+    mallocTrim(std::optional<std::string>("OrderBookUpdate"), j_);
 }
 
 void
