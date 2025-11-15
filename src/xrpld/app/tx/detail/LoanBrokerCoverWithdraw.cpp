@@ -3,6 +3,8 @@
 #include <xrpld/app/misc/LendingHelpers.h>
 #include <xrpld/app/tx/detail/Payment.h>
 
+#include "test/jtx/pay.h"
+
 namespace ripple {
 
 bool
@@ -163,33 +165,19 @@ LoanBrokerCoverWithdraw::doApply()
         // the payment engine, though only a subset of the functionality is
         // supported in this transaction. e.g. No paths, no partial
         // payments.
-        bool const mptDirect = amount.holds<MPTIssue>();
-        STAmount const maxSourceAmount =
-            Payment::getMaxSourceAmount(brokerPseudoID, amount);
-        SLE::pointer sleDst = view().peek(keylet::account(dstAcct));
-        if (!sleDst)
-            return tecINTERNAL;  // LCOV_EXCL_LINE
-
         Payment::RipplePaymentParams paymentParams{
             .ctx = ctx_,
-            .maxSourceAmount = maxSourceAmount,
+            .sendMax = amount,
             .srcAccountID = brokerPseudoID,
             .dstAccountID = dstAcct,
-            .sleDst = sleDst,
             .dstAmount = amount,
-            .paths = STPathSet{},
+            .sourceBalance = mSourceBalance,
+            .priorBalance = mPriorBalance,
+            .paths = {},
             .deliverMin = std::nullopt,
-            .j = j_};
-
-        TER ret;
-        if (mptDirect)
-        {
-            ret = Payment::makeMPTDirectPayment(paymentParams);
-        }
-        else
-        {
-            ret = Payment::makeRipplePayment(paymentParams);
-        }
+            .domainID = std::nullopt
+    };
+        TER const ret = Payment::makePayment(paymentParams);
         // Always claim a fee
         if (!isTesSuccess(ret) && !isTecClaim(ret))
         {

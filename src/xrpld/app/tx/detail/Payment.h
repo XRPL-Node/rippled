@@ -45,32 +45,20 @@ public:
     struct RipplePaymentParams
     {
         ApplyContext& ctx;
-        STAmount const& maxSourceAmount;
+        std::optional<STAmount> const& sendMax;
         AccountID const& srcAccountID;
         AccountID const& dstAccountID;
-        SLE::pointer sleDst;
         STAmount const& dstAmount;
-        // Paths need to be explicitly included because other transactions don't
-        // have them defined
+        XRPAmount const& sourceBalance;
+        XRPAmount const& priorBalance;
         STPathSet const& paths;
         std::optional<STAmount> const& deliverMin;
-        bool partialPaymentAllowed = false;
-        bool defaultPathsAllowed = true;
-        bool limitQuality = false;
-        beast::Journal j;
+        std::optional<uint256> const& domainID;
+        std::uint32_t flags = 0;
     };
 
-    static STAmount
-    getMaxSourceAmount(
-        AccountID const& senderAccount,
-        STAmount const& dstAmount,
-        std::optional<STAmount> const& sendMax = {});
-
     static TER
-    makeRipplePayment(RipplePaymentParams const& p);
-
-    static TER
-    makeMPTDirectPayment(RipplePaymentParams const& p);
+    makePayment(RipplePaymentParams& p);
 };
 
 }  // namespace ripple
