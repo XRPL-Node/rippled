@@ -37,7 +37,6 @@ namespace ripple {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
 // TODO: Once the Rules switching is implemented, default to largeRange
-thread_local Number::mantissa_scale Number::scale_ = small;  // large;
 thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
     smallRange;  // largeRange;
 
@@ -53,20 +52,19 @@ Number::setround(rounding_mode mode)
     return std::exchange(mode_, mode);
 }
 
-Number::mantissa_scale
+MantissaRange::mantissa_scale
 Number::getMantissaScale()
 {
-    return scale_;
+    return range_.get().scale;
 }
 
 void
-Number::setMantissaScale(mantissa_scale scale)
+Number::setMantissaScale(MantissaRange::mantissa_scale scale)
 {
     // scale_ and range_ MUST stay in lockstep
-    if (scale != mantissa_scale::small && scale != mantissa_scale::large)
+    if (scale != MantissaRange::small && scale != MantissaRange::large)
         LogicError("Unknown mantissa scale");
-    scale_ = scale;
-    range_ = scale == mantissa_scale::small ? smallRange : largeRange;
+    range_ = scale == MantissaRange::small ? smallRange : largeRange;
 }
 
 // Guard
@@ -547,7 +545,7 @@ Number::operator/=(Number const& y)
     // f can be up to 10^(38-19) = 10^19 safely
     static_assert(smallRange.log == 15);
     static_assert(largeRange.log == 18);
-    bool small = Number::scale_ == Number::small;
+    bool small = Number::getMantissaScale() == MantissaRange::small;
     uint128_t const f =
         small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000ULL;
     XRPL_ASSERT_PARTS(

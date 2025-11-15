@@ -10,13 +10,13 @@
 namespace ripple {
 
 std::string
-to_string(Number::mantissa_scale const& scale)
+to_string(MantissaRange::mantissa_scale const& scale)
 {
     switch (scale)
     {
-        case Number::small:
+        case MantissaRange::small:
             return "small";
-        case Number::large:
+        case MantissaRange::large:
             return "large";
         default:
             throw std::runtime_error("Bad scale");
@@ -69,7 +69,7 @@ public:
         BEAST_EXPECT(
             (m ==
              Number{
-                 scale == Number::small
+                 scale == MantissaRange::small
                      ? -9'223'372'036'854'776
                      : std::numeric_limits<std::int64_t>::min(),
                  18 - Number::mantissaLog()}));
@@ -77,7 +77,7 @@ public:
         BEAST_EXPECT(
             (M ==
              Number{
-                 scale == Number::small
+                 scale == MantissaRange::small
                      ? 9'223'372'036'854'776
                      : std::numeric_limits<std::int64_t>::max(),
                  18 - Number::mantissaLog()}));
@@ -115,7 +115,7 @@ public:
         test(Number(-25, 1), "-250");
         switch (scale)
         {
-            case Number::small:
+            case MantissaRange::small:
                 test(Number(2, 20), "2000000000000000e5");
                 test(Number(-2, -20), "-2000000000000000e-35");
                 // Test the edges
@@ -144,7 +144,7 @@ public:
                         "-9999999999999999");
                 }
                 break;
-            case Number::large:
+            case MantissaRange::large:
                 test(Number(2, 20), "2000000000000000000e2");
                 test(Number(-2, -20), "-2000000000000000000e-38");
                 // Test the edges
@@ -263,7 +263,7 @@ public:
                 BEAST_EXPECTS(result == z, ss.str());
             }
         };
-        if (scale == Number::small)
+        if (scale == MantissaRange::small)
             test(cSmall);
         else
             test(cLarge);
@@ -271,7 +271,7 @@ public:
             bool caught = false;
             try
             {
-                if (scale == Number::small)
+                if (scale == MantissaRange::small)
                     Number{9'999'999'999'999'999, 32768} +
                         Number{5'000'000'000'000'000, 32767};
                 else
@@ -284,7 +284,7 @@ public:
             }
             BEAST_EXPECT(caught);
         }
-        if (scale != Number::small)
+        if (scale != MantissaRange::small)
         {
             bool caught = false;
             try
@@ -371,7 +371,7 @@ public:
                 BEAST_EXPECTS(result == z, ss.str());
             }
         };
-        if (scale == Number::small)
+        if (scale == MantissaRange::small)
             test(cSmall);
         else
             test(cLarge);
@@ -394,7 +394,7 @@ public:
             }
         };
         auto tests = [&](auto const& cSmall, auto const& cLarge) {
-            if (scale == Number::small)
+            if (scale == MantissaRange::small)
                 test(cSmall);
             else
                 test(cLarge);
@@ -646,7 +646,7 @@ public:
             bool caught = false;
             try
             {
-                if (scale == Number::small)
+                if (scale == MantissaRange::small)
                     Number{9'999'999'999'999'999, 32768} *
                         Number{5'000'000'000'000'000, 32767};
                 else
@@ -659,7 +659,7 @@ public:
             }
             BEAST_EXPECT(caught);
         }
-        if (scale != Number::small)
+        if (scale != MantissaRange::small)
         {
             bool caught = false;
             try
@@ -693,7 +693,7 @@ public:
             }
         };
         auto tests = [&](auto const& cSmall, auto const& cLarge) {
-            if (scale == Number::small)
+            if (scale == MantissaRange::small)
                 test(cSmall);
             else
                 test(cLarge);
@@ -926,7 +926,7 @@ public:
         /*
         auto tests = [&](auto const& cSmall, auto const& cLarge) {
             test(cSmall);
-            if (scale != Number::small)
+            if (scale != MantissaRange::small)
                 test(cLarge);
         };
         */
@@ -1331,7 +1331,7 @@ public:
         Number ten{10};
         BEAST_EXPECT(ten.exponent() <= 0);
 
-        if (scale == Number::small)
+        if (scale == MantissaRange::small)
         {
             BEAST_EXPECT(
                 std::numeric_limits<std::int64_t>::max() > INITIAL_XRP.drops());
@@ -1375,7 +1375,7 @@ public:
     void
     run() override
     {
-        for (auto const scale : {Number::small, Number::large})
+        for (auto const scale : {MantissaRange::small, MantissaRange::large})
         {
             NumberMantissaScaleGuard sg(scale);
             testZero();

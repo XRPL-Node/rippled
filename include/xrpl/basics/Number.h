@@ -51,15 +51,20 @@ using numberint128 = __int128_t;
 struct MantissaRange
 {
     using internalrep = numberint128;
+    enum mantissa_scale { small, large };
 
-    explicit constexpr MantissaRange(internalrep min_)
-        : min(min_), max(min_ * 10 - 1), log(logTen(min).value_or(-1))
+    explicit constexpr MantissaRange(mantissa_scale scale_, internalrep min_)
+        : min(min_)
+        , max(min_ * 10 - 1)
+        , log(logTen(min).value_or(-1))
+        , scale(scale_)
     {
     }
 
     internalrep min;
     internalrep max;
     int log;
+    mantissa_scale scale;
 };
 
 class Number
@@ -234,11 +239,10 @@ public:
     static rounding_mode
     setround(rounding_mode mode);
 
-    enum mantissa_scale { small, large };
-    static mantissa_scale
+    static MantissaRange::mantissa_scale
     getMantissaScale();
     static void
-    setMantissaScale(mantissa_scale scale);
+    setMantissaScale(MantissaRange::mantissa_scale scale);
 
     inline static internalrep
     minMantissa()
@@ -279,12 +283,16 @@ private:
     static thread_local rounding_mode mode_;
     // The available ranges for mantissa
 
-    constexpr static MantissaRange smallRange{1'000'000'000'000'000LL};
+    constexpr static MantissaRange smallRange{
+        MantissaRange::small,
+        1'000'000'000'000'000LL};
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
     static_assert(smallRange.log == 15);
     // maxint64                               9,223,372,036,854,775,808
-    constexpr static MantissaRange largeRange{1'000'000'000'000'000'000LL};
+    constexpr static MantissaRange largeRange{
+        MantissaRange::large,
+        1'000'000'000'000'000'000LL};
     static_assert(isPowerOfTen(largeRange.min));
     static_assert(largeRange.max == internalrep(9'999'999'999'999'999'999ULL));
     static_assert(largeRange.log == 18);
@@ -294,7 +302,6 @@ private:
     // The range for the mantissa when normalized.
     // Use reference_wrapper to avoid making copies, and prevent accidentally
     // changing the values inside the range.
-    static thread_local mantissa_scale scale_;
     static thread_local std::reference_wrapper<MantissaRange const> range_;
 
     void
@@ -546,10 +553,11 @@ public:
 // This class may only end up needed in tests
 class NumberMantissaScaleGuard
 {
-    Number::mantissa_scale saved_;
+    MantissaRange::mantissa_scale saved_;
 
 public:
-    explicit NumberMantissaScaleGuard(Number::mantissa_scale scale) noexcept
+    explicit NumberMantissaScaleGuard(
+        MantissaRange::mantissa_scale scale) noexcept
         : saved_{Number::getMantissaScale()}
     {
         Number::setMantissaScale(scale);
