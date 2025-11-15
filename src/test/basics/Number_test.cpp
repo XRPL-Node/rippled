@@ -9,20 +9,6 @@
 
 namespace ripple {
 
-std::string
-to_string(MantissaRange::mantissa_scale const& scale)
-{
-    switch (scale)
-    {
-        case MantissaRange::small:
-            return "small";
-        case MantissaRange::large:
-            return "large";
-        default:
-            throw std::runtime_error("Bad scale");
-    }
-}
-
 class Number_test : public beast::unit_test::suite
 {
 public:

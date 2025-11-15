@@ -509,6 +509,20 @@ squelch(Number const& x, Number const& limit) noexcept
     return x;
 }
 
+inline std::string
+to_string(MantissaRange::mantissa_scale const& scale)
+{
+    switch (scale)
+    {
+        case MantissaRange::small:
+            return "small";
+        case MantissaRange::large:
+            return "large";
+        default:
+            throw std::runtime_error("Bad scale");
+    }
+}
+
 class saveNumberRoundMode
 {
     Number::rounding_mode mode_;
