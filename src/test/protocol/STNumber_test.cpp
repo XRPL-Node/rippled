@@ -148,12 +148,10 @@ struct STNumber_test : public beast::unit_test::suite
                         numberFromJson(sfNumber, maxInt) ==
                         STNumber(
                             sfNumber, Number{9'223'372'036'854'775'807, 0}));
-                    /*
                     BEAST_EXPECT(
                         numberFromJson(sfNumber, minInt) ==
                         STNumber(
-                            sfNumber, Number{-9'223'372'036'854'775'807, 0}));
-                        */
+                            sfNumber, -Number{9'223'372'036'854'775'808, 0}));
                 }
             }
 

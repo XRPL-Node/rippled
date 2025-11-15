@@ -65,6 +65,8 @@ STNumber::add(Serializer& s) const
     {
         constexpr std::int64_t min = 100'000'000'000'000'000LL;
         constexpr std::int64_t max = min * 10 - 1;
+        static_assert(
+            min < (std::numeric_limits<std::int64_t>::max() - 1 / 10));
         auto const [mantissa, exponent] = value_.normalizeToRange(min, max);
         s.add64(mantissa);
         s.add32(exponent);
@@ -197,16 +199,18 @@ numberFromJson(SField const& field, Json::Value const& value)
     else if (value.isString())
     {
         parts = partsFromString(value.asString());
-        // Only strings can represent out-of-range values.
-        if (parts.mantissa > std::numeric_limits<std::int64_t>::max())
-            Throw<std::range_error>("too high");
+        // Number mantissas are much bigger than the allowable parsed values, so
+        // it can't be out of range.
+        static_assert(
+            std::numeric_limits<numberint128>::max() >
+            std::numeric_limits<decltype(parts.mantissa)>::max());
     }
     else
     {
         Throw<std::runtime_error>("not a number");
     }
 
-    std::int64_t mantissa = parts.mantissa;
+    numberint128 mantissa = parts.mantissa;
     if (parts.negative)
         mantissa = -mantissa;
 
