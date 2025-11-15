@@ -36,9 +36,8 @@ struct make_unsigned<ripple::numberint128>
 namespace ripple {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
-// TODO: Once the Rules switching is implemented, default to largeRange
 thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
-    smallRange;  // largeRange;
+    largeRange;
 
 Number::rounding_mode
 Number::getround()
