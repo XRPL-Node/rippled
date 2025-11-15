@@ -170,7 +170,6 @@ public:
     {
         auto const scale = Number::getMantissaScale();
         testcase << "test_add " << to_string(scale);
-        auto const minMantissa = Number::minMantissa();
 
         using Case = std::tuple<Number, Number, Number>;
         auto const cSmall = std::to_array<Case>(
@@ -292,7 +291,6 @@ public:
     {
         auto const scale = Number::getMantissaScale();
         testcase << "test_sub " << to_string(scale);
-        auto const minMantissa = Number::minMantissa();
 
         using Case = std::tuple<Number, Number, Number>;
         auto const cSmall = std::to_array<Case>(
@@ -1354,7 +1352,8 @@ public:
             BEAST_EXPECT(max.exponent() <= 0);
             // 99999999999999999980000000000000000001 - also 38 digits
             BEAST_EXPECT(
-                (power(max, 2) == Number{99'999'999'999'999'999'98, 19}));
+                (power(max, 2) ==
+                 Number{numberint128(9'999'999'999'999'999) * 1000 + 998, 19}));
         }
     }
 
