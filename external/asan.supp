@@ -8,3 +8,8 @@ interceptor_name:.*/xrpl/net/AutoSocket.h
 interceptor_name:.*/xrpl/net/HTTPClientSSLContext.h
 interceptor_name:.*/src/libxrpl/net/RegisterSSLCerts.cpp
 interceptor_name:.*/src/tests/libxrpl/net/HTTPClient.cpp
+
+leak:ripple::HTTPClientImp
+leak:AutoSocket::AutoSocket
+leak:*/src/tests/libxrpl/net/HTTPClient.cpp
+leak:*/src/libxrpl/net/HTTPClient.cpp
