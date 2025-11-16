@@ -20,7 +20,9 @@ namespace ripple {
 class XRPAmount : private boost::totally_ordered<XRPAmount>,
                   private boost::additive<XRPAmount>,
                   private boost::equality_comparable<XRPAmount, std::int64_t>,
-                  private boost::additive<XRPAmount, std::int64_t>
+                  private boost::equality_comparable<XRPAmount, int>,
+                  private boost::additive<XRPAmount, std::int64_t>,
+                  private boost::additive<XRPAmount, int>
 {
 public:
     using unit_type = unit::dropTag;
@@ -68,11 +70,13 @@ public:
         return XRPAmount{drops_ * rhs};
     }
 
+    template <class T>
     friend constexpr XRPAmount
-    operator*(value_type lhs, XRPAmount const& rhs)
+    operator*(T lhs, XRPAmount const& rhs)
+        requires std::is_convertible_v<T, value_type>
     {
         // multiplication is commutative
-        return rhs * lhs;
+        return rhs.operator*(lhs);
     }
 
     XRPAmount&
@@ -127,6 +131,12 @@ public:
     {
         return drops_ == other;
     }
+    friend bool
+    operator==(value_type lhs, XRPAmount const& rhs)
+    {
+        // multiplication is commutative
+        return rhs.operator==(lhs);
+    }
 
     bool
     operator<(XRPAmount const& other) const
@@ -143,7 +153,7 @@ public:
 
     operator Number() const noexcept
     {
-        return drops();
+        return Number{drops()};
     }
 
     /** Return the sign of the amount */

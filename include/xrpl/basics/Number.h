@@ -13,11 +13,27 @@ class Number;
 std::string
 to_string(Number const& amount);
 
+template <class T1, class T2>
+concept ArithmeticWithNumber =
+    std::is_arithmetic_v<std::remove_reference_t<T1>> &&
+    std::is_convertible_v<T2, Number>;
+
+template <class T1, class T2>
+concept OneNumberParam =
+    ArithmeticWithNumber<T1, T2> || ArithmeticWithNumber<T2, T1>;
+
 class Number
 {
     using rep = std::int64_t;
     rep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
+
+    using urep = std::make_unsigned_t<rep>;
+
+    template <class T>
+    rep
+    utoi(T mantissa)
+        requires std::is_unsigned_v<T>;
 
 public:
     // The range for the mantissa when normalized
@@ -35,7 +51,10 @@ public:
 
     explicit constexpr Number() = default;
 
-    Number(rep mantissa);
+    template <class T>
+    explicit Number(T mantissa)
+        requires std::is_unsigned_v<T>;
+    explicit Number(rep mantissa);
     explicit Number(rep mantissa, int exponent);
     explicit constexpr Number(rep mantissa, int exponent, unchecked) noexcept;
 
@@ -59,13 +78,39 @@ public:
 
     Number&
     operator+=(Number const& x);
+    template <class T>
+    Number&
+    operator+=(T x)
+    {
+        return operator+=(Number(x));
+    }
+
     Number&
     operator-=(Number const& x);
+    template <class T>
+    Number&
+    operator-=(T x)
+    {
+        return operator-=(Number(x));
+    }
 
     Number&
     operator*=(Number const& x);
+    template <class T>
+    Number&
+    operator*=(T x)
+    {
+        return operator*=(Number(x));
+    }
+
     Number&
     operator/=(Number const& x);
+    template <class T>
+    Number&
+    operator/=(T x)
+    {
+        return operator/=(Number(x));
+    }
 
     static constexpr Number
     min() noexcept;
@@ -87,11 +132,25 @@ public:
     {
         return x.mantissa_ == y.mantissa_ && x.exponent_ == y.exponent_;
     }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator==(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator==(Number(x), Number(y));
+    }
 
     friend constexpr bool
     operator!=(Number const& x, Number const& y) noexcept
     {
         return !(x == y);
+    }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator!=(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator!=(Number(x), Number(y));
     }
 
     friend constexpr bool
@@ -122,6 +181,13 @@ public:
 
         // If equal exponents, compare mantissas
         return x.mantissa_ < y.mantissa_;
+    }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator<(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator<(Number(x), Number(y));
     }
 
     /** Return the sign of the amount */
@@ -154,17 +220,38 @@ public:
     {
         return y < x;
     }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator>(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator>(Number(x), Number(y));
+    }
 
     friend constexpr bool
     operator<=(Number const& x, Number const& y) noexcept
     {
         return !(y < x);
     }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator<=(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator<=(Number(x), Number(y));
+    }
 
     friend constexpr bool
     operator>=(Number const& x, Number const& y) noexcept
     {
         return !(x < y);
+    }
+    template <class T1, class T2>
+    friend constexpr bool
+    operator>=(T1&& x, T2&& y) noexcept
+        requires OneNumberParam<T1, T2>
+    {
+        return operator>=(Number(x), Number(y));
     }
 
     friend std::ostream&
@@ -192,6 +279,16 @@ private:
     class Guard;
 };
 
+template <class T>
+Number::rep
+Number::utoi(T mantissa)
+    requires std::is_unsigned_v<T>
+{
+    if (mantissa > std::numeric_limits<rep>::max())
+        throw std::overflow_error("too high");
+    return static_cast<rep>(mantissa);
+}
+
 inline constexpr Number::Number(rep mantissa, int exponent, unchecked) noexcept
     : mantissa_{mantissa}, exponent_{exponent}
 {
@@ -204,6 +301,13 @@ inline Number::Number(rep mantissa, int exponent)
 }
 
 inline Number::Number(rep mantissa) : Number{mantissa, 0}
+{
+}
+
+template <class T>
+Number::Number(T mantissa)
+    requires std::is_unsigned_v<T>
+    : Number{utoi(mantissa), 0}
 {
 }
 
@@ -277,12 +381,28 @@ operator+(Number const& x, Number const& y)
     return z;
 }
 
+template <class T1, class T2>
+constexpr Number
+operator+(T1&& x, T2&& y)
+    requires OneNumberParam<T1, T2>
+{
+    return operator+(Number(x), Number(y));
+}
+
 inline Number
 operator-(Number const& x, Number const& y)
 {
     auto z = x;
     z -= y;
     return z;
+}
+
+template <class T1, class T2>
+constexpr Number
+operator-(T1&& x, T2&& y)
+    requires OneNumberParam<T1, T2>
+{
+    return operator-(Number(x), Number(y));
 }
 
 inline Number
@@ -293,12 +413,28 @@ operator*(Number const& x, Number const& y)
     return z;
 }
 
+template <class T1, class T2>
+constexpr Number
+operator*(T1&& x, T2&& y)
+    requires OneNumberParam<T1, T2>
+{
+    return operator*(Number(x), Number(y));
+}
+
 inline Number
 operator/(Number const& x, Number const& y)
 {
     auto z = x;
     z /= y;
     return z;
+}
+
+template <class T1, class T2>
+constexpr Number
+operator/(T1&& x, T2&& y)
+    requires OneNumberParam<T1, T2>
+{
+    return operator/(Number(x), Number(y));
 }
 
 inline constexpr Number

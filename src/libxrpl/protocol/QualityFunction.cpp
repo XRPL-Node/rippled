@@ -16,6 +16,12 @@ QualityFunction::QualityFunction(
 {
     if (quality.rate() <= beast::zero)
         Throw<std::runtime_error>("QualityFunction quality rate is 0.");
+
+    static_assert(std::is_arithmetic_v<std::remove_reference_t<int>>);
+    static_assert(std::is_convertible_v<ripple::STAmount, Number>);
+    static_assert(ripple::OneNumberParam<int, ripple::STAmount>);
+    static_assert(!ripple::OneNumberParam<Number, Number>);
+
     b_ = 1 / quality.rate();
 }
 

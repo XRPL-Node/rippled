@@ -42,7 +42,7 @@ public:
     IOUAmount() = default;
     explicit IOUAmount(Number const& other);
     IOUAmount(beast::Zero);
-    IOUAmount(std::int64_t mantissa, int exponent);
+    IOUAmount(std::int64_t mantissa, int exponent = 0);
 
     IOUAmount& operator=(beast::Zero);
 

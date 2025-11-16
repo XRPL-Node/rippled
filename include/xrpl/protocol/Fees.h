@@ -29,7 +29,9 @@ struct Fees
     XRPAmount
     accountReserve(std::size_t ownerCount) const
     {
-        return reserve + ownerCount * increment;
+        auto const p = ownerCount * increment;
+        auto const s = reserve + p;
+        return s;
     }
 };
 

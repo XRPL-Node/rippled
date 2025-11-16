@@ -64,7 +64,7 @@ public:
 
     operator Number() const noexcept
     {
-        return value();
+        return Number{value()};
     }
 
     /** Return the sign of the amount */

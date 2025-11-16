@@ -370,6 +370,7 @@ public:
             env(pay(alice, bob, USD(1)), sendmax(USD(10)));
             env.close();
 
+            auto const ten = USD(10);
             env.require(balance(alice, USD(10) - amountWithRate));
             env.require(balance(bob, USD(1)));
         }

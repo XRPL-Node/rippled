@@ -731,6 +731,7 @@ class Simulate_test : public beast::unit_test::suite
         {
             auto validateOutput = [&](Json::Value const& resp,
                                       Json::Value const& tx) {
+                static_assert(ArithmeticWithNumber<XRPAmount, int>);
                 auto result = resp[jss::result];
                 checkBasicReturnValidity(
                     result,

@@ -2884,7 +2884,7 @@ assetsToSharesDeposit(
             Number(assets.mantissa(), assets.exponent() + vault->at(sfScale))
                 .truncate()};
 
-    Number const shareTotal = issuance->at(sfOutstandingAmount);
+    Number const shareTotal = Number{issuance->at(sfOutstandingAmount)};
     shares = ((shareTotal * assets) / assetTotal).truncate();
     return shares;
 }
@@ -2913,7 +2913,7 @@ sharesToAssetsDeposit(
             shares.exponent() - vault->at(sfScale),
             false};
 
-    Number const shareTotal = issuance->at(sfOutstandingAmount);
+    Number const shareTotal{issuance->at(sfOutstandingAmount)};
     assets = (assetTotal * shares) / shareTotal;
     return assets;
 }
@@ -2939,7 +2939,7 @@ assetsToSharesWithdraw(
     STAmount shares{vault->at(sfShareMPTID)};
     if (assetTotal == 0)
         return shares;
-    Number const shareTotal = issuance->at(sfOutstandingAmount);
+    Number const shareTotal{issuance->at(sfOutstandingAmount)};
     Number result = (shareTotal * assets) / assetTotal;
     if (truncate == TruncateShares::yes)
         result = result.truncate();
@@ -2967,7 +2967,7 @@ sharesToAssetsWithdraw(
     STAmount assets{vault->at(sfAsset)};
     if (assetTotal == 0)
         return assets;
-    Number const shareTotal = issuance->at(sfOutstandingAmount);
+    Number const shareTotal{issuance->at(sfOutstandingAmount)};
     assets = (assetTotal * shares) / shareTotal;
     return assets;
 }

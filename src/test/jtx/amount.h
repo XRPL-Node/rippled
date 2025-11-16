@@ -142,6 +142,34 @@ public:
     }
 };
 
+/*
+template <class T1, class T2>
+concept STAmountParams =
+    std::is_convertible_v<T1, STAmount> && std::is_convertible_v<T2, STAmount>;
+
+template <class T1, class T2>
+STAmount
+operator-(T2&& lhs, T1&& rhs)
+    requires STAmountParams<T1, T2>
+{
+    return STAmount(lhs) - STAmount(rhs);
+}
+*/
+
+/*
+STAmount
+operator-(PrettyAmount&& lhs, STAmount const& rhs)
+{
+    return STAmount(lhs) - rhs;
+}
+
+STAmount
+operator-(STAmount const& lhs, PrettyAmount&& rhs)
+{
+    return lhs - STAmount(rhs);
+}
+*/
+
 inline bool
 operator==(PrettyAmount const& lhs, PrettyAmount const& rhs)
 {
