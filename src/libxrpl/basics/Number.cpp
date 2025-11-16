@@ -854,7 +854,7 @@ root2(Number f)
         return f;
 
     // Scale f into the range (0, 1) such that f's exponent is a multiple of d
-    auto e = f.exponent() + 16;
+    auto e = f.exponent() + Number::mantissaLog() + 1;
     if (e % 2 != 0)
         ++e;
     f = Number{f.mantissa(), f.exponent() - e};  // f /= 10^e;

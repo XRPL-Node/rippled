@@ -949,6 +949,46 @@ public:
     }
 
     void
+    test_root2()
+    {
+        auto const scale = Number::getMantissaScale();
+        testcase << "test_root2 " << to_string(scale);
+
+        auto test = [this](auto const& c) {
+            for (auto const& x : c)
+            {
+                auto const expected = root(x, 2);
+                auto const result = root2(x);
+                std::stringstream ss;
+                ss << "root2(" << x << ") = " << result
+                   << ". Expected: " << expected;
+                BEAST_EXPECTS(result == expected, ss.str());
+            }
+        };
+
+        auto const cSmall = std::to_array<Number>(
+            {Number{2},
+             Number{2'000'000},
+             Number{2, -30},
+             Number{27},
+             Number{1},
+             Number{5, -1},
+             Number{0},
+             Number{5625, -4}});
+        test(cSmall);
+        bool caught = false;
+        try
+        {
+            (void)root2(Number{-2});
+        }
+        catch (std::overflow_error const&)
+        {
+            caught = true;
+        }
+        BEAST_EXPECT(caught);
+    }
+
+    void
     test_power1()
     {
         testcase << "test_power1 " << to_string(Number::getMantissaScale());
@@ -1371,6 +1411,7 @@ public:
             test_mul();
             test_div();
             test_root();
+            test_root2();
             test_power1();
             test_power2();
             testConversions();
