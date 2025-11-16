@@ -42,6 +42,9 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
     if (assets.asset() != vaultAsset)
         return tecWRONG_ASSET;
 
+    if (!assets.validNumber())
+        return tecPRECISION_LOSS;
+
     if (vaultAsset.native())
         ;  // No special checks for XRP
     else if (vaultAsset.holds<MPTIssue>())
@@ -227,14 +230,14 @@ VaultDeposit::doApply()
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             sharesCreated = *maybeShares;
         }
-        if (sharesCreated == beast::zero)
+        if (sharesCreated == beast::zero || !sharesCreated.validNumber())
             return tecPRECISION_LOSS;
 
         auto const maybeAssets =
             sharesToAssetsDeposit(vault, sleIssuance, sharesCreated);
         if (!maybeAssets)
             return tecINTERNAL;  // LCOV_EXCL_LINE
-        else if (*maybeAssets > amount)
+        else if (*maybeAssets > amount || !maybeAssets->validNumber())
         {
             // LCOV_EXCL_START
             JLOG(j_.error()) << "VaultDeposit: would take more than offered.";

@@ -71,9 +71,13 @@ VaultClawback::preclaim(PreclaimContext const& ctx)
     }
 
     Asset const vaultAsset = vault->at(sfAsset);
-    if (auto const amount = ctx.tx[~sfAmount];
-        amount && vaultAsset != amount->asset())
-        return tecWRONG_ASSET;
+    if (auto const amount = ctx.tx[~sfAmount])
+    {
+        if (vaultAsset != amount->asset())
+            return tecWRONG_ASSET;
+        else if (!amount->validNumber())
+            return tecPRECISION_LOSS;
+    }
 
     if (vaultAsset.native())
     {

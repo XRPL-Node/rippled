@@ -156,6 +156,9 @@ public:
     exponent() const noexcept;
 
     bool
+    integral() const noexcept;
+
+    bool
     native() const noexcept;
 
     template <ValidIssueType TIss>
@@ -436,6 +439,12 @@ STAmount::exponent() const noexcept
 }
 
 inline bool
+STAmount::integral() const noexcept
+{
+    return mAsset.integral();
+}
+
+inline bool
 STAmount::native() const noexcept
 {
     return mAsset.native();
@@ -553,7 +562,7 @@ STAmount::clear()
 {
     // The -100 is used to allow 0 to sort less than a small positive values
     // which have a negative exponent.
-    mOffset = native() ? 0 : -100;
+    mOffset = integral() ? 0 : -100;
     mValue = 0;
     mIsNegative = false;
 }
