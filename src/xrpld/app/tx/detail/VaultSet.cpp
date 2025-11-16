@@ -143,11 +143,18 @@ VaultSet::doApply()
         if (tx[sfAssetsMaximum] != 0 &&
             tx[sfAssetsMaximum] < *vault->at(sfAssetsTotal))
             return tecLIMIT_EXCEEDED;
-        vault->at(sfAssetsMaximum) = tx[sfAssetsMaximum];
-        if (vault->at(sfAsset).value().integral())
+        auto assetsMaximumProxy = vault->at(~sfAssetsMaximum);
+        assetsMaximumProxy = tx[sfAssetsMaximum];
+        if (auto const stNumber = assetsMaximumProxy.stValue();
+            stNumber && !stNumber->validNumber(vault->at(sfAsset)))
         {
-            if (!vault->at(sfAssetsMaximum).value().valid(Number::compatible))
-                return tecLIMIT_EXCEEDED;
+            // LCOV_EXCL_START
+            // This should be impossible, because invalid values would have been
+            // stopped by `VaultCreate`.
+            UNREACHABLE(
+                "ripple::VaultSet::doApply : invalid assets maximum value");
+            return tecLIMIT_EXCEEDED;
+            // LCOV_EXCL_STOP
         }
     }
 

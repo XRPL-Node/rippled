@@ -2164,6 +2164,28 @@ ValidAMM::finalize(
 
 //------------------------------------------------------------------------------
 
+ValidVault::NumberInfo
+ValidVault::NumberInfo::make(
+    SLE const& from,
+    SF_NUMBER const& field,
+    Asset const& asset)
+{
+    bool valid = true;
+
+    // Poke around in the internals of STObject to get the STNumber object
+    if (auto const stNumber =
+            dynamic_cast<STNumber const*>(from.peekAtPField(field)))
+        valid = stNumber->isIntegral() == asset.integral() &&
+            stNumber->validNumber();
+
+    return {.n = from.at(field), .valid = valid};
+}
+
+ValidVault::NumberInfo::operator Number const&() const
+{
+    return n;
+}
+
 ValidVault::Vault
 ValidVault::Vault::make(SLE const& from)
 {
@@ -2176,10 +2198,11 @@ ValidVault::Vault::make(SLE const& from)
     self.asset = from.at(sfAsset);
     self.pseudoId = from.getAccountID(sfAccount);
     self.shareMPTID = from.getFieldH192(sfShareMPTID);
-    self.assetsTotal = from.at(sfAssetsTotal);
-    self.assetsAvailable = from.at(sfAssetsAvailable);
-    self.assetsMaximum = from.at(sfAssetsMaximum);
-    self.lossUnrealized = from.at(sfLossUnrealized);
+    self.assetsTotal = NumberInfo::make(from, sfAssetsTotal, self.asset);
+    self.assetsAvailable =
+        NumberInfo::make(from, sfAssetsAvailable, self.asset);
+    self.assetsMaximum = NumberInfo::make(from, sfAssetsMaximum, self.asset);
+    self.lossUnrealized = NumberInfo::make(from, sfLossUnrealized, self.asset);
     return self;
 }
 
@@ -2413,10 +2436,8 @@ ValidVault::finalize(
         beforeVault_.empty() || beforeVault_[0].key == afterVault.key,
         "ripple::ValidVault::finalize : single vault operation");
 
-    if (!afterVault.assetsTotal.representable() ||
-        !afterVault.assetsAvailable.representable() ||
-        !afterVault.assetsMaximum.representable() ||
-        !afterVault.lossUnrealized.representable())
+    if (!afterVault.assetsTotal.valid || !afterVault.assetsAvailable.valid ||
+        !afterVault.assetsMaximum.valid || !afterVault.lossUnrealized.valid)
     {
         JLOG(j.fatal()) << "Invariant failed: vault overflowed maximum current "
                            "representable integer value";
@@ -2500,7 +2521,7 @@ ValidVault::finalize(
         result = false;
     }
 
-    if (afterVault.assetsAvailable > afterVault.assetsTotal)
+    if (afterVault.assetsAvailable.n > afterVault.assetsTotal)
     {
         JLOG(j.fatal()) << "Invariant failed: assets available must "
                            "not be greater than assets outstanding";
@@ -2541,7 +2562,7 @@ ValidVault::finalize(
     }
 
     if (!beforeVault_.empty() &&
-        afterVault.lossUnrealized != beforeVault_[0].lossUnrealized)
+        afterVault.lossUnrealized.n != beforeVault_[0].lossUnrealized)
     {
         JLOG(j.fatal()) <<  //
             "Invariant failed: vault transaction must not change loss "
@@ -2711,7 +2732,7 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                if (beforeVault.assetsTotal != afterVault.assetsTotal)
+                if (beforeVault.assetsTotal.n != afterVault.assetsTotal)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: set must not change assets "
@@ -2720,7 +2741,7 @@ ValidVault::finalize(
                 }
 
                 if (afterVault.assetsMaximum > zero &&
-                    afterVault.assetsTotal > afterVault.assetsMaximum)
+                    afterVault.assetsTotal.n > afterVault.assetsMaximum)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: set assets outstanding must not "
@@ -2728,7 +2749,7 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                if (beforeVault.assetsAvailable != afterVault.assetsAvailable)
+                if (beforeVault.assetsAvailable.n != afterVault.assetsAvailable)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: set must not change assets "
@@ -2816,7 +2837,7 @@ ValidVault::finalize(
                 }
 
                 if (afterVault.assetsMaximum > zero &&
-                    afterVault.assetsTotal > afterVault.assetsMaximum)
+                    afterVault.assetsTotal.n > afterVault.assetsMaximum)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit assets outstanding must not "

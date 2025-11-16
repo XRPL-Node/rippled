@@ -418,6 +418,12 @@ public:
     operator=(NumberRoundModeGuard const&) = delete;
 };
 
+class NumberOverflow : public std::overflow_error
+{
+public:
+    using overflow_error::overflow_error;
+};
+
 }  // namespace ripple
 
 #endif  // XRPL_BASICS_NUMBER_H_INCLUDED

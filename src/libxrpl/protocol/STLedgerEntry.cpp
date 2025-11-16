@@ -12,6 +12,7 @@
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STBase.h>
 #include <xrpl/protocol/STLedgerEntry.h>
+#include <xrpl/protocol/STNumber.h>
 #include <xrpl/protocol/STObject.h>
 #include <xrpl/protocol/Serializer.h>
 #include <xrpl/protocol/jss.h>
@@ -67,6 +68,32 @@ STLedgerEntry::setSLEType()
 
     type_ = format->getType();
     applyTemplate(format->getSOTemplate());  // May throw
+
+    // Per object type overrides
+    // Currently only covers STNumber fields to link them to appropriate assets
+    switch (type_)
+    {
+        case ltVAULT: {
+            auto const asset = at(sfAsset);
+            for (auto const& field :
+                 {~sfAssetsAvailable,
+                  ~sfAssetsTotal,
+                  ~sfAssetsMaximum,
+                  ~sfLossUnrealized})
+            {
+                if (auto proxy = at(field))
+                    if (auto stNumber = proxy.stValue())
+                        stNumber->usesAsset(asset);
+            }
+        }
+            /*
+            // TODO: If possible, set up the loan-related STNumber fields, too.
+            // May not be possible because we don't have a view available.
+
+            case ltLOAN_BROKER:
+            case ltLOAN:
+            */
+    }
 }
 
 std::string

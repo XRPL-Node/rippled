@@ -174,8 +174,6 @@ VaultWithdraw::doApply()
             if (!maybeAssets)
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             assetsWithdrawn = *maybeAssets;
-            if (!assetsWithdrawn.validNumber())
-                return tecPRECISION_LOSS;
         }
         else if (amount.asset() == share)
         {
@@ -186,8 +184,6 @@ VaultWithdraw::doApply()
             if (!maybeAssets)
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             assetsWithdrawn = *maybeAssets;
-            if (!assetsWithdrawn.validNumber())
-                return tecPRECISION_LOSS;
         }
         else
             return tefINTERNAL;  // LCOV_EXCL_LINE

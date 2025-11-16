@@ -42,9 +42,6 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
     if (assets.asset() != vaultAsset)
         return tecWRONG_ASSET;
 
-    if (!assets.validNumber())
-        return tecPRECISION_LOSS;
-
     if (vaultAsset.native())
         ;  // No special checks for XRP
     else if (vaultAsset.holds<MPTIssue>())
@@ -230,14 +227,14 @@ VaultDeposit::doApply()
                 return tecINTERNAL;  // LCOV_EXCL_LINE
             sharesCreated = *maybeShares;
         }
-        if (sharesCreated == beast::zero || !sharesCreated.validNumber())
+        if (sharesCreated == beast::zero)
             return tecPRECISION_LOSS;
 
         auto const maybeAssets =
             sharesToAssetsDeposit(vault, sleIssuance, sharesCreated);
         if (!maybeAssets)
             return tecINTERNAL;  // LCOV_EXCL_LINE
-        else if (*maybeAssets > amount || !maybeAssets->validNumber())
+        else if (*maybeAssets > amount)
         {
             // LCOV_EXCL_START
             JLOG(j_.error()) << "VaultDeposit: would take more than offered.";
@@ -263,13 +260,43 @@ VaultDeposit::doApply()
         sharesCreated.asset() != assetsDeposited.asset(),
         "ripple::VaultDeposit::doApply : assets are not shares");
 
-    vault->at(sfAssetsTotal) += assetsDeposited;
-    vault->at(sfAssetsAvailable) += assetsDeposited;
+    auto assetsTotalProxy = vault->at(sfAssetsTotal);
+    auto assetsAvailableProxy = vault->at(sfAssetsAvailable);
+
+    assetsTotalProxy += assetsDeposited;
+    assetsAvailableProxy += assetsDeposited;
     view().update(vault);
+
+    auto const asset = *vault->at(sfAsset);
+    if (auto stNumber = assetsTotalProxy.stValue();
+        stNumber && !stNumber->safeNumber(asset))
+    {
+        JLOG(j_.warn()) << "VaultDeposit: Invalid assets total value for "
+                           "integral asset type: "
+                        << *assetsTotalProxy << " > "
+                        << STNumber::safeNumberLimit();
+        return tecPRECISION_LOSS;
+    }
+    if (auto stNumber = assetsAvailableProxy.stValue();
+        stNumber && !stNumber->safeNumber(asset))
+    {
+        // LCOV_EXCL_START
+        // This should be impossible to reach because total should never be less
+        // than available, so if total is ok, available should be ok.
+        UNREACHABLE(
+            "ripple::VaultDeposit::doApply() : AssetsAvailable exceeds "
+            "AssetsTotal");
+        JLOG(j_.warn()) << "VaultDeposit: Invalid assets available value for "
+                           "integral asset type: "
+                        << *assetsAvailableProxy << " > "
+                        << STNumber::safeNumberLimit();
+        return tecPRECISION_LOSS;
+        // LCOV_EXCL_STOP
+    }
 
     // A deposit must not push the vault over its limit.
     auto const maximum = *vault->at(sfAssetsMaximum);
-    if (maximum != 0 && *vault->at(sfAssetsTotal) > maximum)
+    if (maximum != 0 && *assetsTotalProxy > maximum)
         return tecLIMIT_EXCEEDED;
 
     // Transfer assets from depositor to vault.

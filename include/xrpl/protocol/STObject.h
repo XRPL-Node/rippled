@@ -487,6 +487,10 @@ public:
     T const*
     operator->() const;
 
+    /// Access the underlying STObject without necessarily dereferencing it
+    T*
+    stValue() const;
+
 protected:
     STObject* st_;
     SOEStyle style_;
@@ -726,7 +730,15 @@ template <class T>
 T const*
 STObject::Proxy<T>::operator->() const
 {
-    return this->find();
+    return stValue();
+}
+
+/// Access the underlying STObject without necessarily dereferencing it
+template <class T>
+T*
+STObject::Proxy<T>::stValue() const
+{
+    return dynamic_cast<T*>(st_->getPField(*f_));
 }
 
 template <class T>

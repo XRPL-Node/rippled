@@ -193,7 +193,28 @@ VaultCreate::doApply()
     vault->at(sfLossUnrealized) = Number(0);
     // Leave default values for AssetTotal and AssetAvailable, both zero.
     if (auto value = tx[~sfAssetsMaximum])
-        vault->at(sfAssetsMaximum) = *value;
+    {
+        auto assetsMaximumProxy = vault->at(~sfAssetsMaximum);
+        assetsMaximumProxy = *value;
+        if (auto const stNumber = assetsMaximumProxy.stValue();
+            stNumber && !stNumber->validNumber(asset))
+        {
+            JLOG(j_.warn()) << "VaultCreate: Invalid assets maximum value for "
+                               "integral asset type: "
+                            << *value << " > " << STNumber::validNumberLimit();
+            return tecPRECISION_LOSS;
+        }
+    }
+    // TODO: Should integral types automatically set a limit to the
+    // Number::validNumberLimit() value? Or safeNumberLimit()?
+    /*
+    else if (asset.integral())
+    {
+        auto assetsMaximumProxy = vault->at(~sfAssetsMaximum);
+        assetsMaximumProxy = STNumber::validNumberLimit();
+        assetsMaximumProxy.stValue()->usesAsset(asset);
+    }
+    */
     vault->at(sfShareMPTID) = mptIssuanceID;
     if (auto value = tx[~sfData])
         vault->at(sfData) = *value;
@@ -204,13 +225,6 @@ VaultCreate::doApply()
         vault->at(sfWithdrawalPolicy) = vaultStrategyFirstComeFirstServe;
     if (scale)
         vault->at(sfScale) = scale;
-    if (asset.integral())
-    {
-        // Only the Maximum can be a non-zero value, so only it needs to be
-        // checked.
-        if (!vault->at(sfAssetsMaximum).value().valid(Number::compatible))
-            return tecLIMIT_EXCEEDED;
-    }
     view().insert(vault);
 
     // Explicitly create MPToken for the vault owner

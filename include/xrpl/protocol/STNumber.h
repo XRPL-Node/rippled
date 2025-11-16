@@ -24,6 +24,10 @@ class STNumber : public STBase, public CountedObject<STNumber>
 {
 private:
     Number value_;
+    // isInteger_ is not serialized or transmitted in any way. It is used only
+    // for internal validation of integer types. It is a one-way switch. Once
+    // it's on, it stays on.
+    bool isInteger_ = false;
 
 public:
     using value_type = Number;
@@ -50,6 +54,35 @@ public:
         setValue(rhs);
         return *this;
     }
+
+    // Tell the STNumber whether the value it is holding represents an integer,
+    // and must fit within the allowable range.
+    void
+    usesAsset(Asset const& a);
+    // The asset isn't stored, only whether it's an integral type. Get that flag
+    // back out.
+    bool
+    isIntegral() const;
+    // Returns whether the value fits within Number::maxIntValue. Transactors
+    // should check this whenever interacting with an STNumber.
+    bool
+    safeNumber() const;
+    /// Combines usesAsset(a) and safeNumber()
+    static std::int64_t
+    safeNumberLimit();
+    bool
+    safeNumber(Asset const& a);
+    // Returns whether the value fits within Number::maxMantissa. Transactors
+    // may check this, too, but are not required to. It will be checked when
+    // serializing, and will throw if false, thus preventing the value from
+    // being silently truncated.
+    bool
+    validNumber() const;
+    /// Combines usesAsset(a) and validAsset()
+    bool
+    validNumber(Asset const& a);
+    static std::int64_t
+    validNumberLimit();
 
     bool
     isEquivalent(STBase const& t) const override;

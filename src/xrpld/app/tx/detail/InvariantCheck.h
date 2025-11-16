@@ -5,6 +5,7 @@
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/protocol/MPTIssue.h>
+#include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STLedgerEntry.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/TER.h>
@@ -738,16 +739,38 @@ class ValidVault
 {
     Number static constexpr zero{};
 
+    struct Vault;
+
+    struct NumberInfo final
+    {
+        Number n;
+        bool valid;
+
+        // Make this Number wrapper as transparent as possible, except when
+        // checking validity. However, rather than fleshing out all the
+        // comparison operators, etc, a few places will still need to specify
+        // "n".
+        operator Number const&() const;
+
+    private:
+        friend class ValidVault::Vault;
+
+        NumberInfo static make(
+            SLE const& from,
+            SF_NUMBER const& field,
+            Asset const& asset);
+    };
+
     struct Vault final
     {
         uint256 key = beast::zero;
         Asset asset = {};
         AccountID pseudoId = {};
         uint192 shareMPTID = beast::zero;
-        Number assetsTotal = 0;
-        Number assetsAvailable = 0;
-        Number assetsMaximum = 0;
-        Number lossUnrealized = 0;
+        NumberInfo assetsTotal{0, true};
+        NumberInfo assetsAvailable{0, true};
+        NumberInfo assetsMaximum{0, true};
+        NumberInfo lossUnrealized{0, true};
 
         Vault static make(SLE const&);
     };

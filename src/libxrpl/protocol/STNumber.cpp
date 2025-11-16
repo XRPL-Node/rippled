@@ -50,6 +50,8 @@ STNumber::add(Serializer& s) const
     XRPL_ASSERT(
         getFName().fieldType == getSType(),
         "ripple::STNumber::add : field type match");
+    if (!validNumber())
+        throw NumberOverflow(to_string(value_));
     s.add64(value_.mantissa());
     s.add32(value_.exponent());
 }
@@ -64,6 +66,87 @@ void
 STNumber::setValue(Number const& v)
 {
     value_ = v;
+}
+
+// Tell the STNumber whether the value it is holding represents an integer, and
+// must fit within the allowable range.
+void
+STNumber::usesAsset(Asset const& a)
+{
+    XRPL_ASSERT_PARTS(
+        !isInteger_ || a.integral(),
+        "ripple::STNumber::value",
+        "asset check only gets stricter");
+    // isInteger_ is a one-way switch. Once it's on, it stays on.
+    if (isInteger_)
+        return;
+    isInteger_ = a.integral();
+}
+
+bool
+STNumber::isIntegral() const
+{
+    return isInteger_;
+}
+
+// Returns whether the value fits within Number::maxIntValue. Transactors
+// should check this whenever interacting with an STNumber.
+bool
+STNumber::safeNumber() const
+{
+    if (!isInteger_)
+        return true;
+
+    static Number const max = safeNumberLimit();
+    static Number const maxNeg = -max;
+    // Avoid making a copy
+    if (value_ < 0)
+        return value_ >= maxNeg;
+    return value_ <= max;
+}
+
+bool
+STNumber::safeNumber(Asset const& a)
+{
+    usesAsset(a);
+    return safeNumber();
+}
+
+std::int64_t
+STNumber::safeNumberLimit()
+{
+    return Number::maxIntValue;
+}
+
+// Returns whether the value fits within Number::maxMantissa. Transactors
+// may check this, too, but are not required to. It will be checked when
+// serializing, and will throw if false, thus preventing the value from
+// being silently truncated.
+bool
+STNumber::validNumber() const
+{
+    if (!isInteger_)
+        return true;
+
+    static Number const max = validNumberLimit();
+    static Number const maxNeg = -max;
+    // Avoid making a copy
+    if (value_ < 0)
+        return value_ >= maxNeg;
+    return value_ <= max;
+}
+
+bool
+STNumber::validNumber(Asset const& a)
+{
+    usesAsset(a);
+    return validNumber();
+}
+
+std::int64_t
+STNumber::validNumberLimit()
+{
+    return Number::maxMantissa;
 }
 
 STBase*
