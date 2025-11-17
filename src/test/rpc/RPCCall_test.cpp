@@ -3002,13 +3002,31 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "get_counts",
          "-1",
      },
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+    "method" : "get_counts",
+    "params" : [
+      {
+         "error" : "invalidParams",
+         "error_code" : 31,
+         "error_message" : "Invalid field 'min_count'."
+      }
+    ]
+    })"},
     {"get_counts: count too large.",
      __LINE__,
      {"get_counts", "4294967296"},
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+    "method" : "get_counts",
+    "params" : [
+      {
+         "error" : "invalidParams",
+         "error_code" : 31,
+         "error_message" : "Invalid field 'min_count'."
+      }
+    ]
+    })"},
 
     // json
     // ------------------------------------------------------------------------

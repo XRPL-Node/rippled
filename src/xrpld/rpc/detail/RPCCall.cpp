@@ -546,7 +546,12 @@ private:
         Json::Value jvRequest(Json::objectValue);
 
         if (jvParams.size())
-            jvRequest[jss::min_count] = jvParams[0u].asUInt();
+        {
+            if (auto minCount = jvParseUInt(jvParams[0u]))
+                jvRequest[jss::min_count] = *minCount;
+            else
+                return RPC::invalid_field_error(jss::min_count);
+        }
 
         return jvRequest;
     }
