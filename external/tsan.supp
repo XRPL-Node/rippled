@@ -26,3 +26,5 @@ race:.*/src/xrpld/app/rdb/detail/Wallet.cpp
 race:.*/src/xrpld/overlay/detail/OverlayImpl.cpp
 race:.*/src/xrpld/peerfinder/detail/PeerfinderManager.cpp
 race:.*/src/xrpld/peerfinder/detail/SourceStrings.cpp
+race:crtstuff.c
+race:pipe

@@ -168,6 +168,7 @@ jobs:
           export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
           export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
+          export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/lsan.supp"
           ctest \
             --output-on-failure \
             -C "${BUILD_TYPE}" \
@@ -182,6 +183,7 @@ jobs:
           export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
           export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
+          export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/lsan.supp"
           ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)

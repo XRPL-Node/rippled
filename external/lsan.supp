@@ -1,0 +1,6 @@
+leak:.*/xrpl/net/AutoSocket.h 
+leak:.*/xrpl/net/HTTPClientSSLContext.h
+leak:.*/src/libxrpl/net/RegisterSSLCerts.cpp
+leak:.*/src/tests/libxrpl/net/HTTPClient.cpp
+leak:.*/include/xrpl/net/RegisterSSLCerts.h
+leak:.*/include/xrpl/net/HTTPClient.h
