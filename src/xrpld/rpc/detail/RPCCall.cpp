@@ -1163,7 +1163,10 @@ private:
     {
         Json::Value jvRequest{Json::objectValue};
 
-        jvRequest[jss::start] = jvParams[0u].asUInt();
+        if (auto const start = jvParseUInt(jvParams[0u]))
+            jvRequest[jss::start] = *start;
+        else
+            return RPC::invalid_field_error(jss::start);
 
         return jvRequest;
     }

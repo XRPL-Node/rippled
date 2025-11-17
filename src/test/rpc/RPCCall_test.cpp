@@ -5616,24 +5616,51 @@ static RPCCallTestData const rpcCallTestArray[] = {
         "tx_history: start too small.",
         __LINE__,
         {"tx_history", "-1"},
-        RPCCallTestData::bad_cast,
-        R"()",
+        RPCCallTestData::no_exception,
+        R"({
+    "method" : "tx_history",
+    "params" : [
+      {
+         "error" : "invalidParams",
+         "error_code" : 31,
+         "error_message" : "Invalid field 'start'."
+      }
+    ]
+    })",
     },
     {
         // Note: this really shouldn't throw, but does at the moment.
         "tx_history: start too big.",
         __LINE__,
         {"tx_history", "4294967296"},
-        RPCCallTestData::bad_cast,
-        R"()",
+        RPCCallTestData::no_exception,
+        R"({
+    "method" : "tx_history",
+    "params" : [
+      {
+         "error" : "invalidParams",
+         "error_code" : 31,
+         "error_message" : "Invalid field 'start'."
+      }
+    ]
+    })",
     },
     {
         // Note: this really shouldn't throw, but does at the moment.
         "tx_history: start not integer.",
         __LINE__,
         {"tx_history", "beginning"},
-        RPCCallTestData::bad_cast,
-        R"()",
+        RPCCallTestData::no_exception,
+        R"({
+    "method" : "tx_history",
+    "params" : [
+      {
+         "error" : "invalidParams",
+         "error_code" : 31,
+         "error_message" : "Invalid field 'start'."
+      }
+    ]
+    })",
     },
 
     // unl_list
