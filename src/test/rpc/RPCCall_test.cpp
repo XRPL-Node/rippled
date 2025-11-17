@@ -1948,8 +1948,16 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "can_delete",
          "4294967296",
      },
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+   "method" : "can_delete",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'can_delete'."
+      }
+   ]
+})"},
     {// Note: this really shouldn't throw since it's a legitimate ledger hash.
      "can_delete: ledger hash with no alphas.",
      __LINE__,
@@ -1957,8 +1965,16 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "can_delete",
          "0123456701234567012345670123456701234567012345670123456701234567",
      },
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+   "method" : "can_delete",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'can_delete'."
+      }
+   ]
+})"},
 
     // channel_authorize
     // -----------------------------------------------------------

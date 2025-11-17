@@ -135,7 +135,7 @@ private:
         }
     }
 
-    static std::optional<std::uint32_t>
+    static std::optional<std::int32_t>
     jvParseInt(Json::Value const& param)
     {
         if (param.isUInt() || param.isInt())
@@ -144,6 +144,22 @@ private:
         if (param.isString())
         {
             std::int32_t v;
+            if (beast::lexicalCastChecked(v, param.asString()))
+                return v;
+        }
+
+        return std::nullopt;
+    }
+
+    static std::optional<std::uint32_t>
+    jvParseUInt(Json::Value const& param)
+    {
+        if (param.isUInt() || (param.isInt() && param.asInt() >= 0))
+            return param.asUInt();
+
+        if (param.isString())
+        {
+            std::uint32_t v;
             if (beast::lexicalCastChecked(v, param.asString()))
                 return v;
         }
@@ -418,7 +434,12 @@ private:
 
         std::string input = jvParams[0u].asString();
         if (input.find_first_not_of("0123456789") == std::string::npos)
-            jvRequest["can_delete"] = jvParams[0u].asUInt();
+        {
+            if (auto seq = jvParseUInt(jvParams[0u]))
+                jvRequest["can_delete"] = *seq;
+            else
+                return RPC::invalid_field_error(jss::can_delete);
+        }
         else
             jvRequest["can_delete"] = input;
 
