@@ -1665,6 +1665,7 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "ledger_hash" : "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789",
          "limit" : 200,
          "marker" : "MyMarker",
+         "proof" : true,
          "taker_gets" : {
             "currency" : "EUR",
             "issuer" : "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA"
