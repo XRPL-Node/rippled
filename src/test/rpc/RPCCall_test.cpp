@@ -2413,8 +2413,16 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "ThereIsNoCheckingOnTheIPFormat",
          "-1",
      },
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+   "method" : "connect",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'port'."
+      }
+   ]
+})"},
     {// Note: this should return an error but not throw.
      "connect: port too large.",
      __LINE__,
@@ -2423,8 +2431,16 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "ThereIsNoCheckingOnTheIPFormat",
          "4294967296",
      },
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+   "method" : "connect",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'port'."
+      }
+   ]
+})"},
 
     // consensus_info
     // --------------------------------------------------------------

@@ -455,7 +455,10 @@ private:
         if (jvParams.size() == 2)
         {
             jvRequest[jss::ip] = ip;
-            jvRequest[jss::port] = jvParams[1u].asUInt();
+            if (auto port = jvParseUInt(jvParams[1u]))
+                jvRequest[jss::port] = *port;
+            else
+                return RPC::invalid_field_error(jss::port);
             return jvRequest;
         }
 
@@ -464,8 +467,13 @@ private:
         {
             std::size_t colon = ip.find_last_of(":");
             jvRequest[jss::ip] = std::string{ip, 0, colon};
-            jvRequest[jss::port] =
-                Json::Value{std::string{ip, colon + 1}}.asUInt();
+
+            std::uint32_t port;
+            if (beast::lexicalCastChecked(port, std::string{ip, colon + 1}))
+                jvRequest[jss::port] = port;
+            else
+                return RPC::invalid_field_error(jss::port);
+
             return jvRequest;
         }
 
