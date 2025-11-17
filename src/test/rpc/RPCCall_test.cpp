@@ -5724,10 +5724,6 @@ public:
             }
             else
             {
-                std::cout << "no match: " << rpcCallTest.description
-                          << std::endl;
-                std::cout << "  got: " << got.toStyledString() << std::endl;
-                std::cout << "  exp: " << exp.toStyledString() << std::endl;
                 fail(rpcCallTest.description, __FILE__, rpcCallTest.line);
             }
         }
