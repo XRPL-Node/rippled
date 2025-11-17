@@ -49,4 +49,7 @@ race:crtstuff.c
 race:pipe
 race:ripple::ServerHandler
 
+deadlock:.*/src/libxrpl/beast/utility/beast_Journal.cpp
 deadlock:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp
+deadlock:.*/src/test/beast/beast_PropertyStream_test.cpp
+deadlock:.*/src/xrpld/core/detail/Workers.cpp

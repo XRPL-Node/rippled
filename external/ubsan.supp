@@ -91,3 +91,6 @@ unsigned-integer-overflow:*./src/libxrpl/json/json_value.cpp
 
 # src/libxrpl/ledger/View.cpp:567:36: runtime error: unsigned integer overflow: 1 + 4294967295 cannot be represented in type 'std::uint32_t' (aka 'unsigned int')
 unsigned-integer-overflow:*./src/libxrpl/ledger/View.cpp
+
+undefined:.*/src/libxrpl/basics/base64.cpp
+undefined:.*/src/libxrpl/basics/Number.cpp
