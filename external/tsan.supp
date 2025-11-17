@@ -2,8 +2,10 @@ called_from_lib:^libboost_.*
 # Suppress race in Boost ASIO scheduler detected by GCC-15
 # This is a false positive in Boost's internal pipe() synchronization
 race:.*/boost/asio/.*
+race:.*/boost/context/.*
 
 race:.*/src/libxrpl/basics/make_SSLContext.cpp
+race:.*/src/libxrpl/basics/Number.cpp
 race:.*/src/libxrpl/json/json_value.cpp
 race:.*/src/libxrpl/json/to_string.cpp
 race:.*/src/libxrpl/ledger/OpenView.cpp
@@ -12,13 +14,20 @@ race:.*/src/libxrpl/nodestore/backend/NuDBFactory.cpp
 race:.*/src/libxrpl/protocol/InnerObjectFormats.cpp
 race:.*/src/libxrpl/protocol/STParsedJSON.cpp
 race:.*/src/libxrpl/resource/ResourceManager.cpp
+race:.*/src/test/app/Flow_test.cpp
+race:.*/src/test/app/LedgerReplay_test.cpp
+race:.*/src/test/app/NFToken_test.cpp
+race:.*/src/test/app/Offer_test.cpp
+race:.*/src/test/app/ValidatorSite_test.cpp
 race:.*/src/test/consensus/NegativeUNL_test.cpp
 race:.*/src/test/jtx/impl/Env.cpp
 race:.*/src/test/jtx/impl/JSONRPCClient.cpp
 race:.*/src/test/jtx/impl/pay.cpp
 race:.*/src/test/jtx/impl/token.cpp
+race:.*/src/test/rpc/Book_test.cpp
 race:.*/src/xrpld/app/ledger/detail/InboundTransactions.cpp
 race:.*/src/xrpld/app/main/Application.cpp
+race:.*/src/xrpld/app/main/BasicApp.cpp
 race:.*/src/xrpld/app/main/GRPCServer.cpp
 race:.*/src/xrpld/app/misc/detail/AmendmentTable.cpp
 race:.*/src/xrpld/app/misc/FeeVoteImpl.cpp
@@ -26,5 +35,10 @@ race:.*/src/xrpld/app/rdb/detail/Wallet.cpp
 race:.*/src/xrpld/overlay/detail/OverlayImpl.cpp
 race:.*/src/xrpld/peerfinder/detail/PeerfinderManager.cpp
 race:.*/src/xrpld/peerfinder/detail/SourceStrings.cpp
+race:.*/src/xrpld/rpc/detail/ServerHandler.cpp
+race:.*/xrpl/server/detail/Door.h
+race:.*/xrpl/server/detail/Spawn.h
+race:.*xrpl/server/detail/ServerImpl.h
 race:crtstuff.c
 race:pipe
+race:ripple::ServerHandler

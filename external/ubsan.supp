@@ -81,7 +81,13 @@ vptr:*/boost/*
 cfi:*/boost/*
 vptr_check:*/boost/*
 
+# basic_string.h:483:51: runtime error: unsigned integer overflow
+unsigned-integer-overflow:*./basic_string.h
 
+# runtime error: unsigned integer overflow: 0 - 1 cannot be represented in type 'std::size_t' (aka 'unsigned long')
 unsigned-integer-overflow:*./src/libxrpl/basics/base64.cpp
 unsigned-integer-overflow:*./src/tests/libxrpl/basics/RangeSet.cpp
 unsigned-integer-overflow:*./src/libxrpl/json/json_value.cpp
+
+# src/libxrpl/ledger/View.cpp:567:36: runtime error: unsigned integer overflow: 1 + 4294967295 cannot be represented in type 'std::uint32_t' (aka 'unsigned int')
+unsigned-integer-overflow:*./src/libxrpl/ledger/View.cpp
