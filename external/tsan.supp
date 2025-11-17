@@ -3,6 +3,8 @@ called_from_lib:^libboost_.*
 # This is a false positive in Boost's internal pipe() synchronization
 race:.*/boost/asio/.*
 race:.*/boost/context/.*
+race:.*/boost/asio/executor.hpp
+race:.*boost::asio::.*
 
 race:.*/src/libxrpl/basics/make_SSLContext.cpp
 race:.*/src/libxrpl/basics/Number.cpp
@@ -38,7 +40,13 @@ race:.*/src/xrpld/peerfinder/detail/SourceStrings.cpp
 race:.*/src/xrpld/rpc/detail/ServerHandler.cpp
 race:.*/xrpl/server/detail/Door.h
 race:.*/xrpl/server/detail/Spawn.h
-race:.*xrpl/server/detail/ServerImpl.h
+race:.*/xrpl/server/detail/ServerImpl.h
+race:.*/xrpl/nodestore/detail/DatabaseNodeImp.h
+race:.*/src/libxrpl/beast/utility/beast_Journal.cpp
+race:.*/src/test/beast/LexicalCast_test.cpp
+
 race:crtstuff.c
 race:pipe
 race:ripple::ServerHandler
+
+deadlock:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp

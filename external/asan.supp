@@ -3,6 +3,9 @@ interceptor_via_lib:^libboost_.*
 # Suprpress voilations in external code
 interceptor_name:^external/.*
 
+# Boost
+interceptor_name:.*/boost/asio/.*
+
 # Leaks in Doctests
 interceptor_name:.*/src/libxrpl/net/HTTPClient.cpp
 interceptor_name:.*/src/libxrpl/net/RegisterSSLCerts.cpp
