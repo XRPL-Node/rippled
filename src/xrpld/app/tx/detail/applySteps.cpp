@@ -58,6 +58,8 @@ with_txn_type(Rules const& rules, TxType txnType, F&& f)
         stNumberSO.emplace(rules.enabled(fixUniversalNumber));
         rulesGuard.emplace(rules);
     }
+    if (Transactor::useOldNumberRules(txnType))
+        Number::setMantissaScale(MantissaRange::small);
 
     switch (txnType)
     {
