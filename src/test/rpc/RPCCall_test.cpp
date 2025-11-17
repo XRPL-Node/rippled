@@ -1381,16 +1381,32 @@ static RPCCallTestData const rpcCallTestArray[] = {
         "account_tx: non-integer min.",
         __LINE__,
         {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "Binary", "-1"},
-        RPCCallTestData::bad_cast,
-        R"()",
+        RPCCallTestData::no_exception,
+        R"({
+   "method" : "account_tx",
+   "params" : [
+      {
+         "error" : "invalidLgrRange",
+         "error_message" : "Ledger range is invalid."
+      }
+   ]
+})",
     },
     {
         // Note: this really shouldn't throw, but does at the moment.
         "account_tx: non-integer max.",
         __LINE__,
         {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "-1", "counts"},
-        RPCCallTestData::bad_cast,
-        R"()",
+        RPCCallTestData::no_exception,
+        R"({
+   "method" : "account_tx",
+   "params" : [
+      {
+         "error" : "invalidLgrRange",
+         "error_message" : "Ledger range is invalid."
+      }
+   ]
+})",
     },
     {
         // Note: this really shouldn't throw, but does at the moment.
@@ -1400,25 +1416,39 @@ static RPCCallTestData const rpcCallTestArray[] = {
          "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
          "-1",
          "-1",
-         "decending"},
-        RPCCallTestData::bad_cast,
-        R"()",
+         "200",
+         "bad_offset"},
+        RPCCallTestData::no_exception,
+        R"({
+   "method" : "account_tx",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'offset'."
+      }
+   ]
+})",
     },
     {
-        // Note: this really shouldn't throw, but does at the moment.
         "account_tx: non-integer limit.",
         __LINE__,
         {"account_tx",
          "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
          "-1",
          "-1",
-         "300",
-         "false"},
-        RPCCallTestData::bad_cast,
-        R"()",
+         "bad_limit"},
+        RPCCallTestData::no_exception,
+        R"({
+   "method" : "account_tx",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'limit'."
+      }
+   ]
+})",
     },
-    {// Note: this really shouldn't throw, but does at the moment.
-     "account_tx: RIPD-1570.",
+    {"account_tx: RIPD-1570.",
      __LINE__,
      {"account_tx",
       "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
@@ -1428,8 +1458,16 @@ static RPCCallTestData const rpcCallTestArray[] = {
       "false",
       "false",
       "false"},
-     RPCCallTestData::bad_cast,
-     R"()"},
+     RPCCallTestData::no_exception,
+     R"({
+   "method" : "account_tx",
+   "params" : [
+      {
+         "error" : "invalidParams",
+         "error_message" : "Invalid field 'offset'."
+      }
+   ]
+})"},
 
     // book_offers
     // -----------------------------------------------------------------
@@ -5978,6 +6016,10 @@ public:
             }
             else
             {
+                std::cout << "no match: " << rpcCallTest.description
+                          << std::endl;
+                std::cout << "  got: " << got.toStyledString() << std::endl;
+                std::cout << "  exp: " << exp.toStyledString() << std::endl;
                 fail(rpcCallTest.description, __FILE__, rpcCallTest.line);
             }
         }

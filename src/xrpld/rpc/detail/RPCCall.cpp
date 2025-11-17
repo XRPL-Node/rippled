@@ -135,6 +135,22 @@ private:
         }
     }
 
+    static std::optional<std::uint32_t>
+    jvParseInt(Json::Value const& param)
+    {
+        if (param.isUInt() || param.isInt())
+            return param.asInt();
+
+        if (param.isString())
+        {
+            std::int32_t v;
+            if (beast::lexicalCastChecked(v, param.asString()))
+                return v;
+        }
+
+        return std::nullopt;
+    }
+
     static bool
     validPublicKey(
         std::string const& strPk,
@@ -266,24 +282,50 @@ private:
         }
         else
         {
-            std::int64_t uLedgerMin = jvParams[1u].asInt();
-            std::int64_t uLedgerMax = jvParams[2u].asInt();
+            std::int32_t ledgerMin, ledgerMax;
+            if (auto ledgerMinOpt = jvParseInt(jvParams[1u]))
+            {
+                ledgerMin = *ledgerMinOpt;
+            }
+            else
+            {
+                return rpcError(rpcINVALID_LGR_RANGE);
+            }
 
-            if (uLedgerMax != -1 && uLedgerMax < uLedgerMin)
+            if (auto ledgerMaxOpt = jvParseInt(jvParams[2u]))
+            {
+                ledgerMax = *ledgerMaxOpt;
+            }
+            else
+            {
+                return rpcError(rpcINVALID_LGR_RANGE);
+            }
+
+            if (ledgerMax != -1 && ledgerMax < ledgerMin)
             {
                 if (apiVersion_ == 1)
                     return rpcError(rpcLGR_IDXS_INVALID);
                 return rpcError(rpcNOT_SYNCED);
             }
 
-            jvRequest[jss::ledger_index_min] = jvParams[1u].asInt();
-            jvRequest[jss::ledger_index_max] = jvParams[2u].asInt();
+            jvRequest[jss::ledger_index_min] = ledgerMin;
+            jvRequest[jss::ledger_index_max] = ledgerMax;
 
             if (iParams >= 4)
-                jvRequest[jss::limit] = jvParams[3u].asInt();
+            {
+                if (auto limit = jvParseInt(jvParams[3u]))
+                    jvRequest[jss::limit] = *limit;
+                else
+                    return RPC::invalid_field_error(jss::limit);
+            }
 
             if (iParams >= 5)
-                jvRequest[jss::offset] = jvParams[4u].asInt();
+            {
+                if (auto offset = jvParseInt(jvParams[4u]))
+                    jvRequest[jss::offset] = *offset;
+                else
+                    return RPC::invalid_field_error(jss::offset);
+            }
         }
 
         return jvRequest;
