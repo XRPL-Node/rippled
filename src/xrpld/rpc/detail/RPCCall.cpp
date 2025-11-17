@@ -332,7 +332,7 @@ private:
 
         if (jvParams.size() >= 5)
         {
-            int iLimit = jvParams[5u].asInt();
+            int iLimit = jvParams[4u].asInt();
 
             if (iLimit > 0)
                 jvRequest[jss::limit] = iLimit;
