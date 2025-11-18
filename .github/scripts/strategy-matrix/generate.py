@@ -170,8 +170,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # This is needed because sanitizers create very large binaries
                 # -fPIC enables position independent code to avoid relocation range issues
                 # large model removes the 2GB limitation that medium model has
-                cxx_flags += ' -mcmodel=large -fPIC pie'
-                linker_relocation_flags+=' -mcmodel=large -fPIC pie'
+                cxx_flags += ' -mcmodel=large -fPIC'
+                linker_relocation_flags+=' -mcmodel=large -fPIC'
 
             # Create default sanitizer flags
             sanitizers_flags = 'undefined,float-divide-by-zero'
@@ -226,7 +226,10 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=${{CMAKE_CURRENT_SOURCE_DIR}}/external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+            # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
+            # before CMake processes it. This ensures the compiler receives an absolute path.
+            # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
             configurations.append({
                 'config_name': config_name+ "_tsan",
