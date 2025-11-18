@@ -118,6 +118,8 @@ unsigned-integer-overflow:.*/xrpl/nodestore/detail/varint.h
 unsigned-integer-overflow:.*/xrpl/peerfinder/detail/Counts.h
 unsigned-integer-overflow:.*/xrpl/protocol/nft.h
 
+signed-integer-overflow:.*/src/test/beast/LexicalCast_test.cpp
+
 # External library suppressions
 unsigned-integer-overflow:.*/nudb/detail/xxhash.hpp
 

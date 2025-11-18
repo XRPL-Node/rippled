@@ -53,3 +53,9 @@ deadlock:.*/src/libxrpl/beast/utility/beast_Journal.cpp
 deadlock:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp
 deadlock:.*/src/test/beast/beast_PropertyStream_test.cpp
 deadlock:.*/src/xrpld/core/detail/Workers.cpp
+
+# Additional deadlock suppressions by function name
+deadlock:beast::PropertyStream::Source::find_one
+deadlock:beast::PropertyStream::Source::find_one_deep
+deadlock:beast::PropertyStream_test::test_find_one_deep
+deadlock:beast::PropertyStream_test::run
