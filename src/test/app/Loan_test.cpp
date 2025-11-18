@@ -5588,11 +5588,11 @@ protected:
         });
     }
 
-#if LOANTODO
     void
-    testCoverDepositAllowsNonTransferableMPT()
+    testCoverDepositWithdrawNonTransferableMPT()
     {
-        testcase("CoverDeposit accepts MPT without CanTransfer");
+        testcase(
+            "CoverDeposit and CoverWithdraw reject MPT without CanTransfer");
         using namespace jtx;
         using namespace loanBroker;
 
@@ -5612,7 +5612,7 @@ protected:
 
         env.close();
 
-        PrettyAsset const asset = mpt["BUG"];
+        PrettyAsset const asset = mpt["MPT"];
         mpt.authorize({.account = alice});
         env.close();
 
@@ -5646,21 +5646,58 @@ protected:
         env(pay(alice, pseudoAccount, asset(1)), ter(tecNO_AUTH));
         env.close();
 
+        // Cover cannot be transferred to broker account
         auto const depositAmount = asset(1);
-        env(coverDeposit(alice, brokerKeylet.key, depositAmount));
-        BEAST_EXPECT(env.ter() == tesSUCCESS);
+        env(coverDeposit(alice, brokerKeylet.key, depositAmount),
+            ter{tecNO_AUTH});
         env.close();
 
         if (auto const refreshed = env.le(brokerKeylet);
             BEAST_EXPECT(refreshed))
         {
-            // with an MPT that cannot be transferred the covrAvailable should
-            // remain zero
             BEAST_EXPECT(refreshed->at(sfCoverAvailable) == 0);
+            env.require(balance(pseudoAccount, asset(0)));
+        }
+
+        // Set CanTransfer again and transfer some deposit
+        mpt.set({.mutableFlags = tmfMPTSetCanTransfer});
+        env.close();
+
+        env(coverDeposit(alice, brokerKeylet.key, depositAmount));
+        env.close();
+
+        if (auto const refreshed = env.le(brokerKeylet);
+            BEAST_EXPECT(refreshed))
+        {
+            BEAST_EXPECT(refreshed->at(sfCoverAvailable) == 1);
             env.require(balance(pseudoAccount, depositAmount));
+        }
+
+        // Remove CanTransfer after the deposit
+        mpt.set({.mutableFlags = tmfMPTClearCanTransfer});
+        env.close();
+
+        // Cover cannot be transferred from broker account
+        env(coverWithdraw(alice, brokerKeylet.key, depositAmount),
+            ter{tecNO_AUTH});
+        env.close();
+
+        // Set CanTransfer again and withdraw
+        mpt.set({.mutableFlags = tmfMPTSetCanTransfer});
+        env.close();
+
+        env(coverWithdraw(alice, brokerKeylet.key, depositAmount));
+        env.close();
+
+        if (auto const refreshed = env.le(brokerKeylet);
+            BEAST_EXPECT(refreshed))
+        {
+            BEAST_EXPECT(refreshed->at(sfCoverAvailable) == 0);
+            env.require(balance(pseudoAccount, asset(0)));
         }
     }
 
+#if LOANTODO
     void
     testLoanPayLateFullPaymentBypassesPenalties()
     {
@@ -6855,10 +6892,10 @@ public:
     run() override
     {
 #if LOANTODO
-        testCoverDepositAllowsNonTransferableMPT();
         testLoanPayLateFullPaymentBypassesPenalties();
         testLoanCoverMinimumRoundingExploit();
 #endif
+        testCoverDepositWithdrawNonTransferableMPT();
         testPoC_UnsignedUnderflowOnFullPayAfterEarlyPeriodic();
 
         testDisabled();
