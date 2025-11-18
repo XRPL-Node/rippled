@@ -3,6 +3,7 @@
 #include <test/jtx/Env.h>
 #include <test/jtx/amount.h>
 #include <test/jtx/mpt.h>
+#include <test/jtx/testline.h>
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/beast/unit_test/suite.h>
@@ -588,7 +589,6 @@ class Vault_test : public beast::unit_test::suite
             Vault vault{env};
             env.fund(XRP(1000), issuer, owner, depositor, charlie, dave);
             env.close();
-            env(fset(issuer, asfDefaultRipple));
             env(fset(issuer, asfAllowTrustLineClawback));
             env(fset(issuer, asfRequireAuth));
             env(fset(dave, asfRequireDest));
@@ -659,7 +659,6 @@ class Vault_test : public beast::unit_test::suite
             env.fund(XRP(1000), issuer, owner);
             env.close();
 
-            env(fset(issuer, asfDefaultRipple));
             env(fset(issuer, asfAllowTrustLineClawback));
             env(fset(issuer, asfRequireAuth));
             env.close();
@@ -2567,7 +2566,6 @@ class Vault_test : public beast::unit_test::suite
                 Account const charlie{"charlie"};
                 Vault vault{env};
                 env.fund(XRP(args.initialXRP), issuer, owner, charlie);
-                env(fset(issuer, asfDefaultRipple));
                 env(fset(issuer, asfAllowTrustLineClawback));
                 env.close();
 
@@ -2971,7 +2969,7 @@ class Vault_test : public beast::unit_test::suite
                 Account const& owner,
                 Account const& issuer,
                 Account const& charlie,
-                auto,
+                auto vaultAccount,
                 Vault& vault,
                 PrettyAsset const& asset,
                 std::function<MPTID(ripple::Keylet)> issuanceId) {
@@ -2983,13 +2981,18 @@ class Vault_test : public beast::unit_test::suite
                 env(tx);
                 env.close();
 
+                // Turn on noripple on the pseudo account's trust line.
+                // Charlie's is already set.
+                env(trust(issuer, vaultAccount(keylet)["IOU"], tfSetNoRipple),
+                    THISLINE);
+
                 {
                     // Charlie cannot deposit
                     auto tx = vault.deposit(
                         {.depositor = charlie,
                          .id = keylet.key,
                          .amount = asset(100)});
-                    env(tx, ter{terNO_RIPPLE});
+                    env(tx, ter{terNO_RIPPLE}, THISLINE);
                     env.close();
                 }
 
@@ -2999,7 +3002,7 @@ class Vault_test : public beast::unit_test::suite
                         {.depositor = owner,
                          .id = keylet.key,
                          .amount = asset(100)});
-                    env(tx1);
+                    env(tx1, THISLINE);
                     env.close();
 
                     // Charlie cannot receive funds
@@ -3008,7 +3011,7 @@ class Vault_test : public beast::unit_test::suite
                          .id = keylet.key,
                          .amount = shares(100)});
                     tx2[sfDestination] = charlie.human();
-                    env(tx2, ter{terNO_RIPPLE});
+                    env(tx2, ter{terNO_RIPPLE}, THISLINE);
                     env.close();
 
                     {
@@ -3021,7 +3024,7 @@ class Vault_test : public beast::unit_test::suite
                         env(tx);
                         env.close();
                     }
-                    env(pay(owner, charlie, shares(100)));
+                    env(pay(owner, charlie, shares(100)), THISLINE);
                     env.close();
 
                     // Charlie cannot withdraw
@@ -3032,7 +3035,7 @@ class Vault_test : public beast::unit_test::suite
                     env(tx3, ter{terNO_RIPPLE});
                     env.close();
 
-                    env(pay(charlie, owner, shares(100)));
+                    env(pay(charlie, owner, shares(100)), THISLINE);
                     env.close();
                 }
 
@@ -3040,11 +3043,11 @@ class Vault_test : public beast::unit_test::suite
                     {.depositor = owner,
                      .id = keylet.key,
                      .amount = asset(100)});
-                env(tx);
+                env(tx, THISLINE);
                 env.close();
 
                 // Delete vault with zero balance
-                env(vault.del({.owner = owner, .id = keylet.key}));
+                env(vault.del({.owner = owner, .id = keylet.key}), THISLINE);
             },
             {.charlieRipple = false});
 
@@ -3366,7 +3369,6 @@ class Vault_test : public beast::unit_test::suite
             credIssuer1,
             credIssuer2);
         env.close();
-        env(fset(issuer, asfDefaultRipple));
         env(fset(issuer, asfAllowTrustLineClawback));
         env.close();
         env.require(flags(issuer, asfAllowTrustLineClawback));
@@ -3796,7 +3798,6 @@ class Vault_test : public beast::unit_test::suite
             Account const depositor{"depositor"};
             Vault vault{env};
             env.fund(XRP(1000), issuer, owner, depositor);
-            env(fset(issuer, asfDefaultRipple));
             env(fset(issuer, asfAllowTrustLineClawback));
             env.close();
 

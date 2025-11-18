@@ -3288,11 +3288,11 @@ canTransfer(
         return tesSUCCESS;
 
     auto const issuerId = issue.getIssuer();
+    if (issuerId == from || issuerId == to)
+        return tesSUCCESS;
     auto const sleIssuer = view.read(keylet::account(issuerId));
     if (sleIssuer == nullptr)
         return tefINTERNAL;  // LCOV_EXCL_LINE
-    if (issuerId == from || issuerId == to)
-        return tesSUCCESS;
 
     auto const isRippleDisabled = [&](AccountID account) -> bool {
         // Line might not exist, but some transfers can create it. If this
@@ -3306,8 +3306,8 @@ canTransfer(
         return sleIssuer->isFlag(lsfDefaultRipple) == false;
     };
 
-    // Fail if rippling disabled on either trust line
-    if (isRippleDisabled(from) || isRippleDisabled(to))
+    // Fail if rippling disabled on both trust lines
+    if (isRippleDisabled(from) && isRippleDisabled(to))
         return terNO_RIPPLE;
 
     return tesSUCCESS;

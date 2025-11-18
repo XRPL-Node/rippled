@@ -4516,8 +4516,8 @@ protected:
         // preclaim
         Env env(*this);
         env.fund(XRP(1'000), lender, issuer, borrower);
-        env(trust(lender, IOU(10'000'000)));
-        env(pay(issuer, lender, IOU(5'000'000)));
+        env(trust(lender, IOU(10'000'000)), THISLINE);
+        env(pay(issuer, lender, IOU(5'000'000)), THISLINE);
         BrokerInfo brokerInfo{createVaultAndBroker(env, issuer["IOU"], lender)};
 
         auto const loanSetFee = fee(env.current()->fees().base * 2);
@@ -4525,21 +4525,24 @@ protected:
 
         env(set(borrower, brokerInfo.brokerID, debtMaximumRequest),
             sig(sfCounterpartySignature, lender),
-            loanSetFee);
+            loanSetFee,
+            THISLINE);
 
         env.close();
 
         std::uint32_t const loanSequence = 1;
         auto const loanKeylet = keylet::loan(brokerInfo.brokerID, loanSequence);
 
-        env(fset(issuer, asfGlobalFreeze));
+        env(fset(issuer, asfGlobalFreeze), THISLINE);
         env.close();
 
         // preclaim: tecFROZEN
-        env(pay(borrower, loanKeylet.key, debtMaximumRequest), ter(tecFROZEN));
+        env(pay(borrower, loanKeylet.key, debtMaximumRequest),
+            ter(tecFROZEN),
+            THISLINE);
         env.close();
 
-        env(fclear(issuer, asfGlobalFreeze));
+        env(fclear(issuer, asfGlobalFreeze), THISLINE);
         env.close();
 
         auto const pseudoBroker = [&]() -> std::optional<Account> {
@@ -4559,37 +4562,51 @@ protected:
 
         // Lender and pseudoaccount must both be frozen
         env(trust(
-            issuer,
-            lender["IOU"](1'000),
-            lender,
-            tfSetFreeze | tfSetDeepFreeze));
+                issuer,
+                lender["IOU"](1'000),
+                lender,
+                tfSetFreeze | tfSetDeepFreeze),
+            THISLINE);
         env(trust(
-            issuer,
-            (*pseudoBroker)["IOU"](1'000),
-            *pseudoBroker,
-            tfSetFreeze | tfSetDeepFreeze));
+                issuer,
+                (*pseudoBroker)["IOU"](1'000),
+                *pseudoBroker,
+                tfSetFreeze | tfSetDeepFreeze),
+            THISLINE);
         env.close();
 
         // preclaim: tecFROZEN due to deep frozen
-        env(pay(borrower, loanKeylet.key, debtMaximumRequest), ter(tecFROZEN));
+        env(pay(borrower, loanKeylet.key, debtMaximumRequest),
+            ter(tecFROZEN),
+            THISLINE);
         env.close();
 
         // Only one needs to be unfrozen
         env(trust(
-            issuer, lender["IOU"](1'000), tfClearFreeze | tfClearDeepFreeze));
+                issuer,
+                lender["IOU"](1'000),
+                tfClearFreeze | tfClearDeepFreeze),
+            THISLINE);
         env.close();
 
         // The payment is late by this point
-        env(pay(borrower, loanKeylet.key, debtMaximumRequest), ter(tecEXPIRED));
+        env(pay(borrower, loanKeylet.key, debtMaximumRequest),
+            ter(tecEXPIRED),
+            THISLINE);
         env.close();
-        env(pay(
-            borrower, loanKeylet.key, debtMaximumRequest, tfLoanLatePayment));
+        env(pay(borrower,
+                loanKeylet.key,
+                debtMaximumRequest,
+                tfLoanLatePayment),
+            THISLINE);
         env.close();
 
         // preclaim: tecKILLED
         // note that tecKILLED in loanMakePayment()
         // doesn't happen because of the preclaim check.
-        env(pay(borrower, loanKeylet.key, debtMaximumRequest), ter(tecKILLED));
+        env(pay(borrower, loanKeylet.key, debtMaximumRequest),
+            ter(tecKILLED),
+            THISLINE);
     }
 
     void
