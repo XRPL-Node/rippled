@@ -160,8 +160,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
         if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
             extra_warning_flags = ''
-            exe_linker_flags = ''
-            shared_linker_flags = ''
+            linker_relocation_flags = ''
+            linker_flags = ''
 
             # Use large code model to avoid relocation errors with large binaries
             # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=large
@@ -171,8 +171,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # -fPIC enables position independent code to avoid relocation range issues
                 # large model removes the 2GB limitation that medium model has
                 cxx_flags += ' -mcmodel=large -fPIC'
-                exe_linker_flags+=' -mcmodel=large -fPIC'
-                shared_linker_flags += ' -mcmodel=large -fPIC'
+                linker_relocation_flags+=' -mcmodel=large -fPIC'
 
             # Create default sanitizer flags
             sanitizers_flags = 'undefined,float-divide-by-zero'
@@ -185,12 +184,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Use default linker (bfd/ld) which is more lenient with mixed code models
                 cmake_args += ' -Duse_mold=OFF -Duse_gold=OFF -Duse_lld=OFF'
                 # Add linker flags for Sanitizers
-                cmake_args += f' -DCMAKE_EXE_LINKER_FLAGS="{exe_linker_flags} -fsanitize=address,{sanitizers_flags}"'
-                cmake_args += f' -DCMAKE_SHARED_LINKER_FLAGS="{shared_linker_flags} -fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
                 sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow,unsigned-integer-overflow'
-                cmake_args += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
-                cmake_args += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
 
             # Sanitizers recommend minimum of -O1 for reasonable performance
             if "-O0" in cxx_flags:
@@ -199,7 +198,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 cxx_flags += " -O1"
 
             # First create config for asan
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags} {linker_flags}"'
 
             # Add config with asan
             configurations.append({
@@ -212,22 +211,22 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'architecture': architecture
             })
 
+            linker_flags = ''
             # Update configs for tsan
             # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
             # Also tsan doesn't work well with mcmode=large and bfd linker
             if os['compiler_name'] == 'gcc':
                 extra_warning_flags += ' -Wno-tsan'
                 cxx_flags = cxx_flags.replace('-mcmodel=large', '-mcmodel=medium')
-                exe_linker_flags = exe_linker_flags.replace('-mcmodel=large', '-mcmodel=medium')
-                shared_linker_flags = shared_linker_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                linker_relocation_flags = linker_relocation_flags.replace('-mcmodel=large', '-mcmodel=medium')
                 # Add linker flags for Sanitizers
-                cmake_args += f' -DCMAKE_EXE_LINKER_FLAGS="{exe_linker_flags} -fsanitize=thread,{sanitizers_flags}"'
-                cmake_args += f' -DCMAKE_SHARED_LINKER_FLAGS="{shared_linker_flags} -fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
-                cmake_args += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
-                cmake_args += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}"'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags} {linker_flags}"'
 
             configurations.append({
                 'config_name': config_name+ "_tsan",
