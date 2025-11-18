@@ -158,7 +158,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # so that they are easier to identify in the GitHub Actions UI, as long
         # names get truncated.
         # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
-        if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
+        if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-21'}:
             extra_warning_flags = ''
             linker_relocation_flags = ''
             linker_flags = ''
