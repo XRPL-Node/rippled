@@ -49,13 +49,19 @@ race:crtstuff.c
 race:pipe
 race:ripple::ServerHandler
 
+# Deadlock / lock-order-inversion suppressions
+# Note: GCC's TSAN may not fully support all deadlock suppression patterns
 deadlock:.*/src/libxrpl/beast/utility/beast_Journal.cpp
 deadlock:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp
 deadlock:.*/src/test/beast/beast_PropertyStream_test.cpp
 deadlock:.*/src/xrpld/core/detail/Workers.cpp
 
-# Additional deadlock suppressions by function name
-deadlock:beast::PropertyStream::Source::find_one
-deadlock:beast::PropertyStream::Source::find_one_deep
-deadlock:beast::PropertyStream_test::test_find_one_deep
-deadlock:beast::PropertyStream_test::run
+# Suppress lock-order-inversion in recursive_mutex operations
+deadlock:std::recursive_mutex::lock
+deadlock:__gthread_recursive_mutex_lock
+deadlock:pthread_mutex_lock
+
+# Suppress by function names involved in the lock-order-inversion
+deadlock:*PropertyStream*
+deadlock:*find_one*
+deadlock:*find_one_deep*

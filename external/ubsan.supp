@@ -118,6 +118,7 @@ unsigned-integer-overflow:.*/xrpl/nodestore/detail/varint.h
 unsigned-integer-overflow:.*/xrpl/peerfinder/detail/Counts.h
 unsigned-integer-overflow:.*/xrpl/protocol/nft.h
 
+# Signed integer overflow suppressions
 signed-integer-overflow:.*/src/test/beast/LexicalCast_test.cpp
 
 # External library suppressions
