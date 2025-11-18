@@ -222,8 +222,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Add linker flags for Sanitizers
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
-                cxx_flags += ' -fsanitize-ignorelist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
             elif os['compiler_name'] == 'clang':
+                cxx_flags += ' -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
