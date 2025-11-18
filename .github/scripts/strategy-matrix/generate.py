@@ -222,6 +222,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Add linker flags for Sanitizers
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                cxx_flags += ' -fsanitize-ignorelist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
             elif os['compiler_name'] == 'clang':
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
@@ -229,7 +230,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
             # before CMake processes it. This ensures the compiler receives an absolute path.
             # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
             configurations.append({
                 'config_name': config_name+ "_tsan",
