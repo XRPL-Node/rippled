@@ -226,7 +226,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=${{CMAKE_CURRENT_SOURCE_DIR}}/external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
             configurations.append({
                 'config_name': config_name+ "_tsan",
