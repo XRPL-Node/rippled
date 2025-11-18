@@ -133,7 +133,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         if f'{os["compiler_name"]}-{os["compiler_version"]}' in ['clang-20', 'clang-21'] and architecture['platform'] == 'linux/arm64':
             continue
 
-        cxx_flags = ''
+        cxx_flags = '-g'
         # Enable code coverage for Debian Bookworm using GCC 14 in Debug and no
         # Unity on linux/amd64
         if f'{os["compiler_name"]}-{os["compiler_version"]}' == 'gcc-14' and build_type == 'Debug' and '-Dunity=OFF' in cmake_args and architecture['platform'] == 'linux/amd64':
@@ -170,8 +170,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # This is needed because sanitizers create very large binaries
                 # -fPIC enables position independent code to avoid relocation range issues
                 # large model removes the 2GB limitation that medium model has
-                cxx_flags += ' -mcmodel=large -fPIC'
-                linker_relocation_flags+=' -mcmodel=large -fPIC'
+                cxx_flags += ' -mcmodel=large -fPIC pie'
+                linker_relocation_flags+=' -mcmodel=large -fPIC pie'
 
             # Create default sanitizer flags
             sanitizers_flags = 'undefined,float-divide-by-zero'
@@ -226,7 +226,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fsanitize-blacklist=external/sanitizer-blacklist.txt -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
             configurations.append({
                 'config_name': config_name+ "_tsan",
