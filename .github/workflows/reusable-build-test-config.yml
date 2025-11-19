@@ -50,6 +50,12 @@ on:
         type: number
         default: 2
 
+      sanitizers:
+        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
+        required: false
+        type: string
+        default: "None"
+
     secrets:
       CODECOV_TOKEN:
         description: "The Codecov token to use for uploading coverage reports."
@@ -103,6 +109,7 @@ jobs:
           # Set the verbosity to "quiet" for Windows to avoid an excessive
           # amount of logs. For other OSes, the "verbose" logs are more useful.
           log_verbosity: ${{ runner.os == 'Windows' && 'quiet' || 'verbose' }}
+          sanitizers: ${{ inputs.sanitizers }}
 
       - name: Configure CMake
         working-directory: ${{ inputs.build_dir }}

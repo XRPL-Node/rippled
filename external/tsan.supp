@@ -1,50 +1,48 @@
-called_from_lib:^libboost_.*
 # Suppress race in Boost ASIO scheduler detected by GCC-15
 # This is a false positive in Boost's internal pipe() synchronization
-race:.*/boost/asio/.*
-race:.*/boost/context/.*
-race:.*/boost/asio/executor.hpp
-race:.*boost::asio::.*
+race:boost/asio/
+race:boost/context/
+race:boost/asio/executor.hpp
 race:boost::asio
 
-race:.*/src/libxrpl/basics/make_SSLContext.cpp
-race:.*/src/libxrpl/basics/Number.cpp
-race:.*/src/libxrpl/json/json_value.cpp
-race:.*/src/libxrpl/json/to_string.cpp
-race:.*/src/libxrpl/ledger/OpenView.cpp
-race:.*/src/libxrpl/net/HTTPClient.cpp
-race:.*/src/libxrpl/nodestore/backend/NuDBFactory.cpp
-race:.*/src/libxrpl/protocol/InnerObjectFormats.cpp
-race:.*/src/libxrpl/protocol/STParsedJSON.cpp
-race:.*/src/libxrpl/resource/ResourceManager.cpp
-race:.*/src/test/app/Flow_test.cpp
-race:.*/src/test/app/LedgerReplay_test.cpp
-race:.*/src/test/app/NFToken_test.cpp
-race:.*/src/test/app/Offer_test.cpp
-race:.*/src/test/app/ValidatorSite_test.cpp
-race:.*/src/test/consensus/NegativeUNL_test.cpp
-race:.*/src/test/jtx/impl/Env.cpp
-race:.*/src/test/jtx/impl/JSONRPCClient.cpp
-race:.*/src/test/jtx/impl/pay.cpp
-race:.*/src/test/jtx/impl/token.cpp
-race:.*/src/test/rpc/Book_test.cpp
-race:.*/src/xrpld/app/ledger/detail/InboundTransactions.cpp
-race:.*/src/xrpld/app/main/Application.cpp
-race:.*/src/xrpld/app/main/BasicApp.cpp
-race:.*/src/xrpld/app/main/GRPCServer.cpp
-race:.*/src/xrpld/app/misc/detail/AmendmentTable.cpp
-race:.*/src/xrpld/app/misc/FeeVoteImpl.cpp
-race:.*/src/xrpld/app/rdb/detail/Wallet.cpp
-race:.*/src/xrpld/overlay/detail/OverlayImpl.cpp
-race:.*/src/xrpld/peerfinder/detail/PeerfinderManager.cpp
-race:.*/src/xrpld/peerfinder/detail/SourceStrings.cpp
-race:.*/src/xrpld/rpc/detail/ServerHandler.cpp
-race:.*/xrpl/server/detail/Door.h
-race:.*/xrpl/server/detail/Spawn.h
-race:.*/xrpl/server/detail/ServerImpl.h
-race:.*/xrpl/nodestore/detail/DatabaseNodeImp.h
-race:.*/src/libxrpl/beast/utility/beast_Journal.cpp
-race:.*/src/test/beast/LexicalCast_test.cpp
+race:src/libxrpl/basics/make_SSLContext.cpp
+race:src/libxrpl/basics/Number.cpp
+race:src/libxrpl/json/json_value.cpp
+race:src/libxrpl/json/to_string.cpp
+race:src/libxrpl/ledger/OpenView.cpp
+race:src/libxrpl/net/HTTPClient.cpp
+race:src/libxrpl/nodestore/backend/NuDBFactory.cpp
+race:src/libxrpl/protocol/InnerObjectFormats.cpp
+race:src/libxrpl/protocol/STParsedJSON.cpp
+race:src/libxrpl/resource/ResourceManager.cpp
+race:src/test/app/Flow_test.cpp
+race:src/test/app/LedgerReplay_test.cpp
+race:src/test/app/NFToken_test.cpp
+race:src/test/app/Offer_test.cpp
+race:src/test/app/ValidatorSite_test.cpp
+race:src/test/consensus/NegativeUNL_test.cpp
+race:src/test/jtx/impl/Env.cpp
+race:src/test/jtx/impl/JSONRPCClient.cpp
+race:src/test/jtx/impl/pay.cpp
+race:src/test/jtx/impl/token.cpp
+race:src/test/rpc/Book_test.cpp
+race:src/xrpld/app/ledger/detail/InboundTransactions.cpp
+race:src/xrpld/app/main/Application.cpp
+race:src/xrpld/app/main/BasicApp.cpp
+race:src/xrpld/app/main/GRPCServer.cpp
+race:src/xrpld/app/misc/detail/AmendmentTable.cpp
+race:src/xrpld/app/misc/FeeVoteImpl.cpp
+race:src/xrpld/app/rdb/detail/Wallet.cpp
+race:src/xrpld/overlay/detail/OverlayImpl.cpp
+race:src/xrpld/peerfinder/detail/PeerfinderManager.cpp
+race:src/xrpld/peerfinder/detail/SourceStrings.cpp
+race:src/xrpld/rpc/detail/ServerHandler.cpp
+race:xrpl/server/detail/Door.h
+race:xrpl/server/detail/Spawn.h
+race:xrpl/server/detail/ServerImpl.h
+race:xrpl/nodestore/detail/DatabaseNodeImp.h
+race:src/libxrpl/beast/utility/beast_Journal.cpp
+race:src/test/beast/LexicalCast_test.cpp
 
 race:crtstuff.c
 race:pipe
@@ -52,33 +50,28 @@ race:ripple::ServerHandler
 
 # Deadlock / lock-order-inversion suppressions
 # Note: GCC's TSAN may not fully support all deadlock suppression patterns
-deadlock:.*/src/libxrpl/beast/utility/beast_Journal.cpp
-deadlock:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp
-deadlock:.*/src/test/beast/beast_PropertyStream_test.cpp
-deadlock:.*/src/xrpld/core/detail/Workers.cpp
+deadlock:src/libxrpl/beast/utility/beast_Journal.cpp
+deadlock:src/libxrpl/beast/utility/beast_PropertyStream.cpp
+deadlock:src/test/beast/beast_PropertyStream_test.cpp
+deadlock:src/xrpld/core/detail/Workers.cpp
 
 # Suppress lock-order-inversion in recursive_mutex operations
 deadlock:std::recursive_mutex::lock
 deadlock:__gthread_recursive_mutex_lock
 deadlock:pthread_mutex_lock
 
-# Suppress by function names involved in the lock-order-inversion
-deadlock:*PropertyStream*
-deadlock:*find_one*
-deadlock:*find_one_deep*
-
 # Aggressive suppressing of deadlock tsan errors
 deadlock:pthread_create
 deadlock:pthread_rwlock_rdlock
 deadlock:boost::asio
 
-deadlock:.*/src/xrpld/app/misc/detail/Manifest.cpp
-deadlock:.*/src/xrpld/app/misc/detail/ValidatorList.cpp
-deadlock:.*/src/xrpld/app/misc/detail/ValidatorSite.cpp
+deadlock:src/xrpld/app/misc/detail/Manifest.cpp
+deadlock:src/xrpld/app/misc/detail/ValidatorList.cpp
+deadlock:src/xrpld/app/misc/detail/ValidatorSite.cpp
 
-signal:.*/src/libxrpl/beast/utility/beast_Journal.cpp
-signal:.*/src/xrpld/core/detail/Workers.cpp
-signal:.*/src/xrpld/core/JobQueue.cpp
+signal:src/libxrpl/beast/utility/beast_Journal.cpp
+signal:src/xrpld/core/detail/Workers.cpp
+signal:src/xrpld/core/JobQueue.cpp
 signal:ripple::Workers::Worker
 
 # Suppress SEGV crashes in TSAN itself during stringbuf operations
@@ -87,6 +80,12 @@ signal:ripple::Workers::Worker
 signal:std::__cxx11::basic_stringbuf
 signal:basic_stringbuf
 signal:basic_ostringstream
+
+called_from_lib:libclang_rt
+race:ostreambuf_iterator
+race:basic_ostream
+#called_from_lib:libc++.1.dylib
+#called_from_lib:libc++.abi.dylib
 
 # Suppress SEGV in TSAN during operator new called from stringbuf
 signal:operator new

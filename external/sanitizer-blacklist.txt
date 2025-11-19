@@ -1,5 +1,8 @@
 [thread]
-src:.*/src/libxrpl/beast/utility/beast_Journal.cpp
-src:.*/src/libxrpl/beast/utility/beast_PropertyStream.cpp
-src:.*/src/test/beast/beast_PropertyStream_test.cpp
-src:.*/src/xrpld/core/detail/Workers.cpp
+src:libxrpl/beast/utility/beast_Journal.cpp
+src:libxrpl/beast/utility/beast_PropertyStream.cpp
+src:test/beast/beast_PropertyStream_test.cpp
+src:xrpld/core/detail/Workers.cpp
+src:libxrpl/beast/utility/beast_Journal.cpp
+src:xrpld/core/detail/Workers.cpp
+src:xrpld/core/JobQueue.cpp

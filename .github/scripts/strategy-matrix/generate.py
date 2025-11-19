@@ -208,7 +208,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'build_only': build_only,
                 'build_type': build_type,
                 'os': os,
-                'architecture': architecture
+                'architecture': architecture,
+                'sanitizers': 'Address'
             })
 
             linker_flags = ''
@@ -239,7 +240,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'build_only': build_only,
                 'build_type': build_type,
                 'os': os,
-                'architecture': architecture
+                'architecture': architecture,
+                'sanitizers': 'Thread'
             })
         else:
             if cxx_flags:
