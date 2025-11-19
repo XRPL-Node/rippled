@@ -160,7 +160,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
         if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
             extra_warning_flags = ''
-            linker_relocation_flags = ''
+            linker_relocation_flags = '-static-libasan -static-libtsan -static-libubsan'
             linker_flags = ''
 
             # Use large code model to avoid relocation errors with large binaries
