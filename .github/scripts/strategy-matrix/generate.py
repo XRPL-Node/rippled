@@ -188,7 +188,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -static-libasan -static-libtsan -static-libubsan -fsanitize=address,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
                 sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow,unsigned-integer-overflow'
-                linker_flags += ' -static-libsan'
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags} -static-libsan"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags} -static-libsan"'
 
