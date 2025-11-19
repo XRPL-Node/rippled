@@ -170,8 +170,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # This is needed because sanitizers create very large binaries
                 # -fPIC enables position independent code to avoid relocation range issues
                 # large model removes the 2GB limitation that medium model has
-                cxx_flags += ' -mcmodel=large -fPIC'
-                linker_relocation_flags+=' -mcmodel=large -fPIC'
+                cxx_flags += ' -mcmodel=large -fPIC -pie'
+                linker_relocation_flags+=' -mcmodel=large -fPIC -pie'
 
             # Create default sanitizer flags
             sanitizers_flags = 'undefined,float-divide-by-zero'
