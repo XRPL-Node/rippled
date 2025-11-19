@@ -90,3 +90,14 @@ signal:execute_native_thread_routine
 
 # Suppress nested TSAN bugs (TSAN crashing while handling a crash)
 signal:nested bug in the same thread
+
+# Suppress data race in Boost Context fiber management
+# This is a false positive in Boost's exception state management during fiber context switching
+race:__cxxabiv1::manage_exception_state
+race:boost::context::fiber::resume
+race:boost::asio::detail::spawned_fiber_thread
+race:boost::asio::detail::spawned_fiber_thread::suspend_with
+race:boost::asio::detail::spawned_fiber_thread::destroy
+
+# Suppress data race in __tsan_memcpy called from Boost fiber operations
+race:__tsan_memcpy
