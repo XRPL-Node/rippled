@@ -155,8 +155,6 @@ OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
     }
 
     app_.getLedgerMaster().newOrderBookDB();
-
-    mallocTrim(std::optional<std::string>("OrderBookUpdate"), j_);
 }
 
 void
