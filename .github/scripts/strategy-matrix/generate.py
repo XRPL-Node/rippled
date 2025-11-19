@@ -160,7 +160,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
         if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
             extra_warning_flags = ''
-            linker_relocation_flags = '-static-libasan -static-libtsan -static-libubsan'
+            linker_relocation_flags = ''
             linker_flags = ''
 
             # Use large code model to avoid relocation errors with large binaries
@@ -184,12 +184,13 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 # Use default linker (bfd/ld) which is more lenient with mixed code models
                 cmake_args += ' -Duse_mold=OFF -Duse_gold=OFF -Duse_lld=OFF'
                 # Add linker flags for Sanitizers
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -static-libasan -static-libtsan -static-libubsan -fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -static-libasan -static-libtsan -static-libubsan -fsanitize=address,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
                 sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow,unsigned-integer-overflow'
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
+                linker_flags += ' -static-libsan'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags} -static-libsan"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags} -static-libsan"'
 
             # Sanitizers recommend minimum of -O1 for reasonable performance
             if "-O0" in cxx_flags:
@@ -221,12 +222,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 cxx_flags = cxx_flags.replace('-mcmodel=large', '-mcmodel=medium')
                 linker_relocation_flags = linker_relocation_flags.replace('-mcmodel=large', '-mcmodel=medium')
                 # Add linker flags for Sanitizers
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -static-libasan -static-libtsan -static-libubsan -fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -static-libasan -static-libtsan -static-libubsan -fsanitize=thread,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
                 cxx_flags += ' -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags} -static-libsan"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags} -static-libsan"'
 
             # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
             # before CMake processes it. This ensures the compiler receives an absolute path.
