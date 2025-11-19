@@ -66,6 +66,10 @@ deadlock:*PropertyStream*
 deadlock:*find_one*
 deadlock:*find_one_deep*
 
+deadlock:.*/src/xrpld/app/misc/detail/Manifest.cpp
+deadlock:.*/src/xrpld/app/misc/detail/ValidatorList.cpp
+deadlock:.*/src/xrpld/app/misc/detail/ValidatorSite.cpp
+
 signal:.*/src/libxrpl/beast/utility/beast_Journal.cpp
 signal:.*/src/xrpld/core/detail/Workers.cpp
 signal:.*/src/xrpld/core/JobQueue.cpp
