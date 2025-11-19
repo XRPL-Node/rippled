@@ -7,7 +7,6 @@
 #include <xrpld/core/JobQueue.h>
 
 #include <xrpl/basics/Log.h>
-#include <xrpl/basics/MallocTrim.h>
 #include <xrpl/protocol/Indexes.h>
 
 namespace ripple {
