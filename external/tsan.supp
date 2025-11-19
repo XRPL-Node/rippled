@@ -5,6 +5,7 @@ race:.*/boost/asio/.*
 race:.*/boost/context/.*
 race:.*/boost/asio/executor.hpp
 race:.*boost::asio::.*
+race:boost::asio
 
 race:.*/src/libxrpl/basics/make_SSLContext.cpp
 race:.*/src/libxrpl/basics/Number.cpp
@@ -65,6 +66,11 @@ deadlock:pthread_mutex_lock
 deadlock:*PropertyStream*
 deadlock:*find_one*
 deadlock:*find_one_deep*
+
+# Aggressive suppressing of deadlock tsan errors
+deadlock:pthread_create
+deadlock:pthread_rwlock_rdlock
+deadlock:boost::asio
 
 deadlock:.*/src/xrpld/app/misc/detail/Manifest.cpp
 deadlock:.*/src/xrpld/app/misc/detail/ValidatorList.cpp

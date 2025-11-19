@@ -166,7 +166,7 @@ jobs:
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
         run: |
           export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
-          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
+          export TSAN_OPTIONS="second_deadlock_stack=1 suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
           export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/lsan.supp"
           ctest \
@@ -181,7 +181,7 @@ jobs:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
           export ASAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/asan.supp"
-          export TSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
+          export TSAN_OPTIONS="second_deadlock_stack=1 suppressions=$GITHUB_WORKSPACE/external/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/ubsan.supp"
           export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/external/lsan.supp"
           ./rippled --unittest --unittest-jobs "${BUILD_NPROC}"
