@@ -69,3 +69,24 @@ deadlock:*find_one_deep*
 signal:.*/src/libxrpl/beast/utility/beast_Journal.cpp
 signal:.*/src/xrpld/core/detail/Workers.cpp
 signal:.*/src/xrpld/core/JobQueue.cpp
+signal:ripple::Workers::Worker
+
+# Suppress SEGV crashes in TSAN itself during stringbuf operations
+# This appears to be a GCC-15 TSAN instrumentation issue with basic_stringbuf::str()
+# Commonly triggered in beast::Journal::ScopedStream destructor
+signal:std::__cxx11::basic_stringbuf
+signal:basic_stringbuf
+signal:basic_ostringstream
+
+# Suppress SEGV in TSAN during operator new called from stringbuf
+signal:operator new
+
+# Suppress SEGV in Boost ASIO memory allocation with GCC-15 TSAN
+signal:boost::asio::aligned_new
+signal:boost::asio::detail::memory
+
+# Suppress SEGV in execute_native_thread_routine
+signal:execute_native_thread_routine
+
+# Suppress nested TSAN bugs (TSAN crashing while handling a crash)
+signal:nested bug in the same thread
