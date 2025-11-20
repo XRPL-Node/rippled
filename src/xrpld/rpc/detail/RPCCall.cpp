@@ -25,7 +25,6 @@
 
 #include <array>
 #include <iostream>
-#include <type_traits>
 #include <unordered_map>
 
 namespace ripple {
@@ -317,6 +316,7 @@ private:
                 return rpcError(rpcINVALID_LGR_RANGE);
             }
 
+            // `-1` means "most recent validated ledger version available"
             if (ledgerMax != -1 && ledgerMax < ledgerMin)
             {
                 if (apiVersion_ == 1)
@@ -417,7 +417,7 @@ private:
         std::string input = jvParams[0u].asString();
         if (input.find_first_not_of("0123456789") == std::string::npos)
         {
-            if (auto seq = jvParseUInt(jvParams[0u]))
+            if (auto const seq = jvParseUInt(jvParams[0u]))
                 jvRequest["can_delete"] = *seq;
             else
                 return RPC::invalid_field_error(jss::can_delete);
@@ -437,7 +437,7 @@ private:
         if (jvParams.size() == 2)
         {
             jvRequest[jss::ip] = ip;
-            if (auto port = jvParseUInt(jvParams[1u]))
+            if (auto const port = jvParseUInt(jvParams[1u]))
                 jvRequest[jss::port] = *port;
             else
                 return RPC::invalid_field_error(jss::port);
@@ -529,7 +529,7 @@ private:
 
         if (jvParams.size())
         {
-            if (auto minCount = jvParseUInt(jvParams[0u]))
+            if (auto const minCount = jvParseUInt(jvParams[0u]))
                 jvRequest[jss::min_count] = *minCount;
             else
                 return RPC::invalid_field_error(jss::min_count);
