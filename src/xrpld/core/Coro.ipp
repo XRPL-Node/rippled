@@ -16,18 +16,16 @@ JobQueue::Coro::Coro(
     , type_(type)
     , name_(name)
     , running_(false)
-    , coro_(
-          [this, fn = std::forward<F>(f)](
-              boost::coroutines::asymmetric_coroutine<void>::push_type&
-                  do_yield) {
-              yield_ = &do_yield;
-              yield();
-              fn(shared_from_this());
+    , coro_([this, fn = std::forward<F>(f)](
+                boost::coroutines2::asymmetric_coroutine<void>::push_type&
+                    do_yield) {
+        yield_ = &do_yield;
+        yield();
+        fn(shared_from_this());
 #ifndef NDEBUG
-              finished_ = true;
+        finished_ = true;
 #endif
-          },
-          boost::coroutines::attributes(megabytes(1)))
+    })
 {
 }
 

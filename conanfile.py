@@ -102,6 +102,7 @@ class Xrpl(ConanFile):
             self.options['boost'].visibility = 'global'
         if self.settings.compiler in ['clang', 'gcc']:
             self.options['boost'].without_cobalt = True
+        self.options['boost'].without_coroutine2 = False
 
     def requirements(self):
         # Conan 2 requires transitive headers to be specified
@@ -172,7 +173,8 @@ class Xrpl(ConanFile):
             'boost::headers',
             'boost::chrono',
             'boost::container',
-            'boost::coroutine',
+            'boost::context',
+            'boost::coroutine2',
             'boost::date_time',
             'boost::filesystem',
             'boost::json',

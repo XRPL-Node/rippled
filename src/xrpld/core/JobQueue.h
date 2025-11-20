@@ -9,7 +9,7 @@
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/json/json_value.h>
 
-#include <boost/coroutine/all.hpp>
+#include <boost/coroutine2/all.hpp>
 
 #include <set>
 
@@ -50,8 +50,8 @@ public:
         std::mutex mutex_;
         std::mutex mutex_run_;
         std::condition_variable cv_;
-        boost::coroutines::asymmetric_coroutine<void>::pull_type coro_;
-        boost::coroutines::asymmetric_coroutine<void>::push_type* yield_;
+        boost::coroutines2::asymmetric_coroutine<void>::pull_type coro_;
+        boost::coroutines2::asymmetric_coroutine<void>::push_type* yield_;
 #ifndef NDEBUG
         bool finished_ = false;
 #endif
@@ -334,7 +334,7 @@ private:
     other requests while the RPC command completes its work asynchronously.
 
     postCoro() creates a Coro object. When the Coro ctor is called, and its
-    coro_ member is initialized (a boost::coroutines::pull_type), execution
+    coro_ member is initialized (a boost::coroutines2::pull_type), execution
     automatically passes to the coroutine, which we don't want at this point,
     since we are still in the handler thread context. It's important to note
    here that construction of a boost pull_type automatically passes execution to

@@ -2,7 +2,7 @@ find_package(Boost 1.82 REQUIRED
   COMPONENTS
     chrono
     container
-    coroutine
+    context
     date_time
     filesystem
     json
@@ -20,7 +20,7 @@ target_link_libraries(xrpl_boost
     Boost::headers
     Boost::chrono
     Boost::container
-    Boost::coroutine
+    Boost::context
     Boost::date_time
     Boost::filesystem
     Boost::json

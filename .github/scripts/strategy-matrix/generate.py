@@ -156,15 +156,107 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add the configuration to the list, with the most unique fields first,
         # so that they are easier to identify in the GitHub Actions UI, as long
         # names get truncated.
-        configurations.append({
-            'config_name': config_name,
-            'cmake_args': cmake_args,
-            'cmake_target': cmake_target,
-            'build_only': build_only,
-            'build_type': build_type,
-            'os': os,
-            'architecture': architecture,
-        })
+        # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
+        if os['distro_version'] == 'bookworm' and f'{os["compiler_name"]}-{os["compiler_version"]}' in {'gcc-15', 'clang-20'}:
+            extra_warning_flags = ''
+            linker_relocation_flags = ''
+            linker_flags = ''
+            cxx_flags += ' -DBOOST_USE_TSAN -DBOOST_USE_UBSAN -DBOOST_USE_UCONTEXT'
+
+            # Use large code model to avoid relocation errors with large binaries
+            # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=large
+            if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
+                # Add -mcmodel=large and -fPIC to both compiler AND linker flags
+                # This is needed because sanitizers create very large binaries
+                # -fPIC enables position independent code to avoid relocation range issues
+                # large model removes the 2GB limitation that medium model has
+                cxx_flags += ' -mcmodel=large -fno-PIC'
+                linker_relocation_flags+=' -mcmodel=large -fno-PIC'
+
+            # Create default sanitizer flags
+            sanitizers_flags = 'undefined,float-divide-by-zero'
+
+            if os['compiler_name'] == 'gcc':
+                sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow'
+                # Suppress false positive warnings in GCC with stringop-overflow
+                extra_warning_flags += ' -Wno-stringop-overflow'
+                # Disable mold, gold and lld linkers.
+                # Use default linker (bfd/ld) which is more lenient with mixed code models
+                cmake_args += ' -Duse_mold=OFF -Duse_gold=OFF -Duse_lld=OFF'
+                # Add linker flags for Sanitizers
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
+            elif os['compiler_name'] == 'clang':
+                sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow,unsigned-integer-overflow'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
+
+            # Sanitizers recommend minimum of -O1 for reasonable performance
+            if "-O0" in cxx_flags:
+                cxx_flags = cxx_flags.replace("-O0", "-O1")
+            else:
+                cxx_flags += " -O1"
+
+            # First create config for asan
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+
+            # Add config with asan
+            configurations.append({
+                'config_name': config_name + "_asan",
+                'cmake_args': cmake_args_flags,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture,
+                'sanitizers': 'Address'
+            })
+
+            linker_flags = ''
+            # Update configs for tsan
+            # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
+            # Also tsan doesn't work well with mcmode=large and bfd linker
+            if os['compiler_name'] == 'gcc':
+                extra_warning_flags += ' -Wno-tsan'
+                cxx_flags = cxx_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                linker_relocation_flags = linker_relocation_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                # Add linker flags for Sanitizers
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+            elif os['compiler_name'] == 'clang':
+                cxx_flags += ' -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
+                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+
+            # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
+            # before CMake processes it. This ensures the compiler receives an absolute path.
+            # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
+            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+
+            configurations.append({
+                'config_name': config_name+ "_tsan",
+                'cmake_args': cmake_args_flags,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture,
+                'sanitizers': 'Thread'
+            })
+        else:
+            if cxx_flags:
+                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS={cxx_flags}'
+            else:
+                cmake_args_flags = f'{cmake_args}'
+            configurations.append({
+                'config_name': config_name,
+                'cmake_args': cmake_args_flags,
+                'cmake_target': cmake_target,
+                'build_only': build_only,
+                'build_type': build_type,
+                'os': os,
+                'architecture': architecture
+            })
 
     return configurations
 
