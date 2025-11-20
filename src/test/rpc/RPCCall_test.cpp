@@ -1549,7 +1549,6 @@ static RPCCallTestData const rpcCallTestArray[] = {
       "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
       "ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789",
       "200",
-      "0",
       "MyMarker"},
      R"({
     "method" : "book_offers",
