@@ -71,13 +71,13 @@ inline JobQueue::Coro::~Coro()
         "ripple::JobQueue::Coro::~Coro : is finished");
 }
 
-inline void
+inline bool
 JobQueue::Coro::yield()
 {
     {
         std::lock_guard lock(jq_.m_mutex);
         if (shouldStop())
-            return;
+            return false;
 
         state_ = CoroState::Suspended;
         cv_.notify_all();

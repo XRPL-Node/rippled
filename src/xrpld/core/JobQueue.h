@@ -99,9 +99,11 @@ public:
             Note:
               The associated Job function returns.
               Undefined behavior if called consecutively without a corresponding
-           post.
+              post.
+              It may not suspend at all if the JobQueue is stopping, and returns
+              false in such a case.
         */
-        void
+        bool
         yield();
 
         /** Schedule coroutine execution.
@@ -147,7 +149,7 @@ public:
         join();
 
         /** Returns true if the coroutine should stop executing */
-        bool
+        [[nodiscard]] bool
         shouldStop() const;
     };
 
