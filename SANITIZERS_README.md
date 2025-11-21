@@ -24,7 +24,7 @@ Corresponding suppression files are located in the `external` directory.
 
 ### Summary
 
-Follow the same instructions as mentioned in [BUILD.md](https://github.com/ripple/rippled/blob/develop/BUILD.md) but with following changes:
+Follow the same instructions as mentioned in [BUILD.md](./BUILD.md) but with following changes:
 
 1. Make sure you have clean build directory.
 2. Use `--profile sanitizers` to configure build options to include sanitizer flags. [sanitizes](./conan/profiles/sanitizers) profile contains settings for all sanitizers.
