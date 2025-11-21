@@ -362,7 +362,8 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
 
    If you would like to activate `asan+ubsan`(`Address`) or `tsan+ubsan`(`Thread`) for the build,
    declare an env. variable as follows and simply use the `sanitizers`
-   profile in the `conan install` command.
+   profile in the `conan install` command. Make sure you clear your conan cache before doing so.
+   Command: `conan cache clean "*"`
 
    ```
    SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Debug

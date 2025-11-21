@@ -1,3 +1,5 @@
+# The idea is to empty this file gradually by fixing the underlying issues and removing suppresions.
+
 # Suppress race in Boost ASIO scheduler detected by GCC-15
 # This is a false positive in Boost's internal pipe() synchronization
 race:boost/asio/
@@ -5,6 +7,7 @@ race:boost/context/
 race:boost/asio/executor.hpp
 race:boost::asio
 
+# Suppress tsan related issues in rippled code.
 race:src/libxrpl/basics/make_SSLContext.cpp
 race:src/libxrpl/basics/Number.cpp
 race:src/libxrpl/json/json_value.cpp
@@ -43,10 +46,11 @@ race:xrpl/server/detail/ServerImpl.h
 race:xrpl/nodestore/detail/DatabaseNodeImp.h
 race:src/libxrpl/beast/utility/beast_Journal.cpp
 race:src/test/beast/LexicalCast_test.cpp
+race:ripple::ServerHandler
 
+# More suppressions in external library code.
 race:crtstuff.c
 race:pipe
-race:ripple::ServerHandler
 
 # Deadlock / lock-order-inversion suppressions
 # Note: GCC's TSAN may not fully support all deadlock suppression patterns
@@ -54,17 +58,6 @@ deadlock:src/libxrpl/beast/utility/beast_Journal.cpp
 deadlock:src/libxrpl/beast/utility/beast_PropertyStream.cpp
 deadlock:src/test/beast/beast_PropertyStream_test.cpp
 deadlock:src/xrpld/core/detail/Workers.cpp
-
-# Suppress lock-order-inversion in recursive_mutex operations
-deadlock:std::recursive_mutex::lock
-deadlock:__gthread_recursive_mutex_lock
-deadlock:pthread_mutex_lock
-
-# Aggressive suppressing of deadlock tsan errors
-deadlock:pthread_create
-deadlock:pthread_rwlock_rdlock
-deadlock:boost::asio
-
 deadlock:src/xrpld/app/misc/detail/Manifest.cpp
 deadlock:src/xrpld/app/misc/detail/ValidatorList.cpp
 deadlock:src/xrpld/app/misc/detail/ValidatorSite.cpp
@@ -73,6 +66,11 @@ signal:src/libxrpl/beast/utility/beast_Journal.cpp
 signal:src/xrpld/core/detail/Workers.cpp
 signal:src/xrpld/core/JobQueue.cpp
 signal:ripple::Workers::Worker
+
+# Aggressive suppressing of deadlock tsan errors
+deadlock:pthread_create
+deadlock:pthread_rwlock_rdlock
+deadlock:boost::asio
 
 # Suppress SEGV crashes in TSAN itself during stringbuf operations
 # This appears to be a GCC-15 TSAN instrumentation issue with basic_stringbuf::str()
@@ -84,11 +82,6 @@ signal:basic_ostringstream
 called_from_lib:libclang_rt
 race:ostreambuf_iterator
 race:basic_ostream
-#called_from_lib:libc++.1.dylib
-#called_from_lib:libc++.abi.dylib
-
-# Suppress SEGV in TSAN during operator new called from stringbuf
-signal:operator new
 
 # Suppress SEGV in Boost ASIO memory allocation with GCC-15 TSAN
 signal:boost::asio::aligned_new
@@ -96,9 +89,6 @@ signal:boost::asio::detail::memory
 
 # Suppress SEGV in execute_native_thread_routine
 signal:execute_native_thread_routine
-
-# Suppress nested TSAN bugs (TSAN crashing while handling a crash)
-signal:nested bug in the same thread
 
 # Suppress data race in Boost Context fiber management
 # This is a false positive in Boost's exception state management during fiber context switching

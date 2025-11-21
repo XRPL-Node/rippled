@@ -1,6 +1,5 @@
 # Suppress UBSan errors in external code by source file path
 # This matches any source file under the external/ directory
-
 alignment:external
 bool:external
 bounds:external
@@ -70,6 +69,7 @@ vla-bound:boost
 vptr_check:boost
 vptr:boost
 
+# Suppress UBSan errors in rippled code by source file path
 undefined:src/libxrpl/basics/base64.cpp
 undefined:src/libxrpl/basics/Number.cpp
 undefined:src/libxrpl/beast/utility/beast_Journal.cpp
@@ -160,8 +160,70 @@ unsigned-integer-overflow:xrpl/nodestore/detail/varint.h
 unsigned-integer-overflow:xrpl/peerfinder/detail/Counts.h
 unsigned-integer-overflow:xrpl/protocol/nft.h
 
+# Rippled intentional overflows and operations
+# STAmount uses intentional negation of INT64_MIN and overflow in arithmetic
+signed-integer-overflow:src/libxrpl/protocol/STAmount.cpp
+unsigned-integer-overflow:src/libxrpl/protocol/STAmount.cpp
+
+# XRPAmount test intentional overflows
+signed-integer-overflow:src/test/basics/XRPAmount_test.cpp
+
+# Peerfinder intentional overflow in counter arithmetic
+unsigned-integer-overflow:src/xrpld/peerfinder/detail/Counts.h
+
 # Signed integer overflow suppressions
 signed-integer-overflow:src/test/beast/LexicalCast_test.cpp
 
 # External library suppressions
 unsigned-integer-overflow:nudb/detail/xxhash.hpp
+
+# Protobuf intentional overflows in hash functions
+# Protobuf uses intentional unsigned overflow for hash computation (stringpiece.h:393)
+unsigned-integer-overflow:google/protobuf/stubs/stringpiece.h
+
+# gRPC intentional overflows
+# gRPC uses intentional overflow in timer calculations
+unsigned-integer-overflow:grpc
+unsigned-integer-overflow:timer_manager.cc
+
+# Standard library intentional overflows
+# These are intentional overflows in random number generation and character conversion
+unsigned-integer-overflow:__random/seed_seq.h
+unsigned-integer-overflow:__charconv/traits.h
+
+
+# Suppress errors in RocksDB
+# RocksDB uses intentional unsigned integer overflows in hash functions and CRC calculations
+unsigned-integer-overflow:rocks*/b/src/util/xxhash.h
+unsigned-integer-overflow:rocks*/b/src/util/xxph3.h
+unsigned-integer-overflow:rocks*/b/src/util/hash.cc
+unsigned-integer-overflow:rocks*/b/src/util/crc32c.cc
+unsigned-integer-overflow:rocks*/b/src/util/crc32c.h
+unsigned-integer-overflow:rocks*/b/src/include/rocksdb/utilities/options_type.h
+unsigned-integer-overflow:rocks*/b/src/table/format.h
+unsigned-integer-overflow:rocks*/b/src/table/format.cc
+unsigned-integer-overflow:rocks*/b/src/table/block_based/block_based_table_builder.cc
+unsigned-integer-overflow:rocks*/b/src/table/block_based/reader_common.cc
+unsigned-integer-overflow:rocks*/b/src/db/version_set.cc
+
+# RocksDB misaligned loads (intentional for performance on ARM64)
+alignment:rocks*/b/src/util/crc32c_arm64.cc
+
+# nudb intentional overflows in hash functions
+unsigned-integer-overflow:nudb/detail/xxhash.hpp
+alignment:nudb/detail/xxhash.hpp
+
+# Snappy compression library intentional overflows
+unsigned-integer-overflow:snapp*/b/src/snappy.cc
+
+# Abseil intentional overflows
+unsigned-integer-overflow:abse*/b/src/absl/strings/numbers.cc
+unsigned-integer-overflow:abse*/b/src/absl/strings/internal/cord_rep_flat.h
+
+# Standard library intentional overflows in chrono duration arithmetic
+unsigned-integer-overflow:__chrono/duration.h
+
+# Suppress undefined errors in RocksDB and nudb
+undefined:rocks.*/b/src/util/crc32c_arm64.cc
+undefined:rocks.*/b/src/util/xxhash.h
+undefined:nudb

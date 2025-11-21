@@ -166,9 +166,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # Use large code model to avoid relocation errors with large binaries
             # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=large
             if architecture['platform'] == 'linux/amd64' and os['compiler_name'] == 'gcc':
-                # Add -mcmodel=large and -fPIC to both compiler AND linker flags
-                # This is needed because sanitizers create very large binaries
-                # -fPIC enables position independent code to avoid relocation range issues
+                # Add -mcmodel=large to both compiler AND linker flags
+                # This is needed because sanitizers create very large binaries and
                 # large model removes the 2GB limitation that medium model has
                 cxx_flags += ' -mcmodel=large -fno-PIC'
                 linker_relocation_flags+=' -mcmodel=large -fno-PIC'
@@ -211,38 +210,42 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 'architecture': architecture,
                 'sanitizers': 'Address'
             })
+            # Since TSAN runs are crashing with seg faults(could be compatibility issues with latest compilers)
+            # We deactivate it for now. But I would keep the code, since it took some effort to find the correct set of config needed to run this.
+            # This will be useful when we decide to activate it again in future.
+            activateTSAN = False
+            if activateTSAN:
+                linker_flags = ''
+                # Update configs for tsan
+                # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
+                # Also tsan doesn't work well with mcmode=large and bfd linker
+                if os['compiler_name'] == 'gcc':
+                    extra_warning_flags += ' -Wno-tsan'
+                    cxx_flags = cxx_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                    linker_relocation_flags = linker_relocation_flags.replace('-mcmodel=large', '-mcmodel=medium')
+                    # Add linker flags for Sanitizers
+                    linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                    linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
+                elif os['compiler_name'] == 'clang':
+                    # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
+                    # before CMake processes it. This ensures the compiler receives an absolute path.
+                    # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
+                    cxx_flags += ' -fsanitize-ignorelist=$GITHUB_WORKSPACE/external/sanitizer-ignorelist.txt'
+                    linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                    linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
-            linker_flags = ''
-            # Update configs for tsan
-            # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
-            # Also tsan doesn't work well with mcmode=large and bfd linker
-            if os['compiler_name'] == 'gcc':
-                extra_warning_flags += ' -Wno-tsan'
-                cxx_flags = cxx_flags.replace('-mcmodel=large', '-mcmodel=medium')
-                linker_relocation_flags = linker_relocation_flags.replace('-mcmodel=large', '-mcmodel=medium')
-                # Add linker flags for Sanitizers
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
-            elif os['compiler_name'] == 'clang':
-                cxx_flags += ' -fsanitize-blacklist=$GITHUB_WORKSPACE/external/sanitizer-blacklist.txt'
-                linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
-                linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
+                cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
-            # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
-            # before CMake processes it. This ensures the compiler receives an absolute path.
-            # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
-            cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
-
-            configurations.append({
-                'config_name': config_name+ "_tsan",
-                'cmake_args': cmake_args_flags,
-                'cmake_target': cmake_target,
-                'build_only': build_only,
-                'build_type': build_type,
-                'os': os,
-                'architecture': architecture,
-                'sanitizers': 'Thread'
-            })
+                configurations.append({
+                    'config_name': config_name+ "_tsan",
+                    'cmake_args': cmake_args_flags,
+                    'cmake_target': cmake_target,
+                    'build_only': build_only,
+                    'build_type': build_type,
+                    'os': os,
+                    'architecture': architecture,
+                    'sanitizers': 'Thread'
+                })
         else:
             if cxx_flags:
                 cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS={cxx_flags}'

@@ -22,9 +22,9 @@ inputs:
     required: false
     default: "verbose"
   sanitizers:
-    description: "The sanitizers to enable ('None', 'Address', 'Thread')."
+    description: "The sanitizers to enable ('Address', 'Thread')."
     required: false
-    default: "None"
+    default: ""
 
 runs:
   using: composite

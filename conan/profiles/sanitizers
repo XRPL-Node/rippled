@@ -3,10 +3,7 @@ include(default)
 {% set default_sanitizer_flags = "undefined,float-divide-by-zero,signed-integer-overflow" %}
 {% set sanitizers = os.getenv("SANITIZERS") %}
 
-[settings]
-
 [conf]
-
 {% if sanitizers == "Address" or sanitizers == "Thread" %}
 user.package:sanitizers={{ sanitizers }}
 tools.info.package_id:confs+=["user.package:sanitizers"]
@@ -43,7 +40,6 @@ tools.build:exelinkflags+=['{{asan_sanitizer_flags}}']
 tools.build:cxxflags+=['{{tsan_sanitizer_flags}} -fno-omit-frame-pointer -O1']
 tools.build:sharedlinkflags+=['{{tsan_sanitizer_flags}}']
 tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
-
 
 {% endif %}
 
