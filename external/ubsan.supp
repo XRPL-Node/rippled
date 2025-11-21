@@ -69,6 +69,9 @@ vla-bound:boost
 vptr_check:boost
 vptr:boost
 
+# Google protobuf
+undefined:protobuf
+
 # Suppress UBSan errors in rippled code by source file path
 undefined:src/libxrpl/basics/base64.cpp
 undefined:src/libxrpl/basics/Number.cpp

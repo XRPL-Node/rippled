@@ -186,6 +186,11 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}"'
             elif os['compiler_name'] == 'clang':
+                # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
+                # before CMake processes it. This ensures the compiler receives an absolute path.
+                # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
+                # GCC doesn't support ignorelist.
+                cxx_flags += ' -fsanitize-ignorelist=$GITHUB_WORKSPACE/external/sanitizer-ignorelist.txt'
                 sanitizers_flags = f'{sanitizers_flags},signed-integer-overflow,unsigned-integer-overflow'
                 linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
                 linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,{sanitizers_flags}"'
@@ -227,10 +232,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
                     linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}"'
                 elif os['compiler_name'] == 'clang':
-                    # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
-                    # before CMake processes it. This ensures the compiler receives an absolute path.
-                    # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
-                    cxx_flags += ' -fsanitize-ignorelist=$GITHUB_WORKSPACE/external/sanitizer-ignorelist.txt'
                     linker_flags += f' -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
                     linker_flags += f' -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=thread,{sanitizers_flags}"'
 
