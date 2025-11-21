@@ -13,6 +13,8 @@ LoanBrokerSet::checkExtraFeatures(PreflightContext const& ctx)
 NotTEC
 LoanBrokerSet::preflight(PreflightContext const& ctx)
 {
+    using namespace Lending;
+
     auto const& tx = ctx.tx;
     if (auto const data = tx[~sfData]; data && !data->empty() &&
         !validDataLength(tx[~sfData], maxDataPayloadLength))

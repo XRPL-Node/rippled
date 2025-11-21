@@ -21,6 +21,8 @@ LoanSet::getFlagsMask(PreflightContext const& ctx)
 NotTEC
 LoanSet::preflight(PreflightContext const& ctx)
 {
+    using namespace Lending;
+
     auto const& tx = ctx.tx;
 
     // Special case for Batch inner transactions

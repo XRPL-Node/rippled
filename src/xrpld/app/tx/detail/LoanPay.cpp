@@ -52,6 +52,8 @@ LoanPay::preflight(PreflightContext const& ctx)
 XRPAmount
 LoanPay::calculateBaseFee(ReadView const& view, STTx const& tx)
 {
+    using namespace Lending;
+
     auto const normalCost = Transactor::calculateBaseFee(view, tx);
 
     if (tx.isFlag(tfLoanFullPayment) || tx.isFlag(tfLoanLatePayment))

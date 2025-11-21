@@ -638,6 +638,7 @@ class LoanBroker_test : public beast::unit_test::suite
             }
 
             using namespace loanBroker;
+            using namespace ripple::Lending;
 
             TenthBips32 const tenthBipsZero{0};
 

@@ -1639,6 +1639,7 @@ protected:
         int interestExponent)
     {
         using namespace jtx;
+        using namespace Lending;
 
         auto const& asset = broker.asset.raw();
         auto const currencyLabel = getCurrencyLabel(asset);
@@ -4843,6 +4844,7 @@ protected:
 
         using namespace jtx;
         using namespace std::chrono_literals;
+        using namespace Lending;
         Env env(*this, all);
 
         Account const issuer{"issuer"};
@@ -5016,6 +5018,7 @@ protected:
 
         using namespace jtx;
         using namespace std::chrono_literals;
+        using namespace Lending;
         Env env(*this, all);
 
         Account const issuer{"issuer"};
@@ -5099,6 +5102,7 @@ protected:
 
         using namespace jtx;
         using namespace std::chrono_literals;
+        using namespace Lending;
         Env env(*this, all);
 
         Account const issuer{"issuer"};
@@ -5211,6 +5215,7 @@ protected:
 
         using namespace jtx;
         using namespace std::chrono_literals;
+        using namespace Lending;
         Env env(*this, all);
 
         Account const issuer{"issuer"};
@@ -5305,6 +5310,7 @@ protected:
 
         using namespace jtx;
         using namespace std::chrono_literals;
+        using namespace Lending;
         Env env(*this, all);
 
         Account const issuer{"issuer"};

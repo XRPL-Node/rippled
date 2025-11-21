@@ -1457,6 +1457,8 @@ loanMakePayment(
     LoanPaymentType const paymentType,
     beast::Journal j)
 {
+    using namespace Lending;
+
     /*
      * This function is an implementation of the XLS-66 spec,
      * section 3.2.4.3 (Transaction Pseudo-code)
