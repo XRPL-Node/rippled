@@ -370,6 +370,7 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    ```
 
    Available options for SANITIZERS: `Address` and `Thread`
+   More details here: [SANITIZERS_README](./SANITIZERS_README.md)
 
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`
 
