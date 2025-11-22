@@ -159,9 +159,13 @@ LoanSet::calculateBaseFee(ReadView const& view, STTx const& tx)
     // for the transaction. Note that unlike the base class, the single signer
     // is counted if present. It will only be absent in a batch inner
     // transaction.
-    std::size_t const signerCount = counterSig.isFieldPresent(sfSigners)
-        ? counterSig.getFieldArray(sfSigners).size()
-        : (counterSig.isFieldPresent(sfTxnSignature) ? 1 : 0);
+    std::size_t const signerCount = [&counterSig]() {
+        // Compute defensively. Assure that "tx" cannot be accessed and cause
+        // confusion or miscalculations.
+        return counterSig.isFieldPresent(sfSigners)
+            ? counterSig.getFieldArray(sfSigners).size()
+            : (counterSig.isFieldPresent(sfTxnSignature) ? 1 : 0);
+    }();
 
     return normalCost + (signerCount * baseFee);
 }
