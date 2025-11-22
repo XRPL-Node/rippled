@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2024 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx.h>
 
 #include <xrpl/protocol/SField.h>
@@ -265,34 +246,34 @@ MPTTester::set(MPTSet const& arg)
 
                 if (arg.mutableFlags)
                 {
-                    if (*arg.mutableFlags & tfMPTSetCanLock)
+                    if (*arg.mutableFlags & tmfMPTSetCanLock)
                         flags |= lsfMPTCanLock;
-                    else if (*arg.mutableFlags & tfMPTClearCanLock)
+                    else if (*arg.mutableFlags & tmfMPTClearCanLock)
                         flags &= ~lsfMPTCanLock;
 
-                    if (*arg.mutableFlags & tfMPTSetRequireAuth)
+                    if (*arg.mutableFlags & tmfMPTSetRequireAuth)
                         flags |= lsfMPTRequireAuth;
-                    else if (*arg.mutableFlags & tfMPTClearRequireAuth)
+                    else if (*arg.mutableFlags & tmfMPTClearRequireAuth)
                         flags &= ~lsfMPTRequireAuth;
 
-                    if (*arg.mutableFlags & tfMPTSetCanEscrow)
+                    if (*arg.mutableFlags & tmfMPTSetCanEscrow)
                         flags |= lsfMPTCanEscrow;
-                    else if (*arg.mutableFlags & tfMPTClearCanEscrow)
+                    else if (*arg.mutableFlags & tmfMPTClearCanEscrow)
                         flags &= ~lsfMPTCanEscrow;
 
-                    if (*arg.mutableFlags & tfMPTSetCanClawback)
+                    if (*arg.mutableFlags & tmfMPTSetCanClawback)
                         flags |= lsfMPTCanClawback;
-                    else if (*arg.mutableFlags & tfMPTClearCanClawback)
+                    else if (*arg.mutableFlags & tmfMPTClearCanClawback)
                         flags &= ~lsfMPTCanClawback;
 
-                    if (*arg.mutableFlags & tfMPTSetCanTrade)
+                    if (*arg.mutableFlags & tmfMPTSetCanTrade)
                         flags |= lsfMPTCanTrade;
-                    else if (*arg.mutableFlags & tfMPTClearCanTrade)
+                    else if (*arg.mutableFlags & tmfMPTClearCanTrade)
                         flags &= ~lsfMPTCanTrade;
 
-                    if (*arg.mutableFlags & tfMPTSetCanTransfer)
+                    if (*arg.mutableFlags & tmfMPTSetCanTransfer)
                         flags |= lsfMPTCanTransfer;
-                    else if (*arg.mutableFlags & tfMPTClearCanTransfer)
+                    else if (*arg.mutableFlags & tmfMPTClearCanTransfer)
                         flags &= ~lsfMPTCanTransfer;
                 }
             }
@@ -507,7 +488,7 @@ MPTTester::getFlags(std::optional<Account> const& holder) const
 }
 
 MPT
-MPTTester::operator[](std::string const& name)
+MPTTester::operator[](std::string const& name) const
 {
     return MPT(name, issuanceID());
 }

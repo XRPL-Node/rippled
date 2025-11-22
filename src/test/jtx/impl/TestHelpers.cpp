@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2023 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx/TestHelpers.h>
 #include <test/jtx/offer.h>
 #include <test/jtx/owners.h>
@@ -103,7 +84,7 @@ xrpMinusFee(Env const& env, std::int64_t xrpAmount)
 };
 
 [[nodiscard]] bool
-expectLine(
+expectHolding(
     Env& env,
     AccountID const& account,
     STAmount const& value,
@@ -137,9 +118,33 @@ expectLine(
 }
 
 [[nodiscard]] bool
-expectLine(Env& env, AccountID const& account, None const& value)
+expectHolding(
+    Env& env,
+    AccountID const& account,
+    None const&,
+    Issue const& issue)
 {
-    return !env.le(keylet::line(account, value.issue));
+    return !env.le(keylet::line(account, issue));
+}
+
+[[nodiscard]] bool
+expectHolding(
+    Env& env,
+    AccountID const& account,
+    None const&,
+    MPTIssue const& mptIssue)
+{
+    return !env.le(keylet::mptoken(mptIssue.getMptID(), account));
+}
+
+[[nodiscard]] bool
+expectHolding(Env& env, AccountID const& account, None const& value)
+{
+    return std::visit(
+        [&](auto const& issue) {
+            return expectHolding(env, account, value, issue);
+        },
+        value.asset.value());
 }
 
 [[nodiscard]] bool
@@ -213,6 +218,8 @@ expectLedgerEntryRoot(
 
 /* Payment Channel */
 /******************************************************************************/
+namespace paychan {
+
 Json::Value
 create(
     AccountID const& account,
@@ -303,6 +310,8 @@ channelExists(ReadView const& view, uint256 const& chan)
     auto const slep = view.read({ltPAYCHAN, chan});
     return bool(slep);
 }
+
+}  // namespace paychan
 
 /* Crossing Limits */
 /******************************************************************************/

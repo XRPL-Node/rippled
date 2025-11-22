@@ -39,16 +39,11 @@ found here](./docs/build/environment.md).
 
 - [Python 3.11](https://www.python.org/downloads/), or higher
 - [Conan 2.17](https://conan.io/downloads.html)[^1], or higher
-- [CMake 3.22](https://cmake.org/download/)[^2], or higher
+- [CMake 3.22](https://cmake.org/download/), or higher
 
 [^1]:
     It is possible to build with Conan 1.60+, but the instructions are
     significantly different, which is why we are not recommending it.
-
-[^2]:
-    CMake 4 is not yet supported by all dependencies required by this project.
-    If you are affected by this issue, follow [conan workaround for cmake
-    4](#workaround-for-cmake-4)
 
 `rippled` is written in the C++20 dialect and includes the `<concepts>` header.
 The [minimum compiler versions][2] required are:
@@ -282,21 +277,6 @@ sed -i.bak -e 's|^arch=.*$|arch=x86_64|' $(conan config home)/profiles/default
 sed -i.bak -e 's|^compiler\.runtime=.*$|compiler.runtime=static|' $(conan config home)/profiles/default
 ```
 
-#### Workaround for CMake 4
-
-If your system CMake is version 4 rather than 3, you may have to configure Conan
-profile to use CMake version 3 for dependencies, by adding the following two
-lines to your profile:
-
-```text
-[tool_requires]
-!cmake/*: cmake/[>=3 <4]
-```
-
-This will force Conan to download and use a locally cached CMake 3 version, and
-is needed because some of the dependencies used by this project do not support
-CMake 4.
-
 #### Clang workaround for grpc
 
 If your compiler is clang, version 19 or later, or apple-clang, version 17 or
@@ -515,18 +495,18 @@ A coverage report is created when the following steps are completed, in order:
 
 1. `rippled` binary built with instrumentation data, enabled by the `coverage`
    option mentioned above
-2. completed run of unit tests, which populates coverage capture data
+2. completed one or more run of the unit tests, which populates coverage capture data
 3. completed run of the `gcovr` tool (which internally invokes either `gcov` or `llvm-cov`)
    to assemble both instrumentation data and the coverage capture data into a coverage report
 
-The above steps are automated into a single target `coverage`. The instrumented
+The last step of the above is automated into a single target `coverage`. The instrumented
 `rippled` binary can also be used for regular development or testing work, at
 the cost of extra disk space utilization and a small performance hit
-(to store coverage capture). In case of a spurious failure of unit tests, it is
-possible to re-run the `coverage` target without rebuilding the `rippled` binary
-(since it is simply a dependency of the coverage report target). It is also possible
-to select only specific tests for the purpose of the coverage report, by setting
-the `coverage_test` variable in `cmake`
+(to store coverage capture data). Since `rippled` binary is simply a dependency of the
+coverage report target, it is possible to re-run the `coverage` target without
+rebuilding the `rippled` binary. Note, running of the unit tests before the `coverage`
+target is left to the developer. Each such run will append to the coverage data
+collected in the build directory.
 
 The default coverage report format is `html-details`, but the user
 can override it to any of the formats listed in `Builds/CMake/CodeCoverage.cmake`
@@ -534,11 +514,6 @@ by setting the `coverage_format` variable in `cmake`. It is also possible
 to generate more than one format at a time by setting the `coverage_extra_args`
 variable in `cmake`. The specific command line used to run the `gcovr` tool will be
 displayed if the `CODE_COVERAGE_VERBOSE` variable is set.
-
-By default, the code coverage tool runs parallel unit tests with `--unittest-jobs`
-set to the number of available CPU cores. This may cause spurious test
-errors on Apple. Developers can override the number of unit test jobs with
-the `coverage_test_parallelism` variable in `cmake`.
 
 Example use with some cmake variables set:
 
@@ -610,7 +585,7 @@ you might have generated CMake files for a different `build_type` than the
 `CMAKE_BUILD_TYPE` you passed to Conan.
 
 ```
-/rippled/.build/pb-xrpl.libpb/xrpl/proto/ripple.pb.h:10:10: fatal error: 'google/protobuf/port_def.inc' file not found
+/rippled/.build/pb-xrpl.libpb/xrpl/proto/xrpl.pb.h:10:10: fatal error: 'google/protobuf/port_def.inc' file not found
    10 | #include <google/protobuf/port_def.inc>
       |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 1 error generated.

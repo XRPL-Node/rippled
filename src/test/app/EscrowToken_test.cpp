@@ -1,28 +1,9 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2024 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx.h>
 
 #include <xrpld/app/tx/applySteps.h>
-#include <xrpld/ledger/Dir.h>
-#include <xrpld/ledger/Sandbox.h>
 
+#include <xrpl/ledger/Dir.h>
+#include <xrpl/ledger/Sandbox.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/STAmount.h>
@@ -691,7 +672,7 @@ struct EscrowToken_test : public beast::unit_test::suite
         {
             Env env{*this, features};
             auto const baseFee = env.current()->fees().base;
-            auto const acctReserve = env.current()->fees().accountReserve(0);
+            auto const acctReserve = env.current()->fees().reserve;
             auto const incReserve = env.current()->fees().increment;
             auto const alice = Account("alice");
             auto const bob = Account("bob");
@@ -2691,7 +2672,7 @@ struct EscrowToken_test : public beast::unit_test::suite
         {
             Env env{*this, features};
             auto const baseFee = env.current()->fees().base;
-            auto const acctReserve = env.current()->fees().accountReserve(0);
+            auto const acctReserve = env.current()->fees().reserve;
             auto const incReserve = env.current()->fees().increment;
 
             auto const alice = Account("alice");
@@ -3426,7 +3407,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             auto const preAliceMPT = env.balance(alice, MPT);
             auto const preOutstanding = env.balance(gw, MPT);
             auto const preEscrowed = issuerMPTEscrowed(env, MPT);
-            BEAST_EXPECT(preOutstanding == MPT(10'000));
+            BEAST_EXPECT(preOutstanding == MPT(-10'000));
             BEAST_EXPECT(preEscrowed == 0);
 
             env(escrow::create(alice, gw, MPT(1'000)),
@@ -3449,7 +3430,7 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             BEAST_EXPECT(env.balance(alice, MPT) == preAliceMPT - MPT(1'000));
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 0);
-            BEAST_EXPECT(env.balance(gw, MPT) == preOutstanding - MPT(1'000));
+            BEAST_EXPECT(env.balance(gw, MPT) == preOutstanding + MPT(1'000));
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == preEscrowed);
         }
     }
@@ -3503,7 +3484,7 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 125);
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == 125);
-            BEAST_EXPECT(env.balance(gw, MPT) == MPT(20'000));
+            BEAST_EXPECT(env.balance(gw, MPT) == MPT(-20'000));
 
             // bob can finish escrow
             env(escrow::finish(bob, alice, seq1),
@@ -3522,7 +3503,7 @@ struct EscrowToken_test : public beast::unit_test::suite
                                                                  : MPT(20'000);
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == escrowedWithFix);
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == escrowedWithFix);
-            BEAST_EXPECT(env.balance(gw, MPT) == outstandingWithFix);
+            BEAST_EXPECT(env.balance(gw, MPT) == -outstandingWithFix);
         }
 
         // test locked rate: cancel
@@ -3567,7 +3548,7 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             BEAST_EXPECT(env.balance(alice, MPT) == preAlice);
             BEAST_EXPECT(env.balance(bob, MPT) == preBob);
-            BEAST_EXPECT(env.balance(gw, MPT) == MPT(20'000));
+            BEAST_EXPECT(env.balance(gw, MPT) == MPT(-20'000));
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 0);
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == 0);
         }
@@ -3608,7 +3589,7 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 125);
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == 125);
-            BEAST_EXPECT(env.balance(gw, MPT) == MPT(20'000));
+            BEAST_EXPECT(env.balance(gw, MPT) == MPT(-20'000));
 
             // bob can finish escrow
             env(escrow::finish(gw, alice, seq1),
@@ -3620,7 +3601,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             BEAST_EXPECT(env.balance(alice, MPT) == preAlice - delta);
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 0);
             BEAST_EXPECT(issuerMPTEscrowed(env, MPT) == 0);
-            BEAST_EXPECT(env.balance(gw, MPT) == MPT(19'875));
+            BEAST_EXPECT(env.balance(gw, MPT) == MPT(-19'875));
         }
     }
 
@@ -3826,7 +3807,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 10);
             BEAST_EXPECT(env.balance(bob, MPT) == MPT(0));
             BEAST_EXPECT(mptEscrowed(env, bob, MPT) == 0);
-            BEAST_EXPECT(env.balance(gw, MPT) == MPT(10));
+            BEAST_EXPECT(env.balance(gw, MPT) == MPT(-10));
             mptGw.authorize({.account = bob, .flags = tfMPTUnauthorize});
             mptGw.destroy(
                 {.id = mptGw.issuanceID(),

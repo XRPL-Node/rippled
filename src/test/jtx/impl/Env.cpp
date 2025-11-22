@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx/Env.h>
 #include <test/jtx/JSONRPCClient.h>
 #include <test/jtx/balance.h>
@@ -34,6 +15,7 @@
 
 #include <xrpl/basics/Slice.h>
 #include <xrpl/basics/contract.h>
+#include <xrpl/basics/scope.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/net/HTTPClient.h>
 #include <xrpl/protocol/ErrorCodes.h>
@@ -218,7 +200,9 @@ Env::balance(Account const& account, MPTIssue const& mptIssue) const
         if (!sle)
             return {STAmount(mptIssue, 0), account.name()};
 
-        STAmount const amount{mptIssue, sle->getFieldU64(sfOutstandingAmount)};
+        // Make it negative
+        STAmount const amount{
+            mptIssue, sle->getFieldU64(sfOutstandingAmount), 0, true};
         return {amount, lookup(issuer).name()};
     }
     else
@@ -231,6 +215,14 @@ Env::balance(Account const& account, MPTIssue const& mptIssue) const
         STAmount const amount{mptIssue, sle->getFieldU64(sfMPTAmount)};
         return {amount, lookup(issuer).name()};
     }
+}
+
+PrettyAmount
+Env::balance(Account const& account, Asset const& asset) const
+{
+    return std::visit(
+        [&](auto const& issue) { return balance(account, issue); },
+        asset.value());
 }
 
 PrettyAmount
@@ -401,7 +393,7 @@ Env::sign_and_submit(JTx const& jt, Json::Value params)
     if (params.isNull())
     {
         // Use the command line interface
-        auto const jv = boost::lexical_cast<std::string>(jt.jv);
+        auto const jv = to_string(jt.jv);
         jr = rpc("submit", passphrase, jv);
     }
     else
@@ -521,8 +513,22 @@ void
 Env::autofill_sig(JTx& jt)
 {
     auto& jv = jt.jv;
-    if (jt.signer)
-        return jt.signer(*this, jt);
+
+    scope_success success([&]() {
+        // Call all the post-signers after the main signers or autofill are done
+        for (auto const& signer : jt.postSigners)
+            signer(*this, jt);
+    });
+
+    // Call all the main signers
+    if (!jt.mainSigners.empty())
+    {
+        for (auto const& signer : jt.mainSigners)
+            signer(*this, jt);
+        return;
+    }
+
+    // If the sig is still needed, get it here.
     if (!jt.fill_sig)
         return;
     auto const account = jv.isMember(sfDelegate.jsonName)

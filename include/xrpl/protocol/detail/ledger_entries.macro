@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2024 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #if !defined(LEDGER_ENTRY)
 #error "undefined macro: LEDGER_ENTRY"
 #endif
@@ -120,6 +101,7 @@ LEDGER_ENTRY(ltNFTOKEN_PAGE, 0x0050, NFTokenPage, nft_page, ({
 // All fields are soeREQUIRED because there is always a SignerEntries.
 // If there are no SignerEntries the node is deleted.
 LEDGER_ENTRY(ltSIGNER_LIST, 0x0053, SignerList, signer_list, ({
+    {sfOwner,                soeOPTIONAL},
     {sfOwnerNode,            soeREQUIRED},
     {sfSignerQuorum,         soeREQUIRED},
     {sfSignerEntries,        soeREQUIRED},
@@ -188,7 +170,7 @@ LEDGER_ENTRY(ltDIR_NODE, 0x0064, DirectoryNode, directory, ({
     {sfNFTokenID,            soeOPTIONAL},
     {sfPreviousTxnID,        soeOPTIONAL},
     {sfPreviousTxnLgrSeq,    soeOPTIONAL},
-    {sfDomainID,             soeOPTIONAL}
+    {sfDomainID,             soeOPTIONAL}   // order book directories
 }))
 
 /** The ledger object which lists details about amendments on the network.
@@ -343,6 +325,7 @@ LEDGER_ENTRY(ltXCHAIN_OWNED_CREATE_ACCOUNT_CLAIM_ID, 0x0074, XChainOwnedCreateAc
  */
 LEDGER_ENTRY(ltESCROW, 0x0075, Escrow, escrow, ({
     {sfAccount,              soeREQUIRED},
+    {sfSequence,             soeOPTIONAL},
     {sfDestination,          soeREQUIRED},
     {sfAmount,               soeREQUIRED},
     {sfCondition,            soeOPTIONAL},
@@ -365,6 +348,7 @@ LEDGER_ENTRY(ltESCROW, 0x0075, Escrow, escrow, ({
 LEDGER_ENTRY(ltPAYCHAN, 0x0078, PayChannel, payment_channel, ({
     {sfAccount,              soeREQUIRED},
     {sfDestination,          soeREQUIRED},
+    {sfSequence,             soeOPTIONAL},
     {sfAmount,               soeREQUIRED},
     {sfBalance,              soeREQUIRED},
     {sfPublicKey,            soeREQUIRED},
@@ -433,6 +417,7 @@ LEDGER_ENTRY(ltMPTOKEN, 0x007f, MPToken, mptoken, ({
  */
 LEDGER_ENTRY(ltORACLE, 0x0080, Oracle, oracle, ({
     {sfOwner,                soeREQUIRED},
+    {sfOracleDocumentID,     soeOPTIONAL},
     {sfProvider,             soeREQUIRED},
     {sfPriceDataSeries,      soeREQUIRED},
     {sfAssetClass,           soeREQUIRED},
@@ -453,7 +438,7 @@ LEDGER_ENTRY(ltCREDENTIAL, 0x0081, Credential, credential, ({
     {sfExpiration,           soeOPTIONAL},
     {sfURI,                  soeOPTIONAL},
     {sfIssuerNode,           soeREQUIRED},
-    {sfSubjectNode,          soeREQUIRED},
+    {sfSubjectNode,          soeOPTIONAL},
     {sfPreviousTxnID,        soeREQUIRED},
     {sfPreviousTxnLgrSeq,    soeREQUIRED},
 }))

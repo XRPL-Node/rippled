@@ -1,0 +1,109 @@
+#include <xrpl/nodestore/detail/DatabaseNodeImp.h>
+
+namespace ripple {
+namespace NodeStore {
+
+void
+DatabaseNodeImp::store(
+    NodeObjectType type,
+    Blob&& data,
+    uint256 const& hash,
+    std::uint32_t)
+{
+    storeStats(1, data.size());
+
+    auto obj = NodeObject::createObject(type, std::move(data), hash);
+    backend_->store(obj);
+}
+
+void
+DatabaseNodeImp::asyncFetch(
+    uint256 const& hash,
+    std::uint32_t ledgerSeq,
+    std::function<void(std::shared_ptr<NodeObject> const&)>&& callback)
+{
+    Database::asyncFetch(hash, ledgerSeq, std::move(callback));
+}
+
+void
+DatabaseNodeImp::sweep()
+{
+}
+
+std::shared_ptr<NodeObject>
+DatabaseNodeImp::fetchNodeObject(
+    uint256 const& hash,
+    std::uint32_t,
+    FetchReport& fetchReport,
+    bool duplicate)
+{
+    std::shared_ptr<NodeObject> nodeObject = nullptr;
+    Status status;
+
+    try
+    {
+        status = backend_->fetch(hash.data(), &nodeObject);
+    }
+    catch (std::exception const& e)
+    {
+        JLOG(j_.fatal()) << "fetchNodeObject " << hash
+                         << ": Exception fetching from backend: " << e.what();
+        Rethrow();
+    }
+
+    switch (status)
+    {
+        case ok:
+        case notFound:
+            break;
+        case dataCorrupt:
+            JLOG(j_.fatal()) << "fetchNodeObject " << hash
+                             << ": nodestore data is corrupted";
+            break;
+        default:
+            JLOG(j_.warn()) << "fetchNodeObject " << hash
+                            << ": backend returns unknown result " << status;
+            break;
+    }
+
+    if (nodeObject)
+        fetchReport.wasFound = true;
+
+    return nodeObject;
+}
+
+std::vector<std::shared_ptr<NodeObject>>
+DatabaseNodeImp::fetchBatch(std::vector<uint256> const& hashes)
+{
+    using namespace std::chrono;
+    auto const before = steady_clock::now();
+
+    std::vector<uint256 const*> batch{hashes.size()};
+    for (size_t i = 0; i < hashes.size(); ++i)
+    {
+        auto const& hash = hashes[i];
+        batch.push_back(&hash);
+    }
+
+    std::vector<std::shared_ptr<NodeObject>> results{hashes.size()};
+    results = backend_->fetchBatch(batch).first;
+    for (size_t i = 0; i < results.size(); ++i)
+    {
+        if (!results[i])
+        {
+            JLOG(j_.error())
+                << "fetchBatch - "
+                << "record not found in db. hash = " << strHex(hashes[i]);
+        }
+    }
+
+    auto fetchDurationUs =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            steady_clock::now() - before)
+            .count();
+    updateFetchMetrics(hashes.size(), 0, fetchDurationUs);
+    return results;
+}
+
+}  // namespace NodeStore
+}  // namespace ripple
