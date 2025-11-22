@@ -102,6 +102,31 @@ struct LoanState
     }
 };
 
+// Some values get re-rounded to the vault scale any time they are adjusted. In
+// addition, they are prevented from ever going below zero. This helps avoid
+// accumulated rounding errors and leftover dust amounts.
+template <class NumberProxy>
+void
+adjustImpreciseNumber(
+    NumberProxy value,
+    Number const& adjustment,
+    Asset const& asset,
+    int vaultScale)
+{
+    value = roundToAsset(asset, value + adjustment, vaultScale);
+
+    if (*value < beast::zero)
+        value = 0;
+}
+
+inline int
+getVaultScale(SLE::const_ref vaultSle)
+{
+    if (!vaultSle)
+        return Number::minExponent - 1;  // LCOV_EXCL_LINE
+    return vaultSle->at(sfAssetsTotal).exponent();
+}
+
 TER
 checkLoanGuards(
     Asset const& vaultAsset,

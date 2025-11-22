@@ -141,11 +141,7 @@ protected:
             using namespace jtx;
 
             auto const vaultSle = env.le(keylet::vault(vaultID));
-            if (!vaultSle)
-                // This function is not important enough to return an optional.
-                // Return an impossibly small number
-                return STAmount::cMinOffset - 1;
-            return vaultSle->at(sfAssetsTotal).exponent();
+            return getVaultScale(vaultSle);
         }
     };
 

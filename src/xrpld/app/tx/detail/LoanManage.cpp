@@ -171,15 +171,15 @@ LoanManage::defaultLoan(
 
     // Update the Vault object:
 
+    // The vault may be at a different scale than the loan. Reduce rounding
+    // errors during the accounting by rounding some of the values to that
+    // scale.
+    auto const vaultScale = getVaultScale(vaultSle);
+
     {
         // Decrease the Total Value of the Vault:
         auto vaultTotalProxy = vaultSle->at(sfAssetsTotal);
         auto vaultAvailableProxy = vaultSle->at(sfAssetsAvailable);
-
-        // The vault may be at a different scale than the loan. Reduce rounding
-        // errors during the accounting by rounding some of the values to that
-        // scale.
-        auto const vaultScale = vaultTotalProxy.value().exponent();
 
         if (vaultTotalProxy < vaultDefaultAmount)
         {
@@ -246,16 +246,11 @@ LoanManage::defaultLoan(
     // Update the LoanBroker object:
 
     {
+        auto const asset = *vaultSle->at(sfAsset);
+
         // Decrease the Debt of the LoanBroker:
-        if (brokerDebtTotalProxy < totalDefaultAmount)
-        {
-            // LCOV_EXCL_START
-            JLOG(j.warn())
-                << "LoanBroker debt total is less than the default amount";
-            return tefBAD_LEDGER;
-            // LCOV_EXCL_STOP
-        }
-        brokerDebtTotalProxy -= totalDefaultAmount;
+        adjustImpreciseNumber(
+            brokerDebtTotalProxy, -totalDefaultAmount, asset, vaultScale);
         // Decrease the First-Loss Capital Cover Available:
         auto coverAvailableProxy = brokerSle->at(sfCoverAvailable);
         if (coverAvailableProxy < defaultCovered)

@@ -673,9 +673,14 @@ class LoanBroker_test : public beast::unit_test::suite
                 coverRateMinimum(maxCoverRate),
                 coverRateLiquidation(maxCoverRate),
                 ter(tecNO_PERMISSION));
-            // Cover: too big
+            // CoverMinimum: too big
             env(set(evan, vault.vaultID),
                 coverRateMinimum(maxCoverRate + 1),
+                coverRateLiquidation(maxCoverRate + 1),
+                ter(temINVALID));
+            // CoverLiquidation: too big
+            env(set(evan, vault.vaultID),
+                coverRateMinimum(maxCoverRate / 2),
                 coverRateLiquidation(maxCoverRate + 1),
                 ter(temINVALID));
             // Cover: zero min, non-zero liquidation - implicit and
