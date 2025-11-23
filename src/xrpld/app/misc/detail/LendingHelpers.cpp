@@ -751,9 +751,12 @@ computeFullPayment(
     if (paymentRemaining <= 1)
     {
         // If this is the last payment, it has to be a regular payment
-        JLOG(j.warn()) << "Full payment requested when only final "
-                       << "payment remains.";
+    if (paymentRemaining <= 1)
+    {
+        // If this is the last payment, it has to be a regular payment
+        JLOG(j.warn()) << "Last payment cannot be a full payment.";
         return Unexpected(tecKILLED);
+    }
     }
 
     Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
