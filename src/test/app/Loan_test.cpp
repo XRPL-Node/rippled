@@ -2388,7 +2388,7 @@ protected:
                 // the below BEAST_EXPECTs may not hold across assets.
                 Number const interval = state.paymentInterval;
                 auto const periodicRate =
-                    interval * Number(12, -2) / (365 * 24 * 60 * 60);
+                    interval * Number(12, -2) / secondsInYear;
                 BEAST_EXPECT(
                     periodicRate ==
                     Number(2283105022831050, -21, Number::unchecked{}));
@@ -2620,7 +2620,7 @@ protected:
                 // the below BEAST_EXPECTs may not hold across assets.
                 Number const interval = state.paymentInterval;
                 auto const periodicRate =
-                    interval * Number(12, -2) / (365 * 24 * 60 * 60);
+                    interval * Number(12, -2) / secondsInYear;
                 BEAST_EXPECT(
                     periodicRate ==
                     Number(2283105022831050, -21, Number::unchecked{}));

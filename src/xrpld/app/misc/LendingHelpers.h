@@ -12,6 +12,8 @@ struct PreflightContext;
 bool
 checkLendingProtocolDependencies(PreflightContext const& ctx);
 
+static constexpr std::uint32_t secondsInYear = 365 * 24 * 60 * 60;
+
 Number
 loanPeriodicRate(TenthBips32 interestRate, std::uint32_t paymentInterval);
 

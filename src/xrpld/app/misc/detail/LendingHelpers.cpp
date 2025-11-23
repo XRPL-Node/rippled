@@ -54,7 +54,7 @@ loanPeriodicRate(TenthBips32 interestRate, std::uint32_t paymentInterval)
      * other places.
      */
     return tenthBipsOfValue(Number(paymentInterval), interestRate) /
-        (365 * 24 * 60 * 60);
+        secondsInYear;
 }
 
 bool
