@@ -205,12 +205,15 @@ loanAccruedInterest(
      * This formula is from the XLS-66 spec, section 3.2.4.1.4 (Early Full
      * Repayment), specifically "accruedInterest = ...".
      */
+    if (periodicRate == beast::zero)
+        return numZero;
+
     auto const lastPaymentDate = std::max(prevPaymentDate, startDate);
 
     // If the loan has been paid ahead, then "lastPaymentDate" is in the future,
     // and no interest has accrued.
     if (parentCloseTime.time_since_epoch().count() <= lastPaymentDate)
-        return 0;
+        return numZero;
 
     auto const secondsSinceLastPayment =
         parentCloseTime.time_since_epoch().count() - lastPaymentDate;
@@ -751,12 +754,8 @@ computeFullPayment(
     if (paymentRemaining <= 1)
     {
         // If this is the last payment, it has to be a regular payment
-    if (paymentRemaining <= 1)
-    {
-        // If this is the last payment, it has to be a regular payment
         JLOG(j.warn()) << "Last payment cannot be a full payment.";
         return Unexpected(tecKILLED);
-    }
     }
 
     Number const rawPrincipalOutstanding = loanPrincipalFromPeriodicPayment(
@@ -1241,8 +1240,7 @@ calculateFullPaymentInterest(
     auto const prepaymentPenalty = closeInterestRate == beast::zero
         ? Number{}
         : tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate);
-    
-        tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate);
+
     XRPL_ASSERT(
         prepaymentPenalty >= 0,
         "ripple::detail::computeFullPaymentInterest : valid prepayment "
