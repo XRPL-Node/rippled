@@ -185,7 +185,7 @@ LoanSet::getValueFields()
     return valueFields;
 }
 
-std::uint32_t
+static std::uint32_t
 getStartDate(ReadView const& view)
 {
     return view.info().closeTime.time_since_epoch().count();
