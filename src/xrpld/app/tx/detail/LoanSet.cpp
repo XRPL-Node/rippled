@@ -266,6 +266,7 @@ LoanSet::preclaim(PreclaimContext const& ctx)
                               "of the LoanBroker.";
         return tecNO_PERMISSION;
     }
+    auto const brokerPseudo = brokerSle->at(sfAccount);
 
     auto const borrower = counterparty == brokerOwner ? account : counterparty;
     if (auto const borrowerSle = ctx.view.read(keylet::account(borrower));
@@ -312,6 +313,16 @@ LoanSet::preclaim(PreclaimContext const& ctx)
         JLOG(ctx.j.warn()) << "Vault pseudo-account is frozen.";
         return ret;
     }
+
+    // brokerPseudo is the fallback account to receive LoanPay fees, even if the
+    // broker owner is unable to accept them. Don't create the loan if it is
+    // deep frozen.
+    if (auto const ret = checkDeepFrozen(ctx.view, brokerPseudo, asset))
+    {
+        JLOG(ctx.j.warn()) << "Broker pseudo-account is frozen.";
+        return ret;
+    }
+
     // borrower is eventually going to have to pay back the loan, so it can't be
     // frozen now. It is also going to receive funds, so it can't be deep
     // frozen, but being frozen is a prerequisite for being deep frozen, so
