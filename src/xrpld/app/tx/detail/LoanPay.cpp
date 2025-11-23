@@ -388,6 +388,11 @@ LoanPay::doApply()
         !asset.integral() || totalPaidToVaultRaw == totalPaidToVaultRounded,
         "ripple::LoanPay::doApply",
         "rounding does nothing for integral asset");
+    // Account for value changes when reducing the broker's debt:
+    // - Positive value change (from full/late/overpayments): Subtract from the
+    //   amount credited toward debt to avoid over-reducing the debt.
+    // - Negative value change (from full/overpayments): Add to the amount
+    //   credited toward debt,effectively increasing the debt reduction.
     auto const totalPaidToVaultForDebt =
         totalPaidToVaultRaw - paymentParts->valueChange;
 
