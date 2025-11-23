@@ -114,9 +114,20 @@ LoanManage::preclaim(PreclaimContext const& ctx)
     return tesSUCCESS;
 }
 
-Number
+static Number
 owedToVault(SLE::ref loanSle)
 {
+    // Spec section 3.2.3.2, defines the default amount as
+    //
+    // DefaultAmount = (Loan.PrincipalOutstanding + Loan.InterestOutstanding)
+    //
+    // Loan.InterestOutstanding is not stored directly on ledger.
+    // It is computed as
+    //
+    // Loan.TotalValueOutstanding - Loan.PrincipalOutstanding -
+    //      Loan.ManagementFeeOutstanding
+    //
+    // Add that to the original formula, and you get this:
     return loanSle->at(sfTotalValueOutstanding) -
         loanSle->at(sfManagementFeeOutstanding);
 }
