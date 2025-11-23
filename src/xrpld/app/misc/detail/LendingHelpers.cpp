@@ -874,6 +874,18 @@ computePaymentComponents(
     auto const roundedPeriodicPayment =
         roundPeriodicPayment(asset, periodicPayment, scale);
 
+    if (paymentRemaining == 1 ||
+        totalValueOutstanding <= roundedPeriodicPayment)
+    {
+        // If there's only one payment left, we need to pay off each of the loan
+        // parts.
+        return PaymentComponents{
+            .trackedValueDelta = totalValueOutstanding,
+            .trackedPrincipalDelta = principalOutstanding,
+            .trackedManagementFeeDelta = managementFeeOutstanding,
+            .specialCase = PaymentSpecialCase::final};
+    }
+
     LoanState const trueTarget = calculateRawLoanState(
         periodicPayment, periodicRate, paymentRemaining - 1, managementFeeRate);
     LoanState const roundedTarget = LoanState{
@@ -918,33 +930,6 @@ computePaymentComponents(
         {deltas.managementFee,
          roundedPeriodicPayment - (deltas.principal + deltas.interest),
          currentLedgerState.managementFeeDue});
-
-    if (paymentRemaining == 1 ||
-        totalValueOutstanding <= roundedPeriodicPayment)
-    {
-        // If there's only one payment left, we need to pay off each of the loan
-        // parts.
-
-        XRPL_ASSERT_PARTS(
-            deltas.total() <= totalValueOutstanding,
-            "ripple::detail::computePaymentComponents",
-            "last payment total value agrees");
-        XRPL_ASSERT_PARTS(
-            deltas.principal <= principalOutstanding,
-            "ripple::detail::computePaymentComponents",
-            "last payment principal agrees");
-        XRPL_ASSERT_PARTS(
-            deltas.managementFee <= managementFeeOutstanding,
-            "ripple::detail::computePaymentComponents",
-            "last payment management fee agrees");
-
-        // Pay everything off
-        return PaymentComponents{
-            .trackedValueDelta = totalValueOutstanding,
-            .trackedPrincipalDelta = principalOutstanding,
-            .trackedManagementFeeDelta = managementFeeOutstanding,
-            .specialCase = PaymentSpecialCase::final};
-    }
 
     // The shortage must never be negative, which indicates that the parts are
     // trying to take more than the whole payment. The excess can be positive,
