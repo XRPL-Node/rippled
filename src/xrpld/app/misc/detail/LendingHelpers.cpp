@@ -1238,7 +1238,10 @@ calculateFullPaymentInterest(
         accruedInterest >= 0,
         "ripple::detail::computeFullPaymentInterest : valid accrued interest");
 
-    auto const prepaymentPenalty =
+    auto const prepaymentPenalty = closeInterestRate == beast::zero
+        ? Number{}
+        : tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate);
+    
         tenthBipsOfValue(rawPrincipalOutstanding, closeInterestRate);
     XRPL_ASSERT(
         prepaymentPenalty >= 0,
