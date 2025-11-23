@@ -2621,12 +2621,16 @@ rippleSendMultiMPT(
             // not exceed MaximumAmount
             if (senderID == issuer)
             {
+                XRPL_ASSERT_PARTS(
+                    takeFromSender == beast::zero,
+                    "rippler::rippleSendMultiMPT",
+                    "sender == issuer, takeFromSender == zero");
                 auto const sendAmount = amount.mpt().value();
                 auto const maximumAmount =
                     sle->at(~sfMaximumAmount).value_or(maxMPTokenAmount);
-                if (sendAmount > maximumAmount - takeFromSender ||
+                if (sendAmount > maximumAmount ||
                     sle->getFieldU64(sfOutstandingAmount) >
-                        maximumAmount - sendAmount - takeFromSender)
+                        maximumAmount - sendAmount)
                     return tecPATH_DRY;
             }
 
