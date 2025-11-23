@@ -219,18 +219,32 @@ LoanSet::preclaim(PreclaimContext const& ctx)
         // The grace period can't be larger than the interval. Check it first,
         // mostly so that unit tests can test that specific case.
         if (grace > timeAvailable)
+        {
+            JLOG(ctx.j.warn()) << "Grace period exceeds protocol time limit.";
             return tecKILLED;
+        }
 
         if (interval > timeAvailable)
+        {
+            JLOG(ctx.j.warn())
+                << "Payment interval exceeds protocol time limit.";
             return tecKILLED;
+        }
 
         if (total > timeAvailable)
+        {
+            JLOG(ctx.j.warn()) << "Payment total exceeds protocol time limit.";
             return tecKILLED;
+        }
 
         auto const timeLastPayment = timeAvailable - grace;
 
         if (timeLastPayment / interval < total)
+        {
+            JLOG(ctx.j.warn()) << "Last payment due date, or grace period for "
+                                  "last payment exceeds protocol time limit.";
             return tecKILLED;
+        }
     }
 
     auto const account = tx[sfAccount];
