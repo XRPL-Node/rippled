@@ -179,13 +179,14 @@ loanLatePaymentInterest(
      * The spec is to be updated to base the duration on the next due date
      */
 
+    auto const now = parentCloseTime.time_since_epoch().count();
+
     // If the payment is not late by any amount of time, then there's no late
     // interest
-    if (parentCloseTime.time_since_epoch().count() <= nextPaymentDueDate)
+    if (now <= nextPaymentDueDate)
         return 0;
 
-    auto const secondsOverdue =
-        parentCloseTime.time_since_epoch().count() - nextPaymentDueDate;
+    auto const secondsOverdue = now - nextPaymentDueDate;
 
     auto const rate = loanPeriodicRate(lateInterestRate, secondsOverdue);
 
@@ -209,14 +210,14 @@ loanAccruedInterest(
         return numZero;
 
     auto const lastPaymentDate = std::max(prevPaymentDate, startDate);
+    auto const now = parentCloseTime.time_since_epoch().count();
 
     // If the loan has been paid ahead, then "lastPaymentDate" is in the future,
     // and no interest has accrued.
-    if (parentCloseTime.time_since_epoch().count() <= lastPaymentDate)
+    if (now <= lastPaymentDate)
         return numZero;
 
-    auto const secondsSinceLastPayment =
-        parentCloseTime.time_since_epoch().count() - lastPaymentDate;
+    auto const secondsSinceLastPayment = now - lastPaymentDate;
 
     return principalOutstanding * periodicRate * secondsSinceLastPayment /
         paymentInterval;
@@ -773,8 +774,8 @@ computeFullPayment(
         closeInterestRate);
 
     auto const [roundedFullInterest, roundedFullManagementFee] = [&]() {
-        auto const interest =
-            roundToAsset(asset, fullPaymentInterest, loanScale);
+        auto const interest = roundToAsset(
+            asset, fullPaymentInterest, loanScale, Number::downward);
         auto const parts = computeInterestAndFeeParts(
             asset, interest, managementFeeRate, loanScale);
         // Apply as much of the fee to the outstanding fee, but no
