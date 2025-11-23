@@ -212,7 +212,7 @@ LoanPay::preclaim(PreclaimContext const& ctx)
     // Do not support "partial payments" - if the transaction says to pay X,
     // then the account must have X available, even if the loan payment takes
     // less.
-    if (auto const balance = accountCanSend(
+    if (auto const balance = accountSpendable(
             ctx.view,
             account,
             asset,
@@ -470,11 +470,11 @@ LoanPay::doApply()
     }
 
 #if !NDEBUG
-    auto const accountBalanceBefore = accountCanSend(
+    auto const accountBalanceBefore = accountSpendable(
         view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
     auto const vaultBalanceBefore = account_ == vaultPseudoAccount
         ? STAmount{asset, 0}
-        : accountCanSend(
+        : accountSpendable(
               view,
               vaultPseudoAccount,
               asset,
@@ -483,7 +483,7 @@ LoanPay::doApply()
               j_);
     auto const brokerBalanceBefore = account_ == brokerPayee
         ? STAmount{asset, 0}
-        : accountCanSend(
+        : accountSpendable(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 #endif
 
@@ -539,11 +539,11 @@ LoanPay::doApply()
         "vault pseudo balance agrees after");
 
 #if !NDEBUG
-    auto const accountBalanceAfter = accountCanSend(
+    auto const accountBalanceAfter = accountSpendable(
         view, account_, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
     auto const vaultBalanceAfter = account_ == vaultPseudoAccount
         ? STAmount{asset, 0}
-        : accountCanSend(
+        : accountSpendable(
               view,
               vaultPseudoAccount,
               asset,
@@ -552,7 +552,7 @@ LoanPay::doApply()
               j_);
     auto const brokerBalanceAfter = account_ == brokerPayee
         ? STAmount{asset, 0}
-        : accountCanSend(
+        : accountSpendable(
               view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_);
 
     XRPL_ASSERT_PARTS(
