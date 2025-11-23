@@ -7,6 +7,8 @@
 #include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/TxFlags.h>
 
+#include <bit>
+
 namespace ripple {
 
 bool
@@ -32,14 +34,11 @@ LoanPay::preflight(PreflightContext const& ctx)
 
     // The loan payment flags are all mutually exclusive. If more than one is
     // set, the tx is malformed.
-    int flagsSet = 0;
-    for (auto const flag :
-         {tfLoanLatePayment, tfLoanFullPayment, tfLoanOverpayment})
-    {
-        if (ctx.tx.isFlag(flag))
-            ++flagsSet;
-    }
-    if (flagsSet > 1)
+    static_assert(
+        (tfLoanLatePayment | tfLoanFullPayment | tfLoanOverpayment) ==
+        ~(tfLoanPayMask | tfUniversal));
+    auto const flagsSet = ctx.tx.getFlags() & ~(tfLoanPayMask | tfUniversal);
+    if (std::popcount(flagsSet) > 1)
     {
         JLOG(ctx.j.warn()) << "Only one LoanPay flag can be set per tx. "
                            << flagsSet << " is too many.";
