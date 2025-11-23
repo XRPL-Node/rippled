@@ -135,13 +135,6 @@ LoanManage::defaultLoan(
     std::int32_t const loanScale = loanSle->at(sfLoanScale);
     auto brokerDebtTotalProxy = brokerSle->at(sfDebtTotal);
 
-    auto principalOutstandingProxy = loanSle->at(sfPrincipalOutstanding);
-    auto managementFeeOutstandingProxy =
-        loanSle->at(sfManagementFeeOutstanding);
-
-    auto totalValueOutstandingProxy = loanSle->at(sfTotalValueOutstanding);
-    auto paymentRemainingProxy = loanSle->at(sfPaymentRemaining);
-
     Number const totalDefaultAmount = owedToVault(loanSle);
 
     // Apply the First-Loss Capital to the Default Amount
@@ -267,10 +260,11 @@ LoanManage::defaultLoan(
 
     // Update the Loan object:
     loanSle->setFlag(lsfLoanDefault);
-    totalValueOutstandingProxy = 0;
-    paymentRemainingProxy = 0;
-    principalOutstandingProxy = 0;
-    managementFeeOutstandingProxy = 0;
+
+    loanSle->at(sfTotalValueOutstanding) = 0;
+    loanSle->at(sfPaymentRemaining) = 0;
+    loanSle->at(sfPrincipalOutstanding) = 0;
+    loanSle->at(sfManagementFeeOutstanding) = 0;
     // Zero out the next due date. Since it's default, it'll be removed from
     // the object.
     loanSle->at(sfNextPaymentDueDate) = 0;
