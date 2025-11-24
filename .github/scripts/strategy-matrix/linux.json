@@ -74,6 +74,34 @@
       "image_sha": "ca4517d"
     },
     {
+      "distro_name": "debian",
+      "distro_version": "trixie",
+      "compiler_name": "gcc",
+      "compiler_version": "14",
+      "image_sha": "ca4517d"
+    },
+    {
+      "distro_name": "debian",
+      "distro_version": "trixie",
+      "compiler_name": "gcc",
+      "compiler_version": "15",
+      "image_sha": "ca4517d"
+    },
+    {
+      "distro_name": "debian",
+      "distro_version": "trixie",
+      "compiler_name": "clang",
+      "compiler_version": "20",
+      "image_sha": "ca4517d"
+    },
+    {
+      "distro_name": "debian",
+      "distro_version": "trixie",
+      "compiler_name": "clang",
+      "compiler_version": "21",
+      "image_sha": "ca4517d"
+    },
+    {
       "distro_name": "rhel",
       "distro_version": "8",
       "compiler_name": "gcc",
