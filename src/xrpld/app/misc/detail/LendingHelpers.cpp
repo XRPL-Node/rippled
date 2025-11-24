@@ -835,7 +835,7 @@ PaymentComponents::trackedInterestPart() const
 }
 
 void
-LoanDeltas::nonNegative()
+LoanStateDeltas::nonNegative()
 {
     if (principal < beast::zero)
         principal = numZero;
@@ -899,7 +899,7 @@ computePaymentComponents(
     LoanState const currentLedgerState = constructLoanState(
         totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
 
-    LoanDeltas deltas = currentLedgerState - roundedTarget;
+    LoanStateDeltas deltas = currentLedgerState - roundedTarget;
     deltas.nonNegative();
 
     // Adjust the deltas if necessary for data integrity
@@ -951,7 +951,7 @@ computePaymentComponents(
             "ripple::detail::computePaymentComponents",
             "excess non-negative");
     };
-    auto addressExcess = [&takeFrom](LoanDeltas& deltas, Number& excess) {
+    auto addressExcess = [&takeFrom](LoanStateDeltas& deltas, Number& excess) {
         // This order is based on where errors are the least problematic
         takeFrom(deltas.interest, excess);
         takeFrom(deltas.managementFee, excess);
@@ -1081,10 +1081,10 @@ computeOverpaymentComponents(
 
 }  // namespace detail
 
-detail::LoanDeltas
+detail::LoanStateDeltas
 operator-(LoanState const& lhs, LoanState const& rhs)
 {
-    detail::LoanDeltas result{
+    detail::LoanStateDeltas result{
         .principal = lhs.principalOutstanding - rhs.principalOutstanding,
         .interest = lhs.interestDue - rhs.interestDue,
         .managementFee = lhs.managementFeeDue - rhs.managementFeeDue,
@@ -1094,7 +1094,7 @@ operator-(LoanState const& lhs, LoanState const& rhs)
 }
 
 LoanState
-operator-(LoanState const& lhs, detail::LoanDeltas const& rhs)
+operator-(LoanState const& lhs, detail::LoanStateDeltas const& rhs)
 {
     LoanState result{
         .valueOutstanding = lhs.valueOutstanding - rhs.total(),
@@ -1107,7 +1107,7 @@ operator-(LoanState const& lhs, detail::LoanDeltas const& rhs)
 }
 
 LoanState
-operator+(LoanState const& lhs, detail::LoanDeltas const& rhs)
+operator+(LoanState const& lhs, detail::LoanStateDeltas const& rhs)
 {
     LoanState result{
         .valueOutstanding = lhs.valueOutstanding + rhs.total(),

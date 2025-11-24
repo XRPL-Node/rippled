@@ -1024,7 +1024,8 @@ protected:
                 periodicRate,
                 state.paymentRemaining - 1,
                 broker.params.managementFeeRate);
-            detail::LoanDeltas const deltas = currentTrueState - nextTrueState;
+            detail::LoanStateDeltas const deltas =
+                currentTrueState - nextTrueState;
             BEAST_EXPECT(
                 deltas.total() ==
                 deltas.principal + deltas.interest + deltas.managementFee);
@@ -2735,7 +2736,7 @@ protected:
                             periodicRate,
                             state.paymentRemaining - 1,
                             broker.params.managementFeeRate);
-                    detail::LoanDeltas const deltas =
+                    detail::LoanStateDeltas const deltas =
                         currentTrueState - nextTrueState;
 
                     testcase

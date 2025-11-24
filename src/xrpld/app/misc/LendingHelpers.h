@@ -220,7 +220,10 @@ struct PaymentComponents
     trackedInterestPart() const;
 };
 
-struct LoanDeltas
+// This structure describes the difference between two LoanState objects so that
+// the differences between components don't have to be tracked individually,
+// risking more errors. How that difference is used depends on the context.
+struct LoanStateDeltas
 {
     Number principal;
     Number interest;
@@ -250,14 +253,14 @@ computePaymentComponents(
 
 }  // namespace detail
 
-detail::LoanDeltas
+detail::LoanStateDeltas
 operator-(LoanState const& lhs, LoanState const& rhs);
 
 LoanState
-operator-(LoanState const& lhs, detail::LoanDeltas const& rhs);
+operator-(LoanState const& lhs, detail::LoanStateDeltas const& rhs);
 
 LoanState
-operator+(LoanState const& lhs, detail::LoanDeltas const& rhs);
+operator+(LoanState const& lhs, detail::LoanStateDeltas const& rhs);
 
 LoanProperties
 computeLoanProperties(
