@@ -1060,7 +1060,7 @@ struct PerfHostFunctions : public TestHostFunctions
             return Unexpected(HostFunctionError::INVALID_PARAMS);
 
         PublicKey const pk(pubkey);
-        return verify(pk, message, signature, /*canonical*/ true);
+        return verify(pk, message, signature);
     }
 
     Expected<Hash, HostFunctionError>
