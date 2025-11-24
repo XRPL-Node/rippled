@@ -632,80 +632,97 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span> </div>
 <div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span>        <span class="keyword">using namespace </span>test::jtx;</div>
 <div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span>        Env env{*<span class="keyword">this</span>};</div>
-<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>        <span class="keyword">constexpr</span> <span class="keywordtype">char</span> <span class="keyword">const</span>* featureName = <span class="stringliteral">&quot;CryptoConditionsSuite&quot;</span>;</div>
-<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span> </div>
-<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>        <span class="keyword">auto</span> jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName)[jss::result];</div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
-<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>        jrr.removeMember(jss::status);</div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>        <span class="keyword">auto</span> feature = *(jrr.begin());</div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>        BEAST_EXPECTS(</div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
+<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span> </div>
+<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>        <span class="keyword">auto</span> <span class="keyword">const</span>&amp; supportedAmendments = <a class="code hl_function" href="namespaceripple_1_1detail.html#aa306c03c39352f8b30c6fbde3fe972f3">detail::supportedAmendments</a>();</div>
+<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>        <span class="keyword">auto</span> obsoleteFeature = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a>(</div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a>(supportedAmendments),</div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(supportedAmendments),</div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>            [](<span class="keyword">auto</span> <span class="keyword">const</span>&amp; pair) {</div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>                <span class="keywordflow">return</span> pair.second == <a class="code hl_enumvalue" href="namespaceripple.html#aa5778f9faa15e3677dcda7975d9db7c6aec30c235d0eb792797af1aa1d11759a7">VoteBehavior::Obsolete</a>;</div>
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>            });</div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span> </div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>        <span class="keywordflow">if</span> (obsoleteFeature == <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(supportedAmendments))</div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>        {</div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>            <a class="code hl_function" href="classbeast_1_1unit__test_1_1suite.html#a5c723fb774d3c25ba877c5b9ce681d6f">pass</a>();</div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>        }</div>
 <div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span> </div>
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;reject&quot;</span>)[jss::result];</div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>        jrr.removeMember(jss::status);</div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>        feature = *(jrr.begin());</div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>        BEAST_EXPECTS(</div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span> </div>
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;accept&quot;</span>)[jss::result];</div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>        jrr.removeMember(jss::status);</div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>        feature = *(jrr.begin());</div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>        BEAST_EXPECTS(</div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span> </div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>        <span class="comment">// anything other than accept or reject is an error</span></div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;maybe&quot;</span>);</div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>        BEAST_EXPECT(jrr[jss::error] == <span class="stringliteral">&quot;invalidParams&quot;</span>);</div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>        BEAST_EXPECT(jrr[jss::error_message] == <span class="stringliteral">&quot;Invalid parameters.&quot;</span>);</div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>    }</div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>        <span class="keyword">auto</span> <span class="keyword">const</span> featureName = obsoleteFeature-&gt;first;</div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span> </div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>        <span class="keyword">auto</span> jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName)[jss::result];</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>        jrr.removeMember(jss::status);</div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>        <span class="keyword">auto</span> feature = *(jrr.begin());</div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>        BEAST_EXPECTS(</div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span> </div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;reject&quot;</span>)[jss::result];</div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>        jrr.removeMember(jss::status);</div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>        feature = *(jrr.begin());</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>        BEAST_EXPECTS(</div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span> </div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;accept&quot;</span>)[jss::result];</div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>        <span class="keywordflow">if</span> (!BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>))</div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>        jrr.removeMember(jss::status);</div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>        <span class="keywordflow">if</span> (!BEAST_EXPECT(jrr.size() == 1))</div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>        feature = *(jrr.begin());</div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>        BEAST_EXPECTS(feature[jss::name] == featureName, <span class="stringliteral">&quot;name&quot;</span>);</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        BEAST_EXPECTS(</div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>            feature[jss::vetoed].isString() &amp;&amp;</div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>                feature[jss::vetoed].asString() == <span class="stringliteral">&quot;Obsolete&quot;</span>,</div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>            <span class="stringliteral">&quot;vetoed&quot;</span>);</div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span> </div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>        <span class="comment">// anything other than accept or reject is an error</span></div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>        jrr = env.rpc(<span class="stringliteral">&quot;feature&quot;</span>, featureName, <span class="stringliteral">&quot;maybe&quot;</span>);</div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>        BEAST_EXPECT(jrr[jss::error] == <span class="stringliteral">&quot;invalidParams&quot;</span>);</div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>        BEAST_EXPECT(jrr[jss::error_message] == <span class="stringliteral">&quot;Invalid parameters.&quot;</span>);</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>    }</div>
 </div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>    <span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00581" data-start="{" data-end="}">
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno"><a class="line" href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">  581</a></span>    <a class="code hl_function" href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">run</a>()<span class="keyword"> override</span></div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="keyword">    </span>{</div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a989efbd54e1d0afbbc434823b47b29cb">testInternals</a>();</div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a58721d896fcc421df3aa175293b2eece">testFeatureLookups</a>();</div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a747c62200510dba0247e3753660cd483">testNoParams</a>();</div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#adb528273f142e373f46fc1ff425adcb6">testSingleFeature</a>();</div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a3848b0f9787023de03f21b616c7b5107">testInvalidFeature</a>();</div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a919d181d3bacbea70f034c882249f7a9">testNonAdmin</a>();</div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a96c471cd11f8d88aad197378eb6f41ad">testSomeEnabled</a>();</div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#aeeed6d653837e07c00c8d9c6de5a10dc">testWithMajorities</a>();</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#ace6fc51a6c17a8aa01ead3e0db1b5b25">testVeto</a>();</div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a447312777ce0609305a36c6eb2e03852">testObsolete</a>();</div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>    }</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span> </div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span>    <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00596" data-start="{" data-end="}">
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno"><a class="line" href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">  596</a></span>    <a class="code hl_function" href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">run</a>()<span class="keyword"> override</span></div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span><span class="keyword">    </span>{</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a989efbd54e1d0afbbc434823b47b29cb">testInternals</a>();</div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a58721d896fcc421df3aa175293b2eece">testFeatureLookups</a>();</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a747c62200510dba0247e3753660cd483">testNoParams</a>();</div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#adb528273f142e373f46fc1ff425adcb6">testSingleFeature</a>();</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a3848b0f9787023de03f21b616c7b5107">testInvalidFeature</a>();</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a919d181d3bacbea70f034c882249f7a9">testNonAdmin</a>();</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a96c471cd11f8d88aad197378eb6f41ad">testSomeEnabled</a>();</div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#aeeed6d653837e07c00c8d9c6de5a10dc">testWithMajorities</a>();</div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#ace6fc51a6c17a8aa01ead3e0db1b5b25">testVeto</a>();</div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span>        <a class="code hl_function" href="classripple_1_1Feature__test.html#a447312777ce0609305a36c6eb2e03852">testObsolete</a>();</div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>    }</div>
 </div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>};</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span>};</div>
 </div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span> </div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno"><a class="line" href="namespaceripple.html#a0f69e2428d6879d0eecfad78a4bbf671">  596</a></span>BEAST_DEFINE_TESTSUITE(Feature, rpc, <a class="code hl_namespace" href="namespaceripple.html">ripple</a>);</div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span> </div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>}  <span class="comment">// namespace ripple</span></div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span> </div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno"><a class="line" href="namespaceripple.html#a0f69e2428d6879d0eecfad78a4bbf671">  611</a></span>BEAST_DEFINE_TESTSUITE(Feature, rpc, <a class="code hl_namespace" href="namespaceripple.html">ripple</a>);</div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span> </div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span>}  <span class="comment">// namespace ripple</span></div>
 <div class="ttc" id="aat_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/map/at.html">std::map::at</a></div><div class="ttdeci">T at(T... args)</div></div>
+<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
 <div class="ttc" id="aclassJson_1_1Value_html"><div class="ttname"><a href="classJson_1_1Value.html">Json::Value</a></div><div class="ttdoc">Represents a JSON value.</div><div class="ttdef"><b>Definition</b> <a href="json__value_8h_source.html#l00130">json_value.h:131</a></div></div>
 <div class="ttc" id="aclassbeast_1_1unit__test_1_1suite_html"><div class="ttname"><a href="classbeast_1_1unit__test_1_1suite.html">beast::unit_test::suite</a></div><div class="ttdoc">A testsuite class.</div><div class="ttdef"><b>Definition</b> <a href="suite_8h_source.html#l00051">suite.h:52</a></div></div>
+<div class="ttc" id="aclassbeast_1_1unit__test_1_1suite_html_a5c723fb774d3c25ba877c5b9ce681d6f"><div class="ttname"><a href="classbeast_1_1unit__test_1_1suite.html#a5c723fb774d3c25ba877c5b9ce681d6f">beast::unit_test::suite::pass</a></div><div class="ttdeci">void pass()</div><div class="ttdoc">Record a successful test condition.</div><div class="ttdef"><b>Definition</b> <a href="suite_8h_source.html#l00508">suite.h:508</a></div></div>
 <div class="ttc" id="aclassbeast_1_1unit__test_1_1suite_html_aaa1237d9b85c69d35fe86645cee094b5"><div class="ttname"><a href="classbeast_1_1unit__test_1_1suite.html#aaa1237d9b85c69d35fe86645cee094b5">beast::unit_test::suite::testcase</a></div><div class="ttdeci">testcase_t testcase</div><div class="ttdoc">Memberspace for declaring test cases.</div><div class="ttdef"><b>Definition</b> <a href="suite_8h_source.html#l00152">suite.h:152</a></div></div>
 <div class="ttc" id="aclassbeast_1_1unit__test_1_1suite_html_af5ea30f883ad3a2a841af60a9a82c29c"><div class="ttname"><a href="classbeast_1_1unit__test_1_1suite.html#af5ea30f883ad3a2a841af60a9a82c29c">beast::unit_test::suite::fail</a></div><div class="ttdeci">void fail(String const &amp;reason, char const *file, int line)</div><div class="ttdoc">Record a failure.</div><div class="ttdef"><b>Definition</b> <a href="suite_8h_source.html#l00530">suite.h:530</a></div></div>
 <div class="ttc" id="aclassripple_1_1FeatureBitset_html"><div class="ttname"><a href="classripple_1_1FeatureBitset.html">ripple::FeatureBitset</a></div><div class="ttdef"><b>Definition</b> <a href="Feature_8h_source.html#l00143">Feature.h:144</a></div></div>
@@ -720,8 +737,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassripple_1_1Feature__test_html_ace6fc51a6c17a8aa01ead3e0db1b5b25"><div class="ttname"><a href="classripple_1_1Feature__test.html#ace6fc51a6c17a8aa01ead3e0db1b5b25">ripple::Feature_test::testVeto</a></div><div class="ttdeci">void testVeto()</div><div class="ttdef"><b>Definition</b> <a href="Feature__test_8cpp_source.html#l00475">Feature_test.cpp:475</a></div></div>
 <div class="ttc" id="aclassripple_1_1Feature__test_html_adb528273f142e373f46fc1ff425adcb6"><div class="ttname"><a href="classripple_1_1Feature__test.html#adb528273f142e373f46fc1ff425adcb6">ripple::Feature_test::testSingleFeature</a></div><div class="ttdeci">void testSingleFeature()</div><div class="ttdef"><b>Definition</b> <a href="Feature__test_8cpp_source.html#l00180">Feature_test.cpp:180</a></div></div>
 <div class="ttc" id="aclassripple_1_1Feature__test_html_aeeed6d653837e07c00c8d9c6de5a10dc"><div class="ttname"><a href="classripple_1_1Feature__test.html#aeeed6d653837e07c00c8d9c6de5a10dc">ripple::Feature_test::testWithMajorities</a></div><div class="ttdeci">void testWithMajorities()</div><div class="ttdef"><b>Definition</b> <a href="Feature__test_8cpp_source.html#l00376">Feature_test.cpp:376</a></div></div>
-<div class="ttc" id="aclassripple_1_1Feature__test_html_aef5ad0913752092b9e510ed66c994d0d"><div class="ttname"><a href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">ripple::Feature_test::run</a></div><div class="ttdeci">void run() override</div><div class="ttdoc">Runs the suite.</div><div class="ttdef"><b>Definition</b> <a href="Feature__test_8cpp_source.html#l00581">Feature_test.cpp:581</a></div></div>
+<div class="ttc" id="aclassripple_1_1Feature__test_html_aef5ad0913752092b9e510ed66c994d0d"><div class="ttname"><a href="classripple_1_1Feature__test.html#aef5ad0913752092b9e510ed66c994d0d">ripple::Feature_test::run</a></div><div class="ttdeci">void run() override</div><div class="ttdoc">Runs the suite.</div><div class="ttdef"><b>Definition</b> <a href="Feature__test_8cpp_source.html#l00596">Feature_test.cpp:596</a></div></div>
 <div class="ttc" id="aclassripple_1_1base__uint_html"><div class="ttname"><a href="classripple_1_1base__uint.html">ripple::base_uint&lt; 256 &gt;</a></div></div>
+<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a></div><div class="ttdeci">T end(T... args)</div></div>
+<div class="ttc" id="afind_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a></div><div class="ttdeci">T find_if(T... args)</div></div>
 <div class="ttc" id="amap_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/map.html">std::map</a></div></div>
 <div class="ttc" id="anamespaceJson_html_a7d654b75c16a57007925868e38212b4ea7d9899633b4409bd3fc107e6737f8391"><div class="ttname"><a href="namespaceJson.html#a7d654b75c16a57007925868e38212b4ea7d9899633b4409bd3fc107e6737f8391">Json::nullValue</a></div><div class="ttdeci">@ nullValue</div><div class="ttdoc">'null' value</div><div class="ttdef"><b>Definition</b> <a href="json__value_8h_source.html#l00020">json_value.h:20</a></div></div>
 <div class="ttc" id="anamespaceJson_html_a7d654b75c16a57007925868e38212b4eadc8f264f36b55b063c78126b335415f4"><div class="ttname"><a href="namespaceJson.html#a7d654b75c16a57007925868e38212b4eadc8f264f36b55b063c78126b335415f4">Json::arrayValue</a></div><div class="ttdeci">@ arrayValue</div><div class="ttdoc">array value (ordered list)</div><div class="ttdef"><b>Definition</b> <a href="json__value_8h_source.html#l00026">json_value.h:26</a></div></div>
