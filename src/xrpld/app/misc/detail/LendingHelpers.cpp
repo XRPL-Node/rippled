@@ -1047,7 +1047,7 @@ computeOverpaymentComponents(
         "ripple::detail::computeOverpaymentComponents : valid overpayment "
         "amount");
 
-    Number const fee = roundToAsset(
+    Number const overpaymentFee = roundToAsset(
         asset, tenthBipsOfValue(overpayment, overpaymentFeeRate), loanScale);
 
     auto const [rawOverpaymentInterest, _] = [&]() {
@@ -1065,12 +1065,12 @@ computeOverpaymentComponents(
 
     auto const result = detail::ExtendedPaymentComponents{
         detail::PaymentComponents{
-            .trackedValueDelta = overpayment - fee,
+            .trackedValueDelta = overpayment - overpaymentFee,
             .trackedPrincipalDelta = overpayment - roundedOverpaymentInterest -
-                roundedOverpaymentManagementFee - fee,
+                roundedOverpaymentManagementFee - overpaymentFee,
             .trackedManagementFeeDelta = roundedOverpaymentManagementFee,
             .specialCase = detail::PaymentSpecialCase::extra},
-        fee,
+        overpaymentFee,
         roundedOverpaymentInterest};
     XRPL_ASSERT_PARTS(
         result.trackedInterestPart() == roundedOverpaymentInterest,
