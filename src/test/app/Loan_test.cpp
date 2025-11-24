@@ -906,7 +906,7 @@ protected:
             state.loanScale,
             Number::upward);
 
-        auto currentRoundedState = constructRoundedLoanState(
+        auto currentRoundedState = constructLoanState(
             state.totalValue,
             state.principalOutstanding,
             state.managementFeeOutstanding);
@@ -2666,7 +2666,7 @@ protected:
                         periodicRate,
                         state.paymentRemaining,
                         broker.params.managementFeeRate);
-                    auto const rounded = constructRoundedLoanState(
+                    auto const rounded = constructLoanState(
                         state.totalValue,
                         state.principalOutstanding,
                         state.managementFeeOutstanding);
@@ -5843,7 +5843,7 @@ protected:
         Number const latePaymentFeeRounded = roundToAsset(
             broker.asset, loanSle->at(sfLatePaymentFee), state.loanScale);
 
-        auto const roundedLoanState = constructRoundedLoanState(
+        auto const roundedLoanState = constructLoanState(
             state.totalValue,
             state.principalOutstanding,
             state.managementFeeOutstanding);

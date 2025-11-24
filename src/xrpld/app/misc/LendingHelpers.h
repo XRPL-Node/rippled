@@ -153,12 +153,15 @@ calculateRawLoanState(
     std::uint32_t const paymentRemaining,
     TenthBips32 const managementFeeRate);
 
+// Constructs a valid LoanState object from arbitrary inputs
 LoanState
-constructRoundedLoanState(
+constructLoanState(
     Number const& totalValueOutstanding,
     Number const& principalOutstanding,
     Number const& managementFeeOutstanding);
 
+// Constructs a valid LoanState object from a Loan object, which always has
+// rounded values
 LoanState
 constructRoundedLoanState(SLE::const_ref loan);
 

@@ -445,7 +445,7 @@ LoanSet::doApply()
         // LCOV_EXCL_STOP
     }
 
-    LoanState const state = constructRoundedLoanState(
+    LoanState const state = constructLoanState(
         properties.totalValueOutstanding,
         principalRequested,
         properties.managementFeeOwedToBroker);

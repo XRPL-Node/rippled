@@ -373,7 +373,7 @@ tryOverpayment(
 {
     auto const raw = calculateRawLoanState(
         periodicPayment, periodicRate, paymentRemaining, managementFeeRate);
-    auto const rounded = constructRoundedLoanState(
+    auto const rounded = constructLoanState(
         totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
 
     auto const errors = rounded - raw;
@@ -427,7 +427,7 @@ tryOverpayment(
         numZero,
         rounded.managementFeeDue);
 
-    auto const newRounded = constructRoundedLoanState(
+    auto const newRounded = constructLoanState(
         totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
 
     newLoanProperties.totalValueOutstanding = newRounded.valueOutstanding;
@@ -896,7 +896,7 @@ computePaymentComponents(
         .interestDue = roundToAsset(asset, trueTarget.interestDue, scale),
         .managementFeeDue =
             roundToAsset(asset, trueTarget.managementFeeDue, scale)};
-    LoanState const currentLedgerState = constructRoundedLoanState(
+    LoanState const currentLedgerState = constructLoanState(
         totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
 
     LoanDeltas deltas = currentLedgerState - roundedTarget;
@@ -1307,7 +1307,7 @@ calculateRawLoanState(
 }
 
 LoanState
-constructRoundedLoanState(
+constructLoanState(
     Number const& totalValueOutstanding,
     Number const& principalOutstanding,
     Number const& managementFeeOutstanding)
@@ -1325,7 +1325,7 @@ constructRoundedLoanState(
 LoanState
 constructRoundedLoanState(SLE::const_ref loan)
 {
-    return constructRoundedLoanState(
+    return constructLoanState(
         loan->at(sfTotalValueOutstanding),
         loan->at(sfPrincipalOutstanding),
         loan->at(sfManagementFeeOutstanding));
@@ -1527,7 +1527,7 @@ loanMakePayment(
         Number const closePaymentFee =
             roundToAsset(asset, loan->at(sfClosePaymentFee), loanScale);
 
-        LoanState const roundedLoanState = constructRoundedLoanState(
+        LoanState const roundedLoanState = constructLoanState(
             totalValueOutstandingProxy,
             principalOutstandingProxy,
             managementFeeOutstandingProxy);
