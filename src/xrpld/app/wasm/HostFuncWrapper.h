@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xrpld/app/wasm/WamrVM.h>
+#include <xrpld/app/wasm/WasmiVM.h>
 
 namespace ripple {
 

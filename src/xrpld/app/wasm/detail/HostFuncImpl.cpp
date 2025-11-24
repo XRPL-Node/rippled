@@ -7,7 +7,6 @@
 
 #ifdef _DEBUG
 // #define DEBUG_OUTPUT 1
-// #define DEBUG_OUTPUT_WAMR 1
 #endif
 
 namespace ripple {
@@ -723,7 +722,7 @@ WasmHostFunctionsImpl::trace(
 #endif
     if (!asHex)
     {
-        j << "WAMR TRACE (" << leKey.key << "): " << msg << " "
+        j << "HF TRACE (" << leKey.key << "): " << msg << " "
           << std::string_view(
                  reinterpret_cast<char const*>(data.data()), data.size());
     }
@@ -733,7 +732,7 @@ WasmHostFunctionsImpl::trace(
         hex.reserve(data.size() * 2);
         boost::algorithm::hex(
             data.begin(), data.end(), std::back_inserter(hex));
-        j << "WAMR DEV TRACE (" << leKey.key << "): " << msg << " " << hex;
+        j << "HF DEV TRACE (" << leKey.key << "): " << msg << " " << hex;
     }
 
     return msg.size() + data.size() * (asHex ? 2 : 1);
@@ -747,7 +746,7 @@ WasmHostFunctionsImpl::traceNum(std::string_view const& msg, int64_t data)
 #else
     auto j = getJournal().trace();
 #endif
-    j << "WAMR TRACE NUM(" << leKey.key << "): " << msg << " " << data;
+    j << "HF TRACE NUM(" << leKey.key << "): " << msg << " " << data;
     return msg.size() + sizeof(data);
 }
 
@@ -764,8 +763,7 @@ WasmHostFunctionsImpl::traceAccount(
 
     auto const accountStr = toBase58(account);
 
-    j << "WAMR TRACE ACCOUNT(" << leKey.key << "): " << msg << " "
-      << accountStr;
+    j << "HF TRACE ACCOUNT(" << leKey.key << "): " << msg << " " << accountStr;
     return msg.size() + accountStr.size();
 }
 
@@ -780,7 +778,7 @@ WasmHostFunctionsImpl::traceFloat(
     auto j = getJournal().trace();
 #endif
     auto const s = floatToString(data);
-    j << "WAMR TRACE FLOAT(" << leKey.key << "): " << msg << " " << s;
+    j << "HF TRACE FLOAT(" << leKey.key << "): " << msg << " " << s;
     return msg.size() + s.size();
 }
 
@@ -795,7 +793,7 @@ WasmHostFunctionsImpl::traceAmount(
     auto j = getJournal().trace();
 #endif
     auto const amountStr = amount.getFullText();
-    j << "WAMR TRACE AMOUNT(" << leKey.key << "): " << msg << " " << amountStr;
+    j << "HF TRACE AMOUNT(" << leKey.key << "): " << msg << " " << amountStr;
     return msg.size() + amountStr.size();
 }
 

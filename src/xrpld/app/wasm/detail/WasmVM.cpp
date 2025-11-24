@@ -4,7 +4,7 @@
 
 #include <xrpld/app/wasm/HostFunc.h>
 #include <xrpld/app/wasm/HostFuncWrapper.h>
-#include <xrpld/app/wasm/WamrVM.h>
+#include <xrpld/app/wasm/WasmiVM.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/protocol/AccountID.h>
@@ -114,7 +114,7 @@ runEscrowWasm(
 {
     //  create VM and set cost limit
     auto& vm = WasmEngine::instance();
-    vm.initMaxPages(MAX_PAGES);
+    // vm.initMaxPages(MAX_PAGES);
 
     auto const ret = vm.run(
         wasmCode,
@@ -153,7 +153,7 @@ preflightEscrowWasm(
 {
     //  create VM and set cost limit
     auto& vm = WasmEngine::instance();
-    vm.initMaxPages(MAX_PAGES);
+    // vm.initMaxPages(MAX_PAGES);
 
     auto const ret = vm.check(
         wasmCode,
@@ -167,7 +167,7 @@ preflightEscrowWasm(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-WasmEngine::WasmEngine() : impl(std::make_unique<WamrEngine>())
+WasmEngine::WasmEngine() : impl(std::make_unique<WasmiEngine>())
 {
 }
 
@@ -200,12 +200,6 @@ WasmEngine::check(
     beast::Journal j)
 {
     return impl->check(wasmCode, funcName, params, imports, j);
-}
-
-std::int32_t
-WasmEngine::initMaxPages(std::int32_t def)
-{
-    return impl->initMaxPages(def);
 }
 
 void*
