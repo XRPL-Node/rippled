@@ -139,14 +139,14 @@ checkLoanGuards(
     beast::Journal j);
 
 LoanState
-calculateRawLoanState(
+computeRawLoanState(
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t const paymentRemaining,
     TenthBips32 const managementFeeRate);
 
 LoanState
-calculateRawLoanState(
+computeRawLoanState(
     Number const& periodicPayment,
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
@@ -173,7 +173,7 @@ computeManagementFee(
     std::int32_t scale);
 
 Number
-calculateFullPaymentInterest(
+computeFullPaymentInterest(
     Number const& rawPrincipalOutstanding,
     Number const& periodicRate,
     NetClock::time_point parentCloseTime,
@@ -183,7 +183,7 @@ calculateFullPaymentInterest(
     TenthBips32 closeInterestRate);
 
 Number
-calculateFullPaymentInterest(
+computeFullPaymentInterest(
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t paymentRemaining,

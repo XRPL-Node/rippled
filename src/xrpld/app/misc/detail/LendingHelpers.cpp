@@ -371,7 +371,7 @@ tryOverpayment(
     TenthBips16 const managementFeeRate,
     beast::Journal j)
 {
-    auto const raw = calculateRawLoanState(
+    auto const raw = computeRawLoanState(
         periodicPayment, periodicRate, paymentRemaining, managementFeeRate);
     auto const rounded = constructLoanState(
         totalValueOutstanding, principalOutstanding, managementFeeOutstanding);
@@ -398,7 +398,7 @@ tryOverpayment(
                     << ", first payment principal: "
                     << newLoanProperties.firstPaymentPrincipal;
 
-    auto const newRaw = calculateRawLoanState(
+    auto const newRaw = computeRawLoanState(
                             newLoanProperties.periodicPayment,
                             periodicRate,
                             paymentRemaining,
@@ -764,7 +764,7 @@ computeFullPayment(
 
     // Full payment interest consists of accrued normal interest and the
     // prepayment penalty, as computed by 3.2.4.1.4.
-    auto const fullPaymentInterest = calculateFullPaymentInterest(
+    auto const fullPaymentInterest = computeFullPaymentInterest(
         rawPrincipalOutstanding,
         periodicRate,
         view.parentCloseTime(),
@@ -886,7 +886,7 @@ computePaymentComponents(
             .specialCase = PaymentSpecialCase::final};
     }
 
-    LoanState const trueTarget = calculateRawLoanState(
+    LoanState const trueTarget = computeRawLoanState(
         periodicPayment, periodicRate, paymentRemaining - 1, managementFeeRate);
     LoanState const roundedTarget = LoanState{
         .valueOutstanding =
@@ -1201,7 +1201,7 @@ checkLoanGuards(
 }
 
 Number
-calculateFullPaymentInterest(
+computeFullPaymentInterest(
     Number const& rawPrincipalOutstanding,
     Number const& periodicRate,
     NetClock::time_point parentCloseTime,
@@ -1236,7 +1236,7 @@ calculateFullPaymentInterest(
 }
 
 Number
-calculateFullPaymentInterest(
+computeFullPaymentInterest(
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t paymentRemaining,
@@ -1250,7 +1250,7 @@ calculateFullPaymentInterest(
         detail::loanPrincipalFromPeriodicPayment(
             periodicPayment, periodicRate, paymentRemaining);
 
-    return calculateFullPaymentInterest(
+    return computeFullPaymentInterest(
         rawPrincipalOutstanding,
         periodicRate,
         parentCloseTime,
@@ -1261,7 +1261,7 @@ calculateFullPaymentInterest(
 }
 
 LoanState
-calculateRawLoanState(
+computeRawLoanState(
     Number const& periodicPayment,
     Number const& periodicRate,
     std::uint32_t const paymentRemaining,
@@ -1292,14 +1292,14 @@ calculateRawLoanState(
 };
 
 LoanState
-calculateRawLoanState(
+computeRawLoanState(
     Number const& periodicPayment,
     TenthBips32 interestRate,
     std::uint32_t paymentInterval,
     std::uint32_t const paymentRemaining,
     TenthBips32 const managementFeeRate)
 {
-    return calculateRawLoanState(
+    return computeRawLoanState(
         periodicPayment,
         loanPeriodicRate(interestRate, paymentInterval),
         paymentRemaining,
@@ -1412,12 +1412,12 @@ computeLoanProperties(
     auto const firstPaymentPrincipal = [&]() {
         // Compute the parts for the first payment. Ensure that the
         // principal payment will actually change the principal.
-        auto const startingState = calculateRawLoanState(
+        auto const startingState = computeRawLoanState(
             periodicPayment,
             periodicRate,
             paymentsRemaining,
             managementFeeRate);
-        auto const firstPaymentState = calculateRawLoanState(
+        auto const firstPaymentState = computeRawLoanState(
             periodicPayment,
             periodicRate,
             paymentsRemaining - 1,

@@ -911,7 +911,7 @@ protected:
             state.principalOutstanding,
             state.managementFeeOutstanding);
         {
-            auto const raw = calculateRawLoanState(
+            auto const raw = computeRawLoanState(
                 state.periodicPayment,
                 periodicRate,
                 state.paymentRemaining,
@@ -964,7 +964,7 @@ protected:
         Number totalFeesPaid = 0;
         std::size_t totalPaymentsMade = 0;
 
-        ripple::LoanState currentTrueState = calculateRawLoanState(
+        ripple::LoanState currentTrueState = computeRawLoanState(
             state.periodicPayment,
             periodicRate,
             state.paymentRemaining,
@@ -1019,7 +1019,7 @@ protected:
                     paymentComponents.trackedInterestPart() +
                     paymentComponents.trackedManagementFeeDelta);
 
-            ripple::LoanState const nextTrueState = calculateRawLoanState(
+            ripple::LoanState const nextTrueState = computeRawLoanState(
                 state.periodicPayment,
                 periodicRate,
                 state.paymentRemaining - 1,
@@ -2662,7 +2662,7 @@ protected:
                         Number::upward));
 
                 {
-                    auto const raw = calculateRawLoanState(
+                    auto const raw = computeRawLoanState(
                         state.periodicPayment,
                         periodicRate,
                         state.paymentRemaining,
@@ -2705,7 +2705,7 @@ protected:
                 Number totalInterestPaid = 0;
                 std::size_t totalPaymentsMade = 0;
 
-                ripple::LoanState currentTrueState = calculateRawLoanState(
+                ripple::LoanState currentTrueState = computeRawLoanState(
                     state.periodicPayment,
                     periodicRate,
                     state.paymentRemaining,
@@ -2730,12 +2730,11 @@ protected:
                         paymentComponents.trackedValueDelta <=
                         roundedPeriodicPayment);
 
-                    ripple::LoanState const nextTrueState =
-                        calculateRawLoanState(
-                            state.periodicPayment,
-                            periodicRate,
-                            state.paymentRemaining - 1,
-                            broker.params.managementFeeRate);
+                    ripple::LoanState const nextTrueState = computeRawLoanState(
+                        state.periodicPayment,
+                        periodicRate,
+                        state.paymentRemaining - 1,
+                        broker.params.managementFeeRate);
                     detail::LoanStateDeltas const deltas =
                         currentTrueState - nextTrueState;
 
@@ -5852,7 +5851,7 @@ protected:
 
         auto const periodicRate =
             loanPeriodicRate(interestRateValue, state.paymentInterval);
-        auto const rawLoanState = calculateRawLoanState(
+        auto const rawLoanState = computeRawLoanState(
             state.periodicPayment,
             periodicRate,
             state.paymentRemaining,
@@ -5862,7 +5861,7 @@ protected:
         auto const startDateSeconds = static_cast<std::uint32_t>(
             state.startDate.time_since_epoch().count());
 
-        Number const fullPaymentInterest = calculateFullPaymentInterest(
+        Number const fullPaymentInterest = computeFullPaymentInterest(
             rawLoanState.principalOutstanding,
             periodicRate,
             parentCloseTime,
@@ -6144,7 +6143,7 @@ protected:
             loanPeriodicRate(after.interestRate, after.paymentInterval);
         // Accrued + prepayment-penalty interest based on current periodic
         // schedule
-        auto const fullPaymentInterest = calculateFullPaymentInterest(
+        auto const fullPaymentInterest = computeFullPaymentInterest(
             after.periodicPayment,
             periodicRate2,
             after.paymentRemaining,
@@ -6180,7 +6179,7 @@ protected:
         // Reference (clamped) computation: emulate a non-negative accrual
         // window by clamping prevPaymentDate to 'now' for the full-pay path.
         auto const prevClamped = std::min(after.previousPaymentDate, nowSecs);
-        auto const fullPaymentInterestClamped = calculateFullPaymentInterest(
+        auto const fullPaymentInterestClamped = computeFullPaymentInterest(
             after.periodicPayment,
             periodicRate2,
             after.paymentRemaining,
