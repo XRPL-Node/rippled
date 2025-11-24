@@ -18,12 +18,11 @@ static std::string_view const W_PROC_EXIT = "proc_exit";
 
 static std::string_view const ESCROW_FUNCTION_NAME = "finish";
 
-uint32_t const MAX_PAGES = 128;  // 8MB = 64KB*128
+class WasmiEngine;
 
-class WamrEngine;
 class WasmEngine
 {
-    std::unique_ptr<WamrEngine> const impl;
+    std::unique_ptr<WasmiEngine> const impl;
 
     WasmEngine();
 
@@ -56,9 +55,6 @@ public:
         std::vector<WasmParam> const& params = {},
         std::vector<WasmImportFunc> const& imports = {},
         beast::Journal j = beast::Journal{beast::Journal::getNullSink()});
-
-    std::int32_t
-    initMaxPages(std::int32_t def);
 
     // Host functions helper functionality
     void*
