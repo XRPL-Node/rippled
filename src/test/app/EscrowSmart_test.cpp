@@ -846,7 +846,7 @@ struct EscrowSmart_test : public beast::unit_test::suite
             env.close();
 
             BEAST_EXPECTS(
-                env.ownerCount(alice) == 16,
+                env.ownerCount(alice) == 17,
                 std::to_string(env.ownerCount(alice)));
             if (BEAST_EXPECTS(
                     env.seq(alice) == 20, std::to_string(env.seq(alice))))
@@ -881,7 +881,7 @@ struct EscrowSmart_test : public beast::unit_test::suite
                         gasUsed == allowance, std::to_string(gasUsed));
                 }
                 BEAST_EXPECTS(
-                    env.ownerCount(alice) == 16,
+                    env.ownerCount(alice) == 17,
                     std::to_string(env.ownerCount(alice)));
             }
         }
