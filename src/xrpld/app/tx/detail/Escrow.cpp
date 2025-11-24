@@ -17,7 +17,6 @@
 #include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/XRPAmount.h>
 
-#include <algorithm>
 namespace ripple {
 
 // During an EscrowFinish, the transaction must specify both
@@ -1185,17 +1184,6 @@ EscrowFinish::doApply()
             return tecCRYPTOCONDITION_ERROR;
     }
 
-    // NOTE: Escrow payments cannot be used to fund accounts.
-    AccountID const destID = (*slep)[sfDestination];
-    auto const sled = ctx_.view().peek(keylet::account(destID));
-    if (!sled)
-        return tecNO_DST;
-
-    if (auto err = verifyDepositPreauth(
-            ctx_.tx, ctx_.view(), account_, destID, sled, ctx_.journal);
-        !isTesSuccess(err))
-        return err;
-
     if (!ctx_.view().rules().enabled(featureSmartEscrow))
     {
         // NOTE: Escrow payments cannot be used to fund accounts.
@@ -1206,80 +1194,125 @@ EscrowFinish::doApply()
                 ctx_.tx, ctx_.view(), account_, destID, sled, ctx_.journal);
             !isTesSuccess(err))
             return err;
+    }
 
-        // Execute custom release function
-        if ((*slep)[~sfFinishFunction])
+    // Execute custom release function
+    if ((*slep)[~sfFinishFunction])
+    {
+        JLOG(j_.trace())
+            << "The escrow has a finish function, running WASM code...";
+        // WASM execution
+        auto const wasmStr = slep->getFieldVL(sfFinishFunction);
+        std::vector<uint8_t> wasm(wasmStr.begin(), wasmStr.end());
+
+        WasmHostFunctionsImpl ledgerDataProvider(ctx_, k);
+
+        if (!ctx_.tx.isFieldPresent(sfComputationAllowance))
         {
-            JLOG(j_.trace())
-                << "The escrow has a finish function, running WASM code...";
-            // WASM execution
-            auto const wasmStr = slep->getFieldVL(sfFinishFunction);
-            std::vector<uint8_t> wasm(wasmStr.begin(), wasmStr.end());
+            // already checked above, this check is just in case
+            return tecINTERNAL;
+        }
+        std::uint32_t allowance = ctx_.tx[sfComputationAllowance];
+        auto re = runEscrowWasm(
+            wasm, ESCROW_FUNCTION_NAME, {}, &ledgerDataProvider, allowance);
+        JLOG(j_.trace()) << "Escrow WASM ran";
 
-            WasmHostFunctionsImpl ledgerDataProvider(ctx_, k);
-
-            if (!ctx_.tx.isFieldPresent(sfComputationAllowance))
-            {
-                // already checked above, this check is just in case
-                return tecINTERNAL;
-            }
-            std::uint32_t allowance = ctx_.tx[sfComputationAllowance];
-            auto re = runEscrowWasm(
-                wasm, ESCROW_FUNCTION_NAME, {}, &ledgerDataProvider, allowance);
-            JLOG(j_.trace()) << "Escrow WASM ran";
-
-            if (auto const& data = ledgerDataProvider.getData();
-                data.has_value())
-            {
-                slep->setFieldVL(sfData, makeSlice(*data));
-                ctx_.view().update(slep);
-            }
-
-            if (re.has_value())
-            {
-                auto reValue = re.value().result;
-                auto reCost = re.value().cost;
-                JLOG(j_.debug()) << "WASM Success: " + std::to_string(reValue)
-                                 << ", cost: " << reCost;
-
-                ctx_.setWasmReturnCode(reValue);
-
-                if (reCost < 0 || reCost > std::numeric_limits<uint32_t>::max())
-                    return tecINTERNAL;  // LCOV_EXCL_LINE
-                ctx_.setGasUsed(static_cast<uint32_t>(reCost));
-
-                if (reValue <= 0)
-                {
-                    return tecWASM_REJECTED;
-                }
-            }
-            else
-            {
-                JLOG(j_.debug()) << "WASM Failure: " + transHuman(re.error());
-                return re.error();
-            }
+        if (auto const& data = ledgerDataProvider.getData(); data.has_value())
+        {
+            slep->setFieldVL(sfData, makeSlice(*data));
+            ctx_.view().update(slep);
         }
 
-        AccountID const account = (*slep)[sfAccount];
-
-        // Remove escrow from owner directory
+        if (re.has_value())
         {
-            auto const page = (*slep)[sfOwnerNode];
-            if (!ctx_.view().dirRemove(
-                    keylet::ownerDir(account), page, k.key, true))
+            auto reValue = re.value().result;
+            auto reCost = re.value().cost;
+            JLOG(j_.debug()) << "WASM Success: " + std::to_string(reValue)
+                             << ", cost: " << reCost;
+
+            ctx_.setWasmReturnCode(reValue);
+
+            if (reCost < 0 || reCost > std::numeric_limits<uint32_t>::max())
+                return tecINTERNAL;  // LCOV_EXCL_LINE
+            ctx_.setGasUsed(static_cast<uint32_t>(reCost));
+
+            if (reValue <= 0)
             {
-                // LCOV_EXCL_START
-                JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
-                return tefBAD_LEDGER;
-                // LCOV_EXCL_STOP
+                return tecWASM_REJECTED;
             }
         }
+        else
+        {
+            JLOG(j_.debug()) << "WASM Failure: " + transHuman(re.error());
+            return re.error();
+        }
+    }
 
-        // Remove escrow from recipient's owner directory, if present.
-        if (auto const optPage = (*slep)[~sfDestinationNode])
+    AccountID const account = (*slep)[sfAccount];
+
+    // Remove escrow from owner directory
+    {
+        auto const page = (*slep)[sfOwnerNode];
+        if (!ctx_.view().dirRemove(
+                keylet::ownerDir(account), page, k.key, true))
+        {
+            // LCOV_EXCL_START
+            JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
+            return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
+        }
+    }
+
+    // Remove escrow from recipient's owner directory, if present.
+    if (auto const optPage = (*slep)[~sfDestinationNode])
+    {
+        if (!ctx_.view().dirRemove(
+                keylet::ownerDir(destID), *optPage, k.key, true))
+        {
+            // LCOV_EXCL_START
+            JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
+            return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
+        }
+    }
+
+    STAmount const amount = slep->getFieldAmount(sfAmount);
+    // Transfer amount to destination
+    if (isXRP(amount))
+        (*sled)[sfBalance] = (*sled)[sfBalance] + amount;
+    else
+    {
+        if (!ctx_.view().rules().enabled(featureTokenEscrow))
+            return temDISABLED;  // LCOV_EXCL_LINE
+
+        Rate lockedRate = slep->isFieldPresent(sfTransferRate)
+            ? ripple::Rate(slep->getFieldU32(sfTransferRate))
+            : parityRate;
+        auto const issuer = amount.getIssuer();
+        bool const createAsset = destID == account_;
+        if (auto const ret = std::visit(
+                [&]<typename T>(T const&) {
+                    return escrowUnlockApplyHelper<T>(
+                        ctx_.view(),
+                        lockedRate,
+                        sled,
+                        mPriorBalance,
+                        amount,
+                        issuer,
+                        account,
+                        destID,
+                        createAsset,
+                        j_);
+                },
+                amount.asset().value());
+            !isTesSuccess(ret))
+            return ret;
+
+        // Remove escrow from issuers owner directory, if present.
+        if (auto const optPage = (*slep)[~sfIssuerNode]; optPage)
         {
             if (!ctx_.view().dirRemove(
-                    keylet::ownerDir(destID), *optPage, k.key, true))
+                    keylet::ownerDir(issuer), *optPage, k.key, true))
             {
                 // LCOV_EXCL_START
                 JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
@@ -1287,205 +1320,206 @@ EscrowFinish::doApply()
                 // LCOV_EXCL_STOP
             }
         }
+    }
 
-        STAmount const amount = slep->getFieldAmount(sfAmount);
-        // Transfer amount to destination
-        if (isXRP(amount))
-            (*sled)[sfBalance] = (*sled)[sfBalance] + amount;
-        else
+    ctx_.view().update(sled);
+
+    auto const reserveToSubtract =
+        calculateAdditionalReserve((*slep)[~sfFinishFunction]);
+
+    // Adjust source owner count
+    auto const sle = ctx_.view().peek(keylet::account(account));
+    adjustOwnerCount(ctx_.view(), sle, -1 * reserveToSubtract, ctx_.journal);
+    ctx_.view().update(sle);
+
+    // Remove escrow from ledger
+    ctx_.view().erase(slep);
+    return tesSUCCESS;
+}
+
+//------------------------------------------------------------------------------
+
+NotTEC
+EscrowCancel::preflight(PreflightContext const& ctx)
+{
+    return tesSUCCESS;
+}
+
+template <ValidIssueType T>
+static TER
+escrowCancelPreclaimHelper(
+    PreclaimContext const& ctx,
+    AccountID const& account,
+    STAmount const& amount);
+
+template <>
+TER
+escrowCancelPreclaimHelper<Issue>(
+    PreclaimContext const& ctx,
+    AccountID const& account,
+    STAmount const& amount)
+{
+    AccountID issuer = amount.getIssuer();
+    // If the issuer is the same as the account, return tecINTERNAL
+    if (issuer == account)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // If the issuer has requireAuth set, check if the account is authorized
+    if (auto const ter = requireAuth(ctx.view, amount.issue(), account);
+        ter != tesSUCCESS)
+        return ter;
+
+    return tesSUCCESS;
+}
+
+template <>
+TER
+escrowCancelPreclaimHelper<MPTIssue>(
+    PreclaimContext const& ctx,
+    AccountID const& account,
+    STAmount const& amount)
+{
+    AccountID issuer = amount.getIssuer();
+    // If the issuer is the same as the account, return tecINTERNAL
+    if (issuer == account)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // If the mpt does not exist, return tecOBJECT_NOT_FOUND
+    auto const issuanceKey =
+        keylet::mptIssuance(amount.get<MPTIssue>().getMptID());
+    auto const sleIssuance = ctx.view.read(issuanceKey);
+    if (!sleIssuance)
+        return tecOBJECT_NOT_FOUND;
+
+    // If the issuer has requireAuth set, check if the account is
+    // authorized
+    auto const& mptIssue = amount.get<MPTIssue>();
+    if (auto const ter =
+            requireAuth(ctx.view, mptIssue, account, AuthType::WeakAuth);
+        ter != tesSUCCESS)
+        return ter;
+
+    return tesSUCCESS;
+}
+
+TER
+EscrowCancel::preclaim(PreclaimContext const& ctx)
+{
+    if (ctx.view.rules().enabled(featureTokenEscrow))
+    {
+        auto const k = keylet::escrow(ctx.tx[sfOwner], ctx.tx[sfOfferSequence]);
+        auto const slep = ctx.view.read(k);
+        if (!slep)
+            return tecNO_TARGET;
+
+        AccountID const account = (*slep)[sfAccount];
+        STAmount const amount = (*slep)[sfAmount];
+
+        if (!isXRP(amount))
         {
-            if (!ctx_.view().rules().enabled(featureTokenEscrow))
-                return temDISABLED;  // LCOV_EXCL_LINE
-
-            Rate lockedRate = slep->isFieldPresent(sfTransferRate)
-                ? ripple::Rate(slep->getFieldU32(sfTransferRate))
-                : parityRate;
-            auto const issuer = amount.getIssuer();
-            bool const createAsset = destID == account_;
             if (auto const ret = std::visit(
                     [&]<typename T>(T const&) {
-                        return escrowUnlockApplyHelper<T>(
-                            ctx_.view(),
-                            lockedRate,
-                            sled,
-                            mPriorBalance,
-                            amount,
-                            issuer,
-                            account,
-                            destID,
-                            createAsset,
-                            j_);
+                        return escrowCancelPreclaimHelper<T>(
+                            ctx, account, amount);
                     },
                     amount.asset().value());
                 !isTesSuccess(ret))
                 return ret;
-
-            // Remove escrow from issuers owner directory, if present.
-            if (auto const optPage = (*slep)[~sfIssuerNode]; optPage)
-            {
-                if (!ctx_.view().dirRemove(
-                        keylet::ownerDir(issuer), *optPage, k.key, true))
-                {
-                    // LCOV_EXCL_START
-                    JLOG(j_.fatal())
-                        << "Unable to delete Escrow from recipient.";
-                    return tefBAD_LEDGER;
-                    // LCOV_EXCL_STOP
-                }
-            }
         }
-
-        ctx_.view().update(sled);
-
-        auto const reserveToSubtract =
-            calculateAdditionalReserve((*slep)[~sfFinishFunction]);
-
-        // Adjust source owner count
-        auto const sle = ctx_.view().peek(keylet::account(account));
-        adjustOwnerCount(
-            ctx_.view(), sle, -1 * reserveToSubtract, ctx_.journal);
-        ctx_.view().update(sle);
-
-        // Remove escrow from ledger
-        ctx_.view().erase(slep);
-        return tesSUCCESS;
     }
+    return tesSUCCESS;
+}
 
-    //------------------------------------------------------------------------------
-
-    NotTEC EscrowCancel::preflight(PreflightContext const& ctx)
+TER
+EscrowCancel::doApply()
+{
+    auto const k = keylet::escrow(ctx_.tx[sfOwner], ctx_.tx[sfOfferSequence]);
+    auto const slep = ctx_.view().peek(k);
+    if (!slep)
     {
-        return tesSUCCESS;
-    }
-
-    template <ValidIssueType T>
-    static TER escrowCancelPreclaimHelper(
-        PreclaimContext const& ctx,
-        AccountID const& account,
-        STAmount const& amount);
-
-    template <>
-    TER escrowCancelPreclaimHelper<Issue>(
-        PreclaimContext const& ctx,
-        AccountID const& account,
-        STAmount const& amount)
-    {
-        AccountID issuer = amount.getIssuer();
-        // If the issuer is the same as the account, return tecINTERNAL
-        if (issuer == account)
+        if (ctx_.view().rules().enabled(featureTokenEscrow))
             return tecINTERNAL;  // LCOV_EXCL_LINE
 
-        // If the issuer has requireAuth set, check if the account is authorized
-        if (auto const ter = requireAuth(ctx.view, amount.issue(), account);
-            ter != tesSUCCESS)
-            return ter;
-
-        return tesSUCCESS;
+        return tecNO_TARGET;
     }
 
-    template <>
-    TER escrowCancelPreclaimHelper<MPTIssue>(
-        PreclaimContext const& ctx,
-        AccountID const& account,
-        STAmount const& amount)
+    auto const now = ctx_.view().info().parentCloseTime;
+
+    // No cancel time specified: can't execute at all.
+    if (!(*slep)[~sfCancelAfter])
+        return tecNO_PERMISSION;
+
+    // Too soon: can't execute before the cancel time.
+    if (!after(now, (*slep)[sfCancelAfter]))
+        return tecNO_PERMISSION;
+
+    AccountID const account = (*slep)[sfAccount];
+
+    // Remove escrow from owner directory
     {
-        AccountID issuer = amount.getIssuer();
-        // If the issuer is the same as the account, return tecINTERNAL
-        if (issuer == account)
-            return tecINTERNAL;  // LCOV_EXCL_LINE
-
-        // If the mpt does not exist, return tecOBJECT_NOT_FOUND
-        auto const issuanceKey =
-            keylet::mptIssuance(amount.get<MPTIssue>().getMptID());
-        auto const sleIssuance = ctx.view.read(issuanceKey);
-        if (!sleIssuance)
-            return tecOBJECT_NOT_FOUND;
-
-        // If the issuer has requireAuth set, check if the account is
-        // authorized
-        auto const& mptIssue = amount.get<MPTIssue>();
-        if (auto const ter =
-                requireAuth(ctx.view, mptIssue, account, AuthType::WeakAuth);
-            ter != tesSUCCESS)
-            return ter;
-
-        return tesSUCCESS;
+        auto const page = (*slep)[sfOwnerNode];
+        if (!ctx_.view().dirRemove(
+                keylet::ownerDir(account), page, k.key, true))
+        {
+            // LCOV_EXCL_START
+            JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
+            return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
+        }
     }
 
-    TER EscrowCancel::preclaim(PreclaimContext const& ctx)
+    // Remove escrow from recipient's owner directory, if present.
+    if (auto const optPage = (*slep)[~sfDestinationNode]; optPage)
     {
-        if (ctx.view.rules().enabled(featureTokenEscrow))
+        if (!ctx_.view().dirRemove(
+                keylet::ownerDir((*slep)[sfDestination]),
+                *optPage,
+                k.key,
+                true))
         {
-            auto const k =
-                keylet::escrow(ctx.tx[sfOwner], ctx.tx[sfOfferSequence]);
-            auto const slep = ctx.view.read(k);
-            if (!slep)
-                return tecNO_TARGET;
-
-            AccountID const account = (*slep)[sfAccount];
-            STAmount const amount = (*slep)[sfAmount];
-
-            if (!isXRP(amount))
-            {
-                if (auto const ret = std::visit(
-                        [&]<typename T>(T const&) {
-                            return escrowCancelPreclaimHelper<T>(
-                                ctx, account, amount);
-                        },
-                        amount.asset().value());
-                    !isTesSuccess(ret))
-                    return ret;
-            }
+            // LCOV_EXCL_START
+            JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
+            return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
-        return tesSUCCESS;
     }
 
-    TER EscrowCancel::doApply()
+    auto const sle = ctx_.view().peek(keylet::account(account));
+    STAmount const amount = slep->getFieldAmount(sfAmount);
+
+    // Transfer amount back to the owner
+    if (isXRP(amount))
+        (*sle)[sfBalance] = (*sle)[sfBalance] + amount;
+    else
     {
-        auto const k =
-            keylet::escrow(ctx_.tx[sfOwner], ctx_.tx[sfOfferSequence]);
-        auto const slep = ctx_.view().peek(k);
-        if (!slep)
-        {
-            if (ctx_.view().rules().enabled(featureTokenEscrow))
-                return tecINTERNAL;  // LCOV_EXCL_LINE
+        if (!ctx_.view().rules().enabled(featureTokenEscrow))
+            return temDISABLED;  // LCOV_EXCL_LINE
 
-            return tecNO_TARGET;
-        }
+        auto const issuer = amount.getIssuer();
+        bool const createAsset = account == account_;
+        if (auto const ret = std::visit(
+                [&]<typename T>(T const&) {
+                    return escrowUnlockApplyHelper<T>(
+                        ctx_.view(),
+                        parityRate,
+                        slep,
+                        mPriorBalance,
+                        amount,
+                        issuer,
+                        account,  // sender and receiver are the same
+                        account,
+                        createAsset,
+                        j_);
+                },
+                amount.asset().value());
+            !isTesSuccess(ret))
+            return ret;  // LCOV_EXCL_LINE
 
-        auto const now = ctx_.view().info().parentCloseTime;
-
-        // No cancel time specified: can't execute at all.
-        if (!(*slep)[~sfCancelAfter])
-            return tecNO_PERMISSION;
-
-        // Too soon: can't execute before the cancel time.
-        if (!after(now, (*slep)[sfCancelAfter]))
-            return tecNO_PERMISSION;
-
-        AccountID const account = (*slep)[sfAccount];
-
-        // Remove escrow from owner directory
-        {
-            auto const page = (*slep)[sfOwnerNode];
-            if (!ctx_.view().dirRemove(
-                    keylet::ownerDir(account), page, k.key, true))
-            {
-                // LCOV_EXCL_START
-                JLOG(j_.fatal()) << "Unable to delete Escrow from owner.";
-                return tefBAD_LEDGER;
-                // LCOV_EXCL_STOP
-            }
-        }
-
-        // Remove escrow from recipient's owner directory, if present.
-        if (auto const optPage = (*slep)[~sfDestinationNode]; optPage)
+        // Remove escrow from issuers owner directory, if present.
+        if (auto const optPage = (*slep)[~sfIssuerNode]; optPage)
         {
             if (!ctx_.view().dirRemove(
-                    keylet::ownerDir((*slep)[sfDestination]),
-                    *optPage,
-                    k.key,
-                    true))
+                    keylet::ownerDir(issuer), *optPage, k.key, true))
             {
                 // LCOV_EXCL_START
                 JLOG(j_.fatal()) << "Unable to delete Escrow from recipient.";
@@ -1493,63 +1527,17 @@ EscrowFinish::doApply()
                 // LCOV_EXCL_STOP
             }
         }
-
-        auto const sle = ctx_.view().peek(keylet::account(account));
-        STAmount const amount = slep->getFieldAmount(sfAmount);
-
-        // Transfer amount back to the owner
-        if (isXRP(amount))
-            (*sle)[sfBalance] = (*sle)[sfBalance] + amount;
-        else
-        {
-            if (!ctx_.view().rules().enabled(featureTokenEscrow))
-                return temDISABLED;  // LCOV_EXCL_LINE
-
-            auto const issuer = amount.getIssuer();
-            bool const createAsset = account == account_;
-            if (auto const ret = std::visit(
-                    [&]<typename T>(T const&) {
-                        return escrowUnlockApplyHelper<T>(
-                            ctx_.view(),
-                            parityRate,
-                            slep,
-                            mPriorBalance,
-                            amount,
-                            issuer,
-                            account,  // sender and receiver are the same
-                            account,
-                            createAsset,
-                            j_);
-                    },
-                    amount.asset().value());
-                !isTesSuccess(ret))
-                return ret;  // LCOV_EXCL_LINE
-
-            // Remove escrow from issuers owner directory, if present.
-            if (auto const optPage = (*slep)[~sfIssuerNode]; optPage)
-            {
-                if (!ctx_.view().dirRemove(
-                        keylet::ownerDir(issuer), *optPage, k.key, true))
-                {
-                    // LCOV_EXCL_START
-                    JLOG(j_.fatal())
-                        << "Unable to delete Escrow from recipient.";
-                    return tefBAD_LEDGER;
-                    // LCOV_EXCL_STOP
-                }
-            }
-        }
-
-        auto const reserveToSubtract =
-            calculateAdditionalReserve((*slep)[~sfFinishFunction]);
-        adjustOwnerCount(
-            ctx_.view(), sle, -1 * reserveToSubtract, ctx_.journal);
-        ctx_.view().update(sle);
-
-        // Remove escrow from ledger
-        ctx_.view().erase(slep);
-
-        return tesSUCCESS;
     }
+
+    auto const reserveToSubtract =
+        calculateAdditionalReserve((*slep)[~sfFinishFunction]);
+    adjustOwnerCount(ctx_.view(), sle, -1 * reserveToSubtract, ctx_.journal);
+    ctx_.view().update(sle);
+
+    // Remove escrow from ledger
+    ctx_.view().erase(slep);
+
+    return tesSUCCESS;
+}
 
 }  // namespace ripple
