@@ -169,6 +169,7 @@ LoanBrokerSet::doApply()
         broker->at(sfVaultID) = vaultID;
         broker->at(sfOwner) = account_;
         broker->at(sfAccount) = pseudoId;
+        // The LoanSequence indexes loans created by this broker, starting at 1
         broker->at(sfLoanSequence) = 1;
         if (auto const data = tx[~sfData])
             broker->at(sfData) = *data;
