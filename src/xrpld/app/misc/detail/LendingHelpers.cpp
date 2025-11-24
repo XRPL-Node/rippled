@@ -1653,7 +1653,7 @@ loanMakePayment(
     Number totalPaid;
     std::size_t numPayments = 0;
 
-    while (amount >= totalPaid + periodic.totalDue &&
+    while ((amount >= (totalPaid + periodic.totalDue)) &&
            paymentRemainingProxy > 0 &&
            numPayments < loanMaximumPaymentsPerTransaction)
     {
