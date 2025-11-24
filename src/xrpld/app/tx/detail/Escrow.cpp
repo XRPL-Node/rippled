@@ -153,12 +153,6 @@ EscrowCreate::preflight(PreflightContext const& ctx)
                 << ec.message();
             return temMALFORMED;
         }
-
-        // Conditions other than PrefixSha256 require the
-        // "CryptoConditionsSuite" amendment:
-        if (condition->type != Type::preimageSha256 &&
-            !ctx.rules.enabled(featureCryptoConditionsSuite))
-            return temDISABLED;
     }
 
     return tesSUCCESS;
@@ -459,12 +453,6 @@ EscrowCreate::doApply()
         if (((*sled)[sfFlags] & lsfRequireDestTag) &&
             !ctx_.tx[~sfDestinationTag])
             return tecDST_TAG_NEEDED;
-
-        // Obeying the lsfDisallowXRP flag was a bug.  Piggyback on
-        // featureDepositAuth to remove the bug.
-        if (!ctx_.view().rules().enabled(featureDepositAuth) &&
-            ((*sled)[sfFlags] & lsfDisallowXRP))
-            return tecNO_TARGET;
     }
 
     // Create escrow in ledger.  Note that we we use the value from the
@@ -1041,13 +1029,10 @@ EscrowFinish::doApply()
     if (!sled)
         return tecNO_DST;
 
-    if (ctx_.view().rules().enabled(featureDepositAuth))
-    {
-        if (auto err = verifyDepositPreauth(
-                ctx_.tx, ctx_.view(), account_, destID, sled, ctx_.journal);
-            !isTesSuccess(err))
-            return err;
-    }
+    if (auto err = verifyDepositPreauth(
+            ctx_.tx, ctx_.view(), account_, destID, sled, ctx_.journal);
+        !isTesSuccess(err))
+        return err;
 
     AccountID const account = (*slep)[sfAccount];
 

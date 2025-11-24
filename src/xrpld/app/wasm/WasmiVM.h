@@ -2,42 +2,42 @@
 
 #include <xrpld/app/wasm/WasmVM.h>
 
-#include <wasm_c_api.h>
-#include <wasm_export.h>
+#include <wasm.h>
+#include <wasmi.h>
 
 namespace ripple {
 
-struct WamrResult
+struct WasmiResult
 {
     wasm_val_vec_t r;
     bool f;  // failure flag
 
-    WamrResult(unsigned N = 0) : r{0, nullptr, 0, 0, nullptr}, f(false)
+    WasmiResult(unsigned N = 0) : r{0, nullptr}, f(false)
     {
         if (N)
             wasm_val_vec_new_uninitialized(&r, N);
     }
 
-    ~WamrResult()
+    ~WasmiResult()
     {
         if (r.size)
             wasm_val_vec_delete(&r);
     }
 
-    WamrResult(WamrResult const&) = delete;
-    WamrResult&
-    operator=(WamrResult const&) = delete;
+    WasmiResult(WasmiResult const&) = delete;
+    WasmiResult&
+    operator=(WasmiResult const&) = delete;
 
-    WamrResult(WamrResult&& o)
+    WasmiResult(WasmiResult&& o)
     {
         *this = std::move(o);
     }
 
-    WamrResult&
-    operator=(WamrResult&& o)
+    WasmiResult&
+    operator=(WasmiResult&& o)
     {
         r = o.r;
-        o.r = {0, nullptr, 0, 0, nullptr};
+        o.r = {0, nullptr};
         f = o.f;
         o.f = false;
         return *this;
@@ -55,7 +55,6 @@ struct InstanceWrapper
 {
     wasm_extern_vec_t exports_;
     InstancePtr instance_;
-    wasm_exec_env_t execEnv_ = nullptr;
     beast::Journal j_ = beast::Journal(beast::Journal::getNullSink());
 
 private:
@@ -63,7 +62,6 @@ private:
     init(
         wasm_store_t* s,
         wasm_module_t* m,
-        int32_t maxPages,
         wasm_extern_vec_t* expt,
         wasm_extern_vec_t const& imports,
         beast::Journal j);
@@ -79,8 +77,6 @@ public:
     InstanceWrapper(
         wasm_store_t* s,
         wasm_module_t* m,
-        int32_t maxPages,
-        int64_t gas,
         wasm_extern_vec_t const& imports,
         beast::Journal j);
 
@@ -95,13 +91,11 @@ public:
 
     wmem
     getMem() const;
-
-    std::int64_t
-    getGas() const;
 };
 
 struct ModuleWrapper
 {
+    wasm_store_t* store_ = nullptr;
     ModulePtr module_;
     InstanceWrapper instanceWrap_;
     wasm_exporttype_vec_t exportTypes_;
@@ -120,8 +114,6 @@ public:
         wasm_store_t* s,
         Bytes const& wasmBin,
         bool instantiate,
-        int32_t maxPages,
-        int64_t gas,
         std::vector<WasmImportFunc> const& imports,
         beast::Journal j);
     ~ModuleWrapper();
@@ -139,8 +131,6 @@ public:
     int
     addInstance(
         wasm_store_t* s,
-        int32_t maxPages,
-        int64_t gas,
         wasm_extern_vec_t const& imports = WASM_EMPTY_VEC);
 
     std::int64_t
@@ -155,19 +145,21 @@ private:
     buildImports(wasm_store_t* s, std::vector<WasmImportFunc> const& imports);
 };
 
-class WamrEngine
+class WasmiEngine
 {
     std::unique_ptr<wasm_engine_t, decltype(&wasm_engine_delete)> engine_;
     std::unique_ptr<wasm_store_t, decltype(&wasm_store_delete)> store_;
     std::unique_ptr<ModuleWrapper> moduleWrap_;
-    std::int32_t defMaxPages_ = -1;
     beast::Journal j_ = beast::Journal(beast::Journal::getNullSink());
 
     std::mutex m_;  // 1 instance mutex
 
 public:
-    WamrEngine();
-    ~WamrEngine() = default;
+    WasmiEngine();
+    ~WasmiEngine() = default;
+
+    static std::unique_ptr<wasm_engine_t, decltype(&wasm_engine_delete)>
+    init();
 
     Expected<WasmResult<int32_t>, TER>
     run(Bytes const& wasmCode,
@@ -185,9 +177,6 @@ public:
         std::vector<WasmParam> const& params,
         std::vector<WasmImportFunc> const& imports,
         beast::Journal j);
-
-    std::int32_t
-    initMaxPages(std::int32_t def);
 
     std::int64_t
     getGas();
@@ -261,19 +250,19 @@ private:
     add_param(std::vector<wasm_val_t>& in, int64_t p);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(std::string_view func, Types&&... args);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(FuncInfo const& f, Types&&... args);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(FuncInfo const& f, std::vector<wasm_val_t>& in);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(
         FuncInfo const& f,
         std::vector<wasm_val_t>& in,
@@ -281,7 +270,7 @@ private:
         Types&&... args);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(
         FuncInfo const& f,
         std::vector<wasm_val_t>& in,
@@ -289,7 +278,7 @@ private:
         Types&&... args);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(
         FuncInfo const& f,
         std::vector<wasm_val_t>& in,
@@ -298,7 +287,7 @@ private:
         Types&&... args);
 
     template <int NR, class... Types>
-    inline WamrResult
+    inline WasmiResult
     call(
         FuncInfo const& f,
         std::vector<wasm_val_t>& in,
