@@ -69,10 +69,6 @@ target_link_libraries(xrpl.imports.main
     $<$<BOOL:${voidstar}>:antithesis-sdk-cpp>
 )
 
-if (WIN32)
-  target_link_libraries(xrpl.imports.main INTERFACE ntdll)
-endif()
-
 include(add_module)
 include(target_link_modules)
 
