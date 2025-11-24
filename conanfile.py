@@ -30,12 +30,12 @@ class Xrpl(ConanFile):
         'nudb/2.0.9',
         'openssl/3.5.4',
         'soci/4.0.3',
-        'wasm-xrplf/2.4.1-xrplf',
+        'wasmi/0.42.1',
         'zlib/1.3.1',
     ]
 
     test_requires = [
-        'doctest/2.4.11',
+        'doctest/2.4.12',
     ]
 
     tool_requires = [
@@ -116,7 +116,7 @@ class Xrpl(ConanFile):
         if self.options.jemalloc:
             self.requires('jemalloc/5.3.0')
         if self.options.rocksdb:
-            self.requires('rocksdb/10.0.1')
+            self.requires('rocksdb/10.5.1')
         self.requires('xxhash/0.8.3', **transitive_headers_opt)
 
     exports_sources = (
@@ -193,7 +193,7 @@ class Xrpl(ConanFile):
             'protobuf::libprotobuf',
             'soci::soci',
             'sqlite3::sqlite',
-            'wasm-xrplf::wasm-xrplf',
+            'wasmi::wasmi',
             'xxhash::xxhash',
             'zlib::zlib',
         ]

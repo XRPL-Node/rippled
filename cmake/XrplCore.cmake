@@ -63,7 +63,7 @@ target_link_libraries(xrpl.imports.main
     Xrpl::opts
     Xrpl::syslibs
     secp256k1::secp256k1
-    wasm-xrplf::wasm-xrplf
+    wasmi::wasmi
     xrpl.libpb
     xxHash::xxhash
     $<$<BOOL:${voidstar}>:antithesis-sdk-cpp>
@@ -78,10 +78,7 @@ include(target_link_modules)
 
 # Level 01
 add_module(xrpl beast)
-target_link_libraries(xrpl.libxrpl.beast PUBLIC
-  xrpl.imports.main
-  xrpl.libpb
-)
+target_link_libraries(xrpl.libxrpl.beast PUBLIC xrpl.imports.main)
 
 # Level 02
 add_module(xrpl basics)
