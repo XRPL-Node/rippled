@@ -233,7 +233,6 @@ LoanBrokerCoverClawback::preclaim(PreclaimContext const& ctx)
         // LCOV_EXCL_STOP
     }
 
-
     auto const vaultAsset = vault->at(sfAsset);
 
     if (vaultAsset.native())
