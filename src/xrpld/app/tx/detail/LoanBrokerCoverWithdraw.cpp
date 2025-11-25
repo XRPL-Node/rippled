@@ -157,41 +157,15 @@ LoanBrokerCoverWithdraw::doApply()
     broker->at(sfCoverAvailable) -= amount;
     view().update(broker);
 
-    // Create trust line or MPToken for the receiving account
-    if (dstAcct == account_)
-    {
-        if (auto const ter = addEmptyHolding(
-                view(), account_, mPriorBalance, amount.asset(), j_);
-            !isTesSuccess(ter) && ter != tecDUPLICATE)
-            return ter;
-    }
-    else
-    {
-        auto dstSle = view().peek(keylet::account(dstAcct));
-        if (auto err =
-                verifyDepositPreauth(tx, view(), account_, dstAcct, dstSle, j_))
-            return err;
-    }
-
-    // Sanity check
-    if (accountHolds(
-            view(),
-            brokerPseudoID,
-            amount.asset(),
-            FreezeHandling::fhIGNORE_FREEZE,
-            AuthHandling::ahIGNORE_AUTH,
-            j_) < amount)
-    {
-        // LCOV_EXCL_START
-        JLOG(j_.error()) << "LoanBrokerCoverWithdraw: negative balance of "
-                            "broker cover assets.";
-        return tefINTERNAL;
-        // LCOV_EXCL_STOP
-    }
-
-    // Move the funds directly from the broker's pseudo-account to the dstAcct
-    return accountSend(
-        view(), brokerPseudoID, dstAcct, amount, j_, WaiveTransferFee::Yes);
+    return doWithdraw(
+        view(),
+        tx,
+        account_,
+        dstAcct,
+        brokerPseudoID,
+        mPriorBalance,
+        amount,
+        j_);
 }
 
 //------------------------------------------------------------------------------

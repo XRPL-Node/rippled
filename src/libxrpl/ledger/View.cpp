@@ -1386,6 +1386,55 @@ canWithdraw(ReadView const& view, STTx const& tx)
     return canWithdraw(from, view, to, tx.isFieldPresent(sfDestinationTag));
 }
 
+TER
+doWithdraw(
+    ApplyView& view,
+    STTx const& tx,
+    AccountID const& senderAcct,
+    AccountID const& dstAcct,
+    AccountID const& sourceAcct,
+    XRPAmount priorBalance,
+    STAmount const& amount,
+    beast::Journal j)
+{
+    // Create trust line or MPToken for the receiving account
+    if (dstAcct == senderAcct)
+    {
+        if (auto const ter = addEmptyHolding(
+                view, senderAcct, priorBalance, amount.asset(), j);
+            !isTesSuccess(ter) && ter != tecDUPLICATE)
+            return ter;
+    }
+    else
+    {
+        auto dstSle = view.peek(keylet::account(dstAcct));
+        if (auto err =
+                verifyDepositPreauth(tx, view, senderAcct, dstAcct, dstSle, j))
+            return err;
+    }
+
+    // Sanity check
+    if (accountHolds(
+            view,
+            sourceAcct,
+            amount.asset(),
+            FreezeHandling::fhIGNORE_FREEZE,
+            AuthHandling::ahIGNORE_AUTH,
+            j) < amount)
+    {
+        // LCOV_EXCL_START
+        JLOG(j.error()) << "LoanBrokerCoverWithdraw: negative balance of "
+                           "broker cover assets.";
+        return tefINTERNAL;
+        // LCOV_EXCL_STOP
+    }
+
+    // Move the funds directly from the broker's pseudo-account to the
+    // dstAcct
+    return accountSend(
+        view, sourceAcct, dstAcct, amount, j, WaiveTransferFee::Yes);
+}
+
 [[nodiscard]] TER
 addEmptyHolding(
     ApplyView& view,

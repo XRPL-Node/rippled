@@ -237,49 +237,15 @@ VaultWithdraw::doApply()
 
     auto const dstAcct = ctx_.tx[~sfDestination].value_or(account_);
 
-    // Create trust line or MPToken for the receiving account
-    if (dstAcct == account_)
-    {
-        if (auto const ter = addEmptyHolding(
-                view(), account_, mPriorBalance, vaultAsset, j_);
-            !isTesSuccess(ter) && ter != tecDUPLICATE)
-            return ter;
-    }
-    else
-    {
-        auto dstSle = view().peek(keylet::account(dstAcct));
-        if (auto err = verifyDepositPreauth(
-                ctx_.tx, view(), account_, dstAcct, dstSle, j_))
-            return err;
-    }
-
-    // Transfer assets from vault to depositor or destination account.
-    if (auto const ter = accountSend(
-            view(),
-            vaultAccount,
-            dstAcct,
-            assetsWithdrawn,
-            j_,
-            WaiveTransferFee::Yes);
-        !isTesSuccess(ter))
-        return ter;
-
-    // Sanity check
-    if (accountHolds(
-            view(),
-            vaultAccount,
-            assetsWithdrawn.asset(),
-            FreezeHandling::fhIGNORE_FREEZE,
-            AuthHandling::ahIGNORE_AUTH,
-            j_) < beast::zero)
-    {
-        // LCOV_EXCL_START
-        JLOG(j_.error()) << "VaultWithdraw: negative balance of vault assets.";
-        return tefINTERNAL;
-        // LCOV_EXCL_STOP
-    }
-
-    return tesSUCCESS;
+    return doWithdraw(
+        view(),
+        ctx_.tx,
+        account_,
+        dstAcct,
+        vaultAccount,
+        mPriorBalance,
+        assetsWithdrawn,
+        j_);
 }
 
 }  // namespace ripple
