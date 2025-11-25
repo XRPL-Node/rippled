@@ -87,6 +87,8 @@ JobQueue::Coro::yield()
         jq_.cv_.notify_all();
     }
     (*yield_)();
+
+    return true;
 }
 
 inline bool
