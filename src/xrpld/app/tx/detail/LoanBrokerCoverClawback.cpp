@@ -275,7 +275,7 @@ LoanBrokerCoverClawback::preclaim(PreclaimContext const& ctx)
     STAmount const clawAmount = *findClawAmount;
 
     // Explicitly check the balance of the trust line / MPT to make sure the
-    // balance is actually there. It should always match `stCoverAvailable`, so
+    // balance is actually there. It should always match `sfCoverAvailable`, so
     // if there isn't, this is an internal error.
     if (accountHolds(
             ctx.view,
