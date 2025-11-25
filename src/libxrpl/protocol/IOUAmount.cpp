@@ -1,5 +1,6 @@
 #include <xrpl/protocol/IOUAmount.h>
-//
+// Do not remove. Forces IOUAmount.h to stay first, to verify it can compile
+// without any hidden dependencies
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/Number.h>
 #include <xrpl/basics/contract.h>

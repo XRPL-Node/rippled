@@ -21,12 +21,12 @@ using uint128_t = boost::multiprecision::uint128_t;
 #else   // !defined(_MSC_VER)
 using uint128_t = __uint128_t;
 #endif  // !defined(_MSC_VER)
-static_assert(std::is_same_v<uint128_t, ripple::numberuint128>);
+static_assert(std::is_same_v<uint128_t, ripple::numberuint>);
 
 namespace std {
 
 template <>
-struct make_unsigned<ripple::numberint128>
+struct make_unsigned<ripple::numberint>
 {
     using type = uint128_t;
 };
@@ -256,13 +256,37 @@ Number::normalize(
         m /= 10;
         ++exponent_;
     }
-    mantissa_ = m;
-    if ((exponent_ < minExponent) || (mantissa_ < minMantissa))
+    if ((exponent_ < minExponent) || (m < minMantissa))
     {
         mantissa_ = zero.mantissa_;
         exponent_ = zero.exponent_;
         return;
     }
+    // When using the largeRange, "m" needs fit within an int64, even if
+    // the final mantissa_ is going to end up larger to fit within the range.
+    // Cut it down here so that the rounding will be done while it's smaller.
+    //
+    // Example: 9,900,000,000,000,555,555 > 9,223,372,036,854,775,808,
+    //      so "m" will be modified to 990,000,000,000,055,555. Then that value
+    //      will be rounded to 990,000,000,000,055,555 or
+    //      990,000,000,000,055,556, depending on the rounding mode. Finally,
+    //      mantissa_ will be m*10 so it fits within the range, and end up as
+    //      9,900,000,000,000,555,550 or 9,900,000,000,000,555,560.
+    // mantissa() will return mantissa_ / 10, and exponent() will return
+    // exponent_ + 1.
+    if (m > maxRep)
+    {
+        if (exponent_ >= maxExponent)
+            throw std::overflow_error("Number::normalize 1.5");
+        g.push(m % 10);
+        m /= 10;
+        ++exponent_;
+    }
+    XRPL_ASSERT_PARTS(
+        m <= maxRep,
+        "ripple::Number::normalize",
+        "intermediate mantissa fits in int64");
+    mantissa_ = m;
 
     auto r = g.round();
     if (r == 1 || (r == 0 && (mantissa_ & 1) == 1))
@@ -276,6 +300,18 @@ Number::normalize(
     }
     if (exponent_ > maxExponent)
         throw std::overflow_error("Number::normalize 2");
+    if (mantissa_ < minMantissa)
+    {
+        // When using the largeRange, the intermediate "m" needs fit within an
+        // int64, but mantissa_ needs to fit within the minMantissa /
+        // maxMantissa range.
+        mantissa_ *= 10;
+        --exponent_;
+    }
+    XRPL_ASSERT_PARTS(
+        mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
+        "ripple::Number::normalize",
+        "final mantissa fits in range");
 
     if (negative)
         mantissa_ = -mantissa_;
@@ -286,6 +322,29 @@ Number::normalize()
 {
     normalize(
         mantissa_, exponent_, Number::minMantissa(), Number::maxMantissa());
+}
+
+// Copy the number, but set a new exponent. Because the mantissa doesn't change,
+// the result will be "mostly" normalized, but the exponent could go out of
+// range.
+Number
+Number::shiftExponent(int exponentDelta) const
+{
+    XRPL_ASSERT_PARTS(
+        isnormal(), "ripple::Number::shiftExponent", "normalized");
+    auto const newExponent = exponent_ + exponentDelta;
+    if (newExponent >= maxExponent)
+        throw std::overflow_error("Number::shiftExponent");
+    if (newExponent < minExponent)
+    {
+        return Number{};
+    }
+    Number const result{mantissa_, newExponent, unchecked{}};
+    XRPL_ASSERT_PARTS(
+        result.isnormal(),
+        "ripple::Number::shiftExponent",
+        "result is normalized");
+    return result;
 }
 
 Number&
@@ -306,16 +365,16 @@ Number::operator+=(Number const& y)
     XRPL_ASSERT(
         isnormal() && y.isnormal(),
         "ripple::Number::operator+=(Number) : is normal");
-    auto xm = mantissa();
-    auto xe = exponent();
+    auto xm = mantissa_;
+    auto xe = exponent_;
     int xn = 1;
     if (xm < 0)
     {
         xm = -xm;
         xn = -1;
     }
-    auto ym = y.mantissa();
-    auto ye = y.exponent();
+    auto ym = y.mantissa_;
+    auto ye = y.exponent_;
     int yn = 1;
     if (ym < 0)
     {
@@ -407,6 +466,10 @@ Number::operator+=(Number const& y)
     }
     mantissa_ = xm * xn;
     exponent_ = xe;
+    normalize();
+    XRPL_ASSERT(
+        isnormal() || *this == Number{},
+        "ripple::Number::operator+=(Number) : result is normal");
     return *this;
 }
 
@@ -451,16 +514,16 @@ Number::operator*=(Number const& y)
     XRPL_ASSERT(
         isnormal() && y.isnormal(),
         "ripple::Number::operator*=(Number) : is normal");
-    auto xm = mantissa();
-    auto xe = exponent();
+    auto xm = mantissa_;
+    auto xe = exponent_;
     int xn = 1;
     if (xm < 0)
     {
         xm = -xm;
         xn = -1;
     }
-    auto ym = y.mantissa();
-    auto ye = y.exponent();
+    auto ym = y.mantissa_;
+    auto ye = y.exponent_;
     int yn = 1;
     if (ym < 0)
     {
@@ -507,6 +570,7 @@ Number::operator*=(Number const& y)
             std::to_string(xe));
     mantissa_ = xm * zn;
     exponent_ = xe;
+    normalize();
     XRPL_ASSERT(
         isnormal() || *this == Number{},
         "ripple::Number::operator*=(Number) : result is normal");
@@ -521,16 +585,16 @@ Number::operator/=(Number const& y)
     if (*this == Number{})
         return *this;
     int np = 1;
-    auto nm = mantissa();
-    auto ne = exponent();
+    auto nm = mantissa_;
+    auto ne = exponent_;
     if (nm < 0)
     {
         nm = -nm;
         np = -1;
     }
     int dp = 1;
-    auto dm = y.mantissa();
-    auto de = y.exponent();
+    auto dm = y.mantissa_;
+    auto de = y.exponent_;
     if (dm < 0)
     {
         dm = -dm;
@@ -548,7 +612,7 @@ Number::operator/=(Number const& y)
     uint128_t const f =
         small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000ULL;
     XRPL_ASSERT_PARTS(
-        f >= Number::minMantissa() * 10,
+        f >= Number::minMantissa<internalrep>() * 10,
         "Number::operator/=",
         "factor expected size");
 
@@ -649,12 +713,12 @@ to_string(Number const& amount)
     if (amount == Number{})
         return "0";
 
-    auto const exponent = amount.exponent();
+    auto const exponent = amount.exponent_;
 
-    bool const negative = amount.mantissa() < 0;
+    bool const negative = amount.mantissa_ < 0;
 
     auto const mantissa = [&]() {
-        auto mantissa = amount.mantissa();
+        auto mantissa = amount.mantissa_;
         if (negative)
         {
             mantissa = -mantissa;
@@ -806,7 +870,9 @@ root(Number f, unsigned d)
         return di - k2;
     }();
     e += ex;
-    f = Number{f.mantissa(), f.exponent() - e};  // f /= 10^e;
+    f = f.shiftExponent(-e);  // f /= 10^e;
+    XRPL_ASSERT_PARTS(
+        f.isnormal(), "ripple::root(Number, unsigned)", "f is normalized");
     bool neg = false;
     if (f < Number{})
     {
@@ -838,7 +904,12 @@ root(Number f, unsigned d)
     } while (r != rm1 && r != rm2);
 
     //  return r * 10^(e/d) to reverse scaling
-    return Number{r.mantissa(), r.exponent() + e / di};
+    auto const result = r.shiftExponent(e / di);
+    XRPL_ASSERT_PARTS(
+        result.isnormal(),
+        "ripple::root(Number, unsigned)",
+        "result is normalized");
+    return result;
 }
 
 Number
@@ -857,7 +928,8 @@ root2(Number f)
     auto e = f.exponent() + Number::mantissaLog() + 1;
     if (e % 2 != 0)
         ++e;
-    f = Number{f.mantissa(), f.exponent() - e};  // f /= 10^e;
+    f = f.shiftExponent(-e);  // f /= 10^e;
+    XRPL_ASSERT_PARTS(f.isnormal(), "ripple::root2(Number)", "f is normalized");
 
     // Quadratic least squares curve fit of f^(1/d) in the range [0, 1]
     auto const D = 105;
@@ -878,7 +950,11 @@ root2(Number f)
     } while (r != rm1 && r != rm2);
 
     //  return r * 10^(e/2) to reverse scaling
-    return Number{r.mantissa(), r.exponent() + e / 2};
+    auto const result = r.shiftExponent(e / 2);
+    XRPL_ASSERT_PARTS(
+        result.isnormal(), "ripple::root2(Number)", "result is normalized");
+
+    return result;
 }
 
 // Returns f^(n/d)

@@ -1,6 +1,8 @@
 #ifndef XRPL_BASICS_NUMBER_H_INCLUDED
 #define XRPL_BASICS_NUMBER_H_INCLUDED
 
+#include <xrpl/beast/utility/instrumentation.h>
+
 #ifdef _MSC_VER
 #include <boost/multiprecision/cpp_int.hpp>
 #endif
@@ -41,16 +43,17 @@ isPowerOfTen(T value)
 }
 
 #ifdef _MSC_VER
-using numberuint128 = boost::multiprecision::uint128_t;
-using numberint128 = boost::multiprecision::int128_t;
+using numberuint = boost::multiprecision::uint128_t;
+using numberint = boost::multiprecision::int128_t;
 #else   // !defined(_MSC_VER)
-using numberuint128 = __uint128_t;
-using numberint128 = __int128_t;
+using numberuint = __uint128_t;
+using numberint = __int128_t;
 #endif  // !defined(_MSC_VER)
 
 struct MantissaRange
 {
-    using internalrep = numberint128;
+    using rep = std::int64_t;
+    using internalrep = numberint;
     enum mantissa_scale { small, large };
 
     explicit constexpr MantissaRange(mantissa_scale scale_, internalrep min_)
@@ -61,7 +64,7 @@ struct MantissaRange
     {
     }
 
-    internalrep min;
+    rep min;
     internalrep max;
     int log;
     mantissa_scale scale;
@@ -69,11 +72,12 @@ struct MantissaRange
 
 class Number
 {
-    using uint128_t = numberuint128;
-    using int128_t = numberint128;
+    using uint128_t = numberuint;
+    using int128_t = numberint;
 
-    using rep = std::int64_t;
+    using rep = MantissaRange::rep;
     using internalrep = MantissaRange::internalrep;
+
     internalrep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
 
@@ -88,16 +92,27 @@ public:
         explicit unchecked() = default;
     };
 
+    // Like unchecked, normalized is used with the ctors that take an
+    // internalrep mantissa. Unlike unchecked, those ctors will normalize the
+    // value.
+    // Only unit tests are expected to use this class
+    struct normalized
+    {
+        explicit normalized() = default;
+    };
+
     explicit constexpr Number() = default;
 
     Number(rep mantissa);
-    explicit Number(internalrep mantissa, int exponent);
+    explicit Number(rep mantissa, int exponent);
     explicit constexpr Number(
         internalrep mantissa,
         int exponent,
         unchecked) noexcept;
+    // Only unit tests are expected to use this ctor
+    explicit Number(internalrep mantissa, int exponent, normalized);
 
-    constexpr internalrep
+    constexpr rep
     mantissa() const noexcept;
     constexpr int
     exponent() const noexcept;
@@ -125,11 +140,11 @@ public:
     Number&
     operator/=(Number const& x);
 
-    static constexpr Number
+    static Number
     min() noexcept;
-    static constexpr Number
+    static Number
     max() noexcept;
-    static constexpr Number
+    static Number
     lowest() noexcept;
 
     /** Conversions to Number are implicit and conversions away from Number
@@ -231,6 +246,15 @@ public:
         return os << to_string(x);
     }
 
+    friend std::string
+    to_string(Number const& amount);
+
+    friend Number
+    root(Number f, unsigned d);
+
+    friend Number
+    root2(Number f);
+
     // Thread local rounding control.  Default is to_nearest
     enum rounding_mode { to_nearest, towards_zero, downward, upward };
     static rounding_mode
@@ -244,7 +268,8 @@ public:
     static void
     setMantissaScale(MantissaRange::mantissa_scale scale);
 
-    inline static internalrep
+    template <class T = rep>
+    inline static T
     minMantissa()
     {
         return range_.get().min;
@@ -283,21 +308,24 @@ private:
     static thread_local rounding_mode mode_;
     // The available ranges for mantissa
 
+    constexpr static internalrep maxRep =
+        std::numeric_limits<std::int64_t>::max();
+
     constexpr static MantissaRange smallRange{
         MantissaRange::small,
         1'000'000'000'000'000LL};
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
     static_assert(smallRange.log == 15);
-    // maxint64                               9,223,372,036,854,775,808
     constexpr static MantissaRange largeRange{
         MantissaRange::large,
         1'000'000'000'000'000'000LL};
     static_assert(isPowerOfTen(largeRange.min));
+    // maxRep                                   9,223,372,036,854,775,808
     static_assert(largeRange.max == internalrep(9'999'999'999'999'999'999ULL));
     static_assert(largeRange.log == 18);
-    static_assert(largeRange.min < std::numeric_limits<std::int64_t>::max());
-    static_assert(largeRange.max > std::numeric_limits<std::int64_t>::max());
+    static_assert(largeRange.min < maxRep);
+    static_assert(largeRange.max > maxRep);
 
     // The range for the mantissa when normalized.
     // Use reference_wrapper to avoid making copies, and prevent accidentally
@@ -314,8 +342,14 @@ private:
         internalrep const& minMantissa,
         internalrep const& maxMantissa);
 
-    constexpr bool
+    bool
     isnormal() const noexcept;
+
+    // Copy the number, but modify the exponent by "exponentDelta". Because the
+    // mantissa doesn't change, the result will be "mostly" normalized, but the
+    // exponent could go out of range, so it will be checked.
+    Number
+    shiftExponent(int exponentDelta) const;
 
     class Guard;
 };
@@ -328,8 +362,14 @@ inline constexpr Number::Number(
 {
 }
 
-inline Number::Number(internalrep mantissa, int exponent)
-    : mantissa_{mantissa}, exponent_{exponent}
+inline Number::Number(internalrep mantissa, int exponent, normalized)
+    : Number(mantissa, exponent, unchecked{})
+{
+    normalize();
+}
+
+inline Number::Number(rep mantissa, int exponent)
+    : Number(mantissa, exponent, normalized{})
 {
     normalize();
 }
@@ -338,16 +378,36 @@ inline Number::Number(rep mantissa) : Number{mantissa, 0}
 {
 }
 
-inline constexpr Number::internalrep
+inline constexpr Number::rep
 Number::mantissa() const noexcept
 {
-    return mantissa_;
+    auto m = mantissa_;
+    while (m > maxRep)
+    {
+        XRPL_ASSERT_PARTS(
+            !isnormal() || m % 10 == 0,
+            "ripple::Number::mantissa",
+            "large normalized mantissa has no remainder");
+        m /= 10;
+    }
+    return static_cast<Number::rep>(m);
 }
 
 inline constexpr int
 Number::exponent() const noexcept
 {
-    return exponent_;
+    auto m = mantissa_;
+    auto e = exponent_;
+    while (m > maxRep)
+    {
+        XRPL_ASSERT_PARTS(
+            !isnormal() || m % 10 == 0,
+            "ripple::Number::exponent",
+            "large normalized mantissa has no remainder");
+        m /= 10;
+        ++e;
+    }
+    return e;
 }
 
 inline constexpr Number
@@ -432,30 +492,31 @@ operator/(Number const& x, Number const& y)
     return z;
 }
 
-inline constexpr Number
+inline Number
 Number::min() noexcept
 {
     return Number{range_.get().min, minExponent, unchecked{}};
 }
 
-inline constexpr Number
+inline Number
 Number::max() noexcept
 {
     return Number{range_.get().max, maxExponent, unchecked{}};
 }
 
-inline constexpr Number
+inline Number
 Number::lowest() noexcept
 {
     return -Number{range_.get().max, maxExponent, unchecked{}};
 }
 
-inline constexpr bool
+inline bool
 Number::isnormal() const noexcept
 {
     MantissaRange const& range = range_;
     auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
     return range.min <= abs_m && abs_m <= range.max &&
+        (abs_m <= maxRep || abs_m % 10 == 0) &&
         minExponent <= exponent_ && exponent_ <= maxExponent;
 }
 

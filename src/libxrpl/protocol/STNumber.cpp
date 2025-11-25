@@ -50,27 +50,16 @@ STNumber::add(Serializer& s) const
     XRPL_ASSERT(
         getFName().fieldType == getSType(),
         "ripple::STNumber::add : field type match");
-    if (value_.mantissa() <= std::numeric_limits<std::int64_t>::max() &&
-        value_.mantissa() >= std::numeric_limits<std::int64_t>::min())
-    {
-        // If the mantissa fits in the range of std::int64_t, write it directly.
-        // This preserves the maximum available precision.
-        // With the small range, all numbers should be written this way. With
-        // the large range, it's likely that most numbers will be written this
-        // way.
-        s.add64(static_cast<std::int64_t>(value_.mantissa()));
-        s.add32(value_.exponent());
-    }
-    else
-    {
-        constexpr std::int64_t min = 100'000'000'000'000'000LL;
-        constexpr std::int64_t max = min * 10 - 1;
-        static_assert(
-            min < (std::numeric_limits<std::int64_t>::max() - 1 / 10));
-        auto const [mantissa, exponent] = value_.normalizeToRange(min, max);
-        s.add64(mantissa);
-        s.add32(exponent);
-    }
+
+    auto const mantissa = value_.mantissa();
+    auto const exponent = value_.exponent();
+    XRPL_ASSERT_PARTS(
+        mantissa <= std::numeric_limits<std::int64_t>::max() &&
+            mantissa >= std::numeric_limits<std::int64_t>::min(),
+        "ripple::STNumber::add",
+        "mantissa in valid range");
+    s.add64(mantissa);
+    s.add32(exponent);
 }
 
 Number const&
@@ -202,7 +191,7 @@ numberFromJson(SField const& field, Json::Value const& value)
         // Number mantissas are much bigger than the allowable parsed values, so
         // it can't be out of range.
         static_assert(
-            std::numeric_limits<numberint128>::max() >
+            std::numeric_limits<numberint>::max() >=
             std::numeric_limits<decltype(parts.mantissa)>::max());
     }
     else
@@ -210,11 +199,11 @@ numberFromJson(SField const& field, Json::Value const& value)
         Throw<std::runtime_error>("not a number");
     }
 
-    numberint128 mantissa = parts.mantissa;
+    numberint mantissa = parts.mantissa;
     if (parts.negative)
         mantissa = -mantissa;
 
-    return STNumber{field, Number{mantissa, parts.exponent}};
+    return STNumber{field, Number{mantissa, parts.exponent, Number::normalized{}}};
 }
 
 }  // namespace ripple

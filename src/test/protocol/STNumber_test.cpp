@@ -153,9 +153,9 @@ struct STNumber_test : public beast::unit_test::suite
                         STNumber(
                             sfNumber,
                             -Number{
-                                numberint128(9'223'372'036'854'775) * 1000 +
-                                    808,
-                                0}));
+                                numberint(9'223'372'036'854'775) * 1000 + 808,
+                                0,
+                                Number::normalized{}}));
                 }
             }
 
