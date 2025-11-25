@@ -202,7 +202,7 @@ numberFromJson(SField const& field, Json::Value const& value)
         // Number mantissas are much bigger than the allowable parsed values, so
         // it can't be out of range.
         static_assert(
-            std::numeric_limits<numberint128>::max() >
+            std::numeric_limits<numberint>::max() >
             std::numeric_limits<decltype(parts.mantissa)>::max());
     }
     else
@@ -210,7 +210,7 @@ numberFromJson(SField const& field, Json::Value const& value)
         Throw<std::runtime_error>("not a number");
     }
 
-    numberint128 mantissa = parts.mantissa;
+    numberint mantissa = parts.mantissa;
     if (parts.negative)
         mantissa = -mantissa;
 
