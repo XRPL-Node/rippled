@@ -4,10 +4,6 @@ include(default)
 {% set sanitizers = os.getenv("SANITIZERS") %}
 
 [conf]
-{% if sanitizers == "Address" or sanitizers == "Thread" %}
-user.package:sanitizers={{ sanitizers }}
-tools.info.package_id:confs+=["user.package:sanitizers"]
-{% endif %}
 
 {% if compiler == "gcc" %}
 {% set asan_sanitizer_flags = "-fsanitize=address,"~default_sanitizer_flags~" -mcmodel=large -fno-PIC" %}
@@ -40,4 +36,9 @@ tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
 
 {% endif %}
 
+{% endif %}
+
+{% if sanitizers == "Address" or sanitizers == "Thread" %}
+user.package:sanitizers={{ sanitizers }}
+tools.info.package_id:confs+=["user.package:sanitizers", "tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
 {% endif %}
