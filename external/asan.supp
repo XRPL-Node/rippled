@@ -1,4 +1,3 @@
-
 # The idea is to empty this file gradually by fixing the underlying issues and removing suppresions.
 #
 # ASAN_OPTIONS="detect_container_overflow=0:suppressions=external/asan.supp:halt_on_error=0"
@@ -15,7 +14,7 @@ interceptor_name:^external
 # Boost
 interceptor_name:boost/asio
 
-# Leaks in Doctests
+# Leaks in Doctest tests: xrpl.test.*
 interceptor_name:src/libxrpl/net/HTTPClient.cpp
 interceptor_name:src/libxrpl/net/RegisterSSLCerts.cpp
 interceptor_name:src/tests/libxrpl/net/HTTPClient.cpp

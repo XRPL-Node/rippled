@@ -1,3 +1,4 @@
+# The idea is to empty this file gradually by fixing the underlying issues and removing suppresions.
 # Suppress UBSan errors in external code by source file path
 # This matches any source file under the external/ directory
 alignment:external

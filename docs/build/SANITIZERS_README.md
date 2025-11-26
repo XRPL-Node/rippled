@@ -24,11 +24,11 @@ Corresponding suppression files are located in the `external` directory.
 
 ### Summary
 
-Follow the same instructions as mentioned in [BUILD.md](./BUILD.md) but with following changes:
+Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with following changes:
 
 1. Make sure you have clean build directory.
-2. Use `--profile sanitizers` to configure build options to include sanitizer flags. [sanitizes](./conan/profiles/sanitizers) profile contains settings for all sanitizers.
-3. Set ASAN_OPTIONS, LSAN_OPTIONS ,UBSAN_OPTIONS and TSAN_OPTIONS environment variables to configure sanitizer behavior when running executables.
+2. Use `--profile sanitizers` to configure build options to include sanitizer flags. [sanitizes](../../conan/profiles/sanitizers) profile contains settings for all sanitizers.
+3. Set `ASAN_OPTIONS`, `LSAN_OPTIONS` ,`UBSAN_OPTIONS` and `TSAN_OPTIONS` environment variables to configure sanitizer behavior when running executables.
 
 ---
 
@@ -47,7 +47,7 @@ SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --bui
 # To build with Thread+UndefinedBehavior Sanitizer, replace `SANITIZERS=Address` with `SANITIZERS=Thread`.
 
 # Configure CMake
-cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dwerr=ON -Dxrpld=ON -Dwextra=ON
+cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON
 
 # Build
 cmake --build . --parallel 4
@@ -65,7 +65,7 @@ cd .build
 SANITIZERS=Thread conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
 
 # Configure CMake
-cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dwerr=ON -Dxrpld=ON -Dwextra=ON -DCMAKE_BUILD_TYPE=Release
+cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON -DCMAKE_BUILD_TYPE=Release
 
 # Build
 cmake --build . --parallel 4
@@ -146,30 +146,6 @@ export ASAN_OPTIONS="detect_leaks=0"
 - **Purpose**: Compile-time ignorelist for all sanitizers
 - **Usage**: Passed via `-fsanitize-ignorelist=absolute/path/to/sanitizer-ignorelist.txt`
 - **Format**: `<level>:<pattern>` (e.g., `src:Workers.cpp`)
-
-## Known False Positives
-
-### ASan False Positives (Cannot be suppressed at runtime)
-
-1. **Container-overflow in Boost intrusive containers**
-   - **Files**: `slist_iterator.hpp`, `hashtable.hpp`, `aged_unordered_container.h`
-   - **Cause**: ASan's container overflow detection doesn't understand Boost's intrusive containers
-   - **Solution**: Use `detect_container_overflow=0`
-   - **Reference**: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow
-
-### UBSan Intentional Overflows (Suppressed in ubsan.supp)
-
-1. **Protobuf hash functions** (`stringpiece.h:393`)
-   - Intentional unsigned overflow for hash computation
-
-2. **gRPC timer calculations** (`timer_manager.cc`)
-   - Intentional overflow in timer math
-
-3. **Standard library** (`__random/seed_seq.h`, `__charconv/traits.h`)
-   - Intentional overflows in RNG and character conversion
-
-4. **Rippled STAmount** (`protocol/STAmount.cpp:289`)
-   - Intentional negation of INT64_MIN
 
 ## Troubleshooting
 
