@@ -38,7 +38,4 @@ tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
 
 {% endif %}
 
-{% if sanitizers == "Address" or sanitizers == "Thread" %}
-user.package:sanitizers={{ sanitizers }}
-tools.info.package_id:confs+=["user.package:sanitizers", "tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
-{% endif %}
+tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]

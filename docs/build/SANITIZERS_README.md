@@ -1,7 +1,7 @@
 # Sanitizer Configuration for Rippled
 
 This document explains how to properly configure and run sanitizers (AddressSanitizer, UndefinedBehaviorSanitizer, ThreadSanitizer) with the rippled project.
-Corresponding suppression files are located in the `external` directory.
+Corresponding suppression files are located in the `sanitizers/suppressions` directory.
 
 - [Sanitizer Configuration for Rippled](#sanitizer-configuration-for-rippled)
   - [Building with Sanitizers](#building-with-sanitizers)
@@ -12,11 +12,11 @@ Corresponding suppression files are located in the `external` directory.
   - [ThreadSanitizer (TSan)](#threadsanitizer-tsan)
   - [LeakSanitizer (LSan)](#leaksanitizer-lsan)
 - [Suppression Files](#suppression-files)
-  - [external/asan.supp](#externalasansupp)
-  - [external/lsan.supp](#externallsansupp)
-  - [external/ubsan.supp](#externalubsansupp)
-  - [external/tsan.supp](#externaltsansupp)
-- [Ignorelist](#externalsanitizer-ignorelisttxt)
+  - [asan.supp](#asansupp)
+  - [lsan.supp](#lsansupp)
+  - [ubsan.supp](#ubsansupp)
+  - [tsan.supp](#tsansupp)
+  - [Ignorelist](#sanitizer-ignorelisttxt)
 - [Known False Positives](#known-false-positives)
 - [References](#references)
 
@@ -112,7 +112,7 @@ export ASAN_OPTIONS="detect_leaks=0"
 
 ## Suppression Files
 
-### `external/asan.supp`
+### `asan.supp`
 
 - **Purpose**: Suppress AddressSanitizer (ASan) errors only
 - **Format**: `interceptor_name:<pattern>` where pattern matches file names. Supported suppression types are:
@@ -123,25 +123,25 @@ export ASAN_OPTIONS="detect_leaks=0"
 - **More info**: [AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer)
 - **Note**: Cannot suppress stack-buffer-overflow, container-overflow, etc.
 
-### `external/lsan.supp`
+### `lsan.supp`
 
 - **Purpose**: Suppress LeakSanitizer (LSan) errors only
 - **Format**: `leak:<pattern>` where pattern matches function/file names
 - **More info**: [LeakSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer)
 
-### `external/ubsan.supp`
+### `ubsan.supp`
 
 - **Purpose**: Suppress UndefinedBehaviorSanitizer errors
 - **Format**: `<error_type>:<pattern>` (e.g., `unsigned-integer-overflow:protobuf`)
-- **Covers**: Intentional overflows in external libraries (protobuf, gRPC, stdlib)
+- **Covers**: Intentional overflows in sanitizers/suppressions libraries (protobuf, gRPC, stdlib)
 
-### `external/tsan.supp`
+### `tsan.supp`
 
 - **Purpose**: Suppress ThreadSanitizer data race warnings
 - **Format**: `race:<pattern>` where pattern matches function/file names
 - **More info**: [ThreadSanitizerSuppressions](https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions)
 
-### `external/sanitizer-ignorelist.txt`
+### `sanitizer-ignorelist.txt`
 
 - **Purpose**: Compile-time ignorelist for all sanitizers
 - **Usage**: Passed via `-fsanitize-ignorelist=absolute/path/to/sanitizer-ignorelist.txt`
