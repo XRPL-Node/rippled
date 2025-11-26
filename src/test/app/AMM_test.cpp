@@ -31,7 +31,7 @@ namespace test {
 struct AMM_test : public jtx::AMMTest
 {
     // Use small Number mantissas for the life of this test.
-    NumberMantissaScaleGuard sg_{ripple::MantissaRange::small};
+    NumberMantissaScaleGuard const sg_{ripple::MantissaRange::small};
 
 private:
     void

@@ -26,6 +26,9 @@ namespace test {
  */
 struct AMMExtended_test : public jtx::AMMTest
 {
+    // Use small Number mantissas for the life of this test.
+    NumberMantissaScaleGuard const sg_{ripple::MantissaRange::small};
+
 private:
     void
     testRmFundedOffer(FeatureBitset features)
@@ -42,6 +45,11 @@ private:
         // funded and not used for the payment.
 
         using namespace jtx;
+        // For now, just disable SAV entirely, which locks in the small Number
+        // mantissas
+        features =
+            features - featureSingleAssetVault /* - featureLendingProtocol */;
+
         Env env{*this, features};
 
         fund(
