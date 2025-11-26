@@ -52,6 +52,7 @@ using numberint = __int128_t;
 
 struct MantissaRange
 {
+    using rep = std::int64_t;
     using internalrep = numberint;
     enum mantissa_scale { small, large };
 
@@ -63,7 +64,7 @@ struct MantissaRange
     {
     }
 
-    internalrep min;
+    rep min;
     internalrep max;
     int log;
     mantissa_scale scale;
@@ -74,11 +75,9 @@ class Number
     using uint128_t = numberuint;
     using int128_t = numberint;
 
-public:
-    using rep = std::int64_t;
+    using rep = MantissaRange::rep;
     using internalrep = MantissaRange::internalrep;
 
-private:
     internalrep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
 
@@ -93,11 +92,25 @@ public:
         explicit unchecked() = default;
     };
 
+    // Like unchecked, normalized is used with the ctors that take an
+    // internalrep mantissa. Unlike unchecked, those ctors will normalize the
+    // value.
+    // Only unit tests are expected to use this class
+    struct normalized
+    {
+        explicit normalized() = default;
+    };
+
     explicit constexpr Number() = default;
 
     Number(rep mantissa);
-    explicit Number(internalrep mantissa, int exponent);
-    explicit constexpr Number(internalrep mantissa, int exponent, unchecked) noexcept;
+    explicit Number(rep mantissa, int exponent);
+    explicit constexpr Number(
+        internalrep mantissa,
+        int exponent,
+        unchecked) noexcept;
+    // Only unit tests are expected to use this ctor
+    explicit Number(internalrep mantissa, int exponent, normalized);
 
     constexpr rep
     mantissa() const noexcept;
@@ -255,7 +268,8 @@ public:
     static void
     setMantissaScale(MantissaRange::mantissa_scale scale);
 
-    inline static internalrep
+    template <class T = rep>
+    inline static T
     minMantissa()
     {
         return range_.get().min;
@@ -331,16 +345,31 @@ private:
     bool
     isnormal() const noexcept;
 
+    // Copy the number, but modify the exponent by "exponentDelta". Because the
+    // mantissa doesn't change, the result will be "mostly" normalized, but the
+    // exponent could go out of range, so it will be checked.
+    Number
+    shiftExponent(int exponentDelta) const;
+
     class Guard;
 };
 
-inline constexpr Number::Number(internalrep mantissa, int exponent, unchecked) noexcept
+inline constexpr Number::Number(
+    internalrep mantissa,
+    int exponent,
+    unchecked) noexcept
     : mantissa_{mantissa}, exponent_{exponent}
 {
 }
 
-inline Number::Number(internalrep mantissa, int exponent)
-    : mantissa_{mantissa}, exponent_{exponent}
+inline Number::Number(internalrep mantissa, int exponent, normalized)
+    : Number(mantissa, exponent, unchecked{})
+{
+    normalize();
+}
+
+inline Number::Number(rep mantissa, int exponent)
+    : Number(mantissa, exponent, normalized{})
 {
     normalize();
 }
@@ -349,35 +378,36 @@ inline Number::Number(rep mantissa) : Number{mantissa, 0}
 {
 }
 
-inline
-constexpr Number::rep
+inline constexpr Number::rep
 Number::mantissa() const noexcept
 {
     auto m = mantissa_;
-    if (m > maxRep)
+    while (m > maxRep)
     {
         XRPL_ASSERT_PARTS(
-            m % 10 == 0,
+            !isnormal() || m % 10 == 0,
             "ripple::Number::mantissa",
-            "large mantissa has no remainder");
+            "large normalized mantissa has no remainder");
         m /= 10;
     }
     return static_cast<Number::rep>(m);
 }
 
-inline
-constexpr int
+inline constexpr int
 Number::exponent() const noexcept
 {
-    if (mantissa_ > maxRep)
+    auto m = mantissa_;
+    auto e = exponent_;
+    while (m > maxRep)
     {
         XRPL_ASSERT_PARTS(
-            mantissa_ % 10 == 0,
+            !isnormal() || m % 10 == 0,
             "ripple::Number::exponent",
-            "large mantissa has no remainder");
-        return exponent_ + 1;
+            "large normalized mantissa has no remainder");
+        m /= 10;
+        ++e;
     }
-    return exponent_;
+    return e;
 }
 
 inline constexpr Number
@@ -486,6 +516,7 @@ Number::isnormal() const noexcept
     MantissaRange const& range = range_;
     auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
     return range.min <= abs_m && abs_m <= range.max &&
+        (abs_m <= maxRep || abs_m % 10 == 0) &&
         minExponent <= exponent_ && exponent_ <= maxExponent;
 }
 
