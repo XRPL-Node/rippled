@@ -1302,7 +1302,7 @@ public:
                     NumberRoundModeGuard mg(Number::towards_zero);
 
                     auto const maxMantissa = Number::maxMantissa();
-                    BEAST_EXPECT(maxMantissa == 9'999'999'999'999'999'999);
+                    BEAST_EXPECT(maxMantissa == 9'999'999'999'999'999'999ULL);
                     test(
                         Number{maxMantissa, 0, Number::normalized{}},
                         "9999999999999999990");
