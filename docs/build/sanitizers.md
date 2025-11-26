@@ -32,40 +32,38 @@ Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with
 
 ---
 
-### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
+### Build steps:
 
 ```bash
-cd /path/to/rippled
-rm -rf .build
-mkdir .build
-cd .build
-
-# Build with AddressSanitizer. This also builds rippled with UndefinedBehavior sanitizer.
-SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
-# Use `--profile:all sanitizers` if you would like to build all dependencies and libraries (boost etc.) with sanitizers. This might take long time but you won't see some false-positives on sanitizer reports since whole binary will be instrumented.
-
-# To build with Thread+UndefinedBehavior Sanitizer, replace `SANITIZERS=Address` with `SANITIZERS=Thread`.
-
-# Configure CMake
-cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON
-
-# Build
-cmake --build . --parallel 4
+  cd /path/to/rippled
+  rm -rf .build
+  mkdir .build
+  cd .build
 ```
 
-### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
+#### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
+
+Build with AddressSanitizer. This also builds rippled with UndefinedBehavior sanitizer.
 
 ```bash
-cd /path/to/rippled
-rm -rf .build
-mkdir .build
-cd .build
+SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+```
 
+#### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
+
+```bash
 # Build dependencies with Thread sanitizer
 SANITIZERS=Thread conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+```
+
+Use `--profile:all sanitizers` if you would like to build all dependencies and libraries (boost etc.) with sanitizers. This might take long time but you won't see some false-positives on sanitizer reports since whole binary will be instrumented.
+
+To build with Thread+UndefinedBehavior Sanitizer, replace `SANITIZERS=Address` with `SANITIZERS=Thread`.
 
 # Configure CMake
-cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON -DCMAKE_BUILD_TYPE=Release
+
+```bash
+cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON
 
 # Build
 cmake --build . --parallel 4
