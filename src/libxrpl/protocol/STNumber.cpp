@@ -191,7 +191,7 @@ numberFromJson(SField const& field, Json::Value const& value)
         // Number mantissas are much bigger than the allowable parsed values, so
         // it can't be out of range.
         static_assert(
-            std::numeric_limits<numberint>::max() >=
+            std::numeric_limits<std::uint64_t>::max() >=
             std::numeric_limits<decltype(parts.mantissa)>::max());
     }
     else
@@ -199,11 +199,13 @@ numberFromJson(SField const& field, Json::Value const& value)
         Throw<std::runtime_error>("not a number");
     }
 
-    numberint mantissa = parts.mantissa;
-    if (parts.negative)
-        mantissa = -mantissa;
-
-    return STNumber{field, Number{mantissa, parts.exponent, Number::normalized{}}};
+    return STNumber{
+        field,
+        Number{
+            parts.negative,
+            parts.mantissa,
+            parts.exponent,
+            Number::normalized{}}};
 }
 
 }  // namespace ripple

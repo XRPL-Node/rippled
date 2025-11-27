@@ -152,8 +152,9 @@ struct STNumber_test : public beast::unit_test::suite
                         numberFromJson(sfNumber, minInt) ==
                         STNumber(
                             sfNumber,
-                            -Number{
-                                numberint(9'223'372'036'854'775) * 1000 + 808,
+                            Number{
+                                true,
+                                9'223'372'036'854'775'808ULL,
                                 0,
                                 Number::normalized{}}));
                 }
