@@ -203,7 +203,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
 
         # We skip all clang 20+ on arm64 due to Boost build error.
         if (
-            f'{os["compiler_name"]}-{os["compiler_version"]}'
+            f"{os['compiler_name']}-{os['compiler_version']}"
             in ["clang-20", "clang-21"]
             and architecture["platform"] == "linux/arm64"
         ):
