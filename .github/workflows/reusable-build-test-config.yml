@@ -54,7 +54,7 @@ on:
         description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
         required: false
         type: string
-        default: "None"
+        default: ""
 
     secrets:
       CODECOV_TOKEN:

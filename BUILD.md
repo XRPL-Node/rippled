@@ -373,7 +373,7 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    Command: `conan cache clean "*"`
 
    ```
-   SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Debug
+   SANITIZERS=Address conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
    ```
 
    Available options for SANITIZERS: `Address` and `Thread`

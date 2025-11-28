@@ -247,17 +247,33 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             "gcc-15",
             "clang-20",
         }:
-            addSanitizerConfigs(
-                architecture,
-                os,
-                build_type,
-                cmake_args,
-                config_name,
-                build_only,
-                cmake_target,
-                cxx_flags,
-                configurations,
-            )
+            configs = addSanitizerConfigs(architecture, os, cmake_args, cxx_flags)
+            if "asan_ubsan" in configs:
+                configurations.append(
+                    {
+                        "config_name": config_name + "asan_ubsan",
+                        "cmake_args": configs["asan_ubsan"],
+                        "cmake_target": cmake_target,
+                        "build_only": build_only,
+                        "build_type": build_type,
+                        "os": os,
+                        "architecture": architecture,
+                        "sanitizers": "Address",
+                    }
+                )
+            if "tsan_ubsan" in configs:
+                configurations.append(
+                    {
+                        "config_name": config_name + "tsan_ubsan",
+                        "cmake_args": configs["tsan_ubsan"],
+                        "cmake_target": cmake_target,
+                        "build_only": build_only,
+                        "build_type": build_type,
+                        "os": os,
+                        "architecture": architecture,
+                        "sanitizers": "Thread",
+                    }
+                )
         else:
             if cxx_flags:
                 cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS={cxx_flags}"
@@ -281,14 +297,9 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
 def addSanitizerConfigs(
     architecture: dict,
     os: dict,
-    build_type: str,
     cmake_args: str,
-    config_name: str,
-    build_only: bool,
-    cmake_target: str,
     cxx_flags: str,
-    configurations: list[dict],
-):
+) -> dict:
     extra_warning_flags = ""
     linker_relocation_flags = ""
     linker_flags = ""
@@ -336,19 +347,10 @@ def addSanitizerConfigs(
     # First create config for asan
     cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
-    # Add config with asan
-    configurations.append(
-        {
-            "config_name": config_name + "_asan",
-            "cmake_args": cmake_args_flags,
-            "cmake_target": cmake_target,
-            "build_only": build_only,
-            "build_type": build_type,
-            "os": os,
-            "architecture": architecture,
-            "sanitizers": "Address",
-        }
-    )
+    # Add config with asan+ubsan
+    configs = {}
+    configs["asan_ubsan"] = cmake_args_flags
+
     # Since TSAN runs are crashing with seg faults(could be compatibility issues with latest compilers)
     # We deactivate it for now. But I would keep the code, since it took some effort to find the correct set of config needed to run this.
     # This will be useful when we decide to activate it again in future.
@@ -377,18 +379,10 @@ def addSanitizerConfigs(
 
         cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS='-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}' {linker_flags}"
 
-        configurations.append(
-            {
-                "config_name": config_name + "_tsan",
-                "cmake_args": cmake_args_flags,
-                "cmake_target": cmake_target,
-                "build_only": build_only,
-                "build_type": build_type,
-                "os": os,
-                "architecture": architecture,
-                "sanitizers": "Thread",
-            }
-        )
+        # Add config with tsan+ubsan
+        configs["tsan_ubsan"] = cmake_args_flags
+
+    return configs
 
 
 def read_config(file: Path) -> Config:
