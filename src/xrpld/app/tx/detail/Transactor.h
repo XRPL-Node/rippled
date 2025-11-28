@@ -230,9 +230,6 @@ public:
         uint256 const& ticketIndex,
         beast::Journal j);
 
-    static bool
-    useOldNumberRules(TxType txType);
-
 protected:
     TER
     apply();

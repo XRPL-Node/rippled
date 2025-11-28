@@ -592,24 +592,6 @@ Transactor::ticketDelete(
     return tesSUCCESS;
 }
 
-bool
-Transactor::useOldNumberRules(TxType txType)
-{
-    constexpr auto skipTransactions = std::to_array<TxType>(
-        {ttAMM_BID,
-         ttAMM_CLAWBACK,
-         ttAMM_CREATE,
-         ttAMM_DELETE,
-         ttAMM_DEPOSIT,
-         ttAMM_VOTE,
-         ttAMM_WITHDRAW});
-
-    return std::find(
-               std::begin(skipTransactions),
-               std::end(skipTransactions),
-               txType) != std::end(skipTransactions);
-}
-
 // check stuff before you bother to lock the ledger
 void
 Transactor::preCompute()
@@ -1132,8 +1114,6 @@ Transactor::operator()()
     // fixUniversalNumber predate the rulesGuard and should be replaced.
     NumberSO stNumberSO{view().rules().enabled(fixUniversalNumber)};
     CurrentTransactionRulesGuard currentTransctionRulesGuard(view().rules());
-    if (Transactor::useOldNumberRules(ctx_.tx.getTxnType()))
-        Number::setMantissaScale(MantissaRange::small);
 
 #ifdef DEBUG
     {

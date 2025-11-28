@@ -51,15 +51,19 @@ with_txn_type(Rules const& rules, TxType txnType, F&& f)
     //
     std::optional<NumberSO> stNumberSO;
     std::optional<CurrentTransactionRulesGuard> rulesGuard;
+    std::optional<NumberMantissaScaleGuard> mantissaScaleGuard;
     if (rules.enabled(featureSingleAssetVault) /*|| rules.enabled(featureLendingProtocol)*/)
     {
         // raii classes for the current ledger rules.
-        // fixUniversalNumber predate the rulesGuard and should be replaced.
+        // fixUniversalNumber predates the rulesGuard and should be replaced.
         stNumberSO.emplace(rules.enabled(fixUniversalNumber));
         rulesGuard.emplace(rules);
     }
-    if (Transactor::useOldNumberRules(txnType))
-        Number::setMantissaScale(MantissaRange::small);
+    else
+    {
+        // Without those features enabled, always use the old number rules.
+        mantissaScaleGuard.emplace(MantissaRange::small);
+    }
 
     switch (txnType)
     {
