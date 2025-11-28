@@ -51,7 +51,7 @@ on:
         default: 2
 
       sanitizers:
-        description: "The sanitizers to enable ('Address+UndefinedBehaviour' or 'Thread+UndefinedBehaviour')."
+        description: "The sanitizers to enable ('Address+UndefinedBehavior' or 'Thread+UndefinedBehavior')."
         required: false
         type: string
         default: ""

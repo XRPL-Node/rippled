@@ -367,15 +367,18 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    conan install .. --output-folder . --build missing --settings build_type=Debug
    ```
 
-   If you would like to activate `asan+ubsan`(`Address`) or `tsan+ubsan`(`Thread`) for the build,
-   declare an environment variable as follows and use the `sanitizers`
+   If you would like to activate `asan`(`Address`) or `tsan`(`Thread`) or `ubsan`(`UndefinedBehavior`) for the build,
+   declare an environment variable as follows(with values: `Address`, `Thread`, `UndefinedBehavior`) and use the `sanitizers`
    profile in the `conan install` command.
 
    ```
    SANITIZERS=Address conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+   # or if you want asan+ubsan
+   SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
    ```
 
-   Available options for SANITIZERS: `Address` and `Thread`
+   Note: Do not mix Address and Thread, that's incompatible.
+
    More details here: [sanitizers](./docs/build/sanitizers.md)
 
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`

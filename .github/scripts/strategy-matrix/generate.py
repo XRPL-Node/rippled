@@ -258,7 +258,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                         "build_type": build_type,
                         "os": os,
                         "architecture": architecture,
-                        "sanitizers": "Address",
+                        "sanitizers": "Address,UndefinedBehavior",
                     }
                 )
             if "tsan_ubsan" in configs:
@@ -271,7 +271,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                         "build_type": build_type,
                         "os": os,
                         "architecture": architecture,
-                        "sanitizers": "Thread",
+                        "sanitizers": "Thread,UndefinedBehavior",
                     }
                 )
         else:

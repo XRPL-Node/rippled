@@ -7,6 +7,7 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
   - [Building with Sanitizers](#building-with-sanitizers)
     - [AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)](#addresssanitizer-asan--undefinedbehaviorsanitizer-ubsan)
     - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan)
+    - [Just UndefinedBehaviorSanitizer (UBSan)](#just-undefinedbehaviorsanitizer-ubsan)
 - [Running Tests with Sanitizers](#running-tests-with-sanitizers)
   - [AddressSanitizer (ASan)](#addresssanitizer-asan)
   - [ThreadSanitizer (TSan)](#threadsanitizer-tsan)
@@ -43,17 +44,24 @@ Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with
 
 #### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
 
-Build with AddressSanitizer. This also builds rippled with UndefinedBehavior sanitizer.
+Build with AddressSanitizer+UndefinedBehavior sanitizers (or you can choose just one of them).
 
 ```bash
-SANITIZERS=Address conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
 ```
 
 #### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
 # Build dependencies with Thread sanitizer
-SANITIZERS=Thread conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+SANITIZERS=Thread,UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+```
+
+#### Just UndefinedBehaviorSanitizer (UBSan)
+
+```bash
+# Build dependencies with Thread sanitizer
+SANITIZERS=UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
 ```
 
 Use `--profile:all sanitizers` if you would like to build all dependencies and libraries (boost etc.) with sanitizers. This might take long time but you won't see some false-positives on sanitizer reports since whole binary will be instrumented.
