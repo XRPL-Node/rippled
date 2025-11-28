@@ -275,14 +275,10 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     }
                 )
         else:
-            if cxx_flags:
-                cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS={cxx_flags}"
-            else:
-                cmake_args_flags = f"{cmake_args}"
             configurations.append(
                 {
                     "config_name": config_name,
-                    "cmake_args": cmake_args_flags,
+                    "cmake_args": cmake_args,
                     "cmake_target": cmake_target,
                     "build_only": build_only,
                     "build_type": build_type,
