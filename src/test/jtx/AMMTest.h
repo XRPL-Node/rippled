@@ -71,6 +71,15 @@ protected:
 public:
     AMMTestBase();
 
+    static FeatureBitset
+    testable_amendments()
+    {
+        // For now, just disable SAV entirely, which locks in the small Number
+        // mantissas
+        return jtx::testable_amendments() -
+            featureSingleAssetVault /* - featureLendingProtocol */;
+    }
+
 protected:
     /** testAMM() funds 30,000XRP and 30,000IOU
      * for each non-XRP asset to Alice and Carol

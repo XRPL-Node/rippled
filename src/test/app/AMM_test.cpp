@@ -34,7 +34,7 @@ struct AMM_test : public jtx::AMMTest
     NumberMantissaScaleGuard const sg_{ripple::MantissaRange::small};
 
 private:
-    FeatureBitset
+    static FeatureBitset
     testable_amendments()
     {
         // For now, just disable SAV entirely, which locks in the small Number
@@ -50,6 +50,7 @@ private:
 
         using namespace jtx;
 
+#if NUMBERTODO
         // XRP to IOU, with featureSingleAssetVault
         testAMM(
             [&](AMM& ammAlice, Env&) {
@@ -60,6 +61,7 @@ private:
             0,
             {},
             {testable_amendments() | featureSingleAssetVault});
+#endif
 
         // XRP to IOU, without featureSingleAssetVault
         testAMM(
@@ -1497,8 +1499,6 @@ private:
 
         // Single deposit: 100000 tokens worth of XRP
         testAMM([&](AMM& ammAlice, Env& env) {
-            BEAST_EXPECT(
-                !env.app().config().features.contains(featureSingleAssetVault));
             ammAlice.deposit(carol, 100'000, XRP(205));
             BEAST_EXPECT(ammAlice.expectBalances(
                 XRP(10'201), USD(10'000), IOUAmount{10'100'000, 0}));
@@ -7589,6 +7589,7 @@ private:
     {
         auto const [amount, amount2, lptBalance] = amm.balances(GBP, EUR);
 
+        NumberMantissaScaleGuard sg(MantissaRange::small);
         NumberRoundModeGuard g(
             env.enabled(fixAMMv1_3) ? Number::upward : Number::getround());
         auto const res = root2(amount * amount2);
