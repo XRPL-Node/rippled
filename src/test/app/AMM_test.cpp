@@ -34,6 +34,15 @@ struct AMM_test : public jtx::AMMTest
     NumberMantissaScaleGuard const sg_{ripple::MantissaRange::small};
 
 private:
+    FeatureBitset
+    testable_amendments()
+    {
+        // For now, just disable SAV entirely, which locks in the small Number
+        // mantissas
+        return jtx::testable_amendments() -
+            featureSingleAssetVault /* - featureLendingProtocol */;
+    }
+
     void
     testInstanceCreate()
     {
@@ -1368,8 +1377,8 @@ private:
     {
         testcase("Deposit");
 
-        using namespace jtx;
         auto const all = testable_amendments();
+        using namespace jtx;
 
         // Equal deposit: 1000000 tokens, 10% of the current pool
         testAMM([&](AMM& ammAlice, Env& env) {
@@ -1487,7 +1496,9 @@ private:
         });
 
         // Single deposit: 100000 tokens worth of XRP
-        testAMM([&](AMM& ammAlice, Env&) {
+        testAMM([&](AMM& ammAlice, Env& env) {
+            BEAST_EXPECT(
+                !env.app().config().features.contains(featureSingleAssetVault));
             ammAlice.deposit(carol, 100'000, XRP(205));
             BEAST_EXPECT(ammAlice.expectBalances(
                 XRP(10'201), USD(10'000), IOUAmount{10'100'000, 0}));
@@ -1668,8 +1679,8 @@ private:
     {
         testcase("Invalid Withdraw");
 
-        using namespace jtx;
         auto const all = testable_amendments();
+        using namespace jtx;
 
         testAMM(
             [&](AMM& ammAlice, Env& env) {
@@ -2248,8 +2259,8 @@ private:
     {
         testcase("Withdraw");
 
-        using namespace jtx;
         auto const all = testable_amendments();
+        using namespace jtx;
 
         // Equal withdrawal by Carol: 1000000 of tokens, 10% of the current
         // pool
@@ -2669,8 +2680,8 @@ private:
     testFeeVote()
     {
         testcase("Fee Vote");
-        using namespace jtx;
         auto const all = testable_amendments();
+        using namespace jtx;
 
         // One vote sets fee to 1%.
         testAMM([&](AMM& ammAlice, Env& env) {
@@ -4846,12 +4857,12 @@ private:
     testAmendment()
     {
         testcase("Amendment");
-        using namespace jtx;
         FeatureBitset const all{testable_amendments()};
         FeatureBitset const noAMM{all - featureAMM};
         FeatureBitset const noNumber{all - fixUniversalNumber};
         FeatureBitset const noAMMAndNumber{
             all - featureAMM - fixUniversalNumber};
+        using namespace jtx;
 
         for (auto const& feature : {noAMM, noNumber, noAMMAndNumber})
         {
@@ -7037,7 +7048,7 @@ private:
             {{xrpPool, iouPool}},
             889,
             std::nullopt,
-            {jtx::testable_amendments() | fixAMMv1_1});
+            {testable_amendments() | fixAMMv1_1});
     }
 
     void
@@ -7892,7 +7903,7 @@ private:
     void
     run() override
     {
-        FeatureBitset const all{jtx::testable_amendments()};
+        FeatureBitset const all{testable_amendments()};
         testInvalidInstance();
         testInstanceCreate();
         testInvalidDeposit(all);

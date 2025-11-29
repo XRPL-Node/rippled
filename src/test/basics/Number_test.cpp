@@ -81,6 +81,7 @@ public:
         caught = false;
         try
         {
+            [[maybe_unused]]
             Number q =
                 Number{false, minMantissa, 32767, Number::normalized{}} * 100;
         }
