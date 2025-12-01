@@ -1,5 +1,5 @@
 #include <xrpl/basics/Number.h>
-//
+// Keep Number.h first to ensure it can build without hidden dependencies
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -21,17 +21,6 @@ using uint128_t = boost::multiprecision::uint128_t;
 #else   // !defined(_MSC_VER)
 using uint128_t = __uint128_t;
 #endif  // !defined(_MSC_VER)
-// static_assert(std::is_same_v<uint128_t, ripple::numberuint>);
-//
-// namespace std {
-//
-// template <>
-// struct make_unsigned<ripple::numberint>
-//{
-//     using type = uint128_t;
-// };
-//
-// }  // namespace std
 
 namespace ripple {
 
@@ -228,6 +217,7 @@ Number::one()
 }
 
 // Use the member names in this static function for now so the diff is cleaner
+// TODO: Rename the function parameters to get rid of the "_" suffix
 template <class T>
 void
 Number::normalize(
@@ -273,12 +263,12 @@ Number::normalize(
     // the final mantissa_ is going to end up larger to fit within the range.
     // Cut it down here so that the rounding will be done while it's smaller.
     //
-    // Example: 9,900,000,000,000,555,555 > 9,223,372,036,854,775,808,
-    //      so "m" will be modified to 990,000,000,000,055,555. Then that value
-    //      will be rounded to 990,000,000,000,055,555 or
-    //      990,000,000,000,055,556, depending on the rounding mode. Finally,
+    // Example: 9,900,000,000,000,123,456 > 9,223,372,036,854,775,808,
+    //      so "m" will be modified to 990,000,000,000,012,345. Then that value
+    //      will be rounded to 990,000,000,000,012,345 or
+    //      990,000,000,000,012,346, depending on the rounding mode. Finally,
     //      mantissa_ will be m*10 so it fits within the range, and end up as
-    //      9,900,000,000,000,555,550 or 9,900,000,000,000,555,560.
+    //      9,900,000,000,000,123,450 or 9,900,000,000,000,123,460.
     // mantissa() will return mantissa_ / 10, and exponent() will return
     // exponent_ + 1.
     if (m > maxRep)
@@ -324,12 +314,8 @@ Number::normalize(
 void
 Number::normalize()
 {
-    normalize(
-        negative_,
-        mantissa_,
-        exponent_,
-        Number::minMantissa(),
-        Number::maxMantissa());
+    auto const& range = range_.get();
+    normalize(negative_, mantissa_, exponent_, range.min, range.max);
 }
 
 // Copy the number, but set a new exponent. Because the mantissa doesn't change,
@@ -413,12 +399,12 @@ Number::operator+=(Number const& y)
         } while (xe > ye);
     }
 
-    auto const minMantissa = Number::minMantissa();
+    auto const& range = range_.get();
+    auto const& minMantissa = range.min;
+    auto const& maxMantissa = range.max;
 
     if (xn == yn)
     {
-        auto const maxMantissa = Number::maxMantissa();
-
         xm += ym;
         if (xm > maxMantissa || xm > maxRep)
         {
@@ -555,8 +541,9 @@ Number::operator*=(Number const& y)
     if (zn)
         g.set_negative();
 
-    auto const minMantissa = Number::minMantissa();
-    auto const maxMantissa = Number::maxMantissa();
+    auto const& range = range_.get();
+    auto const& minMantissa = range.min;
+    auto const& maxMantissa = range.max;
 
     while (zm > maxMantissa || zm > maxRep)
     {
@@ -628,6 +615,10 @@ Number::operator/=(Number const& y)
     auto dm = y.mantissa_;
     auto de = y.exponent_;
 
+    auto const& range = range_.get();
+    auto const& minMantissa = range.min;
+    auto const& maxMantissa = range.max;
+
     // Shift by 10^17 gives greatest precision while not overflowing
     // uint128_t or the cast back to int64_t
     // TODO: Can/should this be made bigger for largeRange?
@@ -640,9 +631,7 @@ Number::operator/=(Number const& y)
     uint128_t const f =
         small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000ULL;
     XRPL_ASSERT_PARTS(
-        f >= Number::minMantissa() * 10,
-        "Number::operator/=",
-        "factor expected size");
+        f >= minMantissa * 10, "Number::operator/=", "factor expected size");
 
     // unsigned denominator
     auto const dmu = static_cast<uint128_t>(dm);
@@ -689,7 +678,7 @@ Number::operator/=(Number const& y)
             ze -= 3;
         }
     }
-    normalize(zn, zm, ze, minMantissa(), maxMantissa());
+    normalize(zn, zm, ze, minMantissa, maxMantissa);
     negative_ = zn;
     mantissa_ = static_cast<internalrep>(zm);
     exponent_ = ze;

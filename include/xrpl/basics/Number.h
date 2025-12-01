@@ -3,10 +3,6 @@
 
 #include <xrpl/beast/utility/instrumentation.h>
 
-#ifdef _MSC_VER
-#include <boost/multiprecision/cpp_int.hpp>
-#endif
-
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -42,14 +38,6 @@ isPowerOfTen(T value)
     return logTen(value).has_value();
 }
 
-// #ifdef _MSC_VER
-// using numberuint = boost::multiprecision::uint128_t;
-// using numberint = boost::multiprecision::int128_t;
-// #else   // !defined(_MSC_VER)
-// using numberuint = __uint128_t;
-// using numberint = __int128_t;
-// #endif  // !defined(_MSC_VER)
-
 struct MantissaRange
 {
     using rep = std::uint64_t;
@@ -71,9 +59,6 @@ struct MantissaRange
 
 class Number
 {
-    // using uint128_t = numberuint;
-    // using int128_t = numberint;
-
     using rep = std::int64_t;
     using internalrep = MantissaRange::rep;
 
@@ -172,6 +157,7 @@ public:
     {
         return !(x == y);
     }
+
     friend constexpr bool
     operator<(Number const& x, Number const& y) noexcept
     {
@@ -313,6 +299,7 @@ private:
     // The available ranges for mantissa
 
     constexpr static internalrep maxRep = std::numeric_limits<rep>::max();
+    static_assert(maxRep == 9'223'372'036'854'775'807);
 
     constexpr static MantissaRange smallRange{
         MantissaRange::small,
@@ -320,11 +307,12 @@ private:
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
     static_assert(smallRange.log == 15);
+    static_assert(smallRange.min < maxRep);
+    static_assert(smallRange.max < maxRep);
     constexpr static MantissaRange largeRange{
         MantissaRange::large,
         1'000'000'000'000'000'000LL};
     static_assert(isPowerOfTen(largeRange.min));
-    // maxRep                                   9,223,372,036,854,775,807
     static_assert(largeRange.max == internalrep(9'999'999'999'999'999'999ULL));
     static_assert(largeRange.log == 18);
     static_assert(largeRange.min < maxRep);
@@ -649,7 +637,7 @@ public:
 // This class may only end up needed in tests
 class NumberMantissaScaleGuard
 {
-    MantissaRange::mantissa_scale saved_;
+    MantissaRange::mantissa_scale const saved_;
 
 public:
     explicit NumberMantissaScaleGuard(
