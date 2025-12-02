@@ -46,22 +46,26 @@ public:
         }
         BEAST_EXPECT(caught);
 
-        auto test = [this](auto const& x, auto const& y) {
+        auto test = [this](auto const& x, auto const& y, int line) {
             auto const result = x == y;
             std::stringstream ss;
             ss << x << " == " << y << " -> " << (result ? "true" : "false");
-            BEAST_EXPECTS(result, ss.str());
+            expect(result, ss.str(), __FILE__, line);
         };
 
         test(
             Number{false, minMantissa * 10, 32767, Number::normalized{}},
-            Number{false, minMantissa, 32768, Number::normalized{}});
+            Number{false, minMantissa, 32768, Number::normalized{}},
+            __LINE__);
         test(
-            Number{false, minMantissa, -32769, Number::normalized{}}, Number{});
+            Number{false, minMantissa, -32769, Number::normalized{}},
+            Number{},
+            __LINE__);
         test(
             Number{false, minMantissa, 32000, Number::normalized{}} * 1'000 +
                 Number{false, 1'500, 32000, Number::normalized{}},
-            Number{false, minMantissa + 2, 32003, Number::normalized{}});
+            Number{false, minMantissa + 2, 32003, Number::normalized{}},
+            __LINE__);
         // 9,223,372,036,854,775,808
 
         test(
@@ -70,14 +74,16 @@ public:
                 scale == MantissaRange::small
                     ? -9'223'372'036'854'776
                     : std::numeric_limits<std::int64_t>::min(),
-                18 - Number::mantissaLog()});
+                18 - Number::mantissaLog()},
+            __LINE__);
         test(
             Number{std::numeric_limits<std::int64_t>::max()},
             Number{
                 scale == MantissaRange::small
                     ? 9'223'372'036'854'776
                     : std::numeric_limits<std::int64_t>::max(),
-                18 - Number::mantissaLog()});
+                18 - Number::mantissaLog()},
+            __LINE__);
         caught = false;
         try
         {
