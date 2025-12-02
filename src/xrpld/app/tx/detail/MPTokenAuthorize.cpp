@@ -94,8 +94,7 @@ MPTokenAuthorize::preclaim(PreclaimContext const& ctx)
         return tesSUCCESS;
     }
 
-    auto const sleHolder = ctx.view.read(keylet::account(*holderID));
-    if (!sleHolder)
+    if (!ctx.view.exists(keylet::account(*holderID)))
         return tecNO_DST;
 
     auto const sleMptIssuance =
@@ -124,12 +123,6 @@ MPTokenAuthorize::preclaim(PreclaimContext const& ctx)
     if (!ctx.view.exists(
             keylet::mptoken(ctx.tx[sfMPTokenIssuanceID], *holderID)))
         return tecOBJECT_NOT_FOUND;
-
-    // Can't unauthorize the pseudo-accounts because they are implicitly
-    // always authorized. No need to amendment gate since Vault and LoanBroker
-    // can only be created if the Vault amendment is enabled.
-    if (isPseudoAccount(ctx.view, *holderID, {&sfVaultID, &sfLoanBrokerID}))
-        return tecNO_PERMISSION;
 
     return tesSUCCESS;
 }

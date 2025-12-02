@@ -1677,11 +1677,10 @@ NetworkOPsImp::apply(std::unique_lock<std::mutex>& batchLock)
                     app_.getHashRouter().shouldRelay(e.transaction->getID());
                 if (auto const sttx = *(e.transaction->getSTransaction());
                     toSkip &&
-                    // Skip relaying if it's an inner batch txn. The flag should
-                    // only be set if the Batch feature is enabled. If Batch is
-                    // not enabled, the flag is always invalid, so don't relay
-                    // it regardless.
-                    !sttx.isFlag(tfInnerBatchTxn))
+                    // Skip relaying if it's an inner batch txn and batch
+                    // feature is enabled
+                    !(sttx.isFlag(tfInnerBatchTxn) &&
+                      newOL->rules().enabled(featureBatch)))
                 {
                     protocol::TMTransaction tx;
                     Serializer s;
@@ -3041,11 +3040,9 @@ NetworkOPsImp::pubProposedTransaction(
     std::shared_ptr<STTx const> const& transaction,
     TER result)
 {
-    // never publish an inner txn inside a batch txn. The flag should
-    // only be set if the Batch feature is enabled. If Batch is not
-    // enabled, the flag is always invalid, so don't publish it
-    // regardless.
-    if (transaction->isFlag(tfInnerBatchTxn))
+    // never publish an inner txn inside a batch txn
+    if (transaction->isFlag(tfInnerBatchTxn) &&
+        ledger->rules().enabled(featureBatch))
         return;
 
     MultiApiJson jvObj =

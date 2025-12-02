@@ -74,18 +74,6 @@ public:
     // tie, round towards even.
     int
     round() noexcept;
-
-    // Modify the result to the correctly rounded value
-    void
-    doRoundUp(rep& mantissa, int& exponent, std::string location);
-
-    // Modify the result to the correctly rounded value
-    void
-    doRoundDown(rep& mantissa, int& exponent);
-
-    // Modify the result to the correctly rounded value
-    void
-    doRound(rep& drops);
 };
 
 inline void
@@ -163,61 +151,6 @@ Number::Guard::round() noexcept
     return 0;
 }
 
-void
-Number::Guard::doRoundUp(rep& mantissa, int& exponent, std::string location)
-{
-    auto r = round();
-    if (r == 1 || (r == 0 && (mantissa & 1) == 1))
-    {
-        ++mantissa;
-        if (mantissa > maxMantissa)
-        {
-            mantissa /= 10;
-            ++exponent;
-        }
-    }
-    if (exponent < minExponent)
-    {
-        mantissa = 0;
-        exponent = Number{}.exponent_;
-    }
-    if (exponent > maxExponent)
-        throw std::overflow_error(location);
-}
-
-void
-Number::Guard::doRoundDown(rep& mantissa, int& exponent)
-{
-    auto r = round();
-    if (r == 1 || (r == 0 && (mantissa & 1) == 1))
-    {
-        --mantissa;
-        if (mantissa < minMantissa)
-        {
-            mantissa *= 10;
-            --exponent;
-        }
-    }
-    if (exponent < minExponent)
-    {
-        mantissa = 0;
-        exponent = Number{}.exponent_;
-    }
-}
-
-// Modify the result to the correctly rounded value
-void
-Number::Guard::doRound(rep& drops)
-{
-    auto r = round();
-    if (r == 1 || (r == 0 && (drops & 1) == 1))
-    {
-        ++drops;
-    }
-    if (is_negative())
-        drops = -drops;
-}
-
 // Number
 
 constexpr Number one{1000000000000000, -15, Number::unchecked{}};
@@ -257,7 +190,18 @@ Number::normalize()
         return;
     }
 
-    g.doRoundUp(mantissa_, exponent_, "Number::normalize 2");
+    auto r = g.round();
+    if (r == 1 || (r == 0 && (mantissa_ & 1) == 1))
+    {
+        ++mantissa_;
+        if (mantissa_ > maxMantissa)
+        {
+            mantissa_ /= 10;
+            ++exponent_;
+        }
+    }
+    if (exponent_ > maxExponent)
+        throw std::overflow_error("Number::normalize 2");
 
     if (negative)
         mantissa_ = -mantissa_;
@@ -329,7 +273,18 @@ Number::operator+=(Number const& y)
             xm /= 10;
             ++xe;
         }
-        g.doRoundUp(xm, xe, "Number::addition overflow");
+        auto r = g.round();
+        if (r == 1 || (r == 0 && (xm & 1) == 1))
+        {
+            ++xm;
+            if (xm > maxMantissa)
+            {
+                xm /= 10;
+                ++xe;
+            }
+        }
+        if (xe > maxExponent)
+            throw std::overflow_error("Number::addition overflow");
     }
     else
     {
@@ -349,7 +304,21 @@ Number::operator+=(Number const& y)
             xm -= g.pop();
             --xe;
         }
-        g.doRoundDown(xm, xe);
+        auto r = g.round();
+        if (r == 1 || (r == 0 && (xm & 1) == 1))
+        {
+            --xm;
+            if (xm < minMantissa)
+            {
+                xm *= 10;
+                --xe;
+            }
+        }
+        if (xe < minExponent)
+        {
+            xm = 0;
+            xe = Number{}.exponent_;
+        }
     }
     mantissa_ = xm * xn;
     exponent_ = xe;
@@ -429,10 +398,25 @@ Number::operator*=(Number const& y)
     }
     xm = static_cast<rep>(zm);
     xe = ze;
-    g.doRoundUp(
-        xm,
-        xe,
-        "Number::multiplication overflow : exponent is " + std::to_string(xe));
+    auto r = g.round();
+    if (r == 1 || (r == 0 && (xm & 1) == 1))
+    {
+        ++xm;
+        if (xm > maxMantissa)
+        {
+            xm /= 10;
+            ++xe;
+        }
+    }
+    if (xe < minExponent)
+    {
+        xm = 0;
+        xe = Number{}.exponent_;
+    }
+    if (xe > maxExponent)
+        throw std::overflow_error(
+            "Number::multiplication overflow : exponent is " +
+            std::to_string(xe));
     mantissa_ = xm * zn;
     exponent_ = xe;
     XRPL_ASSERT(
@@ -497,27 +481,15 @@ Number::operator rep() const
                 throw std::overflow_error("Number::operator rep() overflow");
             drops *= 10;
         }
-        g.doRound(drops);
+        auto r = g.round();
+        if (r == 1 || (r == 0 && (drops & 1) == 1))
+        {
+            ++drops;
+        }
+        if (g.is_negative())
+            drops = -drops;
     }
     return drops;
-}
-
-Number
-Number::truncate() const noexcept
-{
-    if (exponent_ >= 0 || mantissa_ == 0)
-        return *this;
-
-    Number ret = *this;
-    while (ret.exponent_ < 0 && ret.mantissa_ != 0)
-    {
-        ret.exponent_ += 1;
-        ret.mantissa_ /= rep(10);
-    }
-    // We are guaranteed that normalize() will never throw an exception
-    // because exponent is either negative or zero at this point.
-    ret.normalize();
-    return ret;
 }
 
 std::string

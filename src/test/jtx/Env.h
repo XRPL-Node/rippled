@@ -232,9 +232,7 @@ public:
      *
      * @param suite_ the current unit_test::suite
      */
-    Env(beast::unit_test::suite& suite_,
-        beast::severities::Severity thresh = beast::severities::kError)
-        : Env(suite_, envconfig(), nullptr, thresh)
+    Env(beast::unit_test::suite& suite_) : Env(suite_, envconfig())
     {
     }
 

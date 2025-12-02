@@ -266,7 +266,6 @@ protected:
     checkSign(
         ReadView const& view,
         ApplyFlags flags,
-        std::optional<uint256 const> const& parentBatchId,
         AccountID const& idAccount,
         STObject const& sigObject,
         beast::Journal const j);
@@ -288,26 +287,14 @@ protected:
 
     template <class T>
     static bool
-    validNumericRange(std::optional<T> value, T max, T min = T{});
+    validNumericRange(std::optional<T> value, T max, T min = {});
 
     template <class T, class Unit>
     static bool
     validNumericRange(
         std::optional<T> value,
         unit::ValueUnit<Unit, T> max,
-        unit::ValueUnit<Unit, T> min = unit::ValueUnit<Unit, T>{});
-
-    /// Minimum will usually be zero.
-    template <class T>
-    static bool
-    validNumericMinimum(std::optional<T> value, T min = T{});
-
-    /// Minimum will usually be zero.
-    template <class T, class Unit>
-    static bool
-    validNumericMinimum(
-        std::optional<T> value,
-        unit::ValueUnit<Unit, T> min = unit::ValueUnit<Unit, T>{});
+        unit::ValueUnit<Unit, T> min = {});
 
 private:
     std::pair<TER, XRPAmount>
@@ -432,24 +419,6 @@ Transactor::validNumericRange(
     unit::ValueUnit<Unit, T> min)
 {
     return validNumericRange(value, max.value(), min.value());
-}
-
-template <class T>
-bool
-Transactor::validNumericMinimum(std::optional<T> value, T min)
-{
-    if (!value)
-        return true;
-    return value >= min;
-}
-
-template <class T, class Unit>
-bool
-Transactor::validNumericMinimum(
-    std::optional<T> value,
-    unit::ValueUnit<Unit, T> min)
-{
-    return validNumericMinimum(value, min.value());
 }
 
 }  // namespace ripple

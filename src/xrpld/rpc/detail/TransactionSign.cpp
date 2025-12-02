@@ -1078,11 +1078,7 @@ checkMultiSignFields(Json::Value const& jvRequest)
     if (!tx_json.isMember(sfSigningPubKey.getJsonName()))
         return RPC::missing_field_error("tx_json.SigningPubKey");
 
-    // Multi-signing into a signature_target object field is fine,
-    // because it means the signature is not for the transaction
-    // Account.
-    if (!jvRequest.isMember(jss::signature_target) &&
-        !tx_json[sfSigningPubKey.getJsonName()].asString().empty())
+    if (!tx_json[sfSigningPubKey.getJsonName()].asString().empty())
         return RPC::make_error(
             rpcINVALID_PARAMS,
             "When multi-signing 'tx_json.SigningPubKey' must be empty.");
