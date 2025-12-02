@@ -291,6 +291,20 @@ public:
     }
 
     /**
+     * @brief Create Env with the current test suite and a referenceFee
+     *
+     * This constructor will create an Env with the standard
+     * test Env configuration (from envconfig()) and all supported
+     * amendments enabled.
+     *
+     * @param suite_ the current unit_test::suite
+     */
+    Env(beast::unit_test::suite& suite_, std::optional<XRPAmount> referenceFee)
+        : Env(suite_, envconfig(), referenceFee)
+    {
+    }
+
+    /**
      * @brief Create Env with only the current test suite
      *
      * This constructor will create an Env with the standard
@@ -300,8 +314,9 @@ public:
      * @param suite_ the current unit_test::suite
      */
     Env(beast::unit_test::suite& suite_,
+        beast::severities::Severity thresh = beast::severities::kError,
         std::optional<XRPAmount> referenceFee = std::nullopt)
-        : Env(suite_, envconfig(), referenceFee)
+        : Env(suite_, envconfig(), nullptr, thresh, referenceFee)
     {
     }
 
