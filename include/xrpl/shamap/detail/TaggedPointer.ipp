@@ -16,7 +16,7 @@ namespace {
 constexpr std::array<std::uint8_t, 4> boundaries{
     2,
     3,
-    5,
+    6,
     SHAMapInnerNode::branchFactor};
 static_assert(
     boundaries.size() <= 4,
