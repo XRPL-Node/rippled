@@ -160,15 +160,8 @@ public:
             test(IOUAmount(-25, -3), "-0.025");
             test(IOUAmount(25, 1), "250");
             test(IOUAmount(-25, 1), "-250");
-            test(
-                IOUAmount(2, 20),
-                mantissaSize == MantissaRange::small ? "2000000000000000e5"
-                                                     : "2000000000000000000e2");
-            test(
-                IOUAmount(-2, -20),
-                mantissaSize == MantissaRange::small
-                    ? "-2000000000000000e-35"
-                    : "-2000000000000000000e-38");
+            test(IOUAmount(2, 20), "2e20");
+            test(IOUAmount(-2, -20), "-2e-20");
         }
     }
 

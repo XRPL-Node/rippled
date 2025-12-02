@@ -729,8 +729,8 @@ to_string(Number const& amount)
     if (amount == zero)
         return "0";
 
-    auto const exponent = amount.exponent_;
-    auto const mantissa = amount.mantissa_;
+    auto exponent = amount.exponent_;
+    auto mantissa = amount.mantissa_;
     bool const negative = amount.negative_;
 
     // Use scientific notation for exponents that are too small or too large
@@ -738,7 +738,12 @@ to_string(Number const& amount)
     if (((exponent != 0) &&
          ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
-        // TODO: trim trailing zeros off mantissa
+        while (mantissa != 0 && mantissa % 10 == 0 &&
+               exponent < Number::maxExponent)
+        {
+            mantissa /= 10;
+            ++exponent;
+        }
         std::string ret = negative ? "-" : "";
         ret.append(std::to_string(mantissa));
         ret.append(1, 'e');
