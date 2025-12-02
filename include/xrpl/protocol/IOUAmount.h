@@ -40,13 +40,8 @@ private:
     void
     normalize();
 
-    IOUAmount(std::pair<mantissa_type, exponent_type> parts)
-        : IOUAmount(parts.first, parts.second)
-    {
-    }
-
-    static std::pair<mantissa_type, exponent_type>
-    scaleNumber(Number const& number);
+    static IOUAmount
+    fromNumber(Number const& number);
 
 public:
     IOUAmount() = default;

@@ -51,10 +51,15 @@ static std::int64_t constexpr maxMantissa = STAmount::cMaxValue;
 static int constexpr minExponent = STAmount::cMinOffset;
 static int constexpr maxExponent = STAmount::cMaxOffset;
 
-std::pair<IOUAmount::mantissa_type, IOUAmount::exponent_type>
-IOUAmount::scaleNumber(Number const& number)
+IOUAmount
+IOUAmount::fromNumber(Number const& number)
 {
-    return number.normalizeToRange(minMantissa, maxMantissa);
+    // Need to create a default IOUAmount and assign directly so it doesn't try
+    // to normalize, which calls fromNumber
+    IOUAmount result{};
+    std::tie(result.mantissa_, result.exponent_) =
+        number.normalizeToRange(minMantissa, maxMantissa);
+    return result;
 }
 
 IOUAmount
@@ -75,7 +80,7 @@ IOUAmount::normalize()
     if (getSTNumberSwitchover())
     {
         Number const v{mantissa_, exponent_};
-        std::tie(mantissa_, exponent_) = scaleNumber(v);
+        *this = fromNumber(v);
         if (exponent_ > maxExponent)
             Throw<std::overflow_error>("value overflow");
         if (exponent_ < minExponent)
@@ -116,7 +121,7 @@ IOUAmount::normalize()
         mantissa_ = -mantissa_;
 }
 
-IOUAmount::IOUAmount(Number const& other) : IOUAmount(scaleNumber(other))
+IOUAmount::IOUAmount(Number const& other) : IOUAmount(fromNumber(other))
 {
     if (exponent_ > maxExponent)
         Throw<std::overflow_error>("value overflow");

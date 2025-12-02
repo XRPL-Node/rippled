@@ -138,7 +138,7 @@ public:
 
     template <AssetType A>
     STAmount(A const& asset, Number const& number)
-        : STAmount(asset, scaleNumber(asset, number))
+        : STAmount(fromNumber(asset, number))
     {
     }
 
@@ -283,20 +283,8 @@ public:
 
 private:
     template <AssetType A>
-    STAmount(
-        A const& asset,
-        std::tuple<mantissa_type, exponent_type, bool> parts)
-        : STAmount(
-              asset,
-              std::get<mantissa_type>(parts),
-              std::get<exponent_type>(parts),
-              std::get<bool>(parts))
-    {
-    }
-
-    template <AssetType A>
-    static std::tuple<mantissa_type, exponent_type, bool>
-    scaleNumber(A const& asset, Number const& number);
+    static STAmount
+    fromNumber(A const& asset, Number const& number);
 
     static std::unique_ptr<STAmount>
     construct(SerialIter&, SField const& name);
@@ -568,28 +556,29 @@ STAmount::operator=(XRPAmount const& amount)
 }
 
 template <AssetType A>
-inline std::tuple<STAmount::mantissa_type, STAmount::exponent_type, bool>
-STAmount::scaleNumber(A const& asset, Number const& number)
+inline STAmount
+STAmount::fromNumber(A const& asset, Number const& number)
 {
     bool const negative = number.mantissa() < 0;
     Number const working{negative ? -number : number};
     if (asset.integral())
     {
-        return std::make_tuple(std::int64_t(working), 0, negative);
+        std::uint64_t const intValue = static_cast<std::int64_t>(working);
+        return STAmount{asset, intValue, 0, negative};
     }
     else
     {
         auto const [mantissa, exponent] =
             working.normalizeToRange(cMinValue, cMaxValue);
 
-        return std::make_tuple(mantissa, exponent, negative);
+        return STAmount{asset, mantissa, exponent, negative};
     }
 }
 
 inline STAmount&
 STAmount::operator=(Number const& number)
 {
-    std::tie(mValue, mOffset, mIsNegative) = scaleNumber(mAsset, number);
+    *this = fromNumber(mAsset, number);
     canonicalize();
     return *this;
 }
