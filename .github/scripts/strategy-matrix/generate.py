@@ -240,7 +240,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Add the configuration to the list, with the most unique fields first,
         # so that they are easier to identify in the GitHub Actions UI, as long
         # names get truncated.
-        # Add Address and Thread (both coupled with UB) sanitizers when the distro is bookworm.
+        # Add Address and Thread (both coupled with UB) sanitizers for specific bookworm distros.
         if os[
             "distro_version"
         ] == "bookworm" and f"{os['compiler_name']}-{os['compiler_version']}" in {
@@ -300,6 +300,8 @@ def addSanitizerConfigs(
     linker_relocation_flags = ""
     linker_flags = ""
 
+    cxx_flags += " -fno-omit-frame-pointer"
+
     # Use large code model to avoid relocation errors with large binaries
     # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=large
     if architecture["platform"] == "linux/amd64" and os["compiler_name"] == "gcc":
@@ -311,6 +313,11 @@ def addSanitizerConfigs(
 
     # Create default sanitizer flags
     sanitizers_flags = "undefined,float-divide-by-zero"
+
+    # There are some differences between GCC and Clang support for sanitizers.
+    # Hence we must use diff. falg combinations for each compiler.
+    # These combination of flags were tested to work with GCC 15 and Clang 20.
+    # If the versions are changed, the flags might need to be updated.
 
     if os["compiler_name"] == "gcc":
         # Suppress false positive warnings in GCC with stringop-overflow
@@ -326,7 +333,7 @@ def addSanitizerConfigs(
         # before CMake processes it. This ensures the compiler receives an absolute path.
         # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
         # GCC doesn't support ignorelist.
-        cxx_flags += " -fsanitize-ignorelist=$GITHUB_WORKSPACE/sanitizers/suppressions/sanitizer-ignorelist.txt"
+        cxx_flags += " -fsanitize-ignorelist=${GITHUB_WORKSPACE}/sanitizers/suppressions/sanitizer-ignorelist.txt"
         sanitizers_flags = f"{sanitizers_flags},unsigned-integer-overflow"
         linker_flags += (
             f" -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,{sanitizers_flags}'"
@@ -339,7 +346,7 @@ def addSanitizerConfigs(
     cxx_flags += " -O1"
 
     # First create config for asan
-    cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}" {linker_flags}'
+    cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} {cxx_flags} {extra_warning_flags}" {linker_flags}'
 
     # Add config with asan+ubsan
     configs = {}
@@ -371,7 +378,7 @@ def addSanitizerConfigs(
                 f" -DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=thread,{sanitizers_flags}'"
             )
 
-        cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS='-fsanitize=thread,{sanitizers_flags} -fno-omit-frame-pointer {cxx_flags} {extra_warning_flags}' {linker_flags}"
+        cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS='-fsanitize=thread,{sanitizers_flags} {cxx_flags} {extra_warning_flags}' {linker_flags}"
 
         # Add config with tsan+ubsan
         configs["tsan_ubsan"] = cmake_args_flags

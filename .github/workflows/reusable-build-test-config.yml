@@ -116,11 +116,12 @@ jobs:
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
         run: |
-          cmake .. \
+          cmake \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
             -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-            ${{ inputs.cmake_args }}
+            ${{ inputs.cmake_args }} \
+            ..
 
       - name: Build the binary
         working-directory: ${{ inputs.build_dir }}
