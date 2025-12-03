@@ -95,12 +95,19 @@ public:
         internalrep mantissa,
         int exponent,
         unchecked) noexcept;
+    // Assume unsigned values are... unsigned. i.e. positive
+    explicit constexpr Number(
+        internalrep mantissa,
+        int exponent,
+        unchecked) noexcept;
     // Only unit tests are expected to use this ctor
     explicit Number(
         bool negative,
         internalrep mantissa,
         int exponent,
         normalized);
+    // Assume unsigned values are... unsigned. i.e. positive
+    explicit Number(internalrep mantissa, int exponent, normalized);
 
     constexpr rep
     mantissa() const noexcept;
@@ -196,22 +203,7 @@ public:
     }
 
     Number
-    truncate() const noexcept
-    {
-        if (exponent_ >= 0 || mantissa_ == 0)
-            return *this;
-
-        Number ret = *this;
-        while (ret.exponent_ < 0 && ret.mantissa_ != 0)
-        {
-            ret.exponent_ += 1;
-            ret.mantissa_ /= internalrep(10);
-        }
-        // We are guaranteed that normalize() will never throw an exception
-        // because exponent is either negative or zero at this point.
-        ret.normalize();
-        return ret;
-    }
+    truncate() const noexcept;
 
     friend constexpr bool
     operator>(Number const& x, Number const& y) noexcept
@@ -356,6 +348,16 @@ inline constexpr Number::Number(
 {
 }
 
+inline constexpr Number::Number(
+    internalrep mantissa,
+    int exponent,
+    unchecked) noexcept
+    : Number(false, mantissa, exponent, unchecked{})
+{
+}
+
+constexpr static Number numZero{};
+
 inline Number::Number(
     bool negative,
     internalrep mantissa,
@@ -364,6 +366,11 @@ inline Number::Number(
     : Number(negative, mantissa, exponent, unchecked{})
 {
     normalize();
+}
+
+inline Number::Number(internalrep mantissa, int exponent, normalized)
+    : Number(false, mantissa, exponent, normalized{})
+{
 }
 
 inline Number::Number(rep mantissa, int exponent)
