@@ -155,11 +155,13 @@ Patched recipes</h3>
 <div class="line">git remote add origin git@github.com:XRPLF/conan-center-index.git</div>
 <div class="line">git sparse-checkout init</div>
 <div class="line">git sparse-checkout set recipes/ed25519</div>
+<div class="line">git sparse-checkout add recipes/secp256k1</div>
 <div class="line">git sparse-checkout add recipes/snappy</div>
 <div class="line">git sparse-checkout add recipes/soci</div>
 <div class="line">git fetch origin master</div>
 <div class="line">git checkout master</div>
 <div class="line">conan export --version 2015.03 recipes/ed25519/all</div>
+<div class="line">conan export --version 0.7.0 recipes/secp256k1/all</div>
 <div class="line">conan export --version 1.1.10 recipes/snappy/all</div>
 <div class="line">conan export --version 4.0.3 recipes/soci/all</div>
 <div class="line">rm -rf .git</div>
