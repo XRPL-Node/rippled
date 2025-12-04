@@ -2392,7 +2392,7 @@ protected:
                     interval * Number(12, -2) / secondsInYear;
                 BEAST_EXPECT(
                     periodicRate ==
-                    Number(2283105022831050, -21, Number::unchecked{}));
+                    Number(2283105022831050228ULL, -24, Number::normalized{}));
                 STAmount const principalOutstanding{
                     broker.asset, state.principalOutstanding};
                 STAmount const accruedInterest{
@@ -2624,7 +2624,7 @@ protected:
                     interval * Number(12, -2) / secondsInYear;
                 BEAST_EXPECT(
                     periodicRate ==
-                    Number(2283105022831050, -21, Number::unchecked{}));
+                    Number(2283105022831050228, -24, Number::normalized{}));
                 STAmount const roundedPeriodicPayment{
                     broker.asset,
                     roundPeriodicPayment(

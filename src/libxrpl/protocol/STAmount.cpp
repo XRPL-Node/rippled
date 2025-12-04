@@ -1473,6 +1473,10 @@ roundToScale(
     if (value.integral())
         return value;
 
+    // Nothing to do for zero.
+    if (value == beast::zero)
+        return value;
+
     // If the value's exponent is greater than or equal to the scale, then
     // rounding will do nothing, and might even lose precision, so just return
     // the value.
