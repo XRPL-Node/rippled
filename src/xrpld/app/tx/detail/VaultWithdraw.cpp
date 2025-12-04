@@ -80,13 +80,23 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
         return ter;
 
     // Cannot withdraw from a Vault an Asset frozen for the destination account
-    if (auto const ret = checkFrozen(ctx.view, dstAcct, vaultAsset))
-        return ret;
+    if (!vaultAsset.holds<Issue>() ||
+        (dstAcct != vaultAsset.getIssuer() &&
+         account != vaultAsset.getIssuer()))
+    {
+        if (auto const ret = checkFrozen(ctx.view, dstAcct, vaultAsset))
+            return ret;
+    }
 
     // Cannot return shares to the vault, if the underlying asset was frozen for
     // the submitter
-    if (auto const ret = checkFrozen(ctx.view, account, vaultShare))
-        return ret;
+    if (!vaultAsset.holds<Issue>() ||
+        (dstAcct != vaultAsset.getIssuer() &&
+         account != vaultAsset.getIssuer()))
+    {
+        if (auto const ret = checkFrozen(ctx.view, account, vaultShare))
+            return ret;
+    }
 
     return tesSUCCESS;
 }
@@ -115,6 +125,7 @@ VaultWithdraw::doApply()
 
     auto const amount = ctx_.tx[sfAmount];
     Asset const vaultAsset = vault->at(sfAsset);
+    auto const dstAcct = ctx_.tx[~sfDestination].value_or(account_);
     MPTIssue const share{mptIssuanceID};
     STAmount sharesRedeemed = {share};
     STAmount assetsWithdrawn;
@@ -165,11 +176,20 @@ VaultWithdraw::doApply()
         return tecPATH_DRY;
     }
 
+    // When withdrawing IOU to the issuer, ignore freeze since spec allows
+    // returning frozen IOU assets to their issuer (MPTs don't have this
+    // concept)
+    FreezeHandling const freezeHandling = (vaultAsset.holds<Issue>() &&
+                                           (dstAcct == vaultAsset.getIssuer() ||
+                                            account_ == vaultAsset.getIssuer()))
+        ? FreezeHandling::fhIGNORE_FREEZE
+        : FreezeHandling::fhZERO_IF_FROZEN;
+
     if (accountHolds(
             view(),
             account_,
             share,
-            FreezeHandling::fhZERO_IF_FROZEN,
+            freezeHandling,
             AuthHandling::ahIGNORE_AUTH,
             j_) < sharesRedeemed)
     {
@@ -236,8 +256,6 @@ VaultWithdraw::doApply()
         }
         // else quietly ignore, account balance is not zero
     }
-
-    auto const dstAcct = ctx_.tx[~sfDestination].value_or(account_);
 
     return doWithdraw(
         view(),

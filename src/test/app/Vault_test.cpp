@@ -5243,6 +5243,46 @@ class Vault_test : public beast::unit_test::suite
         });
     }
 
+    void
+    testFrozenWithdrawToIssuer()
+    {
+        using namespace test::jtx;
+
+        testcase("frozen asset cannot withdraw to issuer (spec deviation)");
+
+        Env env{*this, testable_amendments() | featureSingleAssetVault};
+        Account issuer{"issuer"};
+        Account owner{"owner"};
+        Account depositor{"depositor"};
+        env.fund(XRP(1000), issuer, owner, depositor);
+        env.close();
+
+        PrettyAsset asset = issuer["IOU"];
+        env.trust(asset(1000), owner);
+        env.trust(asset(1000), depositor);
+        env(pay(issuer, owner, asset(100)));
+        env(pay(issuer, depositor, asset(200)));
+        env.close();
+
+        Vault vault{env};
+        auto [tx, keylet] = vault.create({.owner = owner, .asset = asset});
+        env(tx);
+        env.close();
+
+        env(vault.deposit(
+            {.depositor = depositor, .id = keylet.key, .amount = asset(50)}));
+        env.close();
+
+        env(fset(issuer, asfGlobalFreeze));
+        env.close();
+
+        auto withdraw = vault.withdraw(
+            {.depositor = depositor, .id = keylet.key, .amount = asset(10)});
+        withdraw[sfDestination] = issuer.human();
+        env(withdraw, ter{tesSUCCESS});
+        env.close();
+    }
+
 public:
     void
     run() override
@@ -5261,6 +5301,7 @@ public:
         testScaleIOU();
         testRPC();
         testDelegate();
+        testFrozenWithdrawToIssuer();
     }
 };
 
