@@ -333,7 +333,7 @@ def addSanitizerConfigs(
         # before CMake processes it. This ensures the compiler receives an absolute path.
         # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
         # GCC doesn't support ignorelist.
-        cxx_flags += " -fsanitize-ignorelist=$GITHUB_WORKSPACE/sanitizers/suppressions/sanitizer-ignorelist.txt"
+        cxx_flags += " -fsanitize-ignorelist=${GITHUB_WORKSPACE}/sanitizers/suppressions/sanitizer-ignorelist.txt"
         sanitizers_flags = f"{sanitizers_flags},unsigned-integer-overflow"
         linker_flags += (
             f" -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,{sanitizers_flags}'"
