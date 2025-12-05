@@ -177,8 +177,9 @@ VaultWithdraw::doApply()
     }
 
     // When withdrawing IOU to the issuer, ignore freeze since spec allows
-    // returning frozen IOU assets to their issuer (MPTs don't have this
-    // concept)
+    // returning frozen IOU assets to their issuer. MPTs don't have this
+    // exemption - MPT locks function like "deep freeze" with no issuer
+    // exception.
     FreezeHandling const freezeHandling = (vaultAsset.holds<Issue>() &&
                                            (dstAcct == vaultAsset.getIssuer() ||
                                             account_ == vaultAsset.getIssuer()))
