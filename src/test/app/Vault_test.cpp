@@ -5248,7 +5248,7 @@ class Vault_test : public beast::unit_test::suite
     {
         using namespace test::jtx;
 
-        testcase("frozen asset cannot withdraw to issuer (spec deviation)");
+        testcase("frozen IOU can be withdrawn to issuer");
 
         Env env{*this, testable_amendments() | featureSingleAssetVault};
         Account issuer{"issuer"};
