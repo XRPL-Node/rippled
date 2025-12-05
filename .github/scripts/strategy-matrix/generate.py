@@ -209,7 +209,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         ):
             continue
 
-        cxx_flags = "-g"
+        cxx_flags = ""
         # Enable code coverage for Debian Bookworm using GCC 14 in Debug and no
         # Unity on linux/amd64
         if (
