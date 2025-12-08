@@ -449,7 +449,8 @@ MPTTester::set(MPTSet const& arg)
             if (arg.account)
                 require(std::nullopt, arg.holder.has_value());
             if (auto const account =
-                (arg.holder ? std::get_if<Account>(&(*arg.holder)) : nullptr))
+                    (arg.holder ? std::get_if<Account>(&(*arg.holder))
+                                : nullptr))
                 require(*account, false);
         }
 
