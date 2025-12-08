@@ -18,6 +18,7 @@ ripple::Buffer
 generatePlaceholderCiphertext()
 {
     Buffer buf(ecGamalEncryptedTotalLength);
+    std::memset(buf.data(), 0, ecGamalEncryptedTotalLength);
 
     buf.data()[0] = 0x02;
     buf.data()[ecGamalEncryptedLength] = 0x02;
