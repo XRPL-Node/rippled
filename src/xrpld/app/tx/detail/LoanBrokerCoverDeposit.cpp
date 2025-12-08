@@ -75,7 +75,14 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
             requireAuth(ctx.view, vaultAsset, account, AuthType::StrongAuth))
         return ret;
 
-    if (accountHolds(
+    // IOU issuers have infinite issuance ability and don't have a "balance"
+    // of their own tokens (accountHolds returns 0 for them). Skip the balance
+    // check for issuers. Note: issuer freeze exemption is handled by the
+    // isFrozen() function. This exemption does not apply to MPTs.
+    bool const isIssuer =
+        vaultAsset.holds<Issue>() && account == vaultAsset.getIssuer();
+    if (!isIssuer &&
+        accountHolds(
             ctx.view,
             account,
             vaultAsset,

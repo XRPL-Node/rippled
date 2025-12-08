@@ -1436,6 +1436,63 @@ class LoanBroker_test : public beast::unit_test::suite
         });
     }
 
+    void
+    testIssuerCoverDepositDuringGlobalFreeze()
+    {
+        testcase("Issuer can deposit to broker during global freeze");
+        using namespace jtx;
+        using namespace loanBroker;
+
+        Account const issuer{"issuer"};
+        Account const holder{"holder"};
+        Env env(*this);
+        Vault vault{env};
+
+        env.fund(XRP(100'000), issuer, holder);
+        env.close();
+
+        PrettyAsset const asset = issuer["IOU"];
+        env.trust(asset(1'000'000), holder);
+        env.close();
+        env(pay(issuer, holder, asset(100'000)));
+        env.close();
+
+        auto [tx, vaultKeylet] =
+            vault.create({.owner = issuer, .asset = asset});
+        env(tx);
+        env.close();
+
+        env(vault.deposit(
+            {.depositor = holder, .id = vaultKeylet.key, .amount = asset(50)}));
+        env.close();
+
+        auto const brokerKeylet =
+            keylet::loanbroker(issuer.id(), env.seq(issuer));
+        env(set(issuer, vaultKeylet.key));
+        env.close();
+
+        auto broker = env.le(brokerKeylet);
+        if (!BEAST_EXPECT(broker))
+            return;
+
+        env(fset(issuer, asfGlobalFreeze));
+        env.close();
+
+        // Issuer CAN deposit to their own broker during global freeze
+        // This is the issuer exemption - issuer can always send (issue) their
+        // own tokens Per spec: "Counterparties of the frozen issuer can still
+        // send and receive payments directly to and from the issuing address."
+        env(coverDeposit(issuer, brokerKeylet.key, asset(10)));
+        env.close();
+
+        // Verify the deposit succeeded
+        broker = env.le(brokerKeylet);
+        if (BEAST_EXPECT(broker))
+        {
+            BEAST_EXPECT(broker->at(sfCoverAvailable) == asset(10).number());
+        }
+    }
+
 public:
     void
     run() override
@@ -1450,6 +1507,7 @@ public:
         testInvalidLoanBrokerDelete();
         testInvalidLoanBrokerSet();
         testRequireAuth();
+        testIssuerCoverDepositDuringGlobalFreeze();
 
         // TODO: Write clawback failure tests with an issuer / MPT that doesn't
         // have the right flags set.
