@@ -2,6 +2,8 @@
 //
 #include <xrpld/app/misc/LendingHelpers.h>
 
+#include <xrpl/protocol/STTakesAsset.h>
+
 namespace ripple {
 
 bool
@@ -128,12 +130,20 @@ LoanBrokerSet::doApply()
             // LCOV_EXCL_STOP
         }
 
+        auto const vault = view.read(keylet::vault(broker->at(sfVaultID)));
+        if (!vault)
+            return tecINTERNAL;  // LCOV_EXCL_LINE
+
+        auto const vaultAsset = vault->at(sfAsset);
+
         if (auto const data = tx[~sfData])
             broker->at(sfData) = *data;
         if (auto const debtMax = tx[~sfDebtMaximum])
             broker->at(sfDebtMaximum) = *debtMax;
 
         view.update(broker);
+
+        associateAsset(*broker, vaultAsset);
     }
     else
     {
@@ -149,6 +159,7 @@ LoanBrokerSet::doApply()
             // LCOV_EXCL_STOP
         }
         auto const vaultPseudoID = sleVault->at(sfAccount);
+        auto const vaultAsset = sleVault->at(sfAsset);
         auto const sequence = tx.getSeqValue();
 
         auto owner = view.peek(keylet::account(account_));
@@ -205,6 +216,8 @@ LoanBrokerSet::doApply()
             broker->at(sfCoverRateLiquidation) = *coverLiq;
 
         view.insert(broker);
+
+        associateAsset(*broker, vaultAsset);
     }
 
     return tesSUCCESS;

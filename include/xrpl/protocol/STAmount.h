@@ -731,17 +731,32 @@ getRate(STAmount const& offerOut, STAmount const& offerIn);
  * @param rounding Optional Number rounding mode
  *
  */
-STAmount
+[[nodiscard]] STAmount
 roundToScale(
     STAmount const& value,
     std::int32_t scale,
     Number::rounding_mode rounding = Number::getround());
 
+/** Round an arbitrary precision Number IN PLACE to the precision of a given
+ * Asset.
+ *
+ * This is used to ensure that calculations do not collect dust for IOUs, or
+ * fractional amounts for the integral types XRP and MPT.
+ *
+ * @param asset The relevant asset
+ * @param value The lvalue to be rounded
+ */
+template <AssetType A>
+void
+roundToAsset(A const& asset, Number& value)
+{
+    value = STAmount{asset, value};
+}
+
 /** Round an arbitrary precision Number to the precision of a given Asset.
  *
- * This is used to ensure that calculations do not collect dust beyond the
- * precision of the reference value for IOUs, or fractional amounts for the
- * integral types XRP and MPT.
+ * This is used to ensure that calculations do not collect dust beyond specified
+ * scale for IOUs, or fractional amounts for the integral types XRP and MPT.
  *
  * @param asset The relevant asset
  * @param value The value to be rounded
@@ -750,7 +765,7 @@ roundToScale(
  * @param rounding Optional Number rounding mode
  */
 template <AssetType A>
-Number
+[[nodiscard]] Number
 roundToAsset(
     A const& asset,
     Number const& value,

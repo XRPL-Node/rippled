@@ -39,8 +39,8 @@ private:
     {
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas
-        return jtx::testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */;
+        return jtx::testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol;
     }
 
     void
@@ -3027,8 +3027,7 @@ private:
 
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas
-        features =
-            features - featureSingleAssetVault /* - featureLendingProtocol */;
+        features = features - featureSingleAssetVault - featureLendingProtocol;
 
         // Auction slot initially is owned by AMM creator, who pays 0 price.
 
@@ -3776,8 +3775,8 @@ private:
 
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas
-        features =
-            features - featureSingleAssetVault /* - featureLendingProtocol */;
+        features = features - featureSingleAssetVault - featureLendingProtocol -
+            featureLendingProtocol;
 
         // Payment 100USD for 100XRP.
         // Force one path with tfNoRippleDirect.

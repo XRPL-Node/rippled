@@ -112,8 +112,7 @@ AMMTestBase::testAMM(
         // mantissas
         Env env{
             *this,
-            features - featureSingleAssetVault /* - featureLendingProtocol */
-            ,
+            features - featureSingleAssetVault - featureLendingProtocol,
             arg.noLog ? std::make_unique<CaptureLogs>(&logs) : nullptr};
 
         auto const [asset1, asset2] =

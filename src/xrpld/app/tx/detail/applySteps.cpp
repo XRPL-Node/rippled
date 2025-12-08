@@ -52,7 +52,8 @@ with_txn_type(Rules const& rules, TxType txnType, F&& f)
     std::optional<NumberSO> stNumberSO;
     std::optional<CurrentTransactionRulesGuard> rulesGuard;
     std::optional<NumberMantissaScaleGuard> mantissaScaleGuard;
-    if (rules.enabled(featureSingleAssetVault) /*|| rules.enabled(featureLendingProtocol)*/)
+    if (rules.enabled(featureSingleAssetVault) ||
+        rules.enabled(featureLendingProtocol))
     {
         // raii classes for the current ledger rules.
         // fixUniversalNumber predates the rulesGuard and should be replaced.

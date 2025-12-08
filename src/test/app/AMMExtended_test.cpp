@@ -1425,8 +1425,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas
         FeatureBitset const all{
-            testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
 
         testRmFundedOffer(all);
         testRmFundedOffer(all - fixAMMv1_1 - fixAMMv1_3);
@@ -3758,8 +3758,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas in the transaction engine
         FeatureBitset const all{
-            testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
 
         testFalseDry(all);
         testBookStep(all);
@@ -3776,8 +3776,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas in the transaction engine
         FeatureBitset const all{
-            testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
         testStepLimit(all);
         testStepLimit(all - fixAMMv1_1 - fixAMMv1_3);
     }
@@ -3789,8 +3789,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas in the transaction engine
         FeatureBitset const all{
-            testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
         test_convert_all_of_an_asset(all);
         test_convert_all_of_an_asset(all - fixAMMv1_1 - fixAMMv1_3);
     }
@@ -3801,8 +3801,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas in the transaction engine
         FeatureBitset const all{
-            jtx::testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            jtx::testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
         testPayment(all);
         testPayIOU();
     }
@@ -3814,8 +3814,8 @@ private:
         // For now, just disable SAV entirely, which locks in the small Number
         // mantissas in the transaction engine
         FeatureBitset const sa{
-            testable_amendments() -
-            featureSingleAssetVault /* - featureLendingProtocol */};
+            testable_amendments() - featureSingleAssetVault -
+            featureLendingProtocol};
         testRippleState(sa);
         testGlobalFreeze(sa);
         testOffersWhenFrozen(sa);

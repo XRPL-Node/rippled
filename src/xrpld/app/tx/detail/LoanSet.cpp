@@ -2,6 +2,7 @@
 //
 #include <xrpld/app/misc/LendingHelpers.h>
 
+#include <xrpl/protocol/STTakesAsset.h>
 #include <xrpl/protocol/TxFlags.h>
 
 namespace ripple {
@@ -627,6 +628,10 @@ LoanSet::doApply()
     // Borrower is the owner of the loan
     if (auto const ter = dirLink(view, borrower, loan, sfOwnerNode))
         return ter;
+
+    associateAsset(*vaultSle, vaultAsset);
+    associateAsset(*brokerSle, vaultAsset);
+    associateAsset(*loan, vaultAsset);
 
     return tesSUCCESS;
 }

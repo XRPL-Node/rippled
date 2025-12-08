@@ -350,8 +350,14 @@ protected:
                     env.balance(account, broker.asset) -
                         (balanceBefore - balanceChangeAmount),
                     borrowerScale);
-                env.test.BEAST_EXPECT(
-                    roundToScale(difference, loanScale) >= beast::zero);
+                env.test.expect(
+                    roundToScale(difference, loanScale) >= beast::zero,
+                    "Balance before: " + to_string(balanceBefore.value()) +
+                        ", expected change: " + to_string(balanceChangeAmount) +
+                        ", difference (balance after - expected): " +
+                        to_string(difference),
+                    __FILE__,
+                    __LINE__);
             }
         }
 
@@ -2451,6 +2457,10 @@ protected:
                     getCurrentState(env, broker, loanKeylet, verifyLoanStatus);
                 env.close();
 
+                BEAST_EXPECT(
+                    STAmount(broker.asset, state.periodicPayment) ==
+                    broker.asset(Number(8333457002039338267, -17)));
+
                 // Make all the payments in one transaction
                 // service fee is 2
                 auto const startingPayments = state.paymentRemaining;
@@ -2458,14 +2468,27 @@ protected:
                     NumberRoundModeGuard mg(Number::upward);
                     auto const rawPayoff = startingPayments *
                         (state.periodicPayment + broker.asset(2).value());
-                    STAmount const payoffAmount{broker.asset, rawPayoff};
+                    STAmount payoffAmount{broker.asset, rawPayoff};
                     BEAST_EXPECTS(
                         payoffAmount ==
-                            broker.asset(Number(1024014840139457, -12)),
+                            broker.asset(Number(1024014840244721, -12)),
                         to_string(payoffAmount));
                     BEAST_EXPECT(payoffAmount > state.principalOutstanding);
+
+                    payoffAmount = roundToScale(payoffAmount, state.loanScale);
+
                     return payoffAmount;
                 }();
+
+                auto const totalPayoffValue = state.totalValue +
+                    startingPayments * broker.asset(2).value();
+                STAmount const totalPayoffAmount{
+                    broker.asset, totalPayoffValue};
+
+                BEAST_EXPECTS(
+                    totalPayoffAmount == payoffAmount,
+                    "Payoff amount: " + to_string(payoffAmount) +
+                        ". Total Value: " + to_string(totalPayoffAmount));
 
                 singlePayment(
                     loanKeylet,
@@ -2653,7 +2676,7 @@ protected:
                     roundedPeriodicPayment ==
                     roundToScale(
                         broker.asset(
-                            Number(8333457001162141, -14), Number::upward),
+                            Number(8333457002039338267, -17), Number::upward),
                         state.loanScale,
                         Number::upward));
                 // 83334570.01162141
@@ -2668,7 +2691,7 @@ protected:
                     totalDue ==
                     roundToScale(
                         broker.asset(
-                            Number(8533457001162141, -14), Number::upward),
+                            Number(8533457002039338267, -17), Number::upward),
                         state.loanScale,
                         Number::upward));
 
@@ -2704,7 +2727,7 @@ protected:
                     transactionAmount ==
                     roundToScale(
                         broker.asset(
-                            Number(9533457001162141, -14), Number::upward),
+                            Number(9533457002039400, -14), Number::upward),
                         state.loanScale,
                         Number::upward));
 
@@ -2737,9 +2760,15 @@ protected:
                             state.paymentRemaining,
                             broker.params.managementFeeRate);
 
-                    BEAST_EXPECT(
-                        paymentComponents.trackedValueDelta <=
-                        roundedPeriodicPayment);
+                    BEAST_EXPECTS(
+                        paymentComponents.specialCase ==
+                                detail::PaymentSpecialCase::final ||
+                            paymentComponents.trackedValueDelta <=
+                                roundedPeriodicPayment,
+                        "Delta: " +
+                            to_string(paymentComponents.trackedValueDelta) +
+                            ", periodic payment: " +
+                            to_string(roundedPeriodicPayment));
 
                     ripple::LoanState const nextTrueState = computeRawLoanState(
                         state.periodicPayment,
@@ -2793,8 +2822,10 @@ protected:
                             paymentComponents.trackedInterestPart() +
                             paymentComponents.trackedManagementFeeDelta);
                     BEAST_EXPECT(
+                        paymentComponents.specialCase ==
+                            detail::PaymentSpecialCase::final ||
                         paymentComponents.trackedValueDelta <=
-                        roundedPeriodicPayment);
+                            roundedPeriodicPayment);
 
                     BEAST_EXPECT(
                         state.paymentRemaining < 12 ||
@@ -2805,7 +2836,7 @@ protected:
                             Number::upward) ==
                             roundToScale(
                                 broker.asset(
-                                    Number(8333228695260180, -14),
+                                    Number(8333228691531218890, -17),
                                     Number::upward),
                                 state.loanScale,
                                 Number::upward));
@@ -3643,7 +3674,7 @@ protected:
         env(pay(issuer, borrower, mptAsset(10'000)));
         env.close();
 
-        std::array const assets{xrpAsset, mptAsset, iouAsset};
+        std::array const assets{iouAsset, xrpAsset, mptAsset};
 
         // Create vaults and loan brokers
         std::vector<BrokerInfo> brokers;
@@ -4982,7 +5013,6 @@ protected:
 
         auto const loanSetFee = fee(env.current()->fees().base * 2);
         Number const principalRequest{1, 3};
-        auto const startDate = env.now() + 60s;
 
         auto createJson = env.json(
             set(borrower, broker.brokerID, principalRequest),
@@ -5007,13 +5037,13 @@ protected:
         auto const keylet = keylet::loan(broker.brokerID, loanSequence);
 
         createJson = env.json(createJson, sig(sfCounterpartySignature, lender));
-        env(createJson, ter(tecPRECISION_LOSS), THISLINE);
-        env.close(startDate);
+        env(createJson, THISLINE);
+        env.close();
 
         auto loanPayTx = env.json(
             pay(borrower, keylet.key, STAmount{broker.asset, Number{}}));
         loanPayTx["Amount"]["value"] = "0.000281284125490196";
-        env(loanPayTx, ter(tecNO_ENTRY));
+        env(loanPayTx, ter(tecINSUFFICIENT_PAYMENT), THISLINE);
         env.close();
     }
 
@@ -5584,21 +5614,26 @@ protected:
             BEAST_EXPECT(beforeState.periodicPayment > 0);
 
             // pay all but the last payment
-            Number const payment = beforeState.periodicPayment * (total - 1);
-            XRPAmount const payFee{
-                baseFee * ((total - 1) / loanPaymentsPerFeeIncrement + 1)};
-            auto loanPayTx = env.json(
-                pay(borrower, keylet.key, STAmount{broker.asset, payment}),
-                fee(payFee));
-            env(loanPayTx, ter(tesSUCCESS));
-            env.close();
+            {
+                NumberRoundModeGuard mg{Number::upward};
+                Number const payment =
+                    beforeState.periodicPayment * (total - 1);
+                XRPAmount const payFee{
+                    baseFee * ((total - 1) / loanPaymentsPerFeeIncrement + 1)};
+                STAmount const paymentAmount = roundToScale(
+                    STAmount{broker.asset, payment}, beforeState.loanScale);
+                auto loanPayTx = env.json(
+                    pay(borrower, keylet.key, paymentAmount), fee(payFee));
+                env(loanPayTx, ter(tesSUCCESS));
+                env.close();
+            }
 
             // The loan is on the last payment
             auto const afterState = getCurrentState(env, broker, keylet);
+            BEAST_EXPECT(afterState.paymentRemaining == 1);
             BEAST_EXPECT(afterState.nextPaymentDate == maxTime - grace);
             BEAST_EXPECT(
                 afterState.previousPaymentDate == maxTime - grace - interval);
-            BEAST_EXPECT(afterState.paymentRemaining == 1);
         }
     }
 

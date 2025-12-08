@@ -1,9 +1,12 @@
+#include <xrpl/protocol/STNumber.h>
+// Do not remove. Keep STNumber.h first
 #include <xrpl/basics/Number.h>
 #include <xrpl/beast/core/LexicalCast.h>
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/protocol/SField.h>
+#include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/STBase.h>
-#include <xrpl/protocol/STNumber.h>
+#include <xrpl/protocol/STIssue.h>
 #include <xrpl/protocol/Serializer.h>
 
 #include <boost/lexical_cast.hpp>
@@ -17,11 +20,11 @@
 namespace ripple {
 
 STNumber::STNumber(SField const& field, Number const& value)
-    : STBase(field), value_(value)
+    : STTakesAsset(field), value_(value)
 {
 }
 
-STNumber::STNumber(SerialIter& sit, SField const& field) : STBase(field)
+STNumber::STNumber(SerialIter& sit, SField const& field) : STTakesAsset(field)
 {
     // We must call these methods in separate statements
     // to guarantee their order of execution.
@@ -43,6 +46,19 @@ STNumber::getText() const
 }
 
 void
+STNumber::associateAsset(Asset const& a)
+{
+    STTakesAsset::associateAsset(a);
+
+    XRPL_ASSERT_PARTS(
+        getFName().shouldMeta(SField::sMD_NeedsAsset),
+        "STNumber::associateAsset",
+        "field needs asset");
+
+    roundToAsset(a, value_);
+}
+
+void
 STNumber::add(Serializer& s) const
 {
     XRPL_ASSERT(
@@ -51,8 +67,48 @@ STNumber::add(Serializer& s) const
         getFName().fieldType == getSType(),
         "ripple::STNumber::add : field type match");
 
-    auto const mantissa = value_.mantissa();
-    auto const exponent = value_.exponent();
+    auto value = value_;
+    auto const mantissa = value.mantissa();
+    auto const exponent = value.exponent();
+
+    SField const& field = getFName();
+    if (field.shouldMeta(SField::sMD_NeedsAsset))
+    {
+        // asset is defined in the STTakesAsset base class
+        if (asset_)
+        {
+            // The number should be rounded to the asset's precision, but round
+            // it here if it has an asset assigned.
+            roundToAsset(*asset_, value);
+            XRPL_ASSERT_PARTS(
+                value_ == value,
+                "ripple::STNumber::add",
+                "value is already rounded");
+        }
+        else
+        {
+            // There are circumstances where an already-rounded Number is
+            // serialized without being touched by a transactor, and thus
+            // without an asset. We can't be 100% sure, but we can check a
+            // couple of conditions that indicate it's _probably_ rounded.
+            XRPL_ASSERT_PARTS(
+                Number::getMantissaScale() == MantissaRange::large,
+                "ripple::STNumber::add",
+                "STNumber only used with large mantissa scale");
+            std::uint64_t testMantissa = mantissa < 0 ? -mantissa : mantissa;
+            auto testExponent = exponent;
+            if (testMantissa < Number::minMantissa())
+            {
+                testMantissa *= 10;
+                --testExponent;
+            }
+            XRPL_ASSERT_PARTS(
+                testExponent <= 0 || (testMantissa % 1000 == 0),
+                "ripple::STNumber::add",
+                "STNumber is probably already rounded");
+        }
+    }
+
     XRPL_ASSERT_PARTS(
         mantissa <= std::numeric_limits<std::int64_t>::max() &&
             mantissa >= std::numeric_limits<std::int64_t>::min(),

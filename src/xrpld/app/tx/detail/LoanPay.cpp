@@ -5,6 +5,7 @@
 
 #include <xrpl/json/to_string.h>
 #include <xrpl/protocol/Protocol.h>
+#include <xrpl/protocol/STTakesAsset.h>
 #include <xrpl/protocol/TxFlags.h>
 
 #include <bit>
@@ -432,27 +433,29 @@ LoanPay::doApply()
         AuthHandling::ahIGNORE_AUTH,
         j_);
 
+    XRPL_ASSERT_PARTS(
+        assetsAvailableBefore == pseudoAccountBalanceBefore,
+        "ripple::LoanPay::doApply",
+        "vault pseudo balance agrees before");
+
+    assetsAvailableProxy += totalPaidToVaultRounded;
+    assetsTotalProxy += paymentParts->valueChange;
+
+    if (*assetsAvailableProxy > *assetsTotalProxy)
     {
-        XRPL_ASSERT_PARTS(
-            assetsAvailableBefore == pseudoAccountBalanceBefore,
-            "ripple::LoanPay::doApply",
-            "vault pseudo balance agrees before");
-
-        assetsAvailableProxy += totalPaidToVaultRounded;
-        assetsTotalProxy += paymentParts->valueChange;
-
-        XRPL_ASSERT_PARTS(
-            *assetsAvailableProxy <= *assetsTotalProxy,
-            "ripple::LoanPay::doApply",
-            "assets available must not be greater than assets outstanding");
-
-        if (*assetsAvailableProxy > *assetsTotalProxy)
-        {
-            // LCOV_EXCL_START
-            return tecINTERNAL;
-            // LCOV_EXCL_STOP
-        }
+        // LCOV_EXCL_START
+        [[maybe_unused]]
+        auto const available = *assetsAvailableProxy;
+        [[maybe_unused]]
+        auto const total = *assetsTotalProxy;
+        return tecINTERNAL;
+        // LCOV_EXCL_STOP
     }
+
+    XRPL_ASSERT_PARTS(
+        *assetsAvailableProxy <= *assetsTotalProxy,
+        "ripple::LoanPay::doApply",
+        "assets available must not be greater than assets outstanding");
 
     JLOG(j_.debug()) << "total paid to vault raw: " << totalPaidToVaultRaw
                      << ", total paid to vault rounded: "
@@ -474,6 +477,16 @@ LoanPay::doApply()
         // it for future needs.
         coverAvailableProxy += totalPaidToBroker;
     }
+
+    associateAsset(*loanSle, asset);
+    associateAsset(*brokerSle, asset);
+    associateAsset(*vaultSle, asset);
+
+    // Duplicate some checks after rounding
+    XRPL_ASSERT_PARTS(
+        *assetsAvailableProxy <= *assetsTotalProxy,
+        "ripple::LoanPay::doApply",
+        "assets available must not be greater than assets outstanding");
 
 #if !NDEBUG
     auto const accountBalanceBefore = accountSpendable(

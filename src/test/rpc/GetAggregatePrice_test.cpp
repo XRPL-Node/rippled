@@ -193,10 +193,7 @@ public:
         {
             auto const all = testable_amendments();
             for (auto const& feats :
-                 {all - featureSingleAssetVault /* -
-                  featureLendingProtocol */
-                  ,
-                  all})
+                 {all - featureSingleAssetVault - featureLendingProtocol, all})
             {
                 for (auto const mantissaSize :
                      {MantissaRange::small, MantissaRange::large})

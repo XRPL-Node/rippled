@@ -40,8 +40,8 @@ setCurrentTransactionRules(std::optional<Rules> r)
     // Push the appropriate setting, instead of having the class pull every time
     // the value is needed. That could get expensive fast.
     bool enableLargeNumbers = !r ||
-        (r->enabled(featureSingleAssetVault) /*||
-         r->enabled(featureLendingProtocol)*/);
+        (r->enabled(featureSingleAssetVault) ||
+         r->enabled(featureLendingProtocol));
     Number::setMantissaScale(
         enableLargeNumbers ? MantissaRange::large : MantissaRange::small);
 

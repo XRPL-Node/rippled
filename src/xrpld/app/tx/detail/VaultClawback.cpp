@@ -8,6 +8,7 @@
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/STNumber.h>
+#include <xrpl/protocol/STTakesAsset.h>
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFlags.h>
 
@@ -136,6 +137,7 @@ VaultClawback::doApply()
     }
 
     Asset const vaultAsset = vault->at(sfAsset);
+
     STAmount const amount = [&]() -> STAmount {
         auto const maybeAmount = tx[~sfAmount];
         if (maybeAmount)
@@ -307,6 +309,8 @@ VaultClawback::doApply()
         return tefINTERNAL;
         // LCOV_EXCL_STOP
     }
+
+    associateAsset(*vault, vaultAsset);
 
     return tesSUCCESS;
 }
