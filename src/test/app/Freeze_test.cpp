@@ -1,6 +1,7 @@
 #include <test/jtx.h>
 #include <test/jtx/AMM.h>
 
+#include <xrpl/ledger/View.h>
 #include <xrpl/protocol/AccountID.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/SField.h>
@@ -2002,6 +2003,57 @@ class Freeze_test : public beast::unit_test::suite
         }
     }
 
+    void
+    testIsFrozenDirectly(FeatureBitset features)
+    {
+        testcase("isFrozen function issuer exemption");
+
+        using namespace test::jtx;
+        Env env(*this, features);
+
+        Account issuer{"issuer"};
+        Account holder{"holder"};
+
+        env.fund(XRP(10000), issuer, holder);
+        env.close();
+
+        auto const USD = issuer["USD"];
+        env.trust(USD(1000), holder);
+        env.close();
+
+        env(pay(issuer, holder, USD(100)));
+        env.close();
+
+        // Before global freeze, neither account is frozen
+        BEAST_EXPECT(
+            !isFrozen(*env.current(), issuer.id(), USD.currency, issuer.id()));
+        BEAST_EXPECT(
+            !isFrozen(*env.current(), holder.id(), USD.currency, issuer.id()));
+
+        // Enable global freeze
+        env(fset(issuer, asfGlobalFreeze));
+        env.close();
+
+        // After global freeze, issuer is NOT frozen for their own currency
+        BEAST_EXPECT(
+            !isFrozen(*env.current(), issuer.id(), USD.currency, issuer.id()));
+
+        // After global freeze, holder IS frozen
+        BEAST_EXPECT(
+            isFrozen(*env.current(), holder.id(), USD.currency, issuer.id()));
+
+        // Verify issuer can still receive payments (uses isFrozen internally)
+        env(pay(holder, issuer, USD(10)));
+        env.close();
+
+        // Verify holder cannot send to other accounts
+        Account other{"other"};
+        env.fund(XRP(10000), other);
+        env.trust(USD(1000), other);
+        env.close();
+        env(pay(holder, other, USD(10)), ter(tecPATH_DRY));
+    }
+
     // Helper function to extract trustline flags from open ledger
     uint32_t
     getTrustlineFlags(
@@ -2065,6 +2117,7 @@ public:
             testCreateFrozenTrustline(features);
             testSetAndClear(features);
             testGlobalFreeze(features);
+            testIsFrozenDirectly(features);
             testNoFreeze(features);
             testOffersWhenFrozen(features);
             testOffersWhenDeepFrozen(features);
