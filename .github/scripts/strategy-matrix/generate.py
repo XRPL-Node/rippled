@@ -308,8 +308,8 @@ def addSanitizerConfigs(
         # Add -mcmodel=large to both compiler AND linker flags
         # This is needed because sanitizers create very large binaries and
         # large model removes the 2GB limitation that medium model has
-        cxx_flags += " -mcmodel=large -fno-PIC"
-        linker_relocation_flags += " -mcmodel=large -fno-PIC"
+        cxx_flags += " -mcmodel=large"
+        linker_relocation_flags += " -mcmodel=large"
 
     # Create default sanitizer flags
     sanitizers_flags = "undefined,float-divide-by-zero"

@@ -8,7 +8,7 @@ include(default)
         {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
             {% set model_code = "" %}
-            {% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1 -Wno-stringop-overflow" %}
+            {% set extra_cxxflags = "-fno-omit-frame-pointer -O1 -Wno-stringop-overflow" %}
 
             {% if "Address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
@@ -41,7 +41,7 @@ include(default)
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
-            {% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1" %}
+            {% set extra_cxxflags = "-fno-omit-frame-pointer -O1" %}
 
             {% if "Address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
