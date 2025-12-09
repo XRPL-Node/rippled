@@ -4,62 +4,61 @@ include(default)
 
 [conf]
 {% if sanitizers %}
-{% if compiler == "gcc" %}
-{% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
-{% set sanitizer_list = [] %}
-{% set model_code = "" %}
-{% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1 -Wno-stringop-overflow" %}
-# Note: GCC-15 has issues compiling Abseil compilation where a constexpr evaluation fails.
-# This is a known issue and will be fixed in GCC-16. For now, we need to
-# use -fpermissive to work around it.
-{% if version >= "15" %}
-{% set extra_cxxflags = extra_cxxflags ~ " -fpermissive" %}
-{% endif %}
+    {% if compiler == "gcc" %}
+        {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
+            {% set sanitizer_list = [] %}
+            {% set model_code = "" %}
+            {% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1 -Wno-stringop-overflow" %}
+            # Note: GCC-15 has issues compiling Abseil compilation where a constexpr evaluation fails.
+            # This is a known issue. For now, we can work around it by using DABSL_ENABLE_CONSTANT_INIT_V2=OFF
+            {% if version >= "15" %}
+                abseil/*:tools.cmake.cmaketoolchain:user_cache_args=["-DABSL_ENABLE_CONSTANT_INIT_V2=OFF"]
+            {% endif %}
 
-{% if "Address" in sanitizers %}
-{% set _ = sanitizer_list.append("address") %}
-{% set model_code = "-mcmodel=large" %}
-{% elif "Thread" in sanitizers %}
-{% set _ = sanitizer_list.append("thread") %}
-{% set model_code = "-mcmodel=medium" %}
-{% set extra_cxxflags = extra_cxxflags ~ " -Wno-tsan" %}
-{% endif %}
+            {% if "Address" in sanitizers %}
+                {% set _ = sanitizer_list.append("address") %}
+                {% set model_code = "-mcmodel=large" %}
+            {% elif "Thread" in sanitizers %}
+                {% set _ = sanitizer_list.append("thread") %}
+                {% set model_code = "-mcmodel=medium" %}
+                {% set extra_cxxflags = extra_cxxflags ~ " -Wno-tsan" %}
+            {% endif %}
 
-{% if "UndefinedBehavior" in sanitizers or "UndefinedBehavior" in sanitizers %}
-{% set _ = sanitizer_list.append("undefined") %}
-{% set _ = sanitizer_list.append("float-divide-by-zero") %}
-{% endif %}
+            {% if "UndefinedBehavior" in sanitizers or "UndefinedBehavior" in sanitizers %}
+                {% set _ = sanitizer_list.append("undefined") %}
+                {% set _ = sanitizer_list.append("float-divide-by-zero") %}
+            {% endif %}
 
-{% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
 
-tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
-tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
-tools.build:exelinkflags+=['{{sanitizer_flags}}']
-{% endif %}
-{% elif compiler == "apple-clang" or compiler == "clang" %}
-{% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
-{% set sanitizer_list = [] %}
-{% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1" %}
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
+            tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
+            tools.build:exelinkflags+=['{{sanitizer_flags}}']
+        {% endif %}
+    {% elif compiler == "apple-clang" or compiler == "clang" %}
+        {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
+            {% set sanitizer_list = [] %}
+            {% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1" %}
 
-{% if "Address" in sanitizers %}
-{% set _ = sanitizer_list.append("address") %}
-{% elif "Thread" in sanitizers %}
-{% set _ = sanitizer_list.append("thread") %}
-{% endif %}
+            {% if "Address" in sanitizers %}
+                {% set _ = sanitizer_list.append("address") %}
+            {% elif "Thread" in sanitizers %}
+                {% set _ = sanitizer_list.append("thread") %}
+            {% endif %}
 
-{% if "UndefinedBehavior" in sanitizers %}
-{% set _ = sanitizer_list.append("undefined") %}
-{% set _ = sanitizer_list.append("float-divide-by-zero") %}
-{% set _ = sanitizer_list.append("unsigned-integer-overflow") %}
-{% endif %}
+            {% if "UndefinedBehavior" in sanitizers %}
+                {% set _ = sanitizer_list.append("undefined") %}
+                {% set _ = sanitizer_list.append("float-divide-by-zero") %}
+                {% set _ = sanitizer_list.append("unsigned-integer-overflow") %}
+            {% endif %}
 
-{% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) %}
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) %}
 
-tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
-tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
-tools.build:exelinkflags+=['{{sanitizer_flags}}']
-{% endif %}
-{% endif %}
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
+            tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
+            tools.build:exelinkflags+=['{{sanitizer_flags}}']
+        {% endif %}
+    {% endif %}
 {% endif %}
 
 tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
