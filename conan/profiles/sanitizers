@@ -35,7 +35,7 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
-            tools.cmake.cmaketoolchain:user_toolchain+=['cmake/AbseilFix.cmake']
+            tools.cmake.cmaketoolchain:user_toolchain+=['AbseilFix.cmake']
             tools.build:defines+=['ABSL_ENABLE_CONSTANT_INIT_V2=0']
             tools.build:cflags+=['-DABSL_ENABLE_CONSTANT_INIT_V2=0']
         {% endif %}
