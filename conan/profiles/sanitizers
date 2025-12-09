@@ -35,6 +35,9 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
+            tools.cmake.cmaketoolchain:user_toolchain+=['cmake/AbseilFix.cmake']
+            tools.build:defines+=['ABSL_ENABLE_CONSTANT_INIT_V2=0']
+            tools.build:cflags+=['-DABSL_ENABLE_CONSTANT_INIT_V2=0']
         {% endif %}
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
@@ -63,12 +66,3 @@ include(default)
 {% endif %}
 
 tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags", "tools.build:defines", "tools.cmake.cmaketoolchain:user_toolchain"]
-
-[options]
-{% if compiler == "gcc"  %}
-    {% if sanitizers == "Address" or sanitizers == "Thread" %}
-        abseil/*:ABSL_ENABLE_CONSTANT_INIT_V2=OFF
-        abseil/*:defines+=['ABSL_ENABLE_CONSTANT_INIT_V2=OFF']
-        abseil/*:extra_cxxflags+="-DABSL_ENABLE_CONSTANT_INIT_V2=OFF"
-    {% endif %}
-{% endif %}
