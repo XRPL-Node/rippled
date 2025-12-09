@@ -291,17 +291,15 @@ LoanSet::preclaim(PreclaimContext const& ctx)
     // This check is almost duplicated in doApply, but that check is done after
     // the overall loan scale is known. This is mostly only relevant for
     // integral (non-IOU) types
+    for (auto const& field : getValueFields())
     {
-        for (auto const& field : getValueFields())
+        if (auto const value = tx[field];
+            value && STAmount{asset, *value} != *value)
         {
-            if (auto const value = tx[field];
-                value && STAmount{asset, *value} != *value)
-            {
-                JLOG(ctx.j.warn()) << field.f->getName() << " (" << *value
-                                   << ") can not be represented as a(n) "
-                                   << to_string(asset) << ".";
-                return tecPRECISION_LOSS;
-            }
+            JLOG(ctx.j.warn()) << field.f->getName() << " (" << *value
+                               << ") can not be represented as a(n) "
+                               << to_string(asset) << ".";
+            return tecPRECISION_LOSS;
         }
     }
 
@@ -410,19 +408,16 @@ LoanSet::doApply()
 
     // Check that relevant values won't lose precision. This is mostly only
     // relevant for IOU assets.
+    for (auto const& field : getValueFields())
     {
-        for (auto const& field : getValueFields())
+        if (auto const value = tx[field];
+            value && !isRounded(vaultAsset, *value, properties.loanScale))
         {
-            if (auto const value = tx[field];
-                value && !isRounded(vaultAsset, *value, properties.loanScale))
-            {
-                JLOG(j_.warn())
-                    << field.f->getName() << " (" << *value
-                    << ") has too much precision. Total loan value is "
-                    << properties.totalValueOutstanding << " with a scale of "
-                    << properties.loanScale;
-                return tecPRECISION_LOSS;
-            }
+            JLOG(j_.warn()) << field.f->getName() << " (" << *value
+                            << ") has too much precision. Total loan value is "
+                            << properties.totalValueOutstanding
+                            << " with a scale of " << properties.loanScale;
+            return tecPRECISION_LOSS;
         }
     }
 

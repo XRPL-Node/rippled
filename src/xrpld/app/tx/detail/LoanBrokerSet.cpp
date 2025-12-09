@@ -64,6 +64,15 @@ LoanBrokerSet::preflight(PreflightContext const& ctx)
     return tesSUCCESS;
 }
 
+std::vector<OptionaledField<STNumber>> const&
+LoanBrokerSet::getValueFields()
+{
+    static std::vector<OptionaledField<STNumber>> const valueFields{
+        ~sfDebtMaximum};
+
+    return valueFields;
+}
+
 TER
 LoanBrokerSet::preclaim(PreclaimContext const& ctx)
 {
@@ -72,8 +81,24 @@ LoanBrokerSet::preclaim(PreclaimContext const& ctx)
     auto const account = tx[sfAccount];
     auto const vaultID = tx[sfVaultID];
 
+    auto const sleVault = ctx.view.read(keylet::vault(vaultID));
+    if (!sleVault)
+    {
+        JLOG(ctx.j.warn()) << "Vault does not exist.";
+        return tecNO_ENTRY;
+    }
+    Asset const asset = sleVault->at(sfAsset);
+
+    if (account != sleVault->at(sfOwner))
+    {
+        JLOG(ctx.j.warn()) << "Account is not the owner of the Vault.";
+        return tecNO_PERMISSION;
+    }
+
     if (auto const brokerID = tx[~sfLoanBrokerID])
     {
+        // Updating an existing Broker
+
         auto const sleBroker = ctx.view.read(keylet::loanbroker(*brokerID));
         if (!sleBroker)
         {
@@ -94,20 +119,24 @@ LoanBrokerSet::preclaim(PreclaimContext const& ctx)
     }
     else
     {
-        auto const sleVault = ctx.view.read(keylet::vault(vaultID));
-        if (!sleVault)
-        {
-            JLOG(ctx.j.warn()) << "Vault does not exist.";
-            return tecNO_ENTRY;
-        }
-        if (account != sleVault->at(sfOwner))
-        {
-            JLOG(ctx.j.warn()) << "Account is not the owner of the Vault.";
-            return tecNO_PERMISSION;
-        }
-        if (auto const ter = canAddHolding(ctx.view, sleVault->at(sfAsset)))
+        if (auto const ter = canAddHolding(ctx.view, asset))
             return ter;
     }
+
+    // Check that relevant values can be represented as the vault asset
+    // type. This is mostly only relevant for integral (non-IOU) types
+    for (auto const& field : getValueFields())
+    {
+        if (auto const value = tx[field];
+            value && STAmount{asset, *value} != *value)
+        {
+            JLOG(ctx.j.warn()) << field.f->getName() << " (" << *value
+                               << ") can not be represented as a(n) "
+                               << to_string(asset) << ".";
+            return tecPRECISION_LOSS;
+        }
+    }
+
     return tesSUCCESS;
 }
 
