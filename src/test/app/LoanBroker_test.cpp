@@ -1189,6 +1189,19 @@ class LoanBroker_test : public beast::unit_test::suite
                 return mpt;
             },
             CoverClawback);
+
+        // MPTIssue:
+        // MPTCanClawback is set but MPTCanLock is not set
+        testLoanBroker(
+            [&](Env& env, Account const& issuer, Account const& alice) -> MPT {
+                MPTTester mpt{env, issuer, mptInitNoFund};
+                mpt.create({.flags = tfMPTCanClawback | tfMPTCanTransfer});
+                env.close();
+                mpt.authorize({.account = alice});
+                env.close();
+                return mpt;
+            },
+            CoverClawback);
     }
 
     void

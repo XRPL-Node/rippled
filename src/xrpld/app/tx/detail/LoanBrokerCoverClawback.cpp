@@ -192,7 +192,8 @@ preclaimHelper<MPTIssue>(
     if (!sleIssuance)
         return tecOBJECT_NOT_FOUND;
 
-    if (!sleIssuance->isFlag(lsfMPTCanClawback))
+    if (!sleIssuance->isFlag(lsfMPTCanClawback) ||
+        !sleIssuance->isFlag(lsfMPTCanLock))
         return tecNO_PERMISSION;
 
     // With all the checking already done, this should be impossible
