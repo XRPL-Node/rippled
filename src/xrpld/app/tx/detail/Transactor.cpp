@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/DelegateUtils.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
@@ -162,14 +143,6 @@ preflightCheckSimulateKeys(
 NotTEC
 Transactor::preflight1(PreflightContext const& ctx, std::uint32_t flagMask)
 {
-    // This is inappropriate in preflight0, because only Change transactions
-    // skip this function, and those do not allow an sfTicketSequence field.
-    if (ctx.tx.isFieldPresent(sfTicketSequence) &&
-        !ctx.rules.enabled(featureTicketBatch))
-    {
-        return temMALFORMED;
-    }
-
     if (ctx.tx.isFieldPresent(sfDelegate))
     {
         if (!ctx.rules.enabled(featurePermissionDelegationV1_1))
@@ -231,13 +204,24 @@ Transactor::preflight2(PreflightContext const& ctx)
         // regardless of success or failure
         return *ret;
 
+    // Skip signature check on batch inner transactions
+    if (ctx.tx.isFlag(tfInnerBatchTxn) && !ctx.rules.enabled(featureBatch))
+        return tesSUCCESS;
+    // Do not add any checks after this point that are relevant for
+    // batch inner transactions. They will be skipped.
+
     auto const sigValid = checkValidity(
         ctx.app.getHashRouter(), ctx.tx, ctx.rules, ctx.app.config());
     if (sigValid.first == Validity::SigBad)
-    {
+    {  // LCOV_EXCL_START
         JLOG(ctx.j.debug()) << "preflight2: bad signature. " << sigValid.second;
-        return temINVALID;  // LCOV_EXCL_LINE
+        return temINVALID;
+        // LCOV_EXCL_STOP
     }
+
+    // Do not add any checks after this point that are relevant for
+    // batch inner transactions. They will be skipped.
+
     return tesSUCCESS;
 }
 
@@ -461,8 +445,7 @@ Transactor::checkSeqProxy(
 
     if (t_seqProx.isSeq())
     {
-        if (tx.isFieldPresent(sfTicketSequence) &&
-            view.rules().enabled(featureTicketBatch))
+        if (tx.isFieldPresent(sfTicketSequence))
         {
             JLOG(j.trace()) << "applyTransaction: has both a TicketSequence "
                                "and a non-zero Sequence number";
@@ -670,13 +653,25 @@ NotTEC
 Transactor::checkSign(
     ReadView const& view,
     ApplyFlags flags,
+    std::optional<uint256 const> const& parentBatchId,
     AccountID const& idAccount,
     STObject const& sigObject,
     beast::Journal const j)
 {
+    {
+        auto const sle = view.read(keylet::account(idAccount));
+
+        if (view.rules().enabled(featureLendingProtocol) &&
+            isPseudoAccount(sle))
+            // Pseudo-accounts can't sign transactions. This check is gated on
+            // the Lending Protocol amendment because that's the project it was
+            // added under, and it doesn't justify another amendment
+            return tefBAD_AUTH;
+    }
+
     auto const pkSigner = sigObject.getFieldVL(sfSigningPubKey);
     // Ignore signature check on batch inner transactions
-    if (sigObject.isFlag(tfInnerBatchTxn) && view.rules().enabled(featureBatch))
+    if (parentBatchId && view.rules().enabled(featureBatch))
     {
         // Defensive Check: These values are also checked in Batch::preflight
         if (sigObject.isFieldPresent(sfTxnSignature) || !pkSigner.empty() ||
@@ -729,7 +724,8 @@ Transactor::checkSign(PreclaimContext const& ctx)
     auto const idAccount = ctx.tx.isFieldPresent(sfDelegate)
         ? ctx.tx.getAccountID(sfDelegate)
         : ctx.tx.getAccountID(sfAccount);
-    return checkSign(ctx.view, ctx.flags, idAccount, ctx.tx, ctx.j);
+    return checkSign(
+        ctx.view, ctx.flags, ctx.parentBatchId, idAccount, ctx.tx, ctx.j);
 }
 
 NotTEC

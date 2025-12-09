@@ -1,24 +1,5 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_PROTOCOL_STTX_H_INCLUDED
-#define RIPPLE_PROTOCOL_STTX_H_INCLUDED
+#ifndef XRPL_PROTOCOL_STTX_H_INCLUDED
+#define XRPL_PROTOCOL_STTX_H_INCLUDED
 
 #include <xrpl/basics/Expected.h>
 #include <xrpl/protocol/Feature.h>
@@ -50,17 +31,8 @@ class STTx final : public STObject, public CountedObject<STTx>
     TxType tx_type_;
 
 public:
-    static std::size_t const minMultiSigners = 1;
-
-    // if rules are not supplied then the largest possible value is returned
-    static std::size_t
-    maxMultiSigners(Rules const* rules = 0)
-    {
-        if (rules && !rules->enabled(featureExpandedSignerList))
-            return 8;
-
-        return 32;
-    }
+    static constexpr std::size_t minMultiSigners = 1;
+    static constexpr std::size_t maxMultiSigners = 32;
 
     STTx() = delete;
     STTx(STTx const& other) = default;
@@ -131,22 +103,15 @@ public:
         std::optional<std::reference_wrapper<SField const>> signatureTarget =
             {});
 
-    enum class RequireFullyCanonicalSig : bool { no, yes };
-
     /** Check the signature.
-        @param requireCanonicalSig If `true`, check that the signature is fully
-            canonical. If `false`, only check that the signature is valid.
         @param rules The current ledger rules.
         @return `true` if valid signature. If invalid, the error message string.
     */
     Expected<void, std::string>
-    checkSign(RequireFullyCanonicalSig requireCanonicalSig, Rules const& rules)
-        const;
+    checkSign(Rules const& rules) const;
 
     Expected<void, std::string>
-    checkBatchSign(
-        RequireFullyCanonicalSig requireCanonicalSig,
-        Rules const& rules) const;
+    checkBatchSign(Rules const& rules) const;
 
     // SQL Functions with metadata.
     static std::string const&
@@ -168,40 +133,25 @@ public:
 
 private:
     /** Check the signature.
-        @param requireCanonicalSig If `true`, check that the signature is fully
-            canonical. If `false`, only check that the signature is valid.
         @param rules The current ledger rules.
         @param sigObject Reference to object that contains the signature fields.
             Will be *this more often than not.
         @return `true` if valid signature. If invalid, the error message string.
     */
     Expected<void, std::string>
-    checkSign(
-        RequireFullyCanonicalSig requireCanonicalSig,
-        Rules const& rules,
-        STObject const& sigObject) const;
+    checkSign(Rules const& rules, STObject const& sigObject) const;
 
     Expected<void, std::string>
-    checkSingleSign(
-        RequireFullyCanonicalSig requireCanonicalSig,
-        STObject const& sigObject) const;
+    checkSingleSign(STObject const& sigObject) const;
 
     Expected<void, std::string>
-    checkMultiSign(
-        RequireFullyCanonicalSig requireCanonicalSig,
-        Rules const& rules,
-        STObject const& sigObject) const;
+    checkMultiSign(Rules const& rules, STObject const& sigObject) const;
 
     Expected<void, std::string>
-    checkBatchSingleSign(
-        STObject const& batchSigner,
-        RequireFullyCanonicalSig requireCanonicalSig) const;
+    checkBatchSingleSign(STObject const& batchSigner) const;
 
     Expected<void, std::string>
-    checkBatchMultiSign(
-        STObject const& batchSigner,
-        RequireFullyCanonicalSig requireCanonicalSig,
-        Rules const& rules) const;
+    checkBatchMultiSign(STObject const& batchSigner, Rules const& rules) const;
 
     STBase*
     copy(std::size_t n, void* buf) const override;

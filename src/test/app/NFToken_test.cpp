@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-  This file is part of rippled: https://github.com/ripple/rippled
-  Copyright (c) 2021 Ripple Labs Inc.
-
-  Permission to use, copy, modify, and/or distribute this software for any
-  purpose  with  or without fee is hereby granted, provided that the above
-  copyright notice and this permission notice appear in all copies.
-
-  THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-  WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-  MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-  ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-  WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-  ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx.h>
 
 #include <xrpld/app/tx/detail/NFTokenUtils.h>
@@ -31,8 +12,6 @@ namespace ripple {
 
 class NFTokenBaseUtil_test : public beast::unit_test::suite
 {
-    FeatureBitset const disallowIncoming{featureDisallowIncoming};
-
     // Helper function that returns the number of NFTs minted by an issuer.
     static std::uint32_t
     mintedCount(test::jtx::Env const& env, test::jtx::Account const& issuer)
@@ -2979,19 +2958,7 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
 
         using namespace test::jtx;
 
-        // test flag doesn't set unless amendment enabled
-        {
-            Env env{*this, features - disallowIncoming};
-            Account const alice{"alice"};
-            env.fund(XRP(10000), alice);
-            env(fset(alice, asfDisallowIncomingNFTokenOffer));
-            env.close();
-            auto const sle = env.le(alice);
-            uint32_t flags = sle->getFlags();
-            BEAST_EXPECT(!(flags & lsfDisallowIncomingNFTokenOffer));
-        }
-
-        Env env{*this, features | disallowIncoming};
+        Env env{*this, features};
 
         Account const issuer{"issuer"};
         Account const minter{"minter"};
@@ -5753,7 +5720,6 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
 
         // Close the ledger until the ledger sequence is large enough to delete
         // the account (no longer within <Sequence + 256>)
-        // This is enforced by the featureDeletableAccounts amendment
         auto incLgrSeqForAcctDel = [&](Env& env, Account const& acct) {
             int const delta = [&]() -> int {
                 if (env.seq(acct) + 255 > openLedgerSeq(env))
@@ -5872,8 +5838,6 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
             }
             env.close();
 
-            // Increment ledger sequence to the number that is
-            // enforced by the featureDeletableAccounts amendment
             incLgrSeqForAcctDel(env, alice);
 
             // Verify that alice's account root is present.
@@ -5976,8 +5940,6 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
 
             BEAST_EXPECT(ticketCount(env, alice) == 0);
 
-            // Increment ledger sequence to the number that is
-            // enforced by the featureDeletableAccounts amendment
             incLgrSeqForAcctDel(env, alice);
 
             // Verify that alice's account root is present.
@@ -6086,8 +6048,6 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
 
         BEAST_EXPECT(ticketCount(env, minter) == 0);
 
-        // Increment ledger sequence to the number that is
-        // enforced by the featureDeletableAccounts amendment
         incLgrSeqForAcctDel(env, alice);
 
         // Verify that alice's account root is present.
@@ -6827,7 +6787,7 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
                         mintAndCreateSellOffer(env, alice, XRP(0));
 
                     // Bob can accept the offer because the new NFT is stored in
-                    // an existing NFTokenPage so no new reserve is requried
+                    // an existing NFTokenPage so no new reserve is required
                     env(token::acceptSellOffer(bob, sellOfferIndex));
                     env.close();
                 }
@@ -7643,8 +7603,8 @@ class NFTokenDisallowIncoming_test : public NFTokenBaseUtil_test
     run() override
     {
         testWithFeats(
-            allFeatures - featureDisallowIncoming - fixNFTokenReserve -
-            featureNFTokenMintOffer - featureDynamicNFT);
+            allFeatures - fixNFTokenReserve - featureNFTokenMintOffer -
+            featureDynamicNFT);
     }
 };
 

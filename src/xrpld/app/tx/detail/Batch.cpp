@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2024 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/app/tx/detail/Batch.h>
 
@@ -282,12 +263,21 @@ Batch::preflight(PreflightContext const& ctx)
             return temREDUNDANT;
         }
 
-        if (stx.getFieldU16(sfTransactionType) == ttBATCH)
+        auto const txType = stx.getFieldU16(sfTransactionType);
+        if (txType == ttBATCH)
         {
             JLOG(ctx.j.debug()) << "BatchTrace[" << parentBatchId << "]: "
                                 << "batch cannot have an inner batch txn. "
                                 << "txID: " << hash;
             return temINVALID;
+        }
+
+        if (std::any_of(
+                disabledTxTypes.begin(),
+                disabledTxTypes.end(),
+                [txType](auto const& disabled) { return txType == disabled; }))
+        {
+            return temINVALID_INNER_BATCH;
         }
 
         if (!(stx.getFlags() & tfInnerBatchTxn))
@@ -302,7 +292,6 @@ Batch::preflight(PreflightContext const& ctx)
         if (auto const ret = checkSignatureFields(stx, hash))
             return ret;
 
-        /* Placeholder for field that will be added by Lending Protocol
         // Note that the CounterpartySignature is optional, and should not be
         // included, but if it is, ensure it doesn't contain a signature.
         if (stx.isFieldPresent(sfCounterpartySignature))
@@ -315,7 +304,6 @@ Batch::preflight(PreflightContext const& ctx)
                 return ret;
             }
         }
-        */
 
         auto const innerAccount = stx.getAccountID(sfAccount);
         if (auto const preflightResult = ripple::preflight(
@@ -412,13 +400,11 @@ Batch::preflightSigValidated(PreflightContext const& ctx)
         // inner account to the required signers set.
         if (innerAccount != outerAccount)
             requiredSigners.insert(innerAccount);
-        /* Placeholder for field that will be added by Lending Protocol
         // Some transactions have a Counterparty, who must also sign the
         // transaction if they are not the outer account
         if (auto const counterparty = rb.at(~sfCounterparty);
             counterparty && counterparty != outerAccount)
             requiredSigners.insert(*counterparty);
-        */
     }
 
     // Validation Batch Signers
@@ -470,8 +456,7 @@ Batch::preflightSigValidated(PreflightContext const& ctx)
         }
 
         // Check the batch signers signatures.
-        auto const sigResult = ctx.tx.checkBatchSign(
-            STTx::RequireFullyCanonicalSig::yes, ctx.rules);
+        auto const sigResult = ctx.tx.checkBatchSign(ctx.rules);
 
         if (!sigResult)
         {
