@@ -9,11 +9,6 @@ include(default)
             {% set sanitizer_list = [] %}
             {% set model_code = "" %}
             {% set extra_cxxflags = "-fno-omit-frame-pointer -fno-PIC -O1 -Wno-stringop-overflow" %}
-            # Note: GCC-15 has issues compiling Abseil compilation where a constexpr evaluation fails.
-            # This is a known issue. For now, we can work around it by using DABSL_ENABLE_CONSTANT_INIT_V2=OFF
-            {% if version >= "15" %}
-                abseil/*:tools.cmake.cmaketoolchain:user_cache_args=["-DABSL_ENABLE_CONSTANT_INIT_V2=OFF"]
-            {% endif %}
 
             {% if "Address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
@@ -30,6 +25,12 @@ include(default)
             {% endif %}
 
             {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
+
+            {% if version >= "15" %}
+                # Note: GCC-15 has issues with Abseil where constexpr evaluation fails.
+                # Work around by disabling Abseil's V2 constant init logic
+                {% set extra_cxxflags = extra_cxxflags ~ " -DABSL_ENABLE_CONSTANT_INIT_V2=0" %}
+            {% endif %}
 
             tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
@@ -61,4 +62,13 @@ include(default)
     {% endif %}
 {% endif %}
 
-tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
+tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags", "tools.build:defines", "tools.cmake.cmaketoolchain:user_toolchain"]
+
+[options]
+{% if compiler == "gcc"  %}
+    {% if sanitizers == "Address" or sanitizers == "Thread" %}
+        abseil/*:ABSL_ENABLE_CONSTANT_INIT_V2=OFF
+        abseil/*:defines+=['ABSL_ENABLE_CONSTANT_INIT_V2=OFF']
+        abseil/*:extra_cxxflags+="-DABSL_ENABLE_CONSTANT_INIT_V2=OFF"
+    {% endif %}
+{% endif %}
