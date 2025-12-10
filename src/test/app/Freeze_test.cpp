@@ -2054,6 +2054,73 @@ class Freeze_test : public beast::unit_test::suite
         env(pay(holder, other, USD(10)), ter(tecPATH_DRY));
     }
 
+    void
+    testGlobalFreezeIssuerAmendment(FeatureBitset features)
+    {
+        testcase("Global Freeze Issuer Amendment");
+
+        using namespace test::jtx;
+
+        Account issuer{"issuer"};
+        Account holder{"holder"};
+
+        // Test pre-amendment behavior (issuer IS frozen under global freeze)
+        {
+            Env env_pre(*this, features - fixGlobalFreezeIssuer);
+
+            env_pre.fund(XRP(10000), issuer, holder);
+            env_pre.close();
+
+            auto const USD = issuer["USD"];
+            env_pre.trust(USD(1000), holder);
+            env_pre.close();
+
+            env_pre(pay(issuer, holder, USD(100)));
+            env_pre.close();
+
+            env_pre(fset(issuer, asfGlobalFreeze));
+            env_pre.close();
+
+            BEAST_EXPECT(isFrozen(
+                *env_pre.current(), issuer.id(), USD.currency, issuer.id()));
+
+            BEAST_EXPECT(isFrozen(
+                *env_pre.current(), holder.id(), USD.currency, issuer.id()));
+        }
+
+        // Test post-amendment behavior (issuer is NOT frozen under global
+        // freeze)
+        if (features[fixGlobalFreezeIssuer])
+        {
+            Env env_post(*this, features);
+
+            env_post.fund(XRP(10000), issuer, holder);
+            env_post.close();
+
+            auto const USD = issuer["USD"];
+            env_post.trust(USD(1000), holder);
+            env_post.close();
+
+            env_post(pay(issuer, holder, USD(100)));
+            env_post.close();
+
+            env_post(fset(issuer, asfGlobalFreeze));
+            env_post.close();
+
+            BEAST_EXPECT(!isFrozen(
+                *env_post.current(), issuer.id(), USD.currency, issuer.id()));
+
+            BEAST_EXPECT(isFrozen(
+                *env_post.current(), holder.id(), USD.currency, issuer.id()));
+
+            env_post(pay(issuer, holder, USD(10)));
+            env_post.close();
+
+            env_post(pay(holder, issuer, USD(10)));
+            env_post.close();
+        }
+    }
+
     // Helper function to extract trustline flags from open ledger
     uint32_t
     getTrustlineFlags(
@@ -2118,6 +2185,7 @@ public:
             testSetAndClear(features);
             testGlobalFreeze(features);
             testIsFrozenDirectly(features);
+            testGlobalFreezeIssuerAmendment(features);
             testNoFreeze(features);
             testOffersWhenFrozen(features);
             testOffersWhenDeepFrozen(features);
