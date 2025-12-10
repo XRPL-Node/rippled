@@ -15,11 +15,13 @@
 #include <utility>
 
 #ifdef _MSC_VER
-#pragma message("Using boost::multiprecision::uint128_t")
+#pragma message("Using boost::multiprecision::uint128_t and int128_t")
 #include <boost/multiprecision/cpp_int.hpp>
 using uint128_t = boost::multiprecision::uint128_t;
+using int128_t = boost::multiprecision::int128_t;
 #else   // !defined(_MSC_VER)
 using uint128_t = __uint128_t;
+using int128_t = __int128_t;
 #endif  // !defined(_MSC_VER)
 
 namespace ripple {
@@ -182,6 +184,29 @@ Number::Guard::round() noexcept
 }
 
 // Number
+
+// Safely convert rep (int64) mantissa to internalrep (uint64). If the rep is
+// negative, returns the positive value. This takes a little extra work because
+// converting std::numeric_limits<std::int64_t>::min() flirts with UB, and can
+// vary across compilers.
+Number::internalrep
+Number::externalToInternal(rep mantissa)
+{
+    // If the mantissa is already positive, just return it
+    if (mantissa >= 0)
+        return mantissa;
+    // If the mantissa is negative, but fits within the positive range of rep,
+    // return it negated
+    if (mantissa >= -std::numeric_limits<rep>::max())
+        return -mantissa;
+
+    // If the mantissa doesn't fit within the positive range, convert to
+    // int128_t, negate that, and cast it back down to the internalrep
+    // In practice, this is only going to cover the case of
+    // std::numeric_limits<rep>::min().
+    int128_t temp = mantissa;
+    return static_cast<internalrep>(-temp);
+}
 
 constexpr Number
 Number::oneSmall()

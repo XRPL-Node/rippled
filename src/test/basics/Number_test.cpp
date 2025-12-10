@@ -70,11 +70,14 @@ public:
 
         test(
             Number{std::numeric_limits<std::int64_t>::min()},
-            Number{
-                scale == MantissaRange::small
-                    ? -9'223'372'036'854'776
-                    : std::numeric_limits<std::int64_t>::min(),
-                18 - Number::mantissaLog()},
+            scale == MantissaRange::small
+                ? Number{-9'223'372'036'854'776, 3}
+                : Number{true, 9'223'372'036'854'775'808ULL, 0, Number::normalized{}},
+            __LINE__);
+        test(
+            Number{std::numeric_limits<std::int64_t>::min() + 1},
+            scale == MantissaRange::small ? Number{-9'223'372'036'854'776, 3}
+                                          : Number{-9'223'372'036'854'775'807},
             __LINE__);
         test(
             Number{std::numeric_limits<std::int64_t>::max()},
@@ -1303,6 +1306,7 @@ public:
 
         test(Number(-2, 10), "-20000000000");
         test(Number(-2, 11), "-2e11");
+
         switch (scale)
         {
             case MantissaRange::small:
@@ -1336,6 +1340,13 @@ public:
                     test(
                         -(Number{std::numeric_limits<std::int64_t>::max(), -3}),
                         "-9223372036854775");
+
+                    test(
+                        Number{std::numeric_limits<std::int64_t>::min(), 0},
+                        "-9223372036854775e3");
+                    test(
+                        -(Number{std::numeric_limits<std::int64_t>::min(), 0}),
+                        "9223372036854775e3");
                 }
                 break;
             case MantissaRange::large:
@@ -1362,6 +1373,16 @@ public:
                     test(
                         -(Number{std::numeric_limits<std::int64_t>::max(), 0}),
                         "-9223372036854775807");
+
+                    // Because the absolute value of min is larger than max, it
+                    // will be scaled down to fit under max. Since we're
+                    // rounding towards zero, the 8 at the end is dropped.
+                    test(
+                        Number{std::numeric_limits<std::int64_t>::min(), 0},
+                        "-9223372036854775800");
+                    test(
+                        -(Number{std::numeric_limits<std::int64_t>::min(), 0}),
+                        "9223372036854775800");
                 }
                 break;
             default:

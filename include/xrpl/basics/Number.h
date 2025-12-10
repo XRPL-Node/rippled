@@ -336,6 +336,13 @@ private:
     Number
     shiftExponent(int exponentDelta) const;
 
+    // Safely convert rep (int64) mantissa to internalrep (uint64). If the rep
+    // is negative, returns the positive value. This takes a little extra work
+    // because converting std::numeric_limits<std::int64_t>::min() flirts with
+    // UB, and can vary across compilers.
+    static internalrep
+    externalToInternal(rep mantissa);
+
     class Guard;
 };
 
@@ -374,11 +381,7 @@ inline Number::Number(internalrep mantissa, int exponent, normalized)
 }
 
 inline Number::Number(rep mantissa, int exponent)
-    : Number(
-          mantissa < 0,
-          mantissa < 0 ? -mantissa : mantissa,
-          exponent,
-          normalized{})
+    : Number(mantissa < 0, externalToInternal(mantissa), exponent, normalized{})
 {
 }
 
