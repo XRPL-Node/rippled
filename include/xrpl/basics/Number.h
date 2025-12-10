@@ -537,6 +537,17 @@ Number::isnormal() const noexcept
          exponent_ <= maxExponent);
 }
 
+// Because the template function definition is in the .cpp file, declare
+// some of the overrides used outside of this class here.
+template <>
+void
+Number::normalize<unsigned long>(
+    bool& negative,
+    unsigned long& mantissa,
+    int& exponent,
+    internalrep const& minMantissa,
+    internalrep const& maxMantissa);
+
 template <class T>
 std::pair<T, int>
 Number::normalizeToRange(T minMantissa, T maxMantissa) const
