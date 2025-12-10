@@ -336,6 +336,18 @@ Number::normalize(
         "final mantissa fits in range");
 }
 
+template <>
+void
+Number::normalize<unsigned long>(
+    bool& negative,
+    unsigned long& mantissa,
+    int& exponent,
+    internalrep const& minMantissa,
+    internalrep const& maxMantissa)
+{
+    Number::normalize(negative, mantissa, exponent, minMantissa, maxMantissa);
+}
+
 void
 Number::normalize()
 {
