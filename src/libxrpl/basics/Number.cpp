@@ -245,13 +245,19 @@ Number::one()
 // TODO: Rename the function parameters to get rid of the "_" suffix
 template <class T>
 void
-Number::normalize(
+doNormalize(
     bool& negative,
     T& mantissa_,
     int& exponent_,
-    internalrep const& minMantissa,
-    internalrep const& maxMantissa)
+    MantissaRange::rep const& minMantissa,
+    MantissaRange::rep const& maxMantissa)
 {
+    auto constexpr minExponent = Number::minExponent;
+    auto constexpr maxExponent = Number::maxExponent;
+    auto constexpr maxRep = Number::maxRep;
+
+    using Guard = Number::Guard;
+
     constexpr Number zero = Number{};
     if (mantissa_ == 0)
     {
@@ -306,7 +312,7 @@ Number::normalize(
     }
     XRPL_ASSERT_PARTS(
         m <= maxRep,
-        "ripple::Number::normalize",
+        "ripple::doNormalize",
         "intermediate mantissa fits in int64");
     mantissa_ = m;
 
@@ -332,8 +338,32 @@ Number::normalize(
     }
     XRPL_ASSERT_PARTS(
         mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
-        "ripple::Number::normalize",
+        "ripple::doNormalize",
         "final mantissa fits in range");
+}
+
+template <>
+void
+Number::normalize<uint128_t>(
+    bool& negative,
+    uint128_t& mantissa,
+    int& exponent,
+    internalrep const& minMantissa,
+    internalrep const& maxMantissa)
+{
+    doNormalize(negative, mantissa, exponent, minMantissa, maxMantissa);
+}
+
+template <>
+void
+Number::normalize<unsigned long long>(
+    bool& negative,
+    unsigned long long& mantissa,
+    int& exponent,
+    internalrep const& minMantissa,
+    internalrep const& maxMantissa)
+{
+    doNormalize(negative, mantissa, exponent, minMantissa, maxMantissa);
 }
 
 template <>
@@ -345,7 +375,7 @@ Number::normalize<unsigned long>(
     internalrep const& minMantissa,
     internalrep const& maxMantissa)
 {
-    Number::normalize(negative, mantissa, exponent, minMantissa, maxMantissa);
+    doNormalize(negative, mantissa, exponent, minMantissa, maxMantissa);
 }
 
 void

@@ -327,6 +327,15 @@ private:
         internalrep const& minMantissa,
         internalrep const& maxMantissa);
 
+    template <class T>
+    friend void
+    doNormalize(
+        bool& negative,
+        T& mantissa_,
+        int& exponent_,
+        MantissaRange::rep const& minMantissa,
+        MantissaRange::rep const& maxMantissa);
+
     bool
     isnormal() const noexcept;
 
@@ -536,17 +545,6 @@ Number::isnormal() const noexcept
          (abs_m <= maxRep || abs_m % 10 == 0) && minExponent <= exponent_ &&
          exponent_ <= maxExponent);
 }
-
-// Because the template function definition is in the .cpp file, declare
-// some of the overrides used outside of this class here.
-template <>
-void
-Number::normalize<unsigned long>(
-    bool& negative,
-    unsigned long& mantissa,
-    int& exponent,
-    internalrep const& minMantissa,
-    internalrep const& maxMantissa);
 
 template <class T>
 std::pair<T, int>
