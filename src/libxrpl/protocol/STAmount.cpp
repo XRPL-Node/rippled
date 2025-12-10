@@ -676,7 +676,7 @@ STAmount::getText() const
     bool const scientific(
         (mOffset != 0) && ((mOffset < -25) || (mOffset > -5)));
 
-    if (native() || mAsset.holds<MPTIssue>() || scientific)
+    if (integral() || scientific)
     {
         ret.append(raw_value);
 
@@ -1258,7 +1258,7 @@ divide(STAmount const& num, STAmount const& den, Asset const& asset)
     int numOffset = num.exponent();
     int denOffset = den.exponent();
 
-    if (num.native() || num.holds<MPTIssue>())
+    if (num.integral())
     {
         while (numVal < STAmount::cMinValue)
         {
@@ -1268,7 +1268,7 @@ divide(STAmount const& num, STAmount const& den, Asset const& asset)
         }
     }
 
-    if (den.native() || den.holds<MPTIssue>())
+    if (den.integral())
     {
         while (denVal < STAmount::cMinValue)
         {
@@ -1333,7 +1333,7 @@ multiply(STAmount const& v1, STAmount const& v2, Asset const& asset)
     int offset1 = v1.exponent();
     int offset2 = v2.exponent();
 
-    if (v1.native() || v1.holds<MPTIssue>())
+    if (v1.integral())
     {
         while (value1 < STAmount::cMinValue)
         {
@@ -1342,7 +1342,7 @@ multiply(STAmount const& v1, STAmount const& v2, Asset const& asset)
         }
     }
 
-    if (v2.native() || v2.holds<MPTIssue>())
+    if (v2.integral())
     {
         while (value2 < STAmount::cMinValue)
         {
@@ -1383,9 +1383,9 @@ multiply(STAmount const& v1, STAmount const& v2, Asset const& asset)
 // So an alternative rounding approach was introduced.  You'll see that
 // alternative below.
 static void
-canonicalizeRound(bool native, std::uint64_t& value, int& offset, bool)
+canonicalizeRound(bool integral, std::uint64_t& value, int& offset, bool)
 {
-    if (native)
+    if (integral)
     {
         if (offset < 0)
         {
@@ -1423,12 +1423,12 @@ canonicalizeRound(bool native, std::uint64_t& value, int& offset, bool)
 // the value being rounded.
 static void
 canonicalizeRoundStrict(
-    bool native,
+    bool integral,
     std::uint64_t& value,
     int& offset,
     bool roundUp)
 {
-    if (native)
+    if (integral)
     {
         if (offset < 0)
         {
@@ -1526,9 +1526,7 @@ mulRoundImpl(
     if (v1 == beast::zero || v2 == beast::zero)
         return {asset};
 
-    bool const xrp = asset.native();
-
-    if (v1.native() && v2.native() && xrp)
+    if (v1.native() && v2.native() && asset.native())
     {
         std::uint64_t minV = std::min(getSNValue(v1), getSNValue(v2));
         std::uint64_t maxV = std::max(getSNValue(v1), getSNValue(v2));
@@ -1559,7 +1557,7 @@ mulRoundImpl(
     std::uint64_t value1 = v1.mantissa(), value2 = v2.mantissa();
     int offset1 = v1.exponent(), offset2 = v2.exponent();
 
-    if (v1.native() || v1.holds<MPTIssue>())
+    if (v1.integral())
     {
         while (value1 < STAmount::cMinValue)
         {
@@ -1568,7 +1566,7 @@ mulRoundImpl(
         }
     }
 
-    if (v2.native() || v2.holds<MPTIssue>())
+    if (v2.integral())
     {
         while (value2 < STAmount::cMinValue)
         {
@@ -1593,7 +1591,7 @@ mulRoundImpl(
     int offset = offset1 + offset2 + 14;
     if (resultNegative != roundUp)
     {
-        CanonicalizeFunc(xrp, amount, offset, roundUp);
+        CanonicalizeFunc(asset.integral(), amount, offset, roundUp);
     }
     STAmount result = [&]() {
         // If appropriate, tell Number to round down.  This gives the desired
@@ -1604,7 +1602,7 @@ mulRoundImpl(
 
     if (roundUp && !resultNegative && !result)
     {
-        if (xrp)
+        if (asset.integral())
         {
             // return the smallest value above zero
             amount = 1;
@@ -1662,7 +1660,7 @@ divRoundImpl(
     std::uint64_t numVal = num.mantissa(), denVal = den.mantissa();
     int numOffset = num.exponent(), denOffset = den.exponent();
 
-    if (num.native() || num.holds<MPTIssue>())
+    if (num.integral())
     {
         while (numVal < STAmount::cMinValue)
         {
@@ -1671,7 +1669,7 @@ divRoundImpl(
         }
     }
 
-    if (den.native() || den.holds<MPTIssue>())
+    if (den.integral())
     {
         while (denVal < STAmount::cMinValue)
         {
@@ -1696,8 +1694,7 @@ divRoundImpl(
     int offset = numOffset - denOffset - 17;
 
     if (resultNegative != roundUp)
-        canonicalizeRound(
-            asset.native() || asset.holds<MPTIssue>(), amount, offset, roundUp);
+        canonicalizeRound(asset.integral(), amount, offset, roundUp);
 
     STAmount result = [&]() {
         // If appropriate, tell Number the rounding mode we are using.
@@ -1711,7 +1708,7 @@ divRoundImpl(
 
     if (roundUp && !resultNegative && !result)
     {
-        if (asset.native() || asset.holds<MPTIssue>())
+        if (asset.integral())
         {
             // return the smallest value above zero
             amount = 1;
