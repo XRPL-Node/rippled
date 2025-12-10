@@ -283,8 +283,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
 <div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    <span class="keywordflow">if</span> (<span class="keyword">auto</span> <span class="keyword">const</span> cl = app.<a class="code hl_function" href="classripple_1_1Application.html#aa303fb1c72786fc008ef52079dee4fe3">getLedgerMaster</a>().<a class="code hl_function" href="classripple_1_1LedgerMaster.html#a837b38dc59d5779fe29018cd948aa407">getClosedLedger</a>())</div>
 <div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    {</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        h.insert(<span class="stringliteral">&quot;Closed-Ledger&quot;</span>, <a class="code hl_function" href="namespaceripple.html#a86e358ce3f06ff049af13c2342791cf8">strHex</a>(cl-&gt;info().hash));</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>        h.insert(<span class="stringliteral">&quot;Previous-Ledger&quot;</span>, <a class="code hl_function" href="namespaceripple.html#a86e358ce3f06ff049af13c2342791cf8">strHex</a>(cl-&gt;info().parentHash));</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        h.insert(<span class="stringliteral">&quot;Closed-Ledger&quot;</span>, <a class="code hl_function" href="namespaceripple.html#a86e358ce3f06ff049af13c2342791cf8">strHex</a>(cl-&gt;header().hash));</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>        h.insert(<span class="stringliteral">&quot;Previous-Ledger&quot;</span>, <a class="code hl_function" href="namespaceripple.html#a86e358ce3f06ff049af13c2342791cf8">strHex</a>(cl-&gt;header().parentHash));</div>
 <div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    }</div>
 <div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>}</div>
 </div>

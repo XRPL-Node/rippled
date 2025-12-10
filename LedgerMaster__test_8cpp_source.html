@@ -124,7 +124,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <span class="comment">// build ledgers</span></div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STTx const&gt;</a>&gt; txns;</div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STObject const&gt;</a>&gt; metas;</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 2; ++i)</div>
 <div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        {</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>            env(<a class="code hl_enumvalue" href="namespaceripple.html#ac34a69f56216ea1e430c09ba049bf0aea5483bf26dec486ec0175e2a3ca816a0a">noop</a>(alice));</div>
@@ -135,7 +135,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        }</div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="comment">// add last (empty) ledger</span></div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        env.close();</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;info().seq;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;header().seq;</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="comment">// test invalid range</span></div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        {</div>

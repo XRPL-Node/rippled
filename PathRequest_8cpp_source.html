@@ -305,7 +305,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>            (sleDest-&gt;getFlags() &amp; <a class="code hl_enumvalue" href="namespaceripple.html#a4a9c7b33fef9015d6406302ef80b63c5a2243e81f83c4191286c8c46bdd86d6f3">lsfRequireDestTag</a>);</div>
 <div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    }</div>
 <div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span> </div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    <a class="code hl_variable" href="classripple_1_1PathRequest.html#abf4fdbb06cf59de1a826fe69494da766">jvStatus</a>[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lrLedger-&gt;info().hash);</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    <a class="code hl_variable" href="classripple_1_1PathRequest.html#abf4fdbb06cf59de1a826fe69494da766">jvStatus</a>[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lrLedger-&gt;header().hash);</div>
 <div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <a class="code hl_variable" href="classripple_1_1PathRequest.html#abf4fdbb06cf59de1a826fe69494da766">jvStatus</a>[jss::ledger_index] = lrLedger-&gt;seq();</div>
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>}</div>

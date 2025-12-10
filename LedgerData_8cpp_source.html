@@ -143,8 +143,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="keywordflow">if</span> ((limit &lt; 0) || ((limit &gt; maxLimit) &amp;&amp; (!<a class="code hl_function" href="namespaceripple.html#a6909f61053b6e084f46665fa9f4ee673">isUnlimited</a>(context.<a class="code hl_variable" href="structripple_1_1RPC_1_1Context.html#a20ec6d6aa84f8c76eeb90ad92fe25e20">role</a>))))</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        limit = maxLimit;</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    jvResult[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lpLedger-&gt;info().hash);</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    jvResult[jss::ledger_index] = lpLedger-&gt;info().seq;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    jvResult[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lpLedger-&gt;header().hash);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    jvResult[jss::ledger_index] = lpLedger-&gt;header().seq;</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordflow">if</span> (!isMarker)</div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    {</div>

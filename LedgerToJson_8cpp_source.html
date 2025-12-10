@@ -230,7 +230,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>        }</div>
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        <span class="keywordflow">if</span> (!<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.open())</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            txJson[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.info().hash);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            txJson[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.header().hash);</div>
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        <span class="keywordtype">bool</span> <span class="keyword">const</span> validated =</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.context-&gt;ledgerMaster.isValidated(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger);</div>
@@ -388,12 +388,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>    <span class="comment">// Is there a way to report this back?</span></div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>    <span class="keyword">auto</span> bFull = isFull(fill);</div>
 <div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>    <span class="keywordflow">if</span> (isBinary(fill))</div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        fillJsonBinary(json, !<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.open(), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.info());</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        fillJsonBinary(json, !<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.open(), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.header());</div>
 <div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>    <span class="keywordflow">else</span></div>
 <div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>        fillJson(</div>
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>            json,</div>
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>            !<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.open(),</div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.info(),</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.ledger.header(),</div>
 <div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>            bFull,</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>            (<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.context ? <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">fill</a>.context-&gt;apiVersion</div>
 <div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>                          : RPC::apiMaximumSupportedVersion));</div>

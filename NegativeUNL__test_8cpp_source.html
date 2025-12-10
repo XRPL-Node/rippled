@@ -643,7 +643,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span>            keyPair.second,</div>
 <div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>            v,</div>
 <div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>            [&amp;](<a class="code hl_class" href="classripple_1_1STValidation.html">STValidation</a>&amp; v) {</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>                v.setFieldH256(sfLedgerHash, ledger-&gt;info().hash);</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>                v.setFieldH256(sfLedgerHash, ledger-&gt;header().hash);</div>
 <div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>                v.setFieldU32(sfLedgerSequence, ledger-&gt;seq());</div>
 <div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>                v.setFlag(vfFullValidation);</div>
 <div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>            });</div>
@@ -1821,7 +1821,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l01773" name="l01773"></a><span class="lineno"> 1773</span>                keys.second,</div>
 <div class="line"><a id="l01774" name="l01774"></a><span class="lineno"> 1774</span>                <a class="code hl_function" href="namespaceripple.html#aa2a27f242f6d150ff52f2ad0b2e2a512">calcNodeID</a>(keys.first),</div>
 <div class="line"><a id="l01775" name="l01775"></a><span class="lineno"> 1775</span>                [&amp;](<a class="code hl_class" href="classripple_1_1STValidation.html">STValidation</a>&amp; v) {</div>
-<div class="line"><a id="l01776" name="l01776"></a><span class="lineno"> 1776</span>                    v.setFieldH256(sfLedgerHash, l-&gt;info().hash);</div>
+<div class="line"><a id="l01776" name="l01776"></a><span class="lineno"> 1776</span>                    v.setFieldH256(sfLedgerHash, l-&gt;header().hash);</div>
 <div class="line"><a id="l01777" name="l01777"></a><span class="lineno"> 1777</span>                    v.setFieldU32(sfLedgerSequence, l-&gt;seq());</div>
 <div class="line"><a id="l01778" name="l01778"></a><span class="lineno"> 1778</span>                    v.setFlag(vfFullValidation);</div>
 <div class="line"><a id="l01779" name="l01779"></a><span class="lineno"> 1779</span>                });</div>

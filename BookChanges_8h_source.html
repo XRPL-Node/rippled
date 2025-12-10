@@ -250,11 +250,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    jvObj[jss::type] = <span class="stringliteral">&quot;bookChanges&quot;</span>;</div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="comment">// retrieve validated information from LedgerHeader class</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    jvObj[jss::validated] = lpAccepted-&gt;info().validated;</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    jvObj[jss::ledger_index] = lpAccepted-&gt;info().seq;</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    jvObj[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lpAccepted-&gt;info().hash);</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>    jvObj[jss::validated] = lpAccepted-&gt;header().validated;</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    jvObj[jss::ledger_index] = lpAccepted-&gt;header().seq;</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    jvObj[jss::ledger_hash] = <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(lpAccepted-&gt;header().hash);</div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>    jvObj[jss::ledger_time] = <a class="code hl_typedef" href="classJson_1_1Value.html#a10794060631f3e5f895739cfd2cc98b2">Json::Value::UInt</a>(</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>        lpAccepted-&gt;info().closeTime.time_since_epoch().count());</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>        lpAccepted-&gt;header().closeTime.time_since_epoch().count());</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    jvObj[jss::changes] = <a class="code hl_enumvalue" href="namespaceJson.html#a7d654b75c16a57007925868e38212b4eadc8f264f36b55b063c78126b335415f4">Json::arrayValue</a>;</div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>

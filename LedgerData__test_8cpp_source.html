@@ -312,7 +312,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>            <span class="keywordflow">if</span> (BEAST_EXPECT(jrr.isMember(jss::ledger)))</div>
 <div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>                BEAST_EXPECT(</div>
 <div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>                    jrr[jss::ledger][jss::ledger_hash] ==</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>                    <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(env.closed()-&gt;info().hash));</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>                    <a class="code hl_function" href="namespaceripple.html#ac124fe6744b7fe887dec949b56b16d50">to_string</a>(env.closed()-&gt;header().hash));</div>
 <div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>        }</div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>        {</div>
 <div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>            <span class="comment">// Closed ledger with binary form</span></div>

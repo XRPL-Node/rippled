@@ -145,7 +145,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>            }</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        }</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keyword">auto</span> <span class="keyword">const</span> seq = prevLedger-&gt;info().seq + 1;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keyword">auto</span> <span class="keyword">const</span> seq = prevLedger-&gt;header().seq + 1;</div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <a class="code hl_function" href="classripple_1_1NegativeUNLVote.html#a715cdaf670c930941605e79e41f37a12">purgeNewValidators</a>(seq);</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        <span class="comment">// Process the table and find all candidates to disable or to re-enable</span></div>
@@ -155,8 +155,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="comment">// Pick one to disable and one to re-enable if any, add ttUNL_MODIFY Tx</span></div>
 <div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordflow">if</span> (!candidates.toDisableCandidates.empty())</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <span class="keyword">auto</span> n =</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>                <a class="code hl_function" href="classripple_1_1NegativeUNLVote.html#a34a78d1a576f170278ca9daae7b60b0b">choose</a>(prevLedger-&gt;info().hash, candidates.toDisableCandidates);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <span class="keyword">auto</span> n = <a class="code hl_function" href="classripple_1_1NegativeUNLVote.html#a34a78d1a576f170278ca9daae7b60b0b">choose</a>(</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>                prevLedger-&gt;header().hash, candidates.toDisableCandidates);</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            XRPL_ASSERT(</div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>                nidToKeyMap.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/unordered_map/contains.html">contains</a>(n),</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>                <span class="stringliteral">&quot;ripple::NegativeUNLVote::doVoting : found node to disable&quot;</span>);</div>
@@ -166,7 +166,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        <span class="keywordflow">if</span> (!candidates.toReEnableCandidates.empty())</div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        {</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>            <span class="keyword">auto</span> n = <a class="code hl_function" href="classripple_1_1NegativeUNLVote.html#a34a78d1a576f170278ca9daae7b60b0b">choose</a>(</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>                prevLedger-&gt;info().hash, candidates.toReEnableCandidates);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>                prevLedger-&gt;header().hash, candidates.toReEnableCandidates);</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>            XRPL_ASSERT(</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>                nidToKeyMap.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/unordered_map/contains.html">contains</a>(n),</div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>                <span class="stringliteral">&quot;ripple::NegativeUNLVote::doVoting : found node to enable&quot;</span>);</div>
@@ -246,7 +246,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span> </div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>    <span class="comment">// Ask the validation container to keep enough validation message history</span></div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>    <span class="comment">// for next time.</span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keyword">auto</span> <span class="keyword">const</span> seq = prevLedger-&gt;info().seq + 1;</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keyword">auto</span> <span class="keyword">const</span> seq = prevLedger-&gt;header().seq + 1;</div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    validations.<a class="code hl_function" href="classripple_1_1Validations.html#adcb502704e0d786d3a27d8be38a87916">setSeqToKeep</a>(seq - 1, seq + <a class="code hl_variable" href="namespaceripple.html#aec92d858e16db22aebce05698a4a444d">FLAG_LEDGER_INTERVAL</a>);</div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
 <div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <span class="comment">// Find FLAG_LEDGER_INTERVAL (i.e. 256) previous ledger hashes</span></div>

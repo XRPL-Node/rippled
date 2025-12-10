@@ -137,7 +137,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STTx const&gt;</a>&gt; txns;</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STObject const&gt;</a>&gt; metas;</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 750; ++i)</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        {</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>            env(<a class="code hl_enumvalue" href="namespaceripple.html#ac34a69f56216ea1e430c09ba049bf0aea5483bf26dec486ec0175e2a3ca816a0a">noop</a>(alice));</div>
@@ -146,7 +146,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>            metas.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/emplace_back.html">emplace_back</a>(</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>                env.closed()-&gt;txRead(env.tx()-&gt;getTransactionID()).second);</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        }</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;info().seq;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;header().seq;</div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        <span class="comment">// Find the existing transactions</span></div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; txns.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>(); ++i)</div>
@@ -391,7 +391,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span> </div>
 <div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STTx const&gt;</a>&gt; txns;</div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::shared_ptr&lt;STObject const&gt;</a>&gt; metas;</div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 750; ++i)</div>
 <div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>        {</div>
 <div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>            env(<a class="code hl_enumvalue" href="namespaceripple.html#ac34a69f56216ea1e430c09ba049bf0aea5483bf26dec486ec0175e2a3ca816a0a">noop</a>(alice));</div>
@@ -400,7 +400,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>            metas.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/emplace_back.html">emplace_back</a>(</div>
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>                env.closed()-&gt;txRead(env.tx()-&gt;getTransactionID()).second);</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>        }</div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;info().seq;</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <span class="keyword">auto</span> <span class="keyword">const</span> endLegSeq = env.closed()-&gt;header().seq;</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span> </div>
 <div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        <span class="comment">// Find the existing transactions</span></div>
 <div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; txns.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>(); ++i)</div>
@@ -723,7 +723,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span>            <span class="keyword">auto</span> <span class="keyword">const</span> alice = Account(<span class="stringliteral">&quot;alice&quot;</span>);</div>
 <div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>            <span class="keyword">auto</span> <span class="keyword">const</span> bob = Account(<span class="stringliteral">&quot;bob&quot;</span>);</div>
 <div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span> </div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>            <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>            <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>            env.fund(XRP(10000), alice, bob);</div>
 <div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>            env(pay(alice, bob, XRP(10)));</div>
 <div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>            env.close();</div>
@@ -754,7 +754,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>            Account <span class="keyword">const</span> alice = Account(<span class="stringliteral">&quot;alice&quot;</span>);</div>
 <div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>            Account <span class="keyword">const</span> bob = Account(<span class="stringliteral">&quot;bob&quot;</span>);</div>
 <div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span> </div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span>            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>            env.fund(XRP(10000), alice, bob);</div>
 <div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span>            env(pay(alice, bob, XRP(10)));</div>
 <div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span>            env.close();</div>
@@ -802,7 +802,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>            env(pay(alice, bob, XRP(10)));</div>
 <div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>            env.close();</div>
 <div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span> </div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>            <span class="keyword">auto</span> <span class="keyword">const</span> ledgerSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>            <span class="keyword">auto</span> <span class="keyword">const</span> ledgerSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span> </div>
 <div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>            env(<a class="code hl_enumvalue" href="namespaceripple.html#ac34a69f56216ea1e430c09ba049bf0aea5483bf26dec486ec0175e2a3ca816a0a">noop</a>(alice), ter(<a class="code hl_enumvalue" href="namespaceripple.html#aabc7f150d5082c73116a1cd5962b434da28c7d8b3ed759d363503a05fcd59f151">tesSUCCESS</a>));</div>
 <div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>            env.close();</div>
@@ -831,7 +831,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>            <span class="keyword">auto</span> <span class="keyword">const</span> alice = Account(<span class="stringliteral">&quot;alice&quot;</span>);</div>
 <div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>            <span class="keyword">auto</span> <span class="keyword">const</span> bob = Account(<span class="stringliteral">&quot;bob&quot;</span>);</div>
 <div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span> </div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>            <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;info().seq;</div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>            <span class="keyword">auto</span> <span class="keyword">const</span> startLegSeq = env.current()-&gt;header().seq;</div>
 <div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>            env.fund(XRP(10000), alice, bob);</div>
 <div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            env(pay(alice, bob, XRP(10)));</div>
 <div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>            env.close();</div>
