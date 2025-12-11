@@ -315,7 +315,7 @@ var searchData=
   ['donftbuyoffers_312',['doNFTBuyOffers',['../namespaceripple.html#a28fa0eeff3b119427fbce8b701f71635',1,'ripple']]],
   ['donftselloffers_313',['doNFTSellOffers',['../namespaceripple.html#a67c54a4d2468423b6ea16761eb5bf347',1,'ripple']]],
   ['donoripplecheck_314',['doNoRippleCheck',['../namespaceripple.html#a2e3758a9867ccf48949ed8cce0e1da5a',1,'ripple']]],
-  ['door_315',['door',['../classripple_1_1Door.html#a43cc9558449ff1e6ad710ff5974a4a88',1,'ripple::Door::Door()'],['../classripple_1_1STXChainBridge.html#a01041e6341cb4fa361e70b189ea58899',1,'ripple::STXChainBridge::door()']]],
+  ['door_315',['door',['../classripple_1_1STXChainBridge.html#a01041e6341cb4fa361e70b189ea58899',1,'ripple::STXChainBridge::door()'],['../classripple_1_1Door.html#a43cc9558449ff1e6ad710ff5974a4a88',1,'ripple::Door::Door()']]],
   ['dooverpayment_316',['doOverpayment',['../namespaceripple_1_1detail.html#ade7a94854f553b17dd5f284030c792dd',1,'ripple::detail']]],
   ['doownerinfo_317',['doOwnerInfo',['../namespaceripple.html#aed533da4e0bc38cb6dcdcadef530f6d0',1,'ripple']]],
   ['dopathfind_318',['doPathFind',['../namespaceripple.html#afb557431632593541ea27ded99670b7e',1,'ripple']]],
