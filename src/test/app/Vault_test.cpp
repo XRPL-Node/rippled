@@ -2972,7 +2972,7 @@ class Vault_test : public beast::unit_test::suite
                 auto vaultAccount,
                 Vault& vault,
                 PrettyAsset const& asset,
-                std::function<MPTID(ripple::Keylet)> issuanceId) {
+                std::function<MPTID(xrpl::Keylet)> issuanceId) {
                 testcase("IOU non-transferable");
 
                 auto [tx, keylet] =

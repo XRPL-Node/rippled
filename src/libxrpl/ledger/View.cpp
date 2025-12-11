@@ -1575,7 +1575,7 @@ authorizeMPToken(
         {
             // LCOV_EXCL_START
             UNREACHABLE(
-                "ripple::authorizeMPToken : invalid issuance or issuers token");
+                "xrpl::authorizeMPToken : invalid issuance or issuers token");
             if (view.rules().enabled(featureLendingProtocol))
                 return tecINTERNAL;
             // LCOV_EXCL_STOP
@@ -1659,7 +1659,7 @@ trustCreate(
     if (uLowAccountID == uHighAccountID)
     {
         // LCOV_EXCL_START
-        UNREACHABLE("ripple::trustCreate : trust line to self");
+        UNREACHABLE("xrpl::trustCreate : trust line to self");
         if (view.rules().enabled(featureLendingProtocol))
             return tecINTERNAL;
         // LCOV_EXCL_STOP
@@ -2181,7 +2181,7 @@ rippleSendMultiIOU(
     auto const& issuer = issue.getIssuer();
 
     XRPL_ASSERT(
-        !isXRP(senderID), "ripple::rippleSendMultiIOU : sender is not XRP");
+        !isXRP(senderID), "xrpl::rippleSendMultiIOU : sender is not XRP");
 
     // These may diverge
     STAmount takeFromSender{issue};
@@ -2201,7 +2201,7 @@ rippleSendMultiIOU(
 
         XRPL_ASSERT(
             !isXRP(receiverID),
-            "ripple::rippleSendMultiIOU : receiver is not XRP");
+            "xrpl::rippleSendMultiIOU : receiver is not XRP");
 
         if (senderID == issuer || receiverID == issuer || issuer == noAccount())
         {
@@ -2381,7 +2381,7 @@ accountSendMultiIOU(
 {
     XRPL_ASSERT_PARTS(
         receivers.size() > 1,
-        "ripple::accountSendMultiIOU",
+        "xrpl::accountSendMultiIOU",
         "multiple recipients provided");
 
     if (!issue.native())
@@ -2804,7 +2804,7 @@ accountSendMulti(
 {
     XRPL_ASSERT_PARTS(
         receivers.size() > 1,
-        "ripple::accountSendMulti",
+        "xrpl::accountSendMulti",
         "multiple recipients provided");
     return std::visit(
         [&]<ValidIssueType TIss>(TIss const& issue) {

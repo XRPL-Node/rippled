@@ -179,7 +179,7 @@ doAccountInfo(RPC::JsonContext& context)
                     name = name.substr(0, name.size() - 2);
                     XRPL_ASSERT_PARTS(
                         !name.empty(),
-                        "ripple::doAccountInfo",
+                        "xrpl::doAccountInfo",
                         "name is not empty");
                 }
                 // ValidPseudoAccounts invariant guarantees that only one field

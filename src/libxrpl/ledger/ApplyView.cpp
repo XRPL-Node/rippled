@@ -135,9 +135,7 @@ insertPage(
     if (page != 1)
         node->setFieldU64(sfIndexPrevious, page - 1);
     XRPL_ASSERT_PARTS(
-        !nextPage,
-        "ripple::directory::insertPage",
-        "nextPage has default value");
+        !nextPage, "xrpl::directory::insertPage", "nextPage has default value");
     /* Reserved for future use when directory pages may be inserted in
      * between two other pages instead of only at the end of the chain.
     if (nextPage)

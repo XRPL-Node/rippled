@@ -542,7 +542,7 @@ AccountRootsDeletedClean::finalize(
                                "behind a non-zero balance";
             XRPL_ASSERT(
                 enforce,
-                "ripple::AccountRootsDeletedClean::finalize : "
+                "xrpl::AccountRootsDeletedClean::finalize : "
                 "deleted account has zero balance");
             if (enforce)
                 return false;
@@ -554,7 +554,7 @@ AccountRootsDeletedClean::finalize(
                                "behind a non-zero owner count";
             XRPL_ASSERT(
                 enforce,
-                "ripple::AccountRootsDeletedClean::finalize : "
+                "xrpl::AccountRootsDeletedClean::finalize : "
                 "deleted account has zero owner count");
             if (enforce)
                 return false;
@@ -1485,7 +1485,7 @@ ValidMPTIssuance::finalize(
             // assert.
             XRPL_ASSERT_PARTS(
                 enforceCreatedByIssuer,
-                "ripple::ValidMPTIssuance::finalize",
+                "xrpl::ValidMPTIssuance::finalize",
                 "no issuer MPToken");
             if (enforceCreatedByIssuer)
                 return false;
@@ -2316,7 +2316,7 @@ NoModifiedUnmodifiableFields::finalize(
         }
         XRPL_ASSERT(
             !bad || enforce,
-            "ripple::NoModifiedUnmodifiableFields::finalize : no bad "
+            "xrpl::NoModifiedUnmodifiableFields::finalize : no bad "
             "changes or enforce invariant");
         if (bad)
         {
