@@ -2,13 +2,13 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/NetworkOPs.h>
-#include <xrpld/core/JobQueue.h>
-#include <xrpld/perflog/PerfLog.h>
 
 #include <xrpl/basics/CanProcess.h>
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
 #include <xrpl/beast/container/aged_map.h>
+#include <xrpl/core/JobQueue.h>
+#include <xrpl/core/PerfLog.h>
 #include <xrpl/protocol/jss.h>
 
 #include <exception>
@@ -16,7 +16,7 @@
 #include <mutex>
 #include <vector>
 
-namespace ripple {
+namespace xrpl {
 
 class InboundLedgersImp : public InboundLedgers
 {
@@ -56,7 +56,7 @@ public:
         auto doAcquire = [&, seq, reason]() -> std::shared_ptr<Ledger const> {
             XRPL_ASSERT(
                 hash.isNonZero(),
-                "ripple::InboundLedgersImp::acquire::doAcquire : nonzero hash");
+                "xrpl::InboundLedgersImp::acquire::doAcquire : nonzero hash");
 
             // probably not the right rule
             if (app_.getOPs().isNeedNetworkLedger() &&
@@ -162,8 +162,7 @@ public:
     find(uint256 const& hash) override
     {
         XRPL_ASSERT(
-            hash.isNonZero(),
-            "ripple::InboundLedgersImp::find : nonzero input");
+            hash.isNonZero(), "xrpl::InboundLedgersImp::find : nonzero input");
 
         std::shared_ptr<InboundLedger> ret;
 
@@ -327,7 +326,7 @@ public:
             {
                 XRPL_ASSERT(
                     it.second,
-                    "ripple::InboundLedgersImp::getInfo : non-null ledger");
+                    "xrpl::InboundLedgersImp::getInfo : non-null ledger");
                 acqs.push_back(it);
             }
             for (auto const& it : mRecentFailures)
@@ -364,7 +363,7 @@ public:
             {
                 XRPL_ASSERT(
                     it.second,
-                    "ripple::InboundLedgersImp::gotFetchPack : non-null "
+                    "xrpl::InboundLedgersImp::gotFetchPack : non-null "
                     "ledger");
                 acquires.push_back(it.second);
             }
@@ -474,4 +473,4 @@ make_InboundLedgers(
         app, clock, collector, make_PeerSetBuilder(app));
 }
 
-}  // namespace ripple
+}  // namespace xrpl
