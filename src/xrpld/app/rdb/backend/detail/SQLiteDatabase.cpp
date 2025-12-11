@@ -196,10 +196,16 @@ private:
      * @brief checkoutTransaction Checks out and returns node store ledger
      *        database.
      * @return Session to the node store ledger database.
+     * @throws std::runtime_error if ledger database is not available.
      */
     auto
     checkoutLedger()
     {
+        if (!lgrdb_)
+        {
+            JLOG(j_.fatal()) << "Ledger database is not available";
+            Throw<std::runtime_error>("Ledger database is not available");
+        }
         return lgrdb_->checkoutDb();
     }
 
@@ -207,10 +213,16 @@ private:
      * @brief checkoutTransaction Checks out and returns the node store
      *        transaction database.
      * @return Session to the node store transaction database.
+     * @throws std::runtime_error if transaction database is not available.
      */
     auto
     checkoutTransaction()
     {
+        if (!txdb_)
+        {
+            JLOG(j_.fatal()) << "Transaction database is not available";
+            Throw<std::runtime_error>("Transaction database is not available");
+        }
         return txdb_->checkoutDb();
     }
 };
