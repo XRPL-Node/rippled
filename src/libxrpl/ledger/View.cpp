@@ -19,7 +19,7 @@
 #include <type_traits>
 #include <variant>
 
-namespace ripple {
+namespace xrpl {
 
 namespace detail {
 
@@ -40,7 +40,7 @@ internalDirNext(
     auto const& svIndexes = page->getFieldV256(sfIndexes);
     XRPL_ASSERT(
         index <= svIndexes.size(),
-        "ripple::detail::internalDirNext : index inside range");
+        "xrpl::detail::internalDirNext : index inside range");
 
     if (index >= svIndexes.size())
     {
@@ -57,7 +57,7 @@ internalDirNext(
         else
             page = view.peek(keylet::page(root, next));
 
-        XRPL_ASSERT(page, "ripple::detail::internalDirNext : non-null root");
+        XRPL_ASSERT(page, "xrpl::detail::internalDirNext : non-null root");
 
         if (!page)
             return false;
@@ -307,7 +307,7 @@ isVaultPseudoAccountFrozen(
     if (mptIssuer == nullptr)
     {
         // LCOV_EXCL_START
-        UNREACHABLE("ripple::isVaultPseudoAccountFrozen : null MPToken issuer");
+        UNREACHABLE("xrpl::isVaultPseudoAccountFrozen : null MPToken issuer");
         return false;
         // LCOV_EXCL_STOP
     }
@@ -319,7 +319,7 @@ isVaultPseudoAccountFrozen(
         view.read(keylet::vault(mptIssuer->getFieldH256(sfVaultID)));
     if (vault == nullptr)
     {  // LCOV_EXCL_START
-        UNREACHABLE("ripple::isVaultPseudoAccountFrozen : null vault");
+        UNREACHABLE("xrpl::isVaultPseudoAccountFrozen : null vault");
         return false;
         // LCOV_EXCL_STOP
     }
@@ -589,7 +589,7 @@ confineOwnerCount(
                     << "Account " << *id << " owner count set below 0!";
             }
             adjusted = 0;
-            XRPL_ASSERT(!id, "ripple::confineOwnerCount : id is not set");
+            XRPL_ASSERT(!id, "xrpl::confineOwnerCount : id is not set");
         }
     }
     return adjusted;
@@ -639,8 +639,7 @@ forEachItem(
     Keylet const& root,
     std::function<void(std::shared_ptr<SLE const> const&)> const& f)
 {
-    XRPL_ASSERT(
-        root.type == ltDIR_NODE, "ripple::forEachItem : valid root type");
+    XRPL_ASSERT(root.type == ltDIR_NODE, "xrpl::forEachItem : valid root type");
 
     if (root.type != ltDIR_NODE)
         return;
@@ -671,7 +670,7 @@ forEachItemAfter(
     std::function<bool(std::shared_ptr<SLE const> const&)> const& f)
 {
     XRPL_ASSERT(
-        root.type == ltDIR_NODE, "ripple::forEachItemAfter : valid root type");
+        root.type == ltDIR_NODE, "xrpl::forEachItemAfter : valid root type");
 
     if (root.type != ltDIR_NODE)
         return false;
@@ -785,14 +784,14 @@ areCompatible(
 {
     bool ret = true;
 
-    if (validLedger.info().seq < testLedger.info().seq)
+    if (validLedger.header().seq < testLedger.header().seq)
     {
         // valid -> ... -> test
         auto hash = hashOfSeq(
             testLedger,
-            validLedger.info().seq,
+            validLedger.header().seq,
             beast::Journal{beast::Journal::getNullSink()});
-        if (hash && (*hash != validLedger.info().hash))
+        if (hash && (*hash != validLedger.header().hash))
         {
             JLOG(s) << reason << " incompatible with valid ledger";
 
@@ -801,14 +800,14 @@ areCompatible(
             ret = false;
         }
     }
-    else if (validLedger.info().seq > testLedger.info().seq)
+    else if (validLedger.header().seq > testLedger.header().seq)
     {
         // test -> ... -> valid
         auto hash = hashOfSeq(
             validLedger,
-            testLedger.info().seq,
+            testLedger.header().seq,
             beast::Journal{beast::Journal::getNullSink()});
-        if (hash && (*hash != testLedger.info().hash))
+        if (hash && (*hash != testLedger.header().hash))
         {
             JLOG(s) << reason << " incompatible preceding ledger";
 
@@ -818,8 +817,8 @@ areCompatible(
         }
     }
     else if (
-        (validLedger.info().seq == testLedger.info().seq) &&
-        (validLedger.info().hash != testLedger.info().hash))
+        (validLedger.header().seq == testLedger.header().seq) &&
+        (validLedger.header().hash != testLedger.header().hash))
     {
         // Same sequence number, different hash
         JLOG(s) << reason << " incompatible ledger";
@@ -829,11 +828,11 @@ areCompatible(
 
     if (!ret)
     {
-        JLOG(s) << "Val: " << validLedger.info().seq << " "
-                << to_string(validLedger.info().hash);
+        JLOG(s) << "Val: " << validLedger.header().seq << " "
+                << to_string(validLedger.header().hash);
 
-        JLOG(s) << "New: " << testLedger.info().seq << " "
-                << to_string(testLedger.info().hash);
+        JLOG(s) << "New: " << testLedger.header().seq << " "
+                << to_string(testLedger.header().hash);
     }
 
     return ret;
@@ -849,7 +848,7 @@ areCompatible(
 {
     bool ret = true;
 
-    if (testLedger.info().seq > validIndex)
+    if (testLedger.header().seq > validIndex)
     {
         // Ledger we are testing follows last valid ledger
         auto hash = hashOfSeq(
@@ -865,8 +864,8 @@ areCompatible(
         }
     }
     else if (
-        (validIndex == testLedger.info().seq) &&
-        (testLedger.info().hash != validHash))
+        (validIndex == testLedger.header().seq) &&
+        (testLedger.header().hash != validHash))
     {
         JLOG(s) << reason << " incompatible ledger";
 
@@ -877,8 +876,8 @@ areCompatible(
     {
         JLOG(s) << "Val: " << validIndex << " " << to_string(validHash);
 
-        JLOG(s) << "New: " << testLedger.info().seq << " "
-                << to_string(testLedger.info().hash);
+        JLOG(s) << "New: " << testLedger.header().seq << " "
+                << to_string(testLedger.header().hash);
     }
 
     return ret;
@@ -949,9 +948,9 @@ hashOfSeq(ReadView const& ledger, LedgerIndex seq, beast::Journal journal)
         return std::nullopt;
     }
     if (seq == ledger.seq())
-        return ledger.info().hash;
+        return ledger.header().hash;
     if (seq == (ledger.seq() - 1))
-        return ledger.info().parentHash;
+        return ledger.header().parentHash;
 
     if (int diff = ledger.seq() - seq; diff <= 256)
     {
@@ -962,7 +961,7 @@ hashOfSeq(ReadView const& ledger, LedgerIndex seq, beast::Journal journal)
             XRPL_ASSERT(
                 hashIndex->getFieldU32(sfLastLedgerSequence) ==
                     (ledger.seq() - 1),
-                "ripple::hashOfSeq : matching ledger sequence");
+                "xrpl::hashOfSeq : matching ledger sequence");
             STVector256 vec = hashIndex->getFieldV256(sfHashes);
             if (vec.size() >= diff)
                 return vec[vec.size() - diff];
@@ -973,7 +972,7 @@ hashOfSeq(ReadView const& ledger, LedgerIndex seq, beast::Journal journal)
         else
         {
             JLOG(journal.warn())
-                << "Ledger " << ledger.seq() << ":" << ledger.info().hash
+                << "Ledger " << ledger.seq() << ":" << ledger.header().hash
                 << " missing normal list";
         }
     }
@@ -990,9 +989,9 @@ hashOfSeq(ReadView const& ledger, LedgerIndex seq, beast::Journal journal)
     if (hashIndex)
     {
         auto const lastSeq = hashIndex->getFieldU32(sfLastLedgerSequence);
-        XRPL_ASSERT(lastSeq >= seq, "ripple::hashOfSeq : minimum last ledger");
+        XRPL_ASSERT(lastSeq >= seq, "xrpl::hashOfSeq : minimum last ledger");
         XRPL_ASSERT(
-            (lastSeq & 0xff) == 0, "ripple::hashOfSeq : valid last ledger");
+            (lastSeq & 0xff) == 0, "xrpl::hashOfSeq : valid last ledger");
         auto const diff = (lastSeq - seq) >> 8;
         STVector256 vec = hashIndex->getFieldV256(sfHashes);
         if (vec.size() > diff)
@@ -1018,7 +1017,7 @@ adjustOwnerCount(
 {
     if (!sle)
         return;
-    XRPL_ASSERT(amount, "ripple::adjustOwnerCount : nonzero amount input");
+    XRPL_ASSERT(amount, "xrpl::adjustOwnerCount : nonzero amount input");
     std::uint32_t const current{sle->getFieldU32(sfOwnerCount)};
     AccountID const id = (*sle)[sfAccount];
     std::uint32_t const adjusted = confineOwnerCount(current, amount, id, j);
@@ -1054,7 +1053,8 @@ pseudoAccountAddress(ReadView const& view, uint256 const& pseudoOwnerKey)
     for (std::uint16_t i = 0; i < maxAccountAttempts; ++i)
     {
         ripesha_hasher rsh;
-        auto const hash = sha512Half(i, view.info().parentHash, pseudoOwnerKey);
+        auto const hash =
+            sha512Half(i, view.header().parentHash, pseudoOwnerKey);
         rsh(hash.data(), hash.size());
         AccountID const ret{static_cast<ripesha_hasher::result_type>(rsh)};
         if (!view.read(keylet::account(ret)))
@@ -1078,8 +1078,8 @@ getPseudoAccountFields()
         {
             // LCOV_EXCL_START
             LogicError(
-                "ripple::isPseudoAccount : unable to find account root ledger "
-                "format");
+                "xrpl::getPseudoAccountFields : unable to find account root "
+                "ledger format");
             // LCOV_EXCL_STOP
         }
         auto const& soTemplate = ar->getSOTemplate();
@@ -1123,7 +1123,7 @@ createPseudoAccount(
             [&ownerField](SField const* sf) -> bool {
                 return *sf == ownerField;
             }) == 1,
-        "ripple::createPseudoAccount : valid owner field");
+        "xrpl::createPseudoAccount : valid owner field");
 
     auto const accountId = pseudoAccountAddress(view, pseudoOwnerKey);
     if (accountId == beast::zero)
@@ -1424,14 +1424,14 @@ trustCreate(
     bool const bSetDst = saLimit.getIssuer() == uDstAccountID;
     bool const bSetHigh = bSrcHigh ^ bSetDst;
 
-    XRPL_ASSERT(sleAccount, "ripple::trustCreate : non-null SLE");
+    XRPL_ASSERT(sleAccount, "xrpl::trustCreate : non-null SLE");
     if (!sleAccount)
         return tefINTERNAL;  // LCOV_EXCL_LINE
 
     XRPL_ASSERT(
         sleAccount->getAccountID(sfAccount) ==
             (bSetHigh ? uHighAccountID : uLowAccountID),
-        "ripple::trustCreate : matching account ID");
+        "xrpl::trustCreate : matching account ID");
     auto const slePeer =
         view.peek(keylet::account(bSetHigh ? uLowAccountID : uHighAccountID));
     if (!slePeer)
@@ -1657,7 +1657,7 @@ offerDelete(ApplyView& view, std::shared_ptr<SLE> const& sle, beast::Journal j)
     {
         XRPL_ASSERT(
             sle->isFlag(lsfHybrid) && sle->isFieldPresent(sfDomainID),
-            "ripple::offerDelete : should be a hybrid domain offer");
+            "xrpl::offerDelete : should be a hybrid domain offer");
 
         auto const& additionalBookDirs = sle->getFieldArray(sfAdditionalBooks);
 
@@ -1700,23 +1700,23 @@ rippleCreditIOU(
     // Make sure issuer is involved.
     XRPL_ASSERT(
         !bCheckIssuer || uSenderID == issuer || uReceiverID == issuer,
-        "ripple::rippleCreditIOU : matching issuer or don't care");
+        "xrpl::rippleCreditIOU : matching issuer or don't care");
     (void)issuer;
 
     // Disallow sending to self.
     XRPL_ASSERT(
         uSenderID != uReceiverID,
-        "ripple::rippleCreditIOU : sender is not receiver");
+        "xrpl::rippleCreditIOU : sender is not receiver");
 
     bool const bSenderHigh = uSenderID > uReceiverID;
     auto const index = keylet::line(uSenderID, uReceiverID, currency);
 
     XRPL_ASSERT(
         !isXRP(uSenderID) && uSenderID != noAccount(),
-        "ripple::rippleCreditIOU : sender is not XRP");
+        "xrpl::rippleCreditIOU : sender is not XRP");
     XRPL_ASSERT(
         !isXRP(uReceiverID) && uReceiverID != noAccount(),
-        "ripple::rippleCreditIOU : receiver is not XRP");
+        "xrpl::rippleCreditIOU : receiver is not XRP");
 
     // If the line exists, modify it accordingly.
     if (auto const sleRippleState = view.peek(index))
@@ -1853,10 +1853,10 @@ rippleSendIOU(
 
     XRPL_ASSERT(
         !isXRP(uSenderID) && !isXRP(uReceiverID),
-        "ripple::rippleSendIOU : neither sender nor receiver is XRP");
+        "xrpl::rippleSendIOU : neither sender nor receiver is XRP");
     XRPL_ASSERT(
         uSenderID != uReceiverID,
-        "ripple::rippleSendIOU : sender is not receiver");
+        "xrpl::rippleSendIOU : sender is not receiver");
 
     if (uSenderID == issuer || uReceiverID == issuer || issuer == noAccount())
     {
@@ -1912,7 +1912,7 @@ accountSendIOU(
         // LCOV_EXCL_START
         XRPL_ASSERT(
             saAmount >= beast::zero && !saAmount.holds<MPTIssue>(),
-            "ripple::accountSendIOU : minimum amount and not MPT");
+            "xrpl::accountSendIOU : minimum amount and not MPT");
         // LCOV_EXCL_STOP
     }
 
@@ -2089,7 +2089,7 @@ rippleSendMPT(
 {
     XRPL_ASSERT(
         uSenderID != uReceiverID,
-        "ripple::rippleSendMPT : sender is not receiver");
+        "xrpl::rippleSendMPT : sender is not receiver");
 
     // Safe to get MPT since rippleSendMPT is only called by accountSendMPT
     auto const issuer = saAmount.getIssuer();
@@ -2154,7 +2154,7 @@ accountSendMPT(
 {
     XRPL_ASSERT(
         saAmount >= beast::zero && saAmount.holds<MPTIssue>(),
-        "ripple::accountSendMPT : minimum amount and MPT");
+        "xrpl::accountSendMPT : minimum amount and MPT");
 
     /* If we aren't sending anything or if the sender is the same as the
      * receiver then we don't need to do anything.
@@ -2252,14 +2252,14 @@ issueIOU(
 {
     XRPL_ASSERT(
         !isXRP(account) && !isXRP(issue.account),
-        "ripple::issueIOU : neither account nor issuer is XRP");
+        "xrpl::issueIOU : neither account nor issuer is XRP");
 
     // Consistency check
-    XRPL_ASSERT(issue == amount.issue(), "ripple::issueIOU : matching issue");
+    XRPL_ASSERT(issue == amount.issue(), "xrpl::issueIOU : matching issue");
 
     // Can't send to self!
     XRPL_ASSERT(
-        issue.account != account, "ripple::issueIOU : not issuer account");
+        issue.account != account, "xrpl::issueIOU : not issuer account");
 
     JLOG(j.trace()) << "issueIOU: " << to_string(account) << ": "
                     << amount.getFullText();
@@ -2352,14 +2352,14 @@ redeemIOU(
 {
     XRPL_ASSERT(
         !isXRP(account) && !isXRP(issue.account),
-        "ripple::redeemIOU : neither account nor issuer is XRP");
+        "xrpl::redeemIOU : neither account nor issuer is XRP");
 
     // Consistency check
-    XRPL_ASSERT(issue == amount.issue(), "ripple::redeemIOU : matching issue");
+    XRPL_ASSERT(issue == amount.issue(), "xrpl::redeemIOU : matching issue");
 
     // Can't send to self!
     XRPL_ASSERT(
-        issue.account != account, "ripple::redeemIOU : not issuer account");
+        issue.account != account, "xrpl::redeemIOU : not issuer account");
 
     JLOG(j.trace()) << "redeemIOU: " << to_string(account) << ": "
                     << amount.getFullText();
@@ -2426,10 +2426,10 @@ transferXRP(
     beast::Journal j)
 {
     XRPL_ASSERT(
-        from != beast::zero, "ripple::transferXRP : nonzero from account");
-    XRPL_ASSERT(to != beast::zero, "ripple::transferXRP : nonzero to account");
-    XRPL_ASSERT(from != to, "ripple::transferXRP : sender is not receiver");
-    XRPL_ASSERT(amount.native(), "ripple::transferXRP : amount is XRP");
+        from != beast::zero, "xrpl::transferXRP : nonzero from account");
+    XRPL_ASSERT(to != beast::zero, "xrpl::transferXRP : nonzero to account");
+    XRPL_ASSERT(from != to, "xrpl::transferXRP : sender is not receiver");
+    XRPL_ASSERT(amount.native(), "xrpl::transferXRP : amount is XRP");
 
     SLE::pointer const sender = view.peek(keylet::account(from));
     SLE::pointer const receiver = view.peek(keylet::account(to));
@@ -2560,7 +2560,7 @@ requireAuth(
     {
         XRPL_ASSERT(
             sleIssuance->getFieldU32(sfFlags) & lsfMPTRequireAuth,
-            "ripple::requireAuth : issuance requires authorization");
+            "xrpl::requireAuth : issuance requires authorization");
         // ter = tefINTERNAL | tecOBJECT_NOT_FOUND | tecNO_AUTH | tecEXPIRED
         if (auto const ter =
                 credentials::validDomain(view, *maybeDomainID, account);
@@ -2594,7 +2594,7 @@ enforceMPTokenAuthorization(
 
     XRPL_ASSERT(
         sleIssuance->isFlag(lsfMPTRequireAuth),
-        "ripple::enforceMPTokenAuthorization : authorization required");
+        "xrpl::enforceMPTokenAuthorization : authorization required");
 
     if (account == sleIssuance->at(sfIssuer))
         return tefINTERNAL;  // LCOV_EXCL_LINE
@@ -2640,7 +2640,7 @@ enforceMPTokenAuthorization(
         // MPToken which requires authorization by the token issuer.
         XRPL_ASSERT(
             sleToken != nullptr && !maybeDomainID.has_value(),
-            "ripple::enforceMPTokenAuthorization : found MPToken");
+            "xrpl::enforceMPTokenAuthorization : found MPToken");
         if (sleToken->isFlag(lsfMPTAuthorized))
             return tesSUCCESS;
 
@@ -2652,7 +2652,7 @@ enforceMPTokenAuthorization(
         // lsfMPTAuthorized because it is meaningless. Return tesSUCCESS
         XRPL_ASSERT(
             maybeDomainID.has_value(),
-            "ripple::enforceMPTokenAuthorization : found MPToken for domain");
+            "xrpl::enforceMPTokenAuthorization : found MPToken for domain");
         return tesSUCCESS;
     }
     else if (authorizedByDomain)
@@ -2661,7 +2661,7 @@ enforceMPTokenAuthorization(
         // authorized by domain. Proceed to create it, then return tesSUCCESS
         XRPL_ASSERT(
             maybeDomainID.has_value() && sleToken == nullptr,
-            "ripple::enforceMPTokenAuthorization : new MPToken for domain");
+            "xrpl::enforceMPTokenAuthorization : new MPToken for domain");
         if (auto const err = authorizeMPToken(
                 view,
                 priorBalance,   // priorBalance
@@ -2676,7 +2676,7 @@ enforceMPTokenAuthorization(
 
     // LCOV_EXCL_START
     UNREACHABLE(
-        "ripple::enforceMPTokenAuthorization : condition list is incomplete");
+        "xrpl::enforceMPTokenAuthorization : condition list is incomplete");
     return tefINTERNAL;
     // LCOV_EXCL_STOP
 }
@@ -2764,7 +2764,7 @@ cleanupOnAccountDelete(
             //     back to 'it' to "un-invalidate" the iterator.
             XRPL_ASSERT(
                 uDirEntry >= 1,
-                "ripple::cleanupOnAccountDelete : minimum dir entries");
+                "xrpl::cleanupOnAccountDelete : minimum dir entries");
             if (uDirEntry == 0)
             {
                 // LCOV_EXCL_START
@@ -2852,8 +2852,7 @@ rippleCredit(
             else
             {
                 XRPL_ASSERT(
-                    !bCheckIssuer,
-                    "ripple::rippleCredit : not checking issuer");
+                    !bCheckIssuer, "xrpl::rippleCredit : not checking issuer");
                 return rippleCreditMPT(
                     view, uSenderID, uReceiverID, saAmount, j);
             }
@@ -2869,10 +2868,10 @@ assetsToSharesDeposit(
 {
     XRPL_ASSERT(
         !assets.negative(),
-        "ripple::assetsToSharesDeposit : non-negative assets");
+        "xrpl::assetsToSharesDeposit : non-negative assets");
     XRPL_ASSERT(
         assets.asset() == vault->at(sfAsset),
-        "ripple::assetsToSharesDeposit : assets and vault match");
+        "xrpl::assetsToSharesDeposit : assets and vault match");
     if (assets.negative() || assets.asset() != vault->at(sfAsset))
         return std::nullopt;  // LCOV_EXCL_LINE
 
@@ -2897,10 +2896,10 @@ sharesToAssetsDeposit(
 {
     XRPL_ASSERT(
         !shares.negative(),
-        "ripple::sharesToAssetsDeposit : non-negative shares");
+        "xrpl::sharesToAssetsDeposit : non-negative shares");
     XRPL_ASSERT(
         shares.asset() == vault->at(sfShareMPTID),
-        "ripple::sharesToAssetsDeposit : shares and vault match");
+        "xrpl::sharesToAssetsDeposit : shares and vault match");
     if (shares.negative() || shares.asset() != vault->at(sfShareMPTID))
         return std::nullopt;  // LCOV_EXCL_LINE
 
@@ -2927,10 +2926,10 @@ assetsToSharesWithdraw(
 {
     XRPL_ASSERT(
         !assets.negative(),
-        "ripple::assetsToSharesDeposit : non-negative assets");
+        "xrpl::assetsToSharesDeposit : non-negative assets");
     XRPL_ASSERT(
         assets.asset() == vault->at(sfAsset),
-        "ripple::assetsToSharesWithdraw : assets and vault match");
+        "xrpl::assetsToSharesWithdraw : assets and vault match");
     if (assets.negative() || assets.asset() != vault->at(sfAsset))
         return std::nullopt;  // LCOV_EXCL_LINE
 
@@ -2955,10 +2954,10 @@ sharesToAssetsWithdraw(
 {
     XRPL_ASSERT(
         !shares.negative(),
-        "ripple::sharesToAssetsDeposit : non-negative shares");
+        "xrpl::sharesToAssetsDeposit : non-negative shares");
     XRPL_ASSERT(
         shares.asset() == vault->at(sfShareMPTID),
-        "ripple::sharesToAssetsWithdraw : shares and vault match");
+        "xrpl::sharesToAssetsWithdraw : shares and vault match");
     if (shares.negative() || shares.asset() != vault->at(sfShareMPTID))
         return std::nullopt;  // LCOV_EXCL_LINE
 
@@ -3081,7 +3080,7 @@ rippleUnlockEscrowMPT(
     if (!view.rules().enabled(fixTokenEscrowV1))
         XRPL_ASSERT(
             netAmount == grossAmount,
-            "ripple::rippleUnlockEscrowMPT : netAmount == grossAmount");
+            "xrpl::rippleUnlockEscrowMPT : netAmount == grossAmount");
 
     auto const& issuer = netAmount.getIssuer();
     auto const& mptIssue = netAmount.get<MPTIssue>();
@@ -3249,4 +3248,4 @@ after(NetClock::time_point now, std::uint32_t mark)
     return now.time_since_epoch().count() > mark;
 }
 
-}  // namespace ripple
+}  // namespace xrpl
