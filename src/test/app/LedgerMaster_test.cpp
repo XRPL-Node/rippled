@@ -4,7 +4,7 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/misc/SHAMapStore.h>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 
 class LedgerMaster_test : public beast::unit_test::suite
@@ -200,7 +200,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(LedgerMaster, app, ripple);
+BEAST_DEFINE_TESTSUITE(LedgerMaster, app, xrpl);
 
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl

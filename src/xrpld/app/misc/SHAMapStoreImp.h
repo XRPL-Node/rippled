@@ -13,7 +13,7 @@
 #include <chrono>
 #include <thread>
 
-namespace ripple {
+namespace xrpl {
 
 class NetworkOPs;
 
@@ -232,6 +232,6 @@ public:
     stop() override;
 };
 
-}  // namespace ripple
+}  // namespace xrpl
 
 #endif

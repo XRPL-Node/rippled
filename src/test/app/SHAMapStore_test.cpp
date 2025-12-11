@@ -13,7 +13,7 @@
 
 #include <thread>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 
 class SHAMapStore_test : public beast::unit_test::suite
@@ -817,7 +817,7 @@ public:
 };
 
 // VFALCO This test fails because of thread asynchronous issues
-BEAST_DEFINE_TESTSUITE(SHAMapStore, app, ripple);
+BEAST_DEFINE_TESTSUITE(SHAMapStore, app, xrpl);
 
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl
