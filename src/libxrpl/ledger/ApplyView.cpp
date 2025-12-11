@@ -6,7 +6,7 @@
 #include <limits>
 #include <type_traits>
 
-namespace ripple {
+namespace xrpl {
 
 namespace directory {
 
@@ -193,7 +193,7 @@ ApplyView::emptyDirDelete(Keylet const& directory)
         node->getFieldH256(sfRootIndex) != directory.key)
     {
         // LCOV_EXCL_START
-        UNREACHABLE("ripple::ApplyView::emptyDirDelete : invalid node type");
+        UNREACHABLE("xrpl::ApplyView::emptyDirDelete : invalid node type");
         return false;
         // LCOV_EXCL_STOP
     }
@@ -435,4 +435,4 @@ ApplyView::dirDelete(
     return true;
 }
 
-}  // namespace ripple
+}  // namespace xrpl
