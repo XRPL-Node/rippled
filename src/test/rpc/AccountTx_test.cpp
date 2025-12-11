@@ -9,7 +9,7 @@
 
 #include <boost/container/flat_set.hpp>
 
-namespace ripple {
+namespace xrpl {
 
 namespace test {
 
@@ -239,7 +239,7 @@ class AccountTx_test : public beast::unit_test::suite
                     env.rpc("json", "account_tx", to_string(p)),
                     rpcLGR_IDX_MALFORMED));
 
-            p[jss::ledger_index_min] = env.current()->info().seq;
+            p[jss::ledger_index_min] = env.current()->header().seq;
             BEAST_EXPECT(isErr(
                 env.rpc("json", "account_tx", to_string(p)),
                 (apiVersion == 1 ? rpcLGR_IDXS_INVALID
@@ -253,7 +253,7 @@ class AccountTx_test : public beast::unit_test::suite
             BEAST_EXPECT(hasTxs(
                 env.rpc(apiVersion, "json", "account_tx", to_string(p))));
 
-            p[jss::ledger_index_max] = env.current()->info().seq;
+            p[jss::ledger_index_max] = env.current()->header().seq;
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(
                     env.rpc(apiVersion, "json", "account_tx", to_string(p))));
@@ -266,11 +266,11 @@ class AccountTx_test : public beast::unit_test::suite
             BEAST_EXPECT(hasTxs(
                 env.rpc(apiVersion, "json", "account_tx", to_string(p))));
 
-            p[jss::ledger_index_max] = env.closed()->info().seq;
+            p[jss::ledger_index_max] = env.closed()->header().seq;
             BEAST_EXPECT(hasTxs(
                 env.rpc(apiVersion, "json", "account_tx", to_string(p))));
 
-            p[jss::ledger_index_max] = env.closed()->info().seq - 1;
+            p[jss::ledger_index_max] = env.closed()->header().seq - 1;
             BEAST_EXPECT(noTxs(env.rpc("json", "account_tx", to_string(p))));
         }
 
@@ -278,19 +278,19 @@ class AccountTx_test : public beast::unit_test::suite
         {
             Json::Value p{jParams};
 
-            p[jss::ledger_index] = env.closed()->info().seq;
+            p[jss::ledger_index] = env.closed()->header().seq;
             BEAST_EXPECT(hasTxs(
                 env.rpc(apiVersion, "json", "account_tx", to_string(p))));
 
-            p[jss::ledger_index] = env.closed()->info().seq - 1;
+            p[jss::ledger_index] = env.closed()->header().seq - 1;
             BEAST_EXPECT(noTxs(env.rpc("json", "account_tx", to_string(p))));
 
-            p[jss::ledger_index] = env.current()->info().seq;
+            p[jss::ledger_index] = env.current()->header().seq;
             BEAST_EXPECT(isErr(
                 env.rpc("json", "account_tx", to_string(p)),
                 rpcLGR_NOT_VALIDATED));
 
-            p[jss::ledger_index] = env.current()->info().seq + 1;
+            p[jss::ledger_index] = env.current()->header().seq + 1;
             BEAST_EXPECT(isErr(
                 env.rpc("json", "account_tx", to_string(p)), rpcLGR_NOT_FOUND));
         }
@@ -299,11 +299,11 @@ class AccountTx_test : public beast::unit_test::suite
         {
             Json::Value p{jParams};
 
-            p[jss::ledger_hash] = to_string(env.closed()->info().hash);
+            p[jss::ledger_hash] = to_string(env.closed()->header().hash);
             BEAST_EXPECT(hasTxs(
                 env.rpc(apiVersion, "json", "account_tx", to_string(p))));
 
-            p[jss::ledger_hash] = to_string(env.closed()->info().parentHash);
+            p[jss::ledger_hash] = to_string(env.closed()->header().parentHash);
             BEAST_EXPECT(noTxs(env.rpc("json", "account_tx", to_string(p))));
         }
 
@@ -330,7 +330,7 @@ class AccountTx_test : public beast::unit_test::suite
         // Ledger index max only
         {
             Json::Value p{jParams};
-            p[jss::ledger_index_max] = env.current()->info().seq;
+            p[jss::ledger_index_max] = env.current()->header().seq;
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(
                     env.rpc(apiVersion, "json", "account_tx", to_string(p))));
@@ -900,7 +900,7 @@ class AccountTx_test : public beast::unit_test::suite
         //
         // ledger hash should be fixed regardless any change to account history
         // BEAST_EXPECT(
-        //     to_string(env.closed()->info().hash) ==
+        //     to_string(env.closed()->header().hash) ==
         //     "0BD507BB87D3C0E73B462485E6E381798A8C82FC49BF17FE39C60E08A1AF035D");
 
         // alice authorizes bob
@@ -935,7 +935,7 @@ public:
         testMPT();
     }
 };
-BEAST_DEFINE_TESTSUITE(AccountTx, rpc, ripple);
+BEAST_DEFINE_TESTSUITE(AccountTx, rpc, xrpl);
 
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl

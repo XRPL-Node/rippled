@@ -3,7 +3,7 @@
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/jss.h>
 
-namespace ripple {
+namespace xrpl {
 
 class LedgerClosed_test : public beast::unit_test::suite
 {
@@ -47,6 +47,6 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(LedgerClosed, rpc, ripple);
+BEAST_DEFINE_TESTSUITE(LedgerClosed, rpc, xrpl);
 
-}  // namespace ripple
+}  // namespace xrpl
