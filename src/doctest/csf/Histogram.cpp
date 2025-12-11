@@ -73,4 +73,3 @@ TEST_CASE("Histogram duplicate elements")
 }
 
 TEST_SUITE_END();
-

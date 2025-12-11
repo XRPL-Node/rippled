@@ -153,4 +153,3 @@ TEST_CASE("SeqProxy operations")
 }
 
 TEST_SUITE_END();
-

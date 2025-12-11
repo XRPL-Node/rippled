@@ -45,4 +45,3 @@ TEST_CASE("Serializer add64/geti64")
 }
 
 TEST_SUITE_END();
-

@@ -61,4 +61,3 @@ TEST_CASE("Scheduler basic operations")
 }
 
 TEST_SUITE_END();
-

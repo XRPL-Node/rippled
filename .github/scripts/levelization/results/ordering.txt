@@ -1,3 +1,13 @@
+doctest.basics > xrpl.basics
+doctest.basics > xrpl.protocol
+doctest.beast > xrpl.basics
+doctest.core > xrpl.core
+doctest.core > xrpl.json
+doctest.csf > test.csf
+doctest.nodestore > xrpl.nodestore
+doctest.protocol > xrpl.basics
+doctest.protocol > xrpl.json
+doctest.protocol > xrpl.protocol
 libxrpl.basics > xrpl.basics
 libxrpl.core > xrpl.basics
 libxrpl.core > xrpl.core

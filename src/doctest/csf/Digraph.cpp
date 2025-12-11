@@ -70,4 +70,3 @@ TEST_CASE("Digraph basic operations")
 }
 
 TEST_SUITE_END();
-

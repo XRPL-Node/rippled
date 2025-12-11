@@ -75,4 +75,3 @@ TEST_CASE("CollectionAndDelimiter")
 }
 
 TEST_SUITE_END();
-

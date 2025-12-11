@@ -93,4 +93,3 @@ TEST_CASE("Journal threshold kDebug")
 }
 
 TEST_SUITE_END();
-

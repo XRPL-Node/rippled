@@ -15,4 +15,3 @@ TEST_CASE("basic_seconds_clock::now() works")
 }
 
 TEST_SUITE_END();
-

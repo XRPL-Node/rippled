@@ -69,7 +69,8 @@ TEST_CASE("STAccount bad size throws")
 {
     // Construct from a VL that is not exactly 160 bits.
     Serializer s;
-    std::uint8_t const bits128[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    std::uint8_t const bits128[]{
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     s.addVL(bits128, sizeof(bits128));
     SerialIter sit(s.slice());
     CHECK_THROWS_AS(STAccount(sit, sfAccount), std::runtime_error);
@@ -113,4 +114,3 @@ TEST_CASE("AccountID invalid parsing")
 }
 
 TEST_SUITE_END();
-

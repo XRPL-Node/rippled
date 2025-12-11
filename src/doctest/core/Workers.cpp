@@ -166,4 +166,3 @@ TEST_CASE("threadCounts: 64 -> 3 -> 65")
 TEST_SUITE_END();
 
 }  // namespace xrpl
-

@@ -67,4 +67,3 @@ TEST_CASE("Thread names are preserved")
 }
 
 TEST_SUITE_END();
-

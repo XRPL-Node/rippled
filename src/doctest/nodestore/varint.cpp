@@ -44,4 +44,3 @@ TEST_CASE("encode, decode")
 }
 
 TEST_SUITE_END();
-
