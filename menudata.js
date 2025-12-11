@@ -348,4 +348,5 @@ var menudata={children:[
 {text:"s",url:"functions_rela_s.html#index_s"},
 {text:"t",url:"functions_rela_t.html#index_t"},
 {text:"v",url:"functions_rela_v.html#index_v"},
-{text:"w",url:"functions_rela_w.html#index_w"}]}]}]}]}
+{text:"w",url:"functions_rela_w.html#index_w"},
+{text:"x",url:"functions_rela_x.html#index_x"}]}]}]}]}
