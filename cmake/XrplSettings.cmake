@@ -92,33 +92,6 @@ option(local_protobuf
 option(local_grpc
   "Force a local build of gRPC instead of looking for an installed version." OFF)
 
-# this one is a string and therefore can't be an option
-set(san "" CACHE STRING "On gcc & clang, add sanitizer instrumentation")
-set_property(CACHE san PROPERTY STRINGS ";undefined;memory;address;thread")
-if(san)
-  string(TOLOWER ${san} san)
-  set(SAN_FLAG "-fsanitize=${san}")
-  set(SAN_LIB "")
-  if(is_gcc)
-    if(san STREQUAL "address")
-      set(SAN_LIB "asan")
-    elseif(san STREQUAL "thread")
-      set(SAN_LIB "tsan")
-    elseif(san STREQUAL "memory")
-      set(SAN_LIB "msan")
-    elseif(san STREQUAL "undefined")
-      set(SAN_LIB "ubsan")
-    endif()
-  endif()
-  set(_saved_CRL ${CMAKE_REQUIRED_LIBRARIES})
-  set(CMAKE_REQUIRED_LIBRARIES "${SAN_FLAG};${SAN_LIB}")
-  check_cxx_compiler_flag(${SAN_FLAG} COMPILER_SUPPORTS_SAN)
-  set(CMAKE_REQUIRED_LIBRARIES ${_saved_CRL})
-  if(NOT COMPILER_SUPPORTS_SAN)
-    message(FATAL_ERROR "${san} sanitizer does not seem to be supported by your compiler")
-  endif()
-endif()
-
 # the remaining options are obscure and rarely used
 option(beast_no_unit_test_inline
   "Prevents unit test definitions from being inserted into global table"

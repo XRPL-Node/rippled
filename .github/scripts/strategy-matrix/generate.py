@@ -209,7 +209,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         ):
             continue
 
-        cxx_flags = ""
         # Enable code coverage for Debian Bookworm using GCC 14 in Debug and no
         # Unity on linux/amd64
         if (
@@ -218,8 +217,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             and "-Dunity=OFF" in cmake_args
             and architecture["platform"] == "linux/amd64"
         ):
-            cmake_args = f"-Dcoverage=ON -Dcoverage_format=xml -DCODE_COVERAGE_VERBOSE=ON -DCMAKE_C_FLAGS=-O0 {cmake_args}"
-            cxx_flags = f"-O0 {cxx_flags}"
+            cmake_args = f"-Dcoverage=ON -Dcoverage_format=xml -DCODE_COVERAGE_VERBOSE=ON -DCMAKE_C_FLAGS=-O0 -DCMAKE_CXX_FLAGS=-O0 {cmake_args}"
 
         # Generate a unique name for the configuration, e.g. macos-arm64-debug
         # or debian-bookworm-gcc-12-amd64-release-unity.
@@ -247,25 +245,26 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             "gcc-15",
             "clang-20",
         }:
-            configs = addSanitizerConfigs(architecture, os, cmake_args, cxx_flags)
-            if "asan_ubsan" in configs:
-                configurations.append(
-                    {
-                        "config_name": config_name + "-asan-ubsan",
-                        "cmake_args": configs["asan_ubsan"],
-                        "cmake_target": cmake_target,
-                        "build_only": build_only,
-                        "build_type": build_type,
-                        "os": os,
-                        "architecture": architecture,
-                        "sanitizers": "Address,UndefinedBehavior",
-                    }
-                )
-            if "tsan_ubsan" in configs:
+            # Add ASAN + UBSAN configuration.
+            configurations.append(
+                {
+                    "config_name": config_name + "-asan-ubsan",
+                    "cmake_args": cmake_args,
+                    "cmake_target": cmake_target,
+                    "build_only": build_only,
+                    "build_type": build_type,
+                    "os": os,
+                    "architecture": architecture,
+                    "sanitizers": "Address,UndefinedBehavior",
+                }
+            )
+            # TSAN is deactivated due to seg faults with latest compilers.
+            activateTSAN = False
+            if activateTSAN:
                 configurations.append(
                     {
                         "config_name": config_name + "-tsan-ubsan",
-                        "cmake_args": configs["tsan_ubsan"],
+                        "cmake_args": cmake_args,
                         "cmake_target": cmake_target,
                         "build_only": build_only,
                         "build_type": build_type,
@@ -288,102 +287,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             )
 
     return configurations
-
-
-def addSanitizerConfigs(
-    architecture: dict,
-    os: dict,
-    cmake_args: str,
-    cxx_flags: str,
-) -> dict:
-    extra_warning_flags = ""
-    linker_relocation_flags = ""
-    linker_flags = ""
-
-    cxx_flags += " -fno-omit-frame-pointer"
-
-    # Use large code model to avoid relocation errors with large binaries
-    # Only for x86-64 (amd64) - ARM64 doesn't support -mcmodel=large
-    if architecture["platform"] == "linux/amd64" and os["compiler_name"] == "gcc":
-        # Add -mcmodel=large to both compiler AND linker flags
-        # This is needed because sanitizers create very large binaries and
-        # large model removes the 2GB limitation that medium model has
-        cxx_flags += " -mcmodel=large"
-        linker_relocation_flags += " -mcmodel=large"
-
-    # Create default sanitizer flags
-    sanitizers_flags = "undefined,float-divide-by-zero"
-
-    # There are some differences between GCC and Clang support for sanitizers.
-    # Hence we must use diff. falg combinations for each compiler.
-    # These combination of flags were tested to work with GCC 15 and Clang 20.
-    # If the versions are changed, the flags might need to be updated.
-
-    if os["compiler_name"] == "gcc":
-        # Suppress false positive warnings in GCC with stringop-overflow
-        extra_warning_flags += " -Wno-stringop-overflow"
-        # Disable mold, gold and lld linkers.
-        # Use default linker (bfd/ld) which is more lenient with mixed code models
-        cmake_args += " -Duse_mold=OFF -Duse_gold=OFF -Duse_lld=OFF"
-        # Add linker flags for Sanitizers
-        linker_flags += f" -DCMAKE_EXE_LINKER_FLAGS='{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}'"
-        linker_flags += f" -DCMAKE_SHARED_LINKER_FLAGS='{linker_relocation_flags} -fsanitize=address,{sanitizers_flags}'"
-    elif os["compiler_name"] == "clang":
-        # Note: We use $GITHUB_WORKSPACE environment variable which will be expanded by the shell
-        # before CMake processes it. This ensures the compiler receives an absolute path.
-        # CMAKE_SOURCE_DIR won't work here because it's inside CMAKE_CXX_FLAGS string.
-        # GCC doesn't support ignorelist.
-        cxx_flags += " -fsanitize-ignorelist=${GITHUB_WORKSPACE}/sanitizers/suppressions/sanitizer-ignorelist.txt"
-        sanitizers_flags = f"{sanitizers_flags},unsigned-integer-overflow"
-        linker_flags += (
-            f" -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,{sanitizers_flags}'"
-        )
-        linker_flags += (
-            f" -DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=address,{sanitizers_flags}'"
-        )
-
-    # Sanitizers recommend minimum of -O1 for reasonable performance
-    cxx_flags += " -O1"
-
-    # First create config for asan
-    cmake_args_flags = f'{cmake_args} -DCMAKE_CXX_FLAGS="-fsanitize=address,{sanitizers_flags} {cxx_flags} {extra_warning_flags}" {linker_flags}'
-
-    # Add config with asan+ubsan
-    configs = {}
-    configs["asan_ubsan"] = cmake_args_flags
-
-    # Since TSAN runs are crashing with seg faults(could be compatibility issues with latest compilers)
-    # We deactivate it for now. But I would keep the code, since it took some effort to find the correct set of config needed to run this.
-    # This will be useful when we decide to activate it again in future.
-    activateTSAN = False
-    if activateTSAN:
-        linker_flags = ""
-        # Update configs for tsan
-        # gcc doesn't supports atomic_thread_fence with tsan. Suppress warnings.
-        # Also tsan doesn't work well with mcmode=large and bfd linker
-        if os["compiler_name"] == "gcc":
-            extra_warning_flags += " -Wno-tsan"
-            cxx_flags = cxx_flags.replace("-mcmodel=large", "-mcmodel=medium")
-            linker_relocation_flags = linker_relocation_flags.replace(
-                "-mcmodel=large", "-mcmodel=medium"
-            )
-            # Add linker flags for Sanitizers
-            linker_flags += f" -DCMAKE_EXE_LINKER_FLAGS='{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}'"
-            linker_flags += f" -DCMAKE_SHARED_LINKER_FLAGS='{linker_relocation_flags} -fsanitize=thread,{sanitizers_flags}'"
-        elif os["compiler_name"] == "clang":
-            linker_flags += (
-                f" -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=thread,{sanitizers_flags}'"
-            )
-            linker_flags += (
-                f" -DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=thread,{sanitizers_flags}'"
-            )
-
-        cmake_args_flags = f"{cmake_args} -DCMAKE_CXX_FLAGS='-fsanitize=thread,{sanitizers_flags} {cxx_flags} {extra_warning_flags}' {linker_flags}"
-
-        # Add config with tsan+ubsan
-        configs["tsan_ubsan"] = cmake_args_flags
-
-    return configs
 
 
 def read_config(file: Path) -> Config:

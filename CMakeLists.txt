@@ -74,6 +74,7 @@ if (packages_only)
   return ()
 endif ()
 include(XrplCompiler)
+include(XrplSanitizers)
 include(XrplInterface)
 
 option(only_docs "Include only the docs target?" FALSE)
