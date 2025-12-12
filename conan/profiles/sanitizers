@@ -31,7 +31,6 @@ include(default)
                 # Work around by disabling Abseil's V2 constant init logic
                 {% set extra_cxxflags = extra_cxxflags ~ " -DABSL_ENABLE_CONSTANT_INIT_V2=0" %}
                 abseil/*:tools.build:defines+=['ABSL_ENABLE_CONSTANT_INIT_V2=0']
-                abseil/*:tools.build:cflags+=['-DABSL_ENABLE_CONSTANT_INIT_V2=0']
             {% endif %}
 
             tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
