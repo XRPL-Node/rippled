@@ -146,5 +146,7 @@ include(XrplValidatorKeys)
 
 if(tests)
   include(CTest)
-  add_subdirectory(src/tests/libxrpl)
+  # add_subdirectory(src/tests/libxrpl)
+  # Doctest-based tests (converted from Beast Unit Test framework)
+  add_subdirectory(src/doctest)
 endif()
