@@ -530,7 +530,7 @@ tryOverpayment(
     XRPL_ASSERT_PARTS(
         deltas.managementFee ==
             rounded.managementFeeDue - managementFeeOutstanding,
-        "ripple::detail::tryOverpayment",
+        "xrpl::detail::tryOverpayment",
         "no fee change");
 
     auto const hypotheticalValueOutstanding =
