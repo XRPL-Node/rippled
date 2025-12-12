@@ -1,5 +1,5 @@
-| :warning: **WARNING** :warning:
-|---|
+| :warning: **WARNING** :warning:                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | These instructions assume you have a C++ development environment ready with Git, Python, Conan, CMake, and a C++ compiler. For help setting one up on Linux, macOS, or Windows, [see this guide](./docs/build/environment.md). |
 
 > These instructions also assume a basic familiarity with Conan and CMake.
@@ -388,19 +388,15 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    conan install .. --output-folder . --build missing --settings build_type=Debug
    ```
 
-   If you would like to activate `asan`(`Address`) or `tsan`(`Thread`) or `ubsan`(`UndefinedBehavior`) for the build,
-   declare an environment variable as follows(with values: `Address`, `Thread`, `UndefinedBehavior`) and use the `sanitizers`
-   profile in the `conan install` command.
+   **Sanitizers:** To build dependencies with sanitizer instrumentation, set the
+   `SANITIZER` environment variable and use the `sanitizers` profile:
 
    ```
-   SANITIZERS=Address conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
-   # or if you want asan+ubsan
-   SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+   SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
    ```
 
-   Note: Do not mix Address and Thread, that's incompatible.
-
-   More details here: [sanitizers](./docs/build/sanitizers.md)
+   Note: Do not mix Address and Thread sanitizers - they are incompatible.
+   See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
 
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`
 
@@ -437,6 +433,15 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    ```
 
    **Note:** You can pass build options for `xrpld` in this step.
+
+   **Sanitizers:** To enable sanitizers (Address, Thread, UndefinedBehavior),
+   set the `SANITIZER` environment variable when running CMake:
+
+   ```
+   SANITIZER=Address,UndefinedBehavior cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug -Dxrpld=ON -Dtests=ON ..
+   ```
+
+   See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
 
 4. Build `xrpld`.
 
@@ -534,16 +539,18 @@ stored inside the build directory, as either of:
 
 ## Options
 
-| Option     | Default Value | Description                                                        |
-| ---------- | ------------- | ------------------------------------------------------------------ |
-| `assert`   | OFF           | Enable assertions.                                                 |
-| `coverage` | OFF           | Prepare the coverage report.                                       |
-| `san`      | N/A           | Enable a sanitizer with Clang. Choices are `thread` and `address`. |
-| `tests`    | OFF           | Build tests.                                                       |
-| `unity`    | OFF           | Configure a unity build.                                           |
-| `xrpld`    | OFF           | Build the xrpld application, and not just the libxrpl library.     |
-| `werr`     | OFF           | Treat compilation warnings as errors                               |
-| `wextra`   | OFF           | Enable additional compilation warnings                             |
+| Option     | Default Value | Description                                                    |
+| ---------- | ------------- | -------------------------------------------------------------- |
+| `assert`   | OFF           | Enable assertions.                                             |
+| `coverage` | OFF           | Prepare the coverage report.                                   |
+| `tests`    | OFF           | Build tests.                                                   |
+| `unity`    | OFF           | Configure a unity build.                                       |
+| `xrpld`    | OFF           | Build the xrpld application, and not just the libxrpl library. |
+| `werr`     | OFF           | Treat compilation warnings as errors                           |
+| `wextra`   | OFF           | Enable additional compilation warnings                         |
+
+To enable sanitizers, set the `SANITIZER` environment variable when running CMake.
+See [sanitizers documentation](./docs/build/sanitizers.md) for details.
 
 [Unity builds][5] may be faster for the first build
 (at the cost of much more memory) since they concatenate sources into fewer

@@ -5,75 +5,106 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
 
 - [Sanitizer Configuration for Rippled](#sanitizer-configuration-for-rippled)
   - [Building with Sanitizers](#building-with-sanitizers)
-    - [AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)](#addresssanitizer-asan--undefinedbehaviorsanitizer-ubsan)
-    - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan)
-    - [Just UndefinedBehaviorSanitizer (UBSan)](#just-undefinedbehaviorsanitizer-ubsan)
-- [Running Tests with Sanitizers](#running-tests-with-sanitizers)
-  - [AddressSanitizer (ASan)](#addresssanitizer-asan)
-  - [ThreadSanitizer (TSan)](#threadsanitizer-tsan)
-  - [LeakSanitizer (LSan)](#leaksanitizer-lsan)
-- [Suppression Files](#suppression-files)
-  - [asan.supp](#asansupp)
-  - [lsan.supp](#lsansupp)
-  - [ubsan.supp](#ubsansupp)
-  - [tsan.supp](#tsansupp)
-  - [Ignorelist](#sanitizer-ignorelisttxt)
-- [Known False Positives](#known-false-positives)
-- [References](#references)
+    - [Summary](#summary)
+    - [Build steps:](#build-steps)
+      - [Install dependencies](#install-dependencies)
+      - [AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)](#addresssanitizer-asan--undefinedbehaviorsanitizer-ubsan)
+      - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan)
+      - [Just AddressSanitizer (ASan)](#just-addresssanitizer-asan)
+      - [Just UndefinedBehaviorSanitizer (UBSan)](#just-undefinedbehaviorsanitizer-ubsan)
+      - [Build](#build)
+  - [Running Tests with Sanitizers](#running-tests-with-sanitizers)
+    - [AddressSanitizer (ASan)](#addresssanitizer-asan)
+    - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan-1)
+    - [LeakSanitizer (LSan)](#leaksanitizer-lsan)
+  - [Suppression Files](#suppression-files)
+    - [`asan.supp`](#asansupp)
+    - [`lsan.supp`](#lsansupp)
+    - [`ubsan.supp`](#ubsansupp)
+    - [`tsan.supp`](#tsansupp)
+    - [`sanitizer-ignorelist.txt`](#sanitizer-ignorelisttxt)
+  - [Troubleshooting](#troubleshooting)
+    - ["ASan is ignoring requested \_\_asan_handle_no_return" warnings](#asan-is-ignoring-requested-__asan_handle_no_return-warnings)
+    - [Sanitizer Mismatch Errors](#sanitizer-mismatch-errors)
+  - [References](#references)
 
 ## Building with Sanitizers
 
 ### Summary
 
-Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with following changes:
+Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with the following changes:
 
-1. Make sure you have clean build directory.
-2. Use `--profile sanitizers` to configure build options to include sanitizer flags. [sanitizes](../../conan/profiles/sanitizers) profile contains settings for all sanitizers.
-3. Set `ASAN_OPTIONS`, `LSAN_OPTIONS` ,`UBSAN_OPTIONS` and `TSAN_OPTIONS` environment variables to configure sanitizer behavior when running executables.
+1. Make sure you have a clean build directory.
+2. Set the `SANITIZER` environment variable when running CMake to enable sanitizers.
+3. Optionally use `--profile sanitizers` with Conan to build dependencies with sanitizer instrumentation.
+4. Set `ASAN_OPTIONS`, `LSAN_OPTIONS`, `UBSAN_OPTIONS` and `TSAN_OPTIONS` environment variables to configure sanitizer behavior when running executables.
 
 ---
 
 ### Build steps:
 
 ```bash
-  cd /path/to/rippled
-  rm -rf .build
-  mkdir .build
-  cd .build
+cd /path/to/rippled
+rm -rf .build
+mkdir .build
+cd .build
+```
+
+#### Install dependencies
+
+The `SANITIZER` environment variable is used by both Conan and CMake.
+
+```bash
+# Standard build (without instrumenting dependencies)
+SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --build missing --settings build_type=Debug
+
+# Or with sanitizer-instrumented dependencies (takes longer but fewer false positives)
+SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
 ```
 
 #### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
 
-Build with AddressSanitizer+UndefinedBehavior sanitizers (or you can choose just one of them).
+Set the `SANITIZER` environment variable when running CMake:
 
 ```bash
-SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+SANITIZER=Address,UndefinedBehavior cmake .. -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -Dtests=ON -Dxrpld=ON
 ```
 
 #### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
-# Build dependencies with Thread sanitizer
-SANITIZERS=Thread,UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+SANITIZER=Thread,UndefinedBehavior cmake .. -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -Dtests=ON -Dxrpld=ON
+```
+
+#### Just AddressSanitizer (ASan)
+
+```bash
+SANITIZER=Address cmake .. -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -Dtests=ON -Dxrpld=ON
 ```
 
 #### Just UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
-# Build dependencies with Thread sanitizer
-SANITIZERS=UndefinedBehavior conan install .. --output-folder . --profile sanitizers --build missing --settings build_type=Release
+SANITIZER=UndefinedBehavior cmake .. -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -Dtests=ON -Dxrpld=ON
 ```
 
-Use `--profile:all sanitizers` if you would like to build all dependencies and libraries (boost etc.) with sanitizers. This might take long time but you won't see some false-positives on sanitizer reports since whole binary will be instrumented.
+**Note:** Do not mix Address and Thread sanitizers - they are incompatible.
 
-To build with Thread+UndefinedBehavior Sanitizer, replace `SANITIZERS=Address` with `SANITIZERS=Thread`.
-
-# Configure CMake
+#### Build
 
 ```bash
-cmake .. -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -Dunity=ON -Dtests=ON -Dxrpld=ON
-
-# Build
 cmake --build . --parallel 4
 ```
 
