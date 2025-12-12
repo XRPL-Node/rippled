@@ -40,7 +40,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # The default CMake target is 'all' for Linux and MacOS and 'install'
         # for Windows, but it can get overridden for certain configurations.
         cmake_target = "install" if os["distro_name"] == "windows" else "all"
-        unittest_args = ''
+        unittest_args = ""
 
         # We build and test all configurations by default, except for Windows in
         # Debug, because it is too slow, as well as when code coverage is
@@ -70,7 +70,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                         and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
-                        unittest_args = f'{unittest_args} --unittest-fee=500'
+                        unittest_args = f"{unittest_args} --unittest-fee=500"
                         skip = False
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
@@ -93,7 +93,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                         and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
-                        unittest_args = f'{unittest_args} --unittest-fee=1000'
+                        unittest_args = f"{unittest_args} --unittest-fee=1000"
                         skip = False
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-20"
@@ -243,7 +243,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             {
                 "config_name": config_name,
                 "cmake_args": cmake_args,
-                "unittest_args" : unittest_args,
+                "unittest_args": unittest_args,
                 "cmake_target": cmake_target,
                 "build_only": build_only,
                 "build_type": build_type,
