@@ -656,7 +656,7 @@ public:
 
         auto& lm = env.app().getLedgerMaster();
         LedgerIndex minSeq = 2;
-        LedgerIndex maxSeq = env.closed()->info().seq;
+        LedgerIndex maxSeq = env.closed()->header().seq;
         auto& store = env.app().getSHAMapStore();
         store.rendezvous();
         LedgerIndex lastRotated = store.getLastRotated();
@@ -778,8 +778,8 @@ public:
             }
             BEAST_EXPECT(maxSeq != lastRotated + deleteInterval);
             BEAST_EXPECTS(
-                env.closed()->info().seq == maxSeq,
-                failureMessage("maxSeq", maxSeq, env.closed()->info().seq));
+                env.closed()->header().seq == maxSeq,
+                failureMessage("maxSeq", maxSeq, env.closed()->header().seq));
             BEAST_EXPECTS(
                 store.getLastRotated() == lastRotated,
                 failureMessage(

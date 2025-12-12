@@ -124,7 +124,7 @@ class LedgerMaster_test : public beast::unit_test::suite
 
         auto& lm = env.app().getLedgerMaster();
         LedgerIndex minSeq = 2;
-        LedgerIndex maxSeq = env.closed()->info().seq;
+        LedgerIndex maxSeq = env.closed()->header().seq;
         auto& store = env.app().getSHAMapStore();
         store.rendezvous();
         LedgerIndex lastRotated = store.getLastRotated();
@@ -160,8 +160,8 @@ class LedgerMaster_test : public beast::unit_test::suite
                 lastRotated = maxSeq;
             }
             BEAST_EXPECTS(
-                env.closed()->info().seq == maxSeq,
-                to_string(env.closed()->info().seq));
+                env.closed()->header().seq == maxSeq,
+                to_string(env.closed()->header().seq));
             BEAST_EXPECTS(
                 store.getLastRotated() == lastRotated,
                 to_string(store.getLastRotated()));
