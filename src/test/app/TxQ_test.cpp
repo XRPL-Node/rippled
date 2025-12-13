@@ -3819,7 +3819,7 @@ public:
             return result;
         };
 
-        testcase("straightfoward positive case");
+        testcase("straightforward positive case");
         {
             // Queue up some transactions at a too-low fee.
             auto aliceSeq = env.seq(alice);
