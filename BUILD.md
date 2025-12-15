@@ -389,10 +389,10 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    ```
 
    **Sanitizers:** To build dependencies with sanitizer instrumentation, set the
-   `SANITIZER` environment variable and use the `sanitizers` profile:
+   `SANITIZERS` environment variable and use the `sanitizers` profile:
 
    ```
-   SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+   SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
    ```
 
    Note: Do not mix Address and Thread sanitizers - they are incompatible.
@@ -435,10 +435,10 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    **Note:** You can pass build options for `xrpld` in this step.
 
    **Sanitizers:** To enable sanitizers (Address, Thread, UndefinedBehavior),
-   set the `SANITIZER` environment variable when running CMake:
+   set the `SANITIZERS` environment variable when running CMake:
 
    ```
-   SANITIZER=Address,UndefinedBehavior cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug -Dxrpld=ON -Dtests=ON ..
+   SANITIZERS=Address,UndefinedBehavior cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug -Dxrpld=ON -Dtests=ON ..
    ```
 
    See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
@@ -549,7 +549,7 @@ stored inside the build directory, as either of:
 | `werr`     | OFF           | Treat compilation warnings as errors                           |
 | `wextra`   | OFF           | Enable additional compilation warnings                         |
 
-To enable sanitizers, set the `SANITIZER` environment variable when running CMake.
+To enable sanitizers, set the `SANITIZERS` environment variable when running CMake.
 See [sanitizers documentation](./docs/build/sanitizers.md) for details.
 
 [Unity builds][5] may be faster for the first build

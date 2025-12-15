@@ -35,7 +35,7 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
 Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with the following changes:
 
 1. Make sure you have a clean build directory.
-2. Set the `SANITIZER` environment variable when running CMake to enable sanitizers.
+2. Set the `SANITIZERS` environment variable when running CMake to enable sanitizers.
 3. Optionally use `--profile sanitizers` with Conan to build dependencies with sanitizer instrumentation.
 4. Set `ASAN_OPTIONS`, `LSAN_OPTIONS`, `UBSAN_OPTIONS` and `TSAN_OPTIONS` environment variables to configure sanitizer behavior when running executables.
 
@@ -52,22 +52,22 @@ cd .build
 
 #### Install dependencies
 
-The `SANITIZER` environment variable is used by both Conan and CMake.
+The `SANITIZERS` environment variable is used by both Conan and CMake.
 
 ```bash
 # Standard build (without instrumenting dependencies)
-SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --build missing --settings build_type=Debug
+SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --build missing --settings build_type=Debug
 
 # Or with sanitizer-instrumented dependencies (takes longer but fewer false positives)
-SANITIZER=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
 ```
 
 #### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
 
-Set the `SANITIZER` environment variable when running CMake:
+Set the `SANITIZERS` environment variable when running CMake:
 
 ```bash
-SANITIZER=Address,UndefinedBehavior cmake .. -G Ninja \
+SANITIZERS=Address,UndefinedBehavior cmake .. -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -Dtests=ON -Dxrpld=ON
@@ -76,7 +76,7 @@ SANITIZER=Address,UndefinedBehavior cmake .. -G Ninja \
 #### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
-SANITIZER=Thread,UndefinedBehavior cmake .. -G Ninja \
+SANITIZERS=Thread,UndefinedBehavior cmake .. -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -Dtests=ON -Dxrpld=ON
@@ -85,7 +85,7 @@ SANITIZER=Thread,UndefinedBehavior cmake .. -G Ninja \
 #### Just AddressSanitizer (ASan)
 
 ```bash
-SANITIZER=Address cmake .. -G Ninja \
+SANITIZERS=Address cmake .. -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -Dtests=ON -Dxrpld=ON
@@ -94,7 +94,7 @@ SANITIZER=Address cmake .. -G Ninja \
 #### Just UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
-SANITIZER=UndefinedBehavior cmake .. -G Ninja \
+SANITIZERS=UndefinedBehavior cmake .. -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -Dtests=ON -Dxrpld=ON
