@@ -9,7 +9,7 @@
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFlags.h>
 
-namespace ripple {
+namespace xrpl {
 
 NotTEC
 VaultWithdraw::preflight(PreflightContext const& ctx)
@@ -203,7 +203,7 @@ VaultWithdraw::doApply()
     [[maybe_unused]] auto const lossUnrealized = vault->at(sfLossUnrealized);
     XRPL_ASSERT(
         lossUnrealized <= (assetsTotal - assetsAvailable),
-        "ripple::VaultWithdraw::doApply : loss and assets do balance");
+        "xrpl::VaultWithdraw::doApply : loss and assets do balance");
 
     // The vault must have enough assets on hand. The vault may hold assets
     // that it has already pledged. That is why we look at AssetAvailable
@@ -269,4 +269,4 @@ VaultWithdraw::doApply()
         j_);
 }
 
-}  // namespace ripple
+}  // namespace xrpl

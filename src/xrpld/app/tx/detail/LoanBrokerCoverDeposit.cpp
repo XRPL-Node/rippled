@@ -2,7 +2,7 @@
 //
 #include <xrpld/app/misc/LendingHelpers.h>
 
-namespace ripple {
+namespace xrpl {
 
 bool
 LoanBrokerCoverDeposit::checkExtraFeatures(PreflightContext const& ctx)
@@ -127,4 +127,4 @@ LoanBrokerCoverDeposit::doApply()
 
 //------------------------------------------------------------------------------
 
-}  // namespace ripple
+}  // namespace xrpl
