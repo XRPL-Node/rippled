@@ -236,7 +236,7 @@ isFrozen(
     auto sle = view.read(keylet::account(issuer));
     if (sle && sle->isFlag(lsfGlobalFreeze))
     {
-        if (!view.rules().enabled(fixGlobalFreezeIssuer) || issuer != account)
+        if (!view.rules().enabled(featureLendingProtocol) || issuer != account)
             return true;
     }
     if (issuer != account)

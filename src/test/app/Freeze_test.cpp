@@ -2066,7 +2066,7 @@ class Freeze_test : public beast::unit_test::suite
 
         // Test pre-amendment behavior (issuer IS frozen under global freeze)
         {
-            Env env_pre(*this, features - fixGlobalFreezeIssuer);
+            Env env_pre(*this, features - featureLendingProtocol);
 
             env_pre.fund(XRP(10000), issuer, holder);
             env_pre.close();
@@ -2090,7 +2090,7 @@ class Freeze_test : public beast::unit_test::suite
 
         // Test post-amendment behavior (issuer is NOT frozen under global
         // freeze)
-        if (features[fixGlobalFreezeIssuer])
+        if (features[featureLendingProtocol])
         {
             Env env_post(*this, features);
 
