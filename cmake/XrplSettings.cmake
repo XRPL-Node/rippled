@@ -62,7 +62,7 @@ else()
   set(wextra OFF CACHE BOOL "gcc/clang only" FORCE)
 endif()
 
-if(is_linux)
+if(is_linux AND NOT $ENV{SANITIZERS})
   option(BUILD_SHARED_LIBS "build shared xrpl libraries" OFF)
   option(static "link protobuf, openssl, libc++, and boost statically" ON)
   option(perf "Enables flags that assist with perf recording" OFF)

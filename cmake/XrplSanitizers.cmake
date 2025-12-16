@@ -112,14 +112,6 @@ endif()
 
 # Compiler-specific configuration
 if(IS_GCC)
-    # Remove any -fuse-ld=... flags previously added to 'common'
-    get_target_property(_common_if_libs common INTERFACE_LINK_LIBRARIES)
-    if(_common_if_libs)
-        message(STATUS "  Can't use mold with gcc while ASAN is enabled. Will use default linker (bfd/ld).")
-        list(REMOVE_ITEM _common_if_libs "-fuse-ld=mold" "-fuse-ld=gold" "-fuse-ld=lld")
-        set_target_properties(common PROPERTIES INTERFACE_LINK_LIBRARIES "${_common_if_libs}")
-    endif()
-
     # Disable mold, gold and lld linkers for GCC with sanitizers
     # Use default linker (bfd/ld) which is more lenient with mixed code models
     set(use_mold OFF CACHE BOOL "Use mold linker" FORCE)
