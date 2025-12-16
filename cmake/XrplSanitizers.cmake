@@ -7,6 +7,7 @@
      - "Address,UndefinedBehavior"
      - "Thread"
      - "Thread,UndefinedBehavior"
+     - "UndefinedBehavior"
 
    The compiler type and platform are detected automatically by CMake.
    The sanitizer compile options are applied to the 'common' interface library
