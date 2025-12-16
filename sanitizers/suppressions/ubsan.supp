@@ -199,36 +199,39 @@ unsigned-integer-overflow:__charconv/traits.h
 
 # Suppress errors in RocksDB
 # RocksDB uses intentional unsigned integer overflows in hash functions and CRC calculations
-unsigned-integer-overflow:rocks*/b/src/util/xxhash.h
-unsigned-integer-overflow:rocks*/b/src/util/xxph3.h
-unsigned-integer-overflow:rocks*/b/src/util/hash.cc
-unsigned-integer-overflow:rocks*/b/src/util/crc32c.cc
-unsigned-integer-overflow:rocks*/b/src/util/crc32c.h
-unsigned-integer-overflow:rocks*/b/src/include/rocksdb/utilities/options_type.h
-unsigned-integer-overflow:rocks*/b/src/table/format.h
-unsigned-integer-overflow:rocks*/b/src/table/format.cc
-unsigned-integer-overflow:rocks*/b/src/table/block_based/block_based_table_builder.cc
-unsigned-integer-overflow:rocks*/b/src/table/block_based/reader_common.cc
-unsigned-integer-overflow:rocks*/b/src/db/version_set.cc
+unsigned-integer-overflow:rocks*/*/util/xxhash.h
+unsigned-integer-overflow:rocks*/*/util/xxph3.h
+unsigned-integer-overflow:rocks*/*/util/hash.cc
+unsigned-integer-overflow:rocks*/*/util/crc32c.cc
+unsigned-integer-overflow:rocks*/*/util/crc32c.h
+unsigned-integer-overflow:rocks*/*/include/rocksdb/utilities/options_type.h
+unsigned-integer-overflow:rocks*/*/table/format.h
+unsigned-integer-overflow:rocks*/*/table/format.cc
+unsigned-integer-overflow:rocks*/*/table/block_based/block_based_table_builder.cc
+unsigned-integer-overflow:rocks*/*/table/block_based/reader_common.cc
+unsigned-integer-overflow:rocks*/*/db/version_set.cc
 
 # RocksDB misaligned loads (intentional for performance on ARM64)
-alignment:rocks*/b/src/util/crc32c_arm64.cc
+alignment:rocks*/*/util/crc32c_arm64.cc
 
 # nudb intentional overflows in hash functions
 unsigned-integer-overflow:nudb/detail/xxhash.hpp
 alignment:nudb/detail/xxhash.hpp
 
 # Snappy compression library intentional overflows
-unsigned-integer-overflow:snapp*/b/src/snappy.cc
+unsigned-integer-overflow:snappy.cc
 
 # Abseil intentional overflows
-unsigned-integer-overflow:abse*/b/src/absl/strings/numbers.cc
-unsigned-integer-overflow:abse*/b/src/absl/strings/internal/cord_rep_flat.h
+unsigned-integer-overflow:absl/strings/numbers.cc
+unsigned-integer-overflow:absl/strings/internal/cord_rep_flat.h
+unsigned-integer-overflow:absl/base/internal/low_level_alloc.cc
+unsigned-integer-overflow:absl/hash/internal/hash.h
+unsigned-integer-overflow:absl/container/internal/raw_hash_set.h
 
 # Standard library intentional overflows in chrono duration arithmetic
 unsigned-integer-overflow:__chrono/duration.h
 
 # Suppress undefined errors in RocksDB and nudb
-undefined:rocks.*/b/src/util/crc32c_arm64.cc
-undefined:rocks.*/b/src/util/xxhash.h
+undefined:rocks.*/*/util/crc32c_arm64.cc
+undefined:rocks.*/*/util/xxhash.h
 undefined:nudb

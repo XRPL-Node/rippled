@@ -389,13 +389,13 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    ```
 
    **Sanitizers:** To build dependencies with sanitizer instrumentation, set the
-   `SANITIZERS` environment variable and use the `sanitizers` profile:
+   `SANITIZERS` environment variable(only once for both conan and cmake) and use the `sanitizers` profile:
 
    ```
-   SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+   export SANITIZERS=Address,UndefinedBehavior
+   conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
    ```
 
-   Note: Do not mix Address and Thread sanitizers - they are incompatible.
    See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
 
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`

@@ -8,14 +8,11 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
     - [Summary](#summary)
     - [Build steps:](#build-steps)
       - [Install dependencies](#install-dependencies)
-      - [AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)](#addresssanitizer-asan--undefinedbehaviorsanitizer-ubsan)
-      - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan)
-      - [Just AddressSanitizer (ASan)](#just-addresssanitizer-asan)
-      - [Just UndefinedBehaviorSanitizer (UBSan)](#just-undefinedbehaviorsanitizer-ubsan)
+      - [Call CMake](#call-cmake)
       - [Build](#build)
   - [Running Tests with Sanitizers](#running-tests-with-sanitizers)
     - [AddressSanitizer (ASan)](#addresssanitizer-asan)
-    - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan-1)
+    - [ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)](#threadsanitizer-tsan--undefinedbehaviorsanitizer-ubsan)
     - [LeakSanitizer (LSan)](#leaksanitizer-lsan)
   - [Suppression Files](#suppression-files)
     - [`asan.supp`](#asansupp)
@@ -35,8 +32,9 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
 Follow the same instructions as mentioned in [BUILD.md](../../BUILD.md) but with the following changes:
 
 1. Make sure you have a clean build directory.
-2. Set the `SANITIZERS` environment variable when running CMake to enable sanitizers.
-3. Optionally use `--profile sanitizers` with Conan to build dependencies with sanitizer instrumentation.
+2. Set the `SANITIZERS` environment variable before calling conan install and cmake. Only set it once. Make sure both conan and cmake read the same values.
+   Example: `export SANITIZERS=Address,UndefinedBehavior`
+3. Optionally use `--profile:all sanitizers` with Conan to build dependencies with sanitizer instrumentation.
 4. Set `ASAN_OPTIONS`, `LSAN_OPTIONS`, `UBSAN_OPTIONS` and `TSAN_OPTIONS` environment variables to configure sanitizer behavior when running executables.
 
 ---
@@ -55,52 +53,26 @@ cd .build
 The `SANITIZERS` environment variable is used by both Conan and CMake.
 
 ```bash
+export SANITIZERS=Address,UndefinedBehavior
 # Standard build (without instrumenting dependencies)
-SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --build missing --settings build_type=Debug
+conan install .. --output-folder . --build missing --settings build_type=Debug
 
 # Or with sanitizer-instrumented dependencies (takes longer but fewer false positives)
-SANITIZERS=Address,UndefinedBehavior conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
-```
-
-#### AddressSanitizer (ASan) + UndefinedBehaviorSanitizer (UBSan)
-
-Set the `SANITIZERS` environment variable when running CMake:
-
-```bash
-SANITIZERS=Address,UndefinedBehavior cmake .. -G Ninja \
-    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -Dtests=ON -Dxrpld=ON
-```
-
-#### ThreadSanitizer (TSan) + UndefinedBehaviorSanitizer (UBSan)
-
-```bash
-SANITIZERS=Thread,UndefinedBehavior cmake .. -G Ninja \
-    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -Dtests=ON -Dxrpld=ON
-```
-
-#### Just AddressSanitizer (ASan)
-
-```bash
-SANITIZERS=Address cmake .. -G Ninja \
-    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -Dtests=ON -Dxrpld=ON
-```
-
-#### Just UndefinedBehaviorSanitizer (UBSan)
-
-```bash
-SANITIZERS=UndefinedBehavior cmake .. -G Ninja \
-    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -Dtests=ON -Dxrpld=ON
+conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
 ```
 
 **Note:** Do not mix Address and Thread sanitizers - they are incompatible.
+
+Since you already set the `SANITIZERS` environment variable when running Conan, same values will be read for the next part.
+
+#### Call CMake
+
+```bash
+cmake .. -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -Dtests=ON -Dxrpld=ON
+```
 
 #### Build
 

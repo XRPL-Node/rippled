@@ -28,14 +28,28 @@ set(ENABLE_ASAN FALSE)
 set(ENABLE_TSAN FALSE)
 set(ENABLE_UBSAN FALSE)
 
-if(SANITIZERS MATCHES "Address")
+# Normalize SANITIZERS into a list
+set(_san_list "${SANITIZERS}")
+string(REPLACE "," ";" _san_list "${_san_list}")
+separate_arguments(_san_list)
+
+set(REMAINING_SANITIZERS "")
+foreach(_san IN LISTS _san_list)
+  if(_san STREQUAL "Address")
     set(ENABLE_ASAN TRUE)
-endif()
-if(SANITIZERS MATCHES "Thread")
+  elseif(_san STREQUAL "Thread")
     set(ENABLE_TSAN TRUE)
-endif()
-if(SANITIZERS MATCHES "UndefinedBehavior")
+  elseif(_san STREQUAL "UndefinedBehavior")
     set(ENABLE_UBSAN TRUE)
+  else()
+    list(APPEND REMAINING_SANITIZERS "${_san}")
+  endif()
+endforeach()
+
+if(REMAINING_SANITIZERS)
+  message(FATAL_ERROR
+    "Unknown SANITIZERS value(s): ${REMAINING_SANITIZERS}. "
+    "Supported: Address, Thread, UndefinedBehavior and their combinations.")
 endif()
 
 # Detect compiler type
@@ -98,6 +112,13 @@ endif()
 
 # Compiler-specific configuration
 if(IS_GCC)
+    # Remove any -fuse-ld=... flags previously added to 'common'
+    get_target_property(_common_if_libs common INTERFACE_LINK_LIBRARIES)
+    if(_common_if_libs)
+        list(REMOVE_ITEM _common_if_libs "-fuse-ld=mold" "-fuse-ld=gold" "-fuse-ld=lld")
+        set_target_properties(common PROPERTIES INTERFACE_LINK_LIBRARIES "${_common_if_libs}")
+    endif()
+
     # Disable mold, gold and lld linkers for GCC with sanitizers
     # Use default linker (bfd/ld) which is more lenient with mixed code models
     set(use_mold OFF CACHE BOOL "Use mold linker" FORCE)
