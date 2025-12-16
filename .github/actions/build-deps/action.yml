@@ -22,7 +22,7 @@ inputs:
     required: false
     default: "verbose"
   sanitizers:
-    description: "The sanitizers to enable ('Address', 'Thread')."
+    description: "The sanitizers to enable."
     required: false
     default: ""
 
