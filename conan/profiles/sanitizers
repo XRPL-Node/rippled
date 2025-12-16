@@ -8,15 +8,18 @@ include(default)
         {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
             {% set model_code = "" %}
-            {% set extra_cxxflags = "-fno-omit-frame-pointer -O1 -Wno-stringop-overflow" %}
+            {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1", "-Wno-stringop-overflow"] %}
 
             {% if "Address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
                 {% set model_code = "-mcmodel=large" %}
+                {% if version >= "15" %}
+                    {% set _ = extra_cxxflags.append("-fno-PIC")%}
+                {% endif %}
             {% elif "Thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
                 {% set model_code = "-mcmodel=medium" %}
-                {% set extra_cxxflags = extra_cxxflags ~ " -Wno-tsan" %}
+                {% set _ = extra_cxxflags.append("-Wno-tsan") %}
             {% endif %}
 
             {% if "UndefinedBehavior" in sanitizers %}
@@ -26,14 +29,14 @@ include(default)
 
             {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
 
-            tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
         {% endif %}
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
-            {% set extra_cxxflags = "-fno-omit-frame-pointer -O1" %}
+            {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1"] %}
 
             {% if "Address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
@@ -49,7 +52,7 @@ include(default)
 
             {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) %}
 
-            tools.build:cxxflags+=['{{sanitizer_flags}} {{extra_cxxflags}}']
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
         {% endif %}

@@ -97,16 +97,16 @@ endif()
 # Configure code model for GCC on amd64
 # Use large code model for ASAN to avoid relocation errors
 # Use medium code model for TSAN (large is not compatible with TSAN)
-set(SANITIZERS_RELOCATION_FLAGS "")
+set(SANITIZERS_RELOCATION_FLAGS)
 if(IS_GCC AND IS_AMD64)
     if(ENABLE_ASAN)
         message(STATUS "  Using large code model (-mcmodel=large)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=large")
-        set(SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
     elseif(ENABLE_TSAN)
         message(STATUS "  Using medium code model (-mcmodel=medium)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=medium")
-        set(SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
     endif()
 endif()
 
@@ -125,6 +125,12 @@ if(IS_GCC)
     if(ENABLE_TSAN)
         # GCC doesn't support atomic_thread_fence with tsan. Suppress warnings.
         list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-tsan")
+    endif()
+
+    if(ENABLE_ASAN)
+        # GCC has issues with PIC and ASAN.
+        # https://github.com/google/sanitizers/issues/856
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-fno-PIC")
     endif()
 
     # Join sanitizer flags with commas for -fsanitize option

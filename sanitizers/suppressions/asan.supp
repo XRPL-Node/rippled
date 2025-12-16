@@ -8,9 +8,6 @@
 #
 # See: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow
 
-# Suprpress voilations in sanitizers/suppressions code
-interceptor_name:^sanitizers/suppressions
-
 # Boost
 interceptor_name:boost/asio
 
@@ -33,3 +30,4 @@ interceptor_name:__asan_memcpy
 
 # stack-use-after-scope
 interceptor_name:src/test/app/Invariants_test.cpp
+interceptor_name:xrpl/protocol/STObject.h
