@@ -15,6 +15,7 @@ include(default)
                 {% set model_code = "-mcmodel=large" %}
                 {% if version >= "15" %}
                     {% set _ = extra_cxxflags.append("-fno-PIC")%}
+                    {% set _ = extra_cxxflags.append("-fno-PIE")%}
                 {% endif %}
             {% elif "Thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
