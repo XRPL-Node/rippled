@@ -130,8 +130,10 @@ if(IS_GCC)
     if(ENABLE_ASAN)
         # GCC has issues with PIC and ASAN.
         # https://github.com/google/sanitizers/issues/856
-        list(APPEND SANITIZERS_COMPILE_FLAGS "-fno-PIC -fno-PIE")
-        list(APPEND SANITIZERS_RELOCATION_FLAGS "-fno-PIC -fno-PIE")
+        list(APPEND SANITIZERS_COMPILE_FLAGS "-fno-pic")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-fno-pic")
+        list(APPEND SANITIZERS_COMPILE_FLAGS "-fno-pie")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-fno-pie")
     endif()
 
     # Join sanitizer flags with commas for -fsanitize option
