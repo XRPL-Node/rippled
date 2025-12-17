@@ -194,7 +194,7 @@ jobs:
           export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/ubsan.supp"
           export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/lsan.supp"
-          "${PREFIX}" ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
+          ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
