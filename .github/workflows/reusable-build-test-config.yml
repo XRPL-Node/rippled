@@ -188,13 +188,13 @@ jobs:
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', inputs.build_dir, inputs.build_type) || inputs.build_dir }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
-          PREFIX: ${{runner.arch=X64  && 'setarch x86_64 -R' | '' }}
+          PREFIX: ${{ runner.arch == 'X64'  && 'setarch x86_64 -R' || '' }}
         run: |
           export ASAN_OPTIONS="detect_container_overflow=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/asan.supp"
           export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/tsan.supp"
           export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/ubsan.supp"
           export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/lsan.supp"
-          $PREFIX ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
+          "${PREFIX}" ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
