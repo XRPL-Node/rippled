@@ -231,15 +231,25 @@ public:
 
     //--------------------------------------------------------------------------
 private:
+    // Helper to safely adjust a size_t counter by a signed value
+    static void
+    adjustCounter(std::size_t& counter, int const n)
+    {
+        if (n >= 0)
+            counter += static_cast<std::size_t>(n);
+        else
+            counter -= static_cast<std::size_t>(-n);
+    }
+
     // Adjusts counts based on the specified slot, in the direction indicated.
     void
     adjust(Slot const& s, int const n)
     {
         if (s.fixed())
-            m_fixed += n;
+            adjustCounter(m_fixed, n);
 
         if (s.reserved())
-            m_reserved += n;
+            adjustCounter(m_reserved, n);
 
         switch (s.state())
         {
@@ -261,15 +271,15 @@ private:
 
             case Slot::active:
                 if (s.fixed())
-                    m_fixed_active += n;
+                    adjustCounter(m_fixed_active, n);
                 if (!s.fixed() && !s.reserved())
                 {
                     if (s.inbound())
-                        m_in_active += n;
+                        adjustCounter(m_in_active, n);
                     else
-                        m_out_active += n;
+                        adjustCounter(m_out_active, n);
                 }
-                m_active += n;
+                adjustCounter(m_active, n);
                 break;
 
             case Slot::closing:

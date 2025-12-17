@@ -97,8 +97,6 @@ undefined:src/test/jtx/impl/acctdelete.cpp
 undefined:src/test/ledger/SkipList_test.cpp
 undefined:src/test/rpc/Subscribe_test.cpp
 undefined:src/tests/libxrpl/basics/RangeSet.cpp
-undefined:src/xrpld/app/main/BasicApp.cpp
-undefined:src/xrpld/app/main/BasicApp.cpp
 undefined:src/xrpld/app/misc/detail/AmendmentTable.cpp
 undefined:src/xrpld/app/misc/NetworkOPs.cpp
 undefined:src/libxrpl/json/json_value.cpp
@@ -110,12 +108,7 @@ undefined:src/xrpld/core/detail/Workers.cpp
 undefined:src/xrpld/rpc/detail/Role.cpp
 undefined:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
 undefined:xrpl/basics/base_uint.h
-undefined:xrpl/basics/DecayingSample.h
-undefined:xrpl/beast/test/yield_to.h
 undefined:xrpl/beast/xor_shift_engine.h
-undefined:xrpl/nodestore/detail/varint.h
-undefined:xrpl/peerfinder/detail/Counts.h
-undefined:xrpl/protocol/nft.h
 
 # basic_string.h:483:51: runtime error: unsigned integer overflow
 unsigned-integer-overflow:basic_string.h
@@ -149,7 +142,6 @@ unsigned-integer-overflow:src/test/jtx/impl/acctdelete.cpp
 unsigned-integer-overflow:src/test/ledger/SkipList_test.cpp
 unsigned-integer-overflow:src/test/rpc/Subscribe_test.cpp
 unsigned-integer-overflow:src/tests/libxrpl/basics/RangeSet.cpp
-unsigned-integer-overflow:src/xrpld/app/main/BasicApp.cpp
 unsigned-integer-overflow:src/xrpld/app/misc/detail/AmendmentTable.cpp
 unsigned-integer-overflow:src/xrpld/app/misc/NetworkOPs.cpp
 unsigned-integer-overflow:src/xrpld/app/paths/detail/StrandFlow.h
@@ -158,12 +150,7 @@ unsigned-integer-overflow:src/xrpld/app/tx/detail/SetOracle.cpp
 unsigned-integer-overflow:src/xrpld/rpc/detail/Role.cpp
 unsigned-integer-overflow:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
 unsigned-integer-overflow:xrpl/basics/base_uint.h
-unsigned-integer-overflow:xrpl/basics/DecayingSample.h
-unsigned-integer-overflow:xrpl/beast/test/yield_to.h
 unsigned-integer-overflow:xrpl/beast/xor_shift_engine.h
-unsigned-integer-overflow:xrpl/nodestore/detail/varint.h
-unsigned-integer-overflow:xrpl/peerfinder/detail/Counts.h
-unsigned-integer-overflow:xrpl/protocol/nft.h
 
 # Rippled intentional overflows and operations
 # STAmount uses intentional negation of INT64_MIN and overflow in arithmetic
@@ -172,9 +159,6 @@ unsigned-integer-overflow:src/libxrpl/protocol/STAmount.cpp
 
 # XRPAmount test intentional overflows
 signed-integer-overflow:src/test/basics/XRPAmount_test.cpp
-
-# Peerfinder intentional overflow in counter arithmetic
-unsigned-integer-overflow:src/xrpld/peerfinder/detail/Counts.h
 
 # Signed integer overflow suppressions
 signed-integer-overflow:src/test/beast/LexicalCast_test.cpp

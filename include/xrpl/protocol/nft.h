@@ -82,7 +82,12 @@ cipheredTaxon(std::uint32_t tokenSeq, Taxon taxon)
     // **IMPORTANT** Changing these numbers would be a breaking change requiring
     //               an amendment along with a way to distinguish token IDs that
     //               were generated with the old code.
-    return taxon ^ toTaxon(((384160001 * tokenSeq) + 2459));
+    // Note: The multiplication is intentionally allowed to overflow (wrap
+    // around) as part of the linear congruential generator algorithm.
+    return taxon ^
+        toTaxon(static_cast<std::uint32_t>(
+            (static_cast<std::uint64_t>(384160001) * tokenSeq + 2459) &
+            0xFFFFFFFF));
 }
 
 inline Taxon
