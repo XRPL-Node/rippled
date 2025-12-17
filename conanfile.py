@@ -125,7 +125,7 @@ class Xrpl(ConanFile):
         if "SANITIZERS" in os.environ:
             sanitizers = os.environ["SANITIZERS"]
             if "Address" in sanitizers:
-                self.options["fPIC"] = False
+                self.default_options["fPIC"] = False
 
     def requirements(self):
         # Conan 2 requires transitive headers to be specified
