@@ -124,7 +124,7 @@ class Xrpl(ConanFile):
         # Check if environment variable exists
         if "SANITIZERS" in os.environ:
             sanitizers = os.environ["SANITIZERS"]
-            if sanitizers.contains("Address"):
+            if "Address" in sanitizers:
                 self.options["fPIC"] = False
 
     def requirements(self):
