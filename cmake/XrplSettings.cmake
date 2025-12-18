@@ -2,11 +2,7 @@
    declare options and variables
 #]===================================================================]
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set (is_linux TRUE)
-else()
-  set(is_linux FALSE)
-endif()
+include(CompilationEnv)
 
 if("$ENV{CI}" STREQUAL "true" OR "$ENV{CONTINUOUS_INTEGRATION}" STREQUAL "true")
   set(is_ci TRUE)

@@ -2,6 +2,8 @@
    setup project-wide compiler settings
 #]===================================================================]
 
+include(CompilationEnv)
+
 #[=========================================================[
    TODO some/most of these common settings belong in a
    toolchain file, especially the ABI-impacting ones

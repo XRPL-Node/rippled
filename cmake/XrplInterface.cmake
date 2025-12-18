@@ -2,6 +2,8 @@
    xrpld compile options/settings via an interface library
 #]===================================================================]
 
+include(CompilationEnv)
+
 add_library (opts INTERFACE)
 add_library (Xrpl::opts ALIAS opts)
 target_compile_definitions (opts
