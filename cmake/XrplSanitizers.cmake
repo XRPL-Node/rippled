@@ -64,7 +64,7 @@ endif()
 if(ENABLE_UBSAN)
     # UB sanitizer flags
     if(is_clang)
-        # Clang supports additional UB checks
+        # Clang supports additional UB checks. More info here https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
         list(APPEND SANITIZERS_FLAGS "undefined" "float-divide-by-zero" "unsigned-integer-overflow")
     else()
         list(APPEND SANITIZERS_FLAGS "undefined" "float-divide-by-zero")
@@ -75,19 +75,8 @@ endif()
 # Use large code model for ASAN to avoid relocation errors
 # Use medium code model for TSAN (large is not compatible with TSAN)
 set(SANITIZERS_RELOCATION_FLAGS)
-if(is_gcc AND is_amd64)
-    if(ENABLE_ASAN)
-        message(STATUS "  Using large code model (-mcmodel=large)")
-        list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=large")
-        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
-    elseif(ENABLE_TSAN)
-        message(STATUS "  Using medium code model (-mcmodel=medium)")
-        list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=medium")
-        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
-    endif()
-endif()
 
-	# Compiler-specific configuration
+# Compiler-specific configuration
 if(is_gcc)
     # Disable mold, gold and lld linkers for GCC with sanitizers
     # Use default linker (bfd/ld) which is more lenient with mixed code models
@@ -99,9 +88,16 @@ if(is_gcc)
     # Suppress false positive warnings in GCC with stringop-overflow
     list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-stringop-overflow")
 
-    if(ENABLE_TSAN)
+    if(is_amd64 AND ENABLE_ASAN)
+        message(STATUS "  Using large code model (-mcmodel=large)")
+        list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=large")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
+    elseif(ENABLE_TSAN)
         # GCC doesn't support atomic_thread_fence with tsan. Suppress warnings.
         list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-tsan")
+         message(STATUS "  Using medium code model (-mcmodel=medium)")
+        list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=medium")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
     endif()
 
     # Join sanitizer flags with commas for -fsanitize option
@@ -142,3 +138,12 @@ target_compile_options(common INTERFACE
 
 # Apply linker flags
 target_link_options(common INTERFACE ${SANITIZERS_LINK_FLAGS})
+
+# Define SANITIZER macro for BuildInfo.cpp
+if(ENABLE_ASAN)
+  target_compile_definitions(common INTERFACE SANITIZER=ASAN)
+elseif(ENABLE_TSAN)
+  target_compile_definitions(common INTERFACE SANITIZER=TSAN)
+elseif(ENABLE_UBSAN)
+  target_compile_definitions(common INTERFACE SANITIZER=UBSAN)
+endif()

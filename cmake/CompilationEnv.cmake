@@ -62,6 +62,8 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
   set(is_amd64 TRUE)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
   set(is_arm64 TRUE)
+else()
+  message(FATAL_ERROR "Unknown architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
 # Keep legacy uppercase alias for existing code

@@ -121,8 +121,8 @@ else ()
       # link to static libc/c++ iff:
       #   * static option set and
       #   * NOT APPLE (AppleClang does not support static libc/c++) and
-      #   * NOT san (sanitizers typically don't work with static libc/c++)
-      $<$<AND:$<BOOL:${static}>,$<NOT:$<BOOL:${APPLE}>>,$<NOT:$<BOOL:${san}>>>:
+      #   * NOT SANITIZER (sanitizers typically don't work with static libc/c++)
+      $<$<AND:$<BOOL:${static}>,$<NOT:$<BOOL:${APPLE}>>,$<NOT:$<BOOL:${SANITIZER}>>>:
       -static-libstdc++
       -static-libgcc
       >)
