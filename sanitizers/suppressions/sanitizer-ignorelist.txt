@@ -25,3 +25,4 @@ src:core/detail/Workers.cpp
 src:core/JobQueue.cpp
 src:libxrpl/beast/utility/beast_Journal.cpp
 src:test/beast/beast_PropertyStream_test.cpp
+src:src/test/app/Invariants_test.cpp

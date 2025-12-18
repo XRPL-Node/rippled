@@ -97,29 +97,21 @@ endif()
 # Configure code model for GCC on amd64
 # Use large code model for ASAN to avoid relocation errors
 # Use medium code model for TSAN (large is not compatible with TSAN)
-set(SANITIZERS_RELOCATION_FLAGS "")
+set(SANITIZERS_RELOCATION_FLAGS)
 if(IS_GCC AND IS_AMD64)
     if(ENABLE_ASAN)
         message(STATUS "  Using large code model (-mcmodel=large)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=large")
-        set(SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
     elseif(ENABLE_TSAN)
         message(STATUS "  Using medium code model (-mcmodel=medium)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=medium")
-        set(SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
+        list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
     endif()
 endif()
 
 # Compiler-specific configuration
 if(IS_GCC)
-    # Remove any -fuse-ld=... flags previously added to 'common'
-    get_target_property(_common_if_libs common INTERFACE_LINK_LIBRARIES)
-    if(_common_if_libs)
-        message(STATUS "  Can't use mold with gcc while ASAN is enabled. Will use default linker (bfd/ld).")
-        list(REMOVE_ITEM _common_if_libs "-fuse-ld=mold" "-fuse-ld=gold" "-fuse-ld=lld")
-        set_target_properties(common PROPERTIES INTERFACE_LINK_LIBRARIES "${_common_if_libs}")
-    endif()
-
     # Disable mold, gold and lld linkers for GCC with sanitizers
     # Use default linker (bfd/ld) which is more lenient with mixed code models
     set(use_mold OFF CACHE BOOL "Use mold linker" FORCE)

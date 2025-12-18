@@ -10,8 +10,12 @@ add_library (common INTERFACE)
 add_library (Xrpl::common ALIAS common)
 # add a single global dependency on this interface lib
 link_libraries (Xrpl::common)
+# Respect CMAKE_POSITION_INDEPENDENT_CODE setting (may be set by Conan toolchain)
+if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 set_target_properties (common
-  PROPERTIES INTERFACE_POSITION_INDEPENDENT_CODE ON)
+  PROPERTIES INTERFACE_POSITION_INDEPENDENT_CODE ${CMAKE_POSITION_INDEPENDENT_CODE})
 set(CMAKE_CXX_EXTENSIONS OFF)
 target_compile_definitions (common
   INTERFACE

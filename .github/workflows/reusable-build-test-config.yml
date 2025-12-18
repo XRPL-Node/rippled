@@ -74,7 +74,7 @@ jobs:
     env:
       ENABLED_VOIDSTAR: ${{ contains(inputs.cmake_args, '-Dvoidstar=ON') }}
       ENABLED_COVERAGE: ${{ contains(inputs.cmake_args, '-Dcoverage=ON') }}
-      ENABLED_SANITIZERS: ${{ inputs.sanitizers != '' }}
+      SANITIZERS_ENABLED: ${{ inputs.sanitizers != '' }}
     steps:
       - name: Cleanup workspace (macOS and Windows)
         if: ${{ runner.os == 'macOS' || runner.os == 'Windows' }}
@@ -149,7 +149,7 @@ jobs:
           if-no-files-found: error
 
       - name: Check linking (Linux)
-        if: ${{ runner.os == 'Linux' && env.ENABLED_SANITIZERS == 'false' }}
+        if: ${{ runner.os == 'Linux' && env.SANITIZERS_ENABLED == 'false' }}
         working-directory: ${{ inputs.build_dir }}
         run: |
           ldd ./xrpld
@@ -174,10 +174,10 @@ jobs:
           BUILD_TYPE: ${{ inputs.build_type }}
           PARALLELISM: ${{ runner.os == 'Windows' && '1' || steps.nproc.outputs.nproc }}
         run: |
-          export ASAN_OPTIONS="detect_container_overflow=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/asan.supp"
-          export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/tsan.supp"
-          export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/ubsan.supp"
-          export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/lsan.supp"
+          export ASAN_OPTIONS="detect_container_overflow=0:suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/asan.supp"
+          export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/tsan.supp"
+          export UBSAN_OPTIONS="suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/ubsan.supp"
+          export LSAN_OPTIONS="suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/lsan.supp"
           ctest \
             --output-on-failure \
             -C "${BUILD_TYPE}" \
@@ -189,10 +189,10 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          export ASAN_OPTIONS="detect_container_overflow=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/asan.supp"
-          export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/tsan.supp"
-          export UBSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/ubsan.supp"
-          export LSAN_OPTIONS="suppressions=$GITHUB_WORKSPACE/sanitizers/suppressions/lsan.supp"
+          export ASAN_OPTIONS="detect_container_overflow=0:suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/asan.supp"
+          export TSAN_OPTIONS="second_deadlock_stack=1 halt_on_error=0 suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/tsan.supp"
+          export UBSAN_OPTIONS="suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/ubsan.supp"
+          export LSAN_OPTIONS="suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/lsan.supp"
           ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
