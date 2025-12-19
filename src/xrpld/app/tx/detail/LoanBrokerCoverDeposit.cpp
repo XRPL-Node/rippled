@@ -75,10 +75,7 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
             requireAuth(ctx.view, vaultAsset, account, AuthType::StrongAuth))
         return ret;
 
-    bool const isIssuer =
-        vaultAsset.holds<Issue>() && account == vaultAsset.getIssuer();
-    if (!isIssuer &&
-        accountHolds(
+    if (accountSpendable(
             ctx.view,
             account,
             vaultAsset,
