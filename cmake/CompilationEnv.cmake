@@ -5,10 +5,7 @@
  # checks on CMAKE_* and built-in platform variables.
 
 # Only run once per configure step.
-if(DEFINED XRPL_COMPILATION_ENV_INCLUDED)
-  return()
-endif()
-set(XRPL_COMPILATION_ENV_INCLUDED TRUE)
+include_guard(GLOBAL)
 
 # --------------------------------------------------------------------
 # Compiler detection (C++)

@@ -3,6 +3,8 @@
 #include <xrpl/beast/core/SemanticVersion.h>
 #include <xrpl/protocol/BuildInfo.h>
 
+#include <boost/preprocessor/stringize.hpp>
+
 #include <algorithm>
 #include <cstdint>
 #include <string>
