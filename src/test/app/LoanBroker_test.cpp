@@ -1495,6 +1495,17 @@ class LoanBroker_test : public beast::unit_test::suite
         {
             BEAST_EXPECT(broker->at(sfCoverAvailable) == asset(10).number());
         }
+
+        // Verify the broker can withdraw the cover
+        env(coverWithdraw(issuer, brokerKeylet.key, asset(5)));
+        env.close();
+
+        // Verify the withdrawal succeeded
+        broker = env.le(brokerKeylet);
+        if (BEAST_EXPECT(broker))
+        {
+            BEAST_EXPECT(broker->at(sfCoverAvailable) == asset(5).number());
+        }
     }
 
     void
@@ -1586,8 +1597,8 @@ public:
         testRequireAuth();
         testIssuerCoverDepositDuringGlobalFreeze();
 
-        // TODO: Write clawback failure tests with an issuer / MPT that
-        // doesn't have the right flags set.
+        // TODO: Write clawback failure tests with an issuer / MPT that doesn't
+        // have the right flags set.
     }
 };
 
