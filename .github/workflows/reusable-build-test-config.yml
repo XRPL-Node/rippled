@@ -116,12 +116,13 @@ jobs:
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
           SANITIZERS: ${{ inputs.sanitizers }}
+          CMAKE_ARGS: ${{ inputs.cmake_args }}
         run: |
           cmake \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
             -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake \
             -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-            ${{ inputs.cmake_args }} \
+            ${CMAKE_ARGS} \
             ..
 
       - name: Build the binary

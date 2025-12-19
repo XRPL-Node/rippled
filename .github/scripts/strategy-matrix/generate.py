@@ -209,7 +209,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         ):
             continue
 
-        # Enable code coverage for Debian Bookworm using GCC 14 in Debug and no
+        # Enable code coverage for Debian Bookworm using GCC 15 in Debug and no
         # Unity on linux/amd64
         if (
             f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
@@ -282,6 +282,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     "build_type": build_type,
                     "os": os,
                     "architecture": architecture,
+                    "sanitizers": "",
                 }
             )
 

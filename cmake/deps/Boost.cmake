@@ -1,3 +1,5 @@
+include(CompilationEnv)
+
 find_package(Boost 1.82 REQUIRED
   COMPONENTS
     chrono
