@@ -35,7 +35,7 @@ class Xrpl(ConanFile):
         "openssl/3.5.4",
         "secp256k1/0.7.0",
         "soci/4.0.3",
-        "wasmi/0.42.1",
+        "wasmi/1.0.4",
         "zlib/1.3.1",
     ]
 
@@ -126,6 +126,7 @@ class Xrpl(ConanFile):
         transitive_headers_opt = (
             {"transitive_headers": True} if conan_version.split(".")[0] == "2" else {}
         )
+
         self.requires("boost/1.88.0", force=True, **transitive_headers_opt)
         self.requires("date/3.0.4", **transitive_headers_opt)
         self.requires("lz4/1.10.0", force=True)
