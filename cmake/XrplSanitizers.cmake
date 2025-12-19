@@ -16,7 +16,7 @@
 
 include(CompilationEnv)
 
-	# Read environment variable
+# Read environment variable
 set(SANITIZERS $ENV{SANITIZERS})
 
 if(NOT SANITIZERS)
