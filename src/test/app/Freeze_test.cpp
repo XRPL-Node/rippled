@@ -2092,17 +2092,46 @@ class Freeze_test : public beast::unit_test::suite
         // freeze)
         if (features[featureLendingProtocol])
         {
+            using namespace loanBroker;
             Env env_post(*this, features);
 
-            env_post.fund(XRP(10000), issuer, holder);
+            Account owner{"owner"};
+            env_post.fund(XRP(10000), issuer, holder, owner);
             env_post.close();
 
             auto const USD = issuer["USD"];
+            env_post(fset(issuer, asfAllowTrustLineClawback));
+            env_post.close();
             env_post.trust(USD(1000), holder);
+            env_post.trust(USD(1000), owner);
             env_post.close();
 
             env_post(pay(issuer, holder, USD(100)));
+            env_post(pay(issuer, owner, USD(100)));
             env_post.close();
+
+            Vault vault{env_post};
+            PrettyAsset const asset{USD};
+            auto [vaultTx, vaultKeylet] =
+                vault.create({.owner = owner, .asset = asset});
+            env_post(vaultTx);
+            env_post.close();
+
+            env_post(vault.deposit(
+                {.depositor = holder,
+                 .id = vaultKeylet.key,
+                 .amount = USD(50)}));
+            env_post.close();
+
+            auto const brokerKeylet =
+                keylet::loanbroker(owner.id(), env_post.seq(owner));
+            env_post(set(owner, vaultKeylet.key));
+            env_post.close();
+
+            auto broker = env_post.le(brokerKeylet);
+            BEAST_EXPECT(broker);
+            Account const pseudoAccount{
+                "Broker pseudo-account", broker->at(sfAccount)};
 
             env_post(fset(issuer, asfGlobalFreeze));
             env_post.close();
@@ -2118,6 +2147,62 @@ class Freeze_test : public beast::unit_test::suite
 
             env_post(pay(holder, issuer, USD(10)));
             env_post.close();
+
+            env_post(
+                vault.withdraw(
+                    {.depositor = holder,
+                     .id = vaultKeylet.key,
+                     .amount = USD(10)}),
+                ter(tecPATH_DRY));
+
+            auto tx = vault.withdraw(
+                {.depositor = holder,
+                 .id = vaultKeylet.key,
+                 .amount = USD(10)});
+            tx[sfDestination] = issuer.human();
+            env_post(tx);
+            env_post.close();
+
+            env_post(vault.deposit(
+                {.depositor = issuer,
+                 .id = vaultKeylet.key,
+                 .amount = USD(20)}));
+            env_post.close();
+
+            env_post(
+                coverDeposit(holder, brokerKeylet.key, USD(10)),
+                ter(tecFROZEN));
+
+            env_post(coverDeposit(issuer, brokerKeylet.key, USD(20)));
+            env_post.close();
+            env_post.require(balance(pseudoAccount, USD(20)));
+
+            env_post(
+                coverWithdraw(owner, brokerKeylet.key, USD(10)),
+                ter(tecPATH_DRY));
+
+            tx = coverWithdraw(owner, brokerKeylet.key, USD(10));
+            tx[sfDestination] = issuer.human();
+            env_post(tx);
+            env_post.close();
+            env_post.require(balance(pseudoAccount, USD(10)));
+
+            env_post(coverDeposit(issuer, brokerKeylet.key, USD(20)));
+            env_post.close();
+            tx = coverWithdraw(owner, brokerKeylet.key, USD(15));
+            tx[sfDestination] = holder.human();
+            env_post(tx);
+            env_post.close();
+
+            env_post(
+                coverClawback(issuer),
+                loanBrokerID(brokerKeylet.key),
+                amount(USD(0)));
+            env_post.close();
+
+            env_post(del(owner, brokerKeylet.key));
+            env_post.close();
+            env_post(vault.del({.owner = owner, .id = vaultKeylet.key}));
         }
     }
 
