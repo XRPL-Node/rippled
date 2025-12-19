@@ -1884,6 +1884,10 @@ class Vault_test : public beast::unit_test::suite
             tx[sfDestination] = issuer.human();
             env(tx);
 
+            // Verify issuer can still send direct payments when locked
+            env(pay(issuer, depositor, asset(50)));
+            env.close();
+
             // Clawback is still permitted, even with global lock
             tx = vault.clawback(
                 {.issuer = issuer,
