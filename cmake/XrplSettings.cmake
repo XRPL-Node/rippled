@@ -2,11 +2,7 @@
    declare options and variables
 #]===================================================================]
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set (is_linux TRUE)
-else()
-  set(is_linux FALSE)
-endif()
+include(CompilationEnv)
 
 if("$ENV{CI}" STREQUAL "true" OR "$ENV{CONTINUOUS_INTEGRATION}" STREQUAL "true")
   set(is_ci TRUE)
@@ -62,7 +58,14 @@ else()
   set(wextra OFF CACHE BOOL "gcc/clang only" FORCE)
 endif()
 
-if(is_linux AND NOT $ENV{SANITIZERS})
+# Sanitizer configuration from environment (flags set in XrplSanitizers.cmake)
+if($ENV{SANITIZERS})
+  set(SANITIZER TRUE)
+else()
+  set(SANITIZER FALSE)
+endif()
+
+if(is_linux AND NOT SANITIZER)
   option(BUILD_SHARED_LIBS "build shared xrpl libraries" OFF)
   option(static "link protobuf, openssl, libc++, and boost statically" ON)
   option(perf "Enables flags that assist with perf recording" OFF)

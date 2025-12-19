@@ -388,16 +388,6 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    conan install .. --output-folder . --build missing --settings build_type=Debug
    ```
 
-   **Sanitizers:** To build dependencies with sanitizer instrumentation, set the
-   `SANITIZERS` environment variable(only once for both conan and cmake) and use the `sanitizers` profile:
-
-   ```
-   export SANITIZERS=Address,UndefinedBehavior
-   conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
-   ```
-
-   See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
-
    To build Debug, in the next step, be sure to set `-DCMAKE_BUILD_TYPE=Debug`
 
    For a single-configuration generator, e.g. `Unix Makefiles` or `Ninja`,
@@ -433,15 +423,6 @@ tools.build:cxxflags=['-DBOOST_ASIO_DISABLE_CONCEPTS']
    ```
 
    **Note:** You can pass build options for `xrpld` in this step.
-
-   **Sanitizers:** To enable sanitizers (Address, Thread, UndefinedBehavior),
-   set the `SANITIZERS` environment variable when running CMake:
-
-   ```
-   SANITIZERS=Address,UndefinedBehavior cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug -Dxrpld=ON -Dtests=ON ..
-   ```
-
-   See [sanitizers documentation](./docs/build/sanitizers.md) for more details.
 
 4. Build `xrpld`.
 
@@ -537,6 +518,21 @@ stored inside the build directory, as either of:
 - file named `coverage.`_extension_, with a suitable extension for the report format, or
 - directory named `coverage`, with the `index.html` and other files inside, for the `html-details` or `html-nested` report formats.
 
+## Sanitizers
+
+To build dependencies and xprld with sanitizer instrumentation, set the
+`SANITIZERS` environment variable(only once before running conan and cmake) and use the `sanitizers` profile in conan:
+
+```bash
+export SANITIZERS=Address,UndefinedBehavior
+
+conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
+
+cmake -DCMAKE_TOOLCHAIN_FILE:FILEPATH=build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug -Dxrpld=ON -Dtests=ON ..
+```
+
+See [Sanitizers docs](./docs/build/sanitizers.md) for more details.
+
 ## Options
 
 | Option     | Default Value | Description                                                    |
@@ -548,9 +544,6 @@ stored inside the build directory, as either of:
 | `xrpld`    | OFF           | Build the xrpld application, and not just the libxrpl library. |
 | `werr`     | OFF           | Treat compilation warnings as errors                           |
 | `wextra`   | OFF           | Enable additional compilation warnings                         |
-
-To enable sanitizers, set the `SANITIZERS` environment variable when running CMake.
-See [sanitizers documentation](./docs/build/sanitizers.md) for details.
 
 [Unity builds][5] may be faster for the first build
 (at the cost of much more memory) since they concatenate sources into fewer
