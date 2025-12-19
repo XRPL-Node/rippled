@@ -79,20 +79,19 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
         !isTesSuccess(ter))
         return ter;
 
-    // Cannot withdraw from a Vault an Asset frozen for the destination account
-    if (!vaultAsset.holds<Issue>() ||
-        (dstAcct != vaultAsset.getIssuer() &&
-         account != vaultAsset.getIssuer()))
+    // Cannot withdraw from a Vault an Asset frozen for the destination account.
+    // Skip freeze check if either party is the issuer (applies to both IOUs and
+    // MPTs).
+    if (dstAcct != vaultAsset.getIssuer() && account != vaultAsset.getIssuer())
     {
         if (auto const ret = checkFrozen(ctx.view, dstAcct, vaultAsset))
             return ret;
     }
 
     // Cannot return shares to the vault, if the underlying asset was frozen for
-    // the submitter
-    if (!vaultAsset.holds<Issue>() ||
-        (dstAcct != vaultAsset.getIssuer() &&
-         account != vaultAsset.getIssuer()))
+    // the submitter. Skip freeze check if either party is the issuer (applies
+    // to both IOUs and MPTs).
+    if (dstAcct != vaultAsset.getIssuer() && account != vaultAsset.getIssuer())
     {
         if (auto const ret = checkFrozen(ctx.view, account, vaultShare))
             return ret;
@@ -176,13 +175,11 @@ VaultWithdraw::doApply()
         return tecPATH_DRY;
     }
 
-    // When withdrawing IOU to the issuer, ignore freeze since spec allows
-    // returning frozen IOU assets to their issuer. MPTs don't have this
-    // exemption - MPT locks function like "deep freeze" with no issuer
-    // exception.
-    FreezeHandling const freezeHandling = (vaultAsset.holds<Issue>() &&
-                                           (dstAcct == vaultAsset.getIssuer() ||
-                                            account_ == vaultAsset.getIssuer()))
+    // Allow returning frozen/locked assets to issuer for both IOUs and MPTs.
+    // When withdrawing to the issuer, ignore freeze since frozen IOUs and
+    // locked MPTs can both be sent back to their issuer.
+    FreezeHandling const freezeHandling = (dstAcct == vaultAsset.getIssuer() ||
+                                           account_ == vaultAsset.getIssuer())
         ? FreezeHandling::fhIGNORE_FREEZE
         : FreezeHandling::fhZERO_IF_FROZEN;
 

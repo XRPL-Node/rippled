@@ -241,8 +241,9 @@ isDeepFrozen(
     MPTIssue const& mptIssue,
     int depth = 0)
 {
-    // Unlike IOUs, frozen / locked MPTs are not allowed to send or receive
-    // funds, so checking "deep frozen" is the same as checking "frozen".
+    // Unlike IOUs, frozen / locked MPTs cannot receive funds and can only send
+    // funds back to the issuer. Deep freeze check is the same as frozen check
+    // for MPTs.
     return isFrozen(view, account, mptIssue, depth);
 }
 

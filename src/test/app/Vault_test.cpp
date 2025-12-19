@@ -1882,7 +1882,7 @@ class Vault_test : public beast::unit_test::suite
             env(tx, ter(tecLOCKED));
 
             tx[sfDestination] = issuer.human();
-            env(tx, ter(tecLOCKED));
+            env(tx);
 
             // Clawback is still permitted, even with global lock
             tx = vault.clawback(

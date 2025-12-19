@@ -1478,9 +1478,7 @@ class LoanBroker_test : public beast::unit_test::suite
         env(fset(issuer, asfGlobalFreeze));
         env.close();
 
-        // Issuer CAN deposit to their own broker during global freeze
-        // This is the issuer exemption - issuer can always send (issue) their
-        // own tokens Per spec: "Counterparties of the frozen issuer can still
+        // Per spec: "Counterparties of the frozen issuer can still
         // send and receive payments directly to and from the issuing address."
         env(coverDeposit(issuer, brokerKeylet.key, asset(10)));
         env.close();
