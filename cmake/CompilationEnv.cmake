@@ -23,10 +23,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(is_gcc TRUE)
 elseif(MSVC)
   set(is_msvc TRUE)
+else()
+  message(FATAL_ERROR "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
-
-set(xrpl_cxx_compiler_id      "${CMAKE_CXX_COMPILER_ID}")
-set(xrpl_cxx_compiler_version "${CMAKE_CXX_COMPILER_VERSION}")
 
 # Backwards-compat aliases used in some modules
 set(IS_CLANG ${is_clang})
@@ -68,3 +67,10 @@ endif()
 
 # Keep legacy uppercase alias for existing code
 set(IS_AMD64 ${is_amd64})
+
+# Sanitizer configuration from environment (flags set in XrplSanitizers.cmake)
+if($ENV{SANITIZERS} AND $ENV{SANITIZERS} MATCHES "Address|Thread|UndefinedBehavior")
+  set(SANITIZERS_ENABLED TRUE)
+else()
+  set(SANITIZERS_ENABLED FALSE)
+endif()

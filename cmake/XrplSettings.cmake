@@ -58,13 +58,6 @@ else()
   set(wextra OFF CACHE BOOL "gcc/clang only" FORCE)
 endif()
 
-# Sanitizer configuration from environment (flags set in XrplSanitizers.cmake)
-if($ENV{SANITIZERS})
-  set(SANITIZER TRUE)
-else()
-  set(SANITIZER FALSE)
-endif()
-
 if(is_linux AND NOT SANITIZER)
   option(BUILD_SHARED_LIBS "build shared xrpl libraries" OFF)
   option(static "link protobuf, openssl, libc++, and boost statically" ON)

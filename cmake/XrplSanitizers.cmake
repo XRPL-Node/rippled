@@ -36,18 +36,17 @@ string(REPLACE "," ";" _san_list "${_san_list}")
 separate_arguments(_san_list)
 
 foreach(_san IN LISTS _san_list)
-  if(_san STREQUAL "Address")
-    set(ENABLE_ASAN TRUE)
-  elseif(_san STREQUAL "Thread")
-    set(ENABLE_TSAN TRUE)
-  elseif(_san STREQUAL "UndefinedBehavior")
-    set(ENABLE_UBSAN TRUE)
-  else()
-    message(FATAL_ERROR "Unsupported sanitizer type: ${_san}"
-            "Supported: Address, Thread, UndefinedBehavior and their combinations.")
-  endif()
+    if(_san STREQUAL "Address")
+        set(ENABLE_ASAN TRUE)
+    elseif(_san STREQUAL "Thread")
+        set(ENABLE_TSAN TRUE)
+    elseif(_san STREQUAL "UndefinedBehavior")
+        set(ENABLE_UBSAN TRUE)
+    else()
+        message(FATAL_ERROR "Unsupported sanitizer type: ${_san}"
+              "Supported: Address, Thread, UndefinedBehavior and their combinations.")
+    endif()
 endforeach()
-
 
 # Frame pointer is required for meaningful stack traces. Sanitizers recommend minimum of -O1 for reasonable performance
 set(SANITIZERS_COMPILE_FLAGS "-fno-omit-frame-pointer" "-O1")
@@ -95,7 +94,7 @@ if(is_gcc)
     elseif(ENABLE_TSAN)
         # GCC doesn't support atomic_thread_fence with tsan. Suppress warnings.
         list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-tsan")
-         message(STATUS "  Using medium code model (-mcmodel=medium)")
+        message(STATUS "  Using medium code model (-mcmodel=medium)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=medium")
         list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=medium")
     endif()
@@ -139,11 +138,19 @@ target_compile_options(common INTERFACE
 # Apply linker flags
 target_link_options(common INTERFACE ${SANITIZERS_LINK_FLAGS})
 
-# Define SANITIZER macro for BuildInfo.cpp
+# Define SANITIZERS macro for BuildInfo.cpp
+set(SANITIZERS_LIST)
 if(ENABLE_ASAN)
-  target_compile_definitions(common INTERFACE SANITIZER=ASAN)
-elseif(ENABLE_TSAN)
-  target_compile_definitions(common INTERFACE SANITIZER=TSAN)
-elseif(ENABLE_UBSAN)
-  target_compile_definitions(common INTERFACE SANITIZER=UBSAN)
+    list(APPEND SANITIZERS_LIST "ASAN")
+endif()
+if(ENABLE_TSAN)
+    list(APPEND SANITIZERS_LIST "TSAN")
+endif()
+if(ENABLE_UBSAN)
+    list(APPEND SANITIZERS_LIST "UBSAN")
+endif()
+
+if(SANITIZERS_LIST)
+    list(JOIN SANITIZERS_LIST "_" SANITIZERS_STR)
+    target_compile_definitions(common INTERFACE SANITIZERS=${SANITIZERS_STR})
 endif()

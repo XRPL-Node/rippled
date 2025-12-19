@@ -20,7 +20,7 @@ namespace BuildInfo {
 char const* const versionString = "3.2.0-b0"
 // clang-format on
 
-#if defined(DEBUG) || defined(SANITIZER)
+#if defined(DEBUG) || defined(SANITIZERS)
     "+"
 #ifdef GIT_COMMIT_HASH
     GIT_COMMIT_HASH
@@ -28,13 +28,13 @@ char const* const versionString = "3.2.0-b0"
 #endif
 #ifdef DEBUG
     "DEBUG"
-#ifdef SANITIZER
+#ifdef SANITIZERS
     "."
 #endif
 #endif
 
-#ifdef SANITIZER
-    BOOST_PP_STRINGIZE(SANITIZER)
+#ifdef SANITIZERS
+    BOOST_PP_STRINGIZE(SANITIZERS)
 #endif
 #endif
 
