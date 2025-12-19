@@ -115,7 +115,7 @@ jobs:
         working-directory: ${{ inputs.build_dir }}
         env:
           BUILD_TYPE: ${{ inputs.build_type }}
-          SANITIZER: ${{ inputs.sanitizers }}
+          SANITIZERS: ${{ inputs.sanitizers }}
         run: |
           cmake \
             -G '${{ runner.os == 'Windows' && 'Visual Studio 17 2022' || 'Ninja' }}' \
