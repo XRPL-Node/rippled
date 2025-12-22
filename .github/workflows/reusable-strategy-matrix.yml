@@ -4,22 +4,13 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "The platform to generate the strategy matrix for. If not provided all platforms are used."
+        description: "The platform to generate the strategy matrix for ('linux', 'macos', 'windows'). If not provided all platforms are used."
         required: false
-        type: choice
-        options:
-          - linux
-          - macos
-          - windows
+        type: string
       trigger:
-        description: "The trigger that caused the workflow to run."
+        description: "The trigger that caused the workflow to run ('commit', 'label', 'merge', 'schedule')."
         required: true
-        type: choice
-        options:
-          - commit
-          - label
-          - merge
-          - schedule
+        type: string
     outputs:
       matrix:
         description: "The generated strategy matrix."
