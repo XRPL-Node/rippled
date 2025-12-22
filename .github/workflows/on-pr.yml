@@ -112,9 +112,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, macos, windows]
+        platform: [linux, macos, windows]
     with:
-      os: ${{ matrix.os }}
+      platform: ${{ matrix.platform }}
+      trigger: commit
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

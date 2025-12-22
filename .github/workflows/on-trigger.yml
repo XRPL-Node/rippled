@@ -66,9 +66,10 @@ jobs:
     strategy:
       fail-fast: ${{ github.event_name == 'merge_group' }}
       matrix:
-        os: [linux, macos, windows]
+        platform: [linux, macos, windows]
     with:
-      os: ${{ matrix.os }}
-      strategy_matrix: ${{ github.event_name == 'schedule' && 'all' || 'minimal' }}
+      platform: ${{ matrix.platform }}
+      # The workflow dispatch event uses the same trigger as the schedule event.
+      trigger: ${{ github.event_name == 'push' && 'merge' || 'schedule' }}
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

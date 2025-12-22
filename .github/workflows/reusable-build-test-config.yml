@@ -3,11 +3,6 @@ name: Build and test configuration
 on:
   workflow_call:
     inputs:
-      build_only:
-        description: 'Whether to only build or to build and test the code ("true", "false").'
-        required: true
-        type: boolean
-
       build_type:
         description: 'The build type to use ("Debug", "Release").'
         type: string
@@ -23,6 +18,21 @@ on:
         description: "The CMake target to build."
         type: string
         required: true
+
+      enable_tests:
+        description: "Whether to run the tests."
+        required: true
+        type: boolean
+
+      enable_package:
+        description: "Whether to publish a package."
+        required: true
+        type: boolean
+
+      enable_image:
+        description: "Whether to publish an image."
+        required: true
+        type: boolean
 
       runs_on:
         description: Runner to run the job on as a JSON string
@@ -156,7 +166,7 @@ jobs:
           ./xrpld --version | grep libvoidstar
 
       - name: Run the separate tests
-        if: ${{ !inputs.build_only }}
+        if: ${{ inputs.enable_tests }}
         working-directory: ${{ env.BUILD_DIR }}
         # Windows locks some of the build files while running tests, and parallel jobs can collide
         env:
@@ -169,7 +179,7 @@ jobs:
             -j "${PARALLELISM}"
 
       - name: Run the embedded tests
-        if: ${{ !inputs.build_only }}
+        if: ${{ inputs.enable_tests }}
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
@@ -177,7 +187,7 @@ jobs:
           ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
-        if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
+        if: ${{ failure() && runner.os == 'Linux' && inputs.enable_tests }}
         run: |
           echo "IPv4 local port range:"
           cat /proc/sys/net/ipv4/ip_local_port_range
@@ -185,7 +195,7 @@ jobs:
           netstat -an
 
       - name: Prepare coverage report
-        if: ${{ !inputs.build_only && env.ENABLED_COVERAGE == 'true' }}
+        if: ${{ github.repository_owner == 'XRPLF' && env.ENABLED_COVERAGE == 'true' }}
         working-directory: ${{ env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
@@ -198,7 +208,7 @@ jobs:
             --target coverage
 
       - name: Upload coverage report
-        if: ${{ github.repository_owner == 'XRPLF' && !inputs.build_only && env.ENABLED_COVERAGE == 'true' }}
+        if: ${{ github.repository_owner == 'XRPLF' && env.ENABLED_COVERAGE == 'true' }}
         uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
         with:
           disable_search: true

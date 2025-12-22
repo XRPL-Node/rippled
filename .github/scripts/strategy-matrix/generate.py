@@ -1,301 +1,211 @@
 #!/usr/bin/env python3
 import argparse
+import dataclasses
 import itertools
-import json
-from dataclasses import dataclass
-from pathlib import Path
+from collections.abc import Iterator
 
-THIS_DIR = Path(__file__).parent.resolve()
+import linux
+import macos
+import windows
+from helpers.defs import *
+from helpers.enums import *
+from helpers.funcs import *
+from helpers.unique import *
 
-
-@dataclass
-class Config:
-    architecture: list[dict]
-    os: list[dict]
-    build_type: list[str]
-    cmake_args: list[str]
-
-
-"""
-Generate a strategy matrix for GitHub Actions CI.
-
-On each PR commit we will build a selection of Debian, RHEL, Ubuntu, MacOS, and
-Windows configurations, while upon merge into the develop, release, or master
-branches, we will build all configurations, and test most of them.
-
-We will further set additional CMake arguments as follows:
-- All builds will have the `tests`, `werr`, and `xrpld` options.
-- All builds will have the `wextra` option except for GCC 12 and Clang 16.
-- All release builds will have the `assert` option.
-- Certain Debian Bookworm configurations will change the reference fee, enable
-  codecov, and enable voidstar in PRs.
-"""
+# The GitHub runner tags to use for the different architectures.
+RUNNER_TAGS = {
+    Arch.LINUX_AMD64: ["self-hosted", "Linux", "X64", "heavy"],
+    Arch.LINUX_ARM64: ["self-hosted", "Linux", "ARM64", "heavy-arm64"],
+    Arch.MACOS_ARM64: ["self-hosted", "macOS", "ARM64", "mac-runner-m1"],
+    Arch.WINDOWS_AMD64: ["self-hosted", "Windows", "devbox"],
+}
 
 
-def generate_strategy_matrix(all: bool, config: Config) -> list:
-    configurations = []
-    for architecture, os, build_type, cmake_args in itertools.product(
-        config.architecture, config.os, config.build_type, config.cmake_args
-    ):
-        # The default CMake target is 'all' for Linux and MacOS and 'install'
-        # for Windows, but it can get overridden for certain configurations.
-        cmake_target = "install" if os["distro_name"] == "windows" else "all"
+def generate_configs(distros: list[Distro], trigger: Trigger) -> list[Config]:
+    """Generate a strategy matrix for GitHub Actions CI.
 
-        # We build and test all configurations by default, except for Windows in
-        # Debug, because it is too slow, as well as when code coverage is
-        # enabled as that mode already runs the tests.
-        build_only = False
-        if os["distro_name"] == "windows" and build_type == "Debug":
-            build_only = True
+    Args:
+        distros: The distros to generate the matrix for.
+        trigger: The trigger that caused the workflow to run.
 
-        # Only generate a subset of configurations in PRs.
-        if not all:
-            # Debian:
-            # - Bookworm using GCC 13: Release and Unity on linux/amd64, set
-            #   the reference fee to 500.
-            # - Bookworm using GCC 15: Debug and no Unity on linux/amd64, enable
-            #   code coverage (which will be done below).
-            # - Bookworm using Clang 16: Debug and no Unity on linux/arm64,
-            #   enable voidstar.
-            # - Bookworm using Clang 17: Release and no Unity on linux/amd64,
-            #   set the reference fee to 1000.
-            # - Bookworm using Clang 20: Debug and Unity on linux/amd64.
-            if os["distro_name"] == "debian":
-                skip = True
-                if os["distro_version"] == "bookworm":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-13"
-                        and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        cmake_args = f"-DUNIT_TEST_REFERENCE_FEE=500 {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
-                        and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-16"
-                        and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        cmake_args = f"-Dvoidstar=ON {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-17"
-                        and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        cmake_args = f"-DUNIT_TEST_REFERENCE_FEE=1000 {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-20"
-                        and build_type == "Debug"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
+    Returns:
+        list[Config]: The generated configurations.
 
-            # RHEL:
-            # - 9 using GCC 12: Debug and Unity on linux/amd64.
-            # - 10 using Clang: Release and no Unity on linux/amd64.
-            if os["distro_name"] == "rhel":
-                skip = True
-                if os["distro_version"] == "9":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
-                        and build_type == "Debug"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                elif os["distro_version"] == "10":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-any"
-                        and build_type == "Release"
-                        and "-Dunity=OFF" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
+    Raises:
+        ValueError: If any of the required fields are empty or invalid.
+        TypeError: If any of the required fields are of the wrong type.
 
-            # Ubuntu:
-            # - Jammy using GCC 12: Debug and no Unity on linux/arm64.
-            # - Noble using GCC 14: Release and Unity on linux/amd64.
-            # - Noble using Clang 18: Debug and no Unity on linux/amd64.
-            # - Noble using Clang 19: Release and Unity on linux/arm64.
-            if os["distro_name"] == "ubuntu":
-                skip = True
-                if os["distro_version"] == "jammy":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
-                        and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        skip = False
-                elif os["distro_version"] == "noble":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-14"
-                        and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-18"
-                        and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-19"
-                        and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
+    """
 
-            # MacOS:
-            # - Debug and no Unity on macos/arm64.
-            if os["distro_name"] == "macos" and not (
-                build_type == "Debug"
-                and "-Dunity=OFF" in cmake_args
-                and architecture["platform"] == "macos/arm64"
-            ):
-                continue
+    configs = []
+    for distro in distros:
+        for config in generate_config_for_distro(distro, trigger):
+            configs.append(config)
 
-            # Windows:
-            # - Release and Unity on windows/amd64.
-            if os["distro_name"] == "windows" and not (
-                build_type == "Release"
-                and "-Dunity=ON" in cmake_args
-                and architecture["platform"] == "windows/amd64"
-            ):
-                continue
+    if not is_unique(configs):
+        raise ValueError("configs must be a list of unique Config")
 
-        # Additional CMake arguments.
-        cmake_args = f"{cmake_args} -Dtests=ON -Dwerr=ON -Dxrpld=ON"
-        if not f"{os['compiler_name']}-{os['compiler_version']}" in [
-            "gcc-12",
-            "clang-16",
-        ]:
-            cmake_args = f"{cmake_args} -Dwextra=ON"
-        if build_type == "Release":
-            cmake_args = f"{cmake_args} -Dassert=ON"
+    return configs
 
-        # We skip all RHEL on arm64 due to a build failure that needs further
-        # investigation.
-        if os["distro_name"] == "rhel" and architecture["platform"] == "linux/arm64":
+
+def generate_config_for_distro(distro: Distro, trigger: Trigger) -> Iterator[Config]:
+    """Generate a strategy matrix for a specific distro.
+
+    Args:
+        distro: The distro to generate the matrix for.
+        trigger: The trigger that caused the workflow to run.
+
+    Yields:
+        Config: The next configuration to build.
+
+    Raises:
+        ValueError: If any of the required fields are empty or invalid.
+        TypeError: If any of the required fields are of the wrong type.
+
+    """
+    for spec in distro.specs:
+        if trigger not in spec.triggers:
             continue
 
-        # We skip all clang 20+ on arm64 due to Boost build error.
-        if (
-            f"{os['compiler_name']}-{os['compiler_version']}"
-            in ["clang-20", "clang-21"]
-            and architecture["platform"] == "linux/arm64"
-        ):
+        os_name = distro.os_name
+        os_version = distro.os_version
+        compiler_name = distro.compiler_name
+        compiler_version = distro.compiler_version
+        image_sha = distro.image_sha
+        yield from generate_config_for_distro_spec(
+            os_name,
+            os_version,
+            compiler_name,
+            compiler_version,
+            image_sha,
+            spec,
+            trigger,
+        )
+
+
+def generate_config_for_distro_spec(
+    os_name: str,
+    os_version: str,
+    compiler_name: str,
+    compiler_version: str,
+    image_sha: str,
+    spec: Spec,
+    trigger: Trigger,
+) -> Iterator[Config]:
+    """Generate a strategy matrix for a specific distro and spec.
+
+    Args:
+        os_name: The OS name.
+        os_version: The OS version.
+        compiler_name: The compiler name.
+        compiler_version: The compiler version.
+        image_sha: The image SHA.
+        spec: The spec to generate the matrix for.
+        trigger: The trigger that caused the workflow to run.
+
+    Yields:
+        Config: The next configuration to build.
+
+    """
+
+    for trigger_, arch, build_mode, build_type in itertools.product(
+        spec.triggers, spec.archs, spec.build_modes, spec.build_types
+    ):
+        if trigger_ != trigger:
             continue
 
-        # Enable code coverage for Debian Bookworm using GCC 15 in Debug and no
-        # Unity on linux/amd64
-        if (
-            f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
-            and build_type == "Debug"
-            and "-Dunity=OFF" in cmake_args
-            and architecture["platform"] == "linux/amd64"
-        ):
-            cmake_args = f"-Dcoverage=ON -Dcoverage_format=xml -DCODE_COVERAGE_VERBOSE=ON -DCMAKE_C_FLAGS=-O0 -DCMAKE_CXX_FLAGS=-O0 {cmake_args}"
+        build_option = spec.build_option
+        test_option = spec.test_option
+        publish_option = spec.publish_option
 
-        # Generate a unique name for the configuration, e.g. macos-arm64-debug
-        # or debian-bookworm-gcc-12-amd64-release-unity.
-        config_name = os["distro_name"]
-        if (n := os["distro_version"]) != "":
-            config_name += f"-{n}"
-        if (n := os["compiler_name"]) != "":
-            config_name += f"-{n}"
-        if (n := os["compiler_version"]) != "":
-            config_name += f"-{n}"
-        config_name += (
-            f"-{architecture['platform'][architecture['platform'].find('/') + 1 :]}"
-        )
-        config_name += f"-{build_type.lower()}"
-        if "-Dunity=ON" in cmake_args:
-            config_name += "-unity"
-
-        # Add the configuration to the list, with the most unique fields first,
-        # so that they are easier to identify in the GitHub Actions UI, as long
-        # names get truncated.
-        configurations.append(
-            {
-                "config_name": config_name,
-                "cmake_args": cmake_args,
-                "cmake_target": cmake_target,
-                "build_only": build_only,
-                "build_type": build_type,
-                "os": os,
-                "architecture": architecture,
-            }
+        # Determine the configuration name.
+        config_name = generate_config_name(
+            os_name,
+            os_version,
+            compiler_name,
+            compiler_version,
+            arch,
+            build_type,
+            build_mode,
+            build_option,
         )
 
-    return configurations
+        # Determine the CMake arguments.
+        cmake_args = generate_cmake_args(
+            compiler_name,
+            compiler_version,
+            build_type,
+            build_mode,
+            build_option,
+            test_option,
+        )
 
+        # Determine the CMake target.
+        cmake_target = generate_cmake_target(os_name, build_type)
 
-def read_config(file: Path) -> Config:
-    config = json.loads(file.read_text())
-    if (
-        config["architecture"] is None
-        or config["os"] is None
-        or config["build_type"] is None
-        or config["cmake_args"] is None
-    ):
-        raise Exception("Invalid configuration file.")
+        # Determine whether to enable running tests, and to create a package
+        # and/or image.
+        enable_tests, enable_package, enable_image = generate_enable_options(
+            os_name, build_type, publish_option
+        )
 
-    return Config(**config)
+        # Determine the image to run in, if applicable.
+        image = generate_image_name(
+            os_name,
+            os_version,
+            compiler_name,
+            compiler_version,
+            image_sha,
+        )
+
+        # Generate the configuration.
+        yield Config(
+            config_name=config_name,
+            cmake_args=cmake_args,
+            cmake_target=cmake_target,
+            build_type=("Debug" if build_type == BuildType.DEBUG else "Release"),
+            enable_tests=enable_tests,
+            enable_package=enable_package,
+            enable_image=enable_image,
+            runs_on=RUNNER_TAGS[arch],
+            image=image,
+        )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-a",
-        "--all",
-        help="Set to generate all configurations (generally used when merging a PR) or leave unset to generate a subset of configurations (generally used when committing to a PR).",
-        action="store_true",
+        "--platform",
+        "-p",
+        required=False,
+        type=Platform,
+        choices=list(Platform),
+        help="The platform to run on.",
     )
     parser.add_argument(
-        "-c",
-        "--config",
-        help="Path to the JSON file containing the strategy matrix configurations.",
-        required=False,
-        type=Path,
+        "--trigger",
+        "-t",
+        required=True,
+        type=Trigger,
+        choices=list(Trigger),
+        help="The trigger that caused the workflow to run.",
     )
     args = parser.parse_args()
 
-    matrix = []
-    if args.config is None or args.config == "":
-        matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "linux.json")
-        )
-        matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "macos.json")
-        )
-        matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "windows.json")
-        )
-    else:
-        matrix += generate_strategy_matrix(args.all, read_config(args.config))
+    # Collect the distros to generate configs for.
+    distros = []
+    if args.platform in [None, Platform.LINUX]:
+        distros += linux.DEBIAN_DISTROS + linux.RHEL_DISTROS + linux.UBUNTU_DISTROS
+    if args.platform in [None, Platform.MACOS]:
+        distros += macos.DISTROS
+    if args.platform in [None, Platform.WINDOWS]:
+        distros += windows.DISTROS
 
-    # Generate the strategy matrix.
-    print(f"matrix={json.dumps({'include': matrix})}")
+    # Generate the configs.
+    configs = generate_configs(distros, args.trigger)
+
+    # Convert the configs into the format expected by GitHub Actions.
+    include = []
+    for config in configs:
+        include.append(dataclasses.asdict(config))
+    print(f"matrix={json.dumps({'include': include})}")

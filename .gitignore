@@ -19,6 +19,7 @@ Release/
 /tmp/
 CMakeSettings.json
 CMakeUserPresets.json
+__pycache__
 
 # Coverage files.
 *.gcno
