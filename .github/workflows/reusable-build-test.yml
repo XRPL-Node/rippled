@@ -45,7 +45,7 @@ jobs:
       enable_tests: ${{ matrix.enable_tests }}
       enable_package: ${{ matrix.enable_package }}
       enable_image: ${{ matrix.enable_image }}
-      runs_on: ${{ matrix.runs_on }}
+      runs_on: ${{ toJson(matrix.runs_on) }}
       image: ${{ matrix.image }}
       config_name: ${{ matrix.config_name }}
     secrets:

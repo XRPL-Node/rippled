@@ -4,8 +4,8 @@ from helpers.enums import *
 # The default CI image SHAs to use, which can be specified per distro group and
 # can be overridden for individual distros, which is useful when debugging using
 # a locally built CI image. See https://github.com/XRPLF/ci for the images.
-DEBIAN_SHA = "sha-0525eae"
-RHEL_SHA = "sha-0525eae"
+DEBIAN_SHA = "sha-ca4517d"
+RHEL_SHA = "sha-ca4517d"
 UBUNTU_SHA = "sha-84afd81"
 
 DEBIAN_DISTROS = [
