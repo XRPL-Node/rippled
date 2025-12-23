@@ -392,7 +392,7 @@ private:
         {
             if (auto const limit = jvParseInt(jvParams[4u]))
             {
-                if (limit > 0)
+                if (limit >= 0)
                     jvRequest[jss::limit] = *limit;
             }
             else
