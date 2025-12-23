@@ -44,7 +44,7 @@ Also note that to create a Docker image we ideally build on both AMD64 and
 ARM64 to create a multi-arch image. Both configs should therefore be triggered
 by the same event. However, as the script outputs individual configs, the
 workflow must be able to run both builds separately and then merge the
-single-arch images afterwards into a multi-arch image.
+single-arch images afterward into a multi-arch image.
 
 ### MacOS
 

@@ -458,9 +458,7 @@ def test_generate_configs(macos_distro, windows_distro, linux_distro):
     ]
 
 
-def test_generate_configs_raises_on_duplicate_configs(
-    macos_distro, windows_distro, linux_distro
-):
+def test_generate_configs_raises_on_duplicate_configs(macos_distro):
     trigger = Trigger.COMMIT
 
     distros = [macos_distro, macos_distro]

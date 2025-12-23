@@ -6,7 +6,7 @@ from typing import Any
 def is_unique(items: list[Any]) -> bool:
     """Check if a list of dataclass objects contains only unique items.
 
-    As the items may not be hashable, we convert them to json strings first, and
+    As the items may not be hashable, we convert them to JSON strings first, and
     then check if the list of strings is the same size as the set of strings.
 
     Args:
