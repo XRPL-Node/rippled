@@ -32,7 +32,9 @@ parsers:
 slack_app: false
 
 ignore:
-  - "src/test/"
-  - "src/tests/"
+  - ".github/scripts/"
   - "include/xrpl/beast/test/"
   - "include/xrpl/beast/unit_test/"
+  - "src/test/"
+  - "src/tests/"
+  - "tests/"
