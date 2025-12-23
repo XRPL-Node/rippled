@@ -8,31 +8,18 @@ DEBIAN_SHA = "sha-ca4517d"
 RHEL_SHA = "sha-ca4517d"
 UBUNTU_SHA = "sha-84afd81"
 
+# We only build a selection of configurations for the various triggers to reduce
+# pipeline runtime. Across all three operating systems we aim to cover all GCC
+# and Clang versions, while not duplicating configurations too much. See also
+# the README for more details.
+
+# The Debian distros to build configurations for.
+#
+# We have the following distros available:
+# - Debian Bullseye: GCC 12-15
+# - Debian Bookworm: GCC 13-15, Clang 16-20
+# - Debian Trixie: GCC 14-15, Clang 20-21
 DEBIAN_DISTROS = [
-    Distro(
-        os_name="debian",
-        os_version="bullseye",
-        compiler_name="gcc",
-        compiler_version="12",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="bullseye",
-        compiler_name="gcc",
-        compiler_version="13",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
     Distro(
         os_name="debian",
         os_version="bullseye",
@@ -80,34 +67,11 @@ DEBIAN_DISTROS = [
         os_name="debian",
         os_version="bookworm",
         compiler_name="gcc",
-        compiler_version="13",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="bookworm",
-        compiler_name="gcc",
-        compiler_version="14",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="bookworm",
-        compiler_name="gcc",
         compiler_version="15",
         image_sha=DEBIAN_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_AMD64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -146,6 +110,7 @@ DEBIAN_DISTROS = [
         image_sha=DEBIAN_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_AMD64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -158,6 +123,7 @@ DEBIAN_DISTROS = [
         image_sha=DEBIAN_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -170,30 +136,7 @@ DEBIAN_DISTROS = [
         image_sha=DEBIAN_SHA,
         specs=[
             Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="bookworm",
-        compiler_name="clang",
-        compiler_version="20",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="trixie",
-        compiler_name="gcc",
-        compiler_version="14",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
+                archs=[Arch.LINUX_AMD64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -206,19 +149,7 @@ DEBIAN_DISTROS = [
         image_sha=DEBIAN_SHA,
         specs=[
             Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="debian",
-        os_version="trixie",
-        compiler_name="clang",
-        compiler_version="20",
-        image_sha=DEBIAN_SHA,
-        specs=[
-            Spec(
-                archs=[Arch.LINUX_AMD64],
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -243,9 +174,13 @@ DEBIAN_DISTROS = [
         ],
     ),
 ]
-# The Debian distros to build for.
 
-# The RHEL distros to build for.
+# The RHEL distros to build configurations for.
+#
+# We have the following distros available:
+# - RHEL 8: GCC 14, Clang "any"
+# - RHEL 9: GCC 12-14, Clang "any"
+# - RHEL 10: GCC 14, Clang "any"
 RHEL_DISTROS = [
     Distro(
         os_name="rhel",
@@ -313,45 +248,6 @@ RHEL_DISTROS = [
     ),
     Distro(
         os_name="rhel",
-        os_version="9",
-        compiler_name="gcc",
-        compiler_version="14",
-        image_sha=RHEL_SHA,
-        specs=[
-            Spec(
-                archs=[Arch.LINUX_AMD64],
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="rhel",
-        os_version="9",
-        compiler_name="clang",
-        compiler_version="any",
-        image_sha=RHEL_SHA,
-        specs=[
-            Spec(
-                archs=[Arch.LINUX_AMD64],
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="rhel",
-        os_version="10",
-        compiler_name="gcc",
-        compiler_version="14",
-        image_sha=RHEL_SHA,
-        specs=[
-            Spec(
-                archs=[Arch.LINUX_AMD64],
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="rhel",
         os_version="10",
         compiler_name="clang",
         compiler_version="any",
@@ -365,7 +261,11 @@ RHEL_DISTROS = [
     ),
 ]
 
-# The Ubuntu distros to build for.
+# The Ubuntu distros to build configurations for.
+#
+# We have the following distros available:
+# - Ubuntu Jammy (22.04): GCC 12
+# - Ubuntu Noble (24.04): GCC 13-14, Clang 16-20
 UBUNTU_DISTROS = [
     Distro(
         os_name="ubuntu",
@@ -375,6 +275,7 @@ UBUNTU_DISTROS = [
         image_sha=UBUNTU_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -393,6 +294,7 @@ UBUNTU_DISTROS = [
                 triggers=[Trigger.MERGE],
             ),
             Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -405,18 +307,7 @@ UBUNTU_DISTROS = [
         image_sha=UBUNTU_SHA,
         specs=[
             Spec(
-                triggers=[Trigger.SCHEDULE],
-            ),
-        ],
-    ),
-    Distro(
-        os_name="ubuntu",
-        os_version="noble",
-        compiler_name="clang",
-        compiler_version="16",
-        image_sha=UBUNTU_SHA,
-        specs=[
-            Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -435,6 +326,7 @@ UBUNTU_DISTROS = [
                 triggers=[Trigger.MERGE],
             ),
             Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -447,6 +339,7 @@ UBUNTU_DISTROS = [
         image_sha=UBUNTU_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_AMD64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
@@ -459,6 +352,7 @@ UBUNTU_DISTROS = [
         image_sha=UBUNTU_SHA,
         specs=[
             Spec(
+                archs=[Arch.LINUX_ARM64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],

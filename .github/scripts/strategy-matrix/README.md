@@ -63,14 +63,42 @@ and don't publish any packages or images.
 
 We have four triggers that can cause the workflow to run:
 
-- `commit`: A commit is pushed to a pull request.
+- `commit`: A commit is pushed to a branch for which a pull request is open.
 - `merge`: A pull request is merged.
 - `label`: A label is added to a pull request.
 - `schedule`: The workflow is run on a scheduled basis.
 
 The `label` trigger is currently not used, but it is reserved for future use.
+
 The `schedule` trigger is used to run the workflow each weekday, and is also
 used for ad hoc testing via the `workflow_dispatch` event.
+
+### Dependencies
+
+The pipeline that is run for the `schedule` trigger will recompile and upload
+all Conan packages to the remote for each configuration that is enabled. In
+case any dependencies were added or updated in a recently merged PR, they will
+then be available in the remote for the following pipeline runs. It is therefore
+important that all configurations that are enabled for the `commit`, `merge`,
+and `label` triggers are also enabled for the `schedule` trigger. We run
+additional configurations in the `schedule` trigger that are not run for the
+other triggers, to get extra confidence that the codebase can compile and run on
+all supported platforms.
+
+#### Caveats
+
+There is some nuance here in that certain options affect the compilation of the
+dependencies, while others do not. This means that that same options need to be
+enabled for the `schedule` trigger as for the other triggers to ensure any
+dependency changes get cached in the Conan remote.
+
+- Build mode (`unity`): Does not affect the dependencies.
+- Build option (`coverage`, `voidstar`): Does not affect the dependencies.
+- Build option (`sanitizer asan`, `sanitizer tsan`): Affects the dependencies.
+- Build type (`debug`, `release`): Affects the dependencies.
+- Build type (`publish`): Same effect as `release` on the dependencies.
+- Test option (`reference fee`): Does not affect the dependencies.
+- Publish option (`package`, `image`): Does not affect the dependencies.
 
 ## Usage
 

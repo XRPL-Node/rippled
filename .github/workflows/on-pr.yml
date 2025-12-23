@@ -115,7 +115,7 @@ jobs:
         platform: [linux, macos, windows]
     with:
       platform: ${{ matrix.platform }}
-      trigger: schedule
+      trigger: commit
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

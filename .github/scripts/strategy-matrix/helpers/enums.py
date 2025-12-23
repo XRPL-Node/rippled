@@ -31,14 +31,12 @@ class BuildOption(StrEnum):
     VOIDSTAR = auto()
 
 
-class TestOption(StrEnum):
-    """Represents test options to enable, specifically the reference fee to use."""
+class BuildType(StrEnum):
+    """Represents the build type to use."""
 
-    __test__ = False  # Tell pytest to not consider this as a test class.
-
-    NONE = ""  # Use the default reference fee of 10.
-    REFERENCE_FEE_500 = "500"
-    REFERENCE_FEE_1000 = "1000"
+    DEBUG = auto()
+    RELEASE = auto()
+    PUBLISH = auto()  # Release build without assertions.
 
 
 class PublishOption(StrEnum):
@@ -50,12 +48,14 @@ class PublishOption(StrEnum):
     PACKAGE_AND_IMAGE = auto()
 
 
-class BuildType(StrEnum):
-    """Represents the build type to use."""
+class TestOption(StrEnum):
+    """Represents test options to enable, specifically the reference fee to use."""
 
-    DEBUG = auto()
-    RELEASE = auto()
-    PUBLISH = auto()  # Release build without assertions.
+    __test__ = False  # Tell pytest to not consider this as a test class.
+
+    NONE = ""  # Use the default reference fee of 10.
+    REFERENCE_FEE_500 = "500"
+    REFERENCE_FEE_1000 = "1000"
 
 
 class Platform(StrEnum):

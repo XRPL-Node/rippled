@@ -187,7 +187,7 @@ jobs:
           ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
-        if: ${{ failure() && runner.os == 'Linux' && inputs.enable_tests }}
+        if: ${{ (failure() || cancelled()) && runner.os == 'Linux' && inputs.enable_tests }}
         run: |
           echo "IPv4 local port range:"
           cat /proc/sys/net/ipv4/ip_local_port_range

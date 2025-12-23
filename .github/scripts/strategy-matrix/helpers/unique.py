@@ -1,5 +1,5 @@
-from dataclasses import asdict, _is_dataclass_instance
 import json
+from dataclasses import _is_dataclass_instance, asdict
 from typing import Any
 
 
