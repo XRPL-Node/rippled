@@ -471,7 +471,7 @@ UBUNTU_DISTROS = [
         image_sha=UBUNTU_SHA,
         specs=[
             Spec(
-                archs=[Arch.LINUX_ARM64],
+                archs=[Arch.LINUX_AMD64],
                 build_modes=[BuildMode.UNITY_ON],
                 build_types=[BuildType.DEBUG],
                 triggers=[Trigger.COMMIT],
@@ -483,6 +483,7 @@ UBUNTU_DISTROS = [
                 triggers=[Trigger.MERGE],
             ),
             Spec(
+                archs=[Arch.LINUX_AMD64],
                 triggers=[Trigger.SCHEDULE],
             ),
         ],
