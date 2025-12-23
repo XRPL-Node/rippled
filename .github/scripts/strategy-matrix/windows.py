@@ -1,5 +1,5 @@
-from helpers.defs import Distro, Spec
-from helpers.enums import Arch
+from helpers.defs import *
+from helpers.enums import *
 
 DISTROS = [
     Distro(
