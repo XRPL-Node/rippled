@@ -257,6 +257,9 @@ isFrozen(
     MPTIssue const& mptIssue,
     int depth)
 {
+    if (account == mptIssue.getIssuer())
+        return false;
+
     return isGlobalFrozen(view, mptIssue) ||
         isIndividualFrozen(view, account, mptIssue) ||
         isVaultPseudoAccountFrozen(view, account, mptIssue, depth);

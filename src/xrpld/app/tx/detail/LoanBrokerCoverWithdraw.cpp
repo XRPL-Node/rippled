@@ -59,11 +59,6 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
         JLOG(ctx.j.warn()) << "LoanBroker does not exist.";
         return tecNO_ENTRY;
     }
-    if (account != sleBroker->at(sfOwner))
-    {
-        JLOG(ctx.j.warn()) << "Account is not the owner of the LoanBroker.";
-        return tecNO_PERMISSION;
-    }
     auto const vault = ctx.view.read(keylet::vault(sleBroker->at(sfVaultID)));
     if (!vault)
     {
@@ -131,11 +126,19 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     if ((coverAvail - amount) < minimumCover)
         return tecINSUFFICIENT_FUNDS;
 
+    // Allow returning frozen/locked assets to issuer for both IOUs and MPTs.
+    // When withdrawing to the issuer, ignore freeze since frozen IOUs and
+    // locked MPTs can both be sent back to their issuer.
+    FreezeHandling const freezeHandling =
+        (dstAcct == vaultAsset.getIssuer() || account == vaultAsset.getIssuer())
+        ? FreezeHandling::fhIGNORE_FREEZE
+        : FreezeHandling::fhZERO_IF_FROZEN;
+
     if (accountHolds(
             ctx.view,
             pseudoAccountID,
             vaultAsset,
-            FreezeHandling::fhZERO_IF_FROZEN,
+            freezeHandling,
             AuthHandling::ahZERO_IF_UNAUTHORIZED,
             ctx.j) < amount)
         return tecINSUFFICIENT_FUNDS;

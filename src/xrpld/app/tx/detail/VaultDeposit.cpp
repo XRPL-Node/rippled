@@ -86,7 +86,8 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
         return vaultAsset.holds<Issue>() ? tecFROZEN : tecLOCKED;
 
     // Cannot deposit if the shares of the vault are frozen
-    if (isFrozen(ctx.view, account, vaultShare))
+    bool const isAssetIssuer = (account == vaultAsset.getIssuer());
+    if (!isAssetIssuer && isFrozen(ctx.view, account, vaultShare))
         return tecLOCKED;
 
     if (vault->isFlag(lsfVaultPrivate) && account != vault->at(sfOwner))
