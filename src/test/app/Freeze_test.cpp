@@ -2046,6 +2046,10 @@ class Freeze_test : public beast::unit_test::suite
         env(pay(holder, issuer, USD(10)));
         env.close();
 
+        // Verify issuer can still send payments (uses isFrozen internally)
+        env(pay(issuer, holder, USD(10)));
+        env.close();
+
         // Verify holder cannot send to other accounts
         Account other{"other"};
         env.fund(XRP(10000), other);
