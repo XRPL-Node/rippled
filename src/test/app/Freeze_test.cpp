@@ -2034,21 +2034,38 @@ class Freeze_test : public beast::unit_test::suite
         env(fset(issuer, asfGlobalFreeze));
         env.close();
 
-        // After global freeze, issuer is NOT frozen for their own currency
-        BEAST_EXPECT(
-            !isFrozen(*env.current(), issuer.id(), USD.currency, issuer.id()));
+        // After global freeze, check issuer freeze state based on amendment
+        if (features[featureLendingProtocol])
+        {
+            // With amendment: issuer is NOT frozen for their own currency
+            BEAST_EXPECT(!isFrozen(
+                *env.current(), issuer.id(), USD.currency, issuer.id()));
 
-        // After global freeze, holder IS frozen
+            // Verify issuer can still receive payments
+            env(pay(holder, issuer, USD(10)));
+            env.close();
+
+            // Verify issuer can still send payments
+            env(pay(issuer, holder, USD(10)));
+            env.close();
+        }
+        else
+        {
+            // Without amendment: issuer IS frozen for their own currency
+            BEAST_EXPECT(isFrozen(
+                *env.current(), issuer.id(), USD.currency, issuer.id()));
+
+            // Issuer can still receive payments (always worked)
+            env(pay(holder, issuer, USD(10)));
+            env.close();
+
+            // But issuer cannot send payments (frozen)
+            env(pay(issuer, holder, USD(10)), ter(tecPATH_DRY));
+        }
+
+        // After global freeze, holder IS frozen (both scenarios)
         BEAST_EXPECT(
             isFrozen(*env.current(), holder.id(), USD.currency, issuer.id()));
-
-        // Verify issuer can still receive payments (uses isFrozen internally)
-        env(pay(holder, issuer, USD(10)));
-        env.close();
-
-        // Verify issuer can still send payments (uses isFrozen internally)
-        env(pay(issuer, holder, USD(10)));
-        env.close();
 
         // Verify holder cannot send to other accounts
         Account other{"other"};

@@ -257,7 +257,8 @@ isFrozen(
     MPTIssue const& mptIssue,
     int depth)
 {
-    if (account == mptIssue.getIssuer())
+    if (view.rules().enabled(featureLendingProtocol) &&
+        account == mptIssue.getIssuer())
         return false;
 
     return isGlobalFrozen(view, mptIssue) ||
