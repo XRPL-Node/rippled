@@ -702,6 +702,77 @@ MPTTester::getIssuanceConfidentialBalance() const
     return 0;
 }
 
+Buffer
+MPTTester::getClawbackProof(
+    Account const& holder,
+    std::uint64_t amount,
+    Buffer const& privateKey,
+    uint256 const& ctxHash) const
+{
+    if (!id_)
+        Throw<std::runtime_error>("MPT has not been created");
+
+    auto const sleHolder = env_.le(keylet::mptoken(*id_, holder.id()));
+    auto const sleIssuance = env_.le(keylet::mptIssuance(*id_));
+
+    // helper to generate a dummy proof, so that other preclaim tests can
+    // proceed
+    auto const getDummyProof = []() {
+        Buffer dummy(ecEqualityProofLength);
+        std::memset(dummy.data(), 0, ecEqualityProofLength);
+        return dummy;
+    };
+
+    if (!sleHolder)
+        return getDummyProof();
+
+    if (!sleIssuance)
+        Throw<std::runtime_error>("Issuance object not found");
+
+    auto const ciphertextBlob = sleHolder->getFieldVL(sfIssuerEncryptedBalance);
+    if (ciphertextBlob.size() == 0)
+        return getDummyProof();
+
+    auto const pubKeyBlob = sleIssuance->getFieldVL(sfIssuerElGamalPublicKey);
+    Slice const ciphertext(ciphertextBlob.data(), ciphertextBlob.size());
+    Slice const pubKey(pubKeyBlob.data(), pubKeyBlob.size());
+
+    if (ciphertextBlob.size() != ecGamalEncryptedTotalLength)
+        Throw<std::runtime_error>("Invalid Ciphertext length");
+
+    secp256k1_pubkey c1, c2;
+    auto const ctx = secp256k1Context();
+    if (!secp256k1_ec_pubkey_parse(
+            ctx, &c1, ciphertextBlob.data(), ecGamalEncryptedLength) ||
+        !secp256k1_ec_pubkey_parse(
+            ctx,
+            &c2,
+            ciphertextBlob.data() + ecGamalEncryptedLength,
+            ecGamalEncryptedLength))
+    {
+        Throw<std::runtime_error>("Invalid Ciphertext");
+    }
+
+    secp256k1_pubkey pk;
+    std::memcpy(pk.data, pubKeyBlob.data(), ecPubKeyLength);
+    Buffer proof(ecEqualityProofLength);
+
+    if (secp256k1_equality_plaintext_prove(
+            ctx,
+            proof.data(),
+            &pk,
+            &c2,
+            &c1,
+            amount,
+            privateKey.data(),
+            ctxHash.data()) != 1)
+    {
+        Throw<std::runtime_error>("Proof generation failed");
+    }
+
+    return proof;
+}
+
 std::optional<Buffer>
 MPTTester::getEncryptedBalance(
     Account const& account,
@@ -1022,6 +1093,16 @@ MPTTester::confidentialClaw(MPTConfidentialClawback const& arg)
 
     if (arg.proof)
         jv[sfZKProof] = *arg.proof;
+    else
+    {
+        std::uint32_t const seq = env_.seq(account);
+        uint256 const ctxHash = getClawbackContextHash(
+            account.id(), seq, *id_, *arg.amt, arg.holder->id());
+        Buffer proof = getClawbackProof(
+            *arg.holder, *arg.amt, getPrivKey(account), ctxHash);
+
+        jv[sfZKProof] = strHex(proof);
+    }
 
     auto const holderPubAmt = getBalance(*arg.holder);
     auto const prevCOA = getIssuanceConfidentialBalance();
