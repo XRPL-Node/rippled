@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2017 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/tx/detail/CancelCheck.h>
 
@@ -27,7 +8,7 @@
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFlags.h>
 
-namespace ripple {
+namespace xrpl {
 
 NotTEC
 CancelCheck::preflight(PreflightContext const& ctx)
@@ -93,8 +74,10 @@ CancelCheck::doApply()
         if (!view().dirRemove(
                 keylet::ownerDir(dstId), page, sleCheck->key(), true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete check from destination.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
     {
@@ -102,8 +85,10 @@ CancelCheck::doApply()
         if (!view().dirRemove(
                 keylet::ownerDir(srcId), page, sleCheck->key(), true))
         {
+            // LCOV_EXCL_START
             JLOG(j_.fatal()) << "Unable to delete check from owner.";
             return tefBAD_LEDGER;
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -116,4 +101,4 @@ CancelCheck::doApply()
     return tesSUCCESS;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

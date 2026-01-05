@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2023 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/misc/AMMHelpers.h>
 #include <xrpld/app/misc/AMMUtils.h>
 #include <xrpld/app/tx/detail/AMMWithdraw.h>
@@ -26,7 +7,7 @@
 #include <xrpl/protocol/AMMCore.h>
 #include <xrpl/protocol/TxFlags.h>
 
-namespace ripple {
+namespace xrpl {
 
 bool
 AMMWithdraw::checkExtraFeatures(PreflightContext const& ctx)
@@ -196,9 +177,11 @@ AMMWithdraw::preclaim(PreclaimContext const& ctx)
     if (amountBalance <= beast::zero || amount2Balance <= beast::zero ||
         lptAMMBalance < beast::zero)
     {
+        // LCOV_EXCL_START
         JLOG(ctx.j.debug())
             << "AMM Withdraw: reserves or tokens balance is zero.";
-        return tecINTERNAL;  // LCOV_EXCL_LINE
+        return tecINTERNAL;
+        // LCOV_EXCL_STOP
     }
 
     auto const ammAccountID = ammSle->getAccountID(sfAccount);
@@ -908,7 +891,7 @@ AMMWithdraw::equalWithdrawLimit(
         // LCOV_EXCL_START
         XRPL_ASSERT(
             amountWithdraw <= amount,
-            "ripple::AMMWithdraw::equalWithdrawLimit : maximum amountWithdraw");
+            "xrpl::AMMWithdraw::equalWithdrawLimit : maximum amountWithdraw");
         // LCOV_EXCL_STOP
     }
     else if (amountWithdraw > amount)
@@ -1101,4 +1084,4 @@ AMMWithdraw::isWithdrawAll(STTx const& tx)
         return WithdrawAll::Yes;
     return WithdrawAll::No;
 }
-}  // namespace ripple
+}  // namespace xrpl
