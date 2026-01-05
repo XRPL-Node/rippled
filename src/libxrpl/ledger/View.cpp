@@ -1440,10 +1440,7 @@ doWithdraw(
         senderAcct != amount.getIssuer())
     {
         if (isGlobalFrozen(view, amount.getIssuer()))
-        {
-            return view.rules().enabled(featureLendingProtocol) ? tecPATH_DRY
-                                                                : tecFROZEN;
-        }
+            return tecFROZEN;
     }
 
     // Move the funds directly from the broker's pseudo-account to the
@@ -1467,10 +1464,7 @@ addEmptyHolding(
     auto const& issuerId = issue.getIssuer();
     auto const& currency = issue.currency;
     if (isGlobalFrozen(view, issuerId))
-    {
-        return view.rules().enabled(featureLendingProtocol) ? tecPATH_DRY
-                                                            : tecFROZEN;
-    }
+        return tecFROZEN;
 
     auto const& srcId = issuerId;
     auto const& dstId = accountID;

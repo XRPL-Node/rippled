@@ -2174,7 +2174,7 @@ class Freeze_test : public beast::unit_test::suite
                     {.depositor = holder,
                      .id = vaultKeylet.key,
                      .amount = USD(10)}),
-                ter(tecPATH_DRY));
+                ter(tecFROZEN));
 
             auto tx = vault.withdraw(
                 {.depositor = holder,
@@ -2190,17 +2190,24 @@ class Freeze_test : public beast::unit_test::suite
                  .amount = USD(20)}));
             env_post.close();
 
+            // Non-owner cannot deposit cover (ownership check)
             env_post(
                 coverDeposit(holder, brokerKeylet.key, USD(10)),
-                ter(tecFROZEN));
+                ter(tecNO_PERMISSION));
 
-            env_post(coverDeposit(issuer, brokerKeylet.key, USD(20)));
+            // Issuer also cannot deposit if not the owner (ownership check)
+            env_post(
+                coverDeposit(issuer, brokerKeylet.key, USD(20)),
+                ter(tecNO_PERMISSION));
+
+            // Owner can deposit even under global freeze
+            env_post(coverDeposit(owner, brokerKeylet.key, USD(20)));
             env_post.close();
             env_post.require(balance(pseudoAccount, USD(20)));
 
             env_post(
                 coverWithdraw(owner, brokerKeylet.key, USD(10)),
-                ter(tecPATH_DRY));
+                ter(tecFROZEN));
 
             tx = coverWithdraw(owner, brokerKeylet.key, USD(10));
             tx[sfDestination] = issuer.human();
@@ -2208,13 +2215,14 @@ class Freeze_test : public beast::unit_test::suite
             env_post.close();
             env_post.require(balance(pseudoAccount, USD(10)));
 
-            env_post(coverDeposit(issuer, brokerKeylet.key, USD(20)));
+            // Owner deposits more cover
+            env_post(coverDeposit(owner, brokerKeylet.key, USD(20)));
             env_post.close();
 
             // Withdrawal to holder should fail due to global freeze
             tx = coverWithdraw(owner, brokerKeylet.key, USD(15));
             tx[sfDestination] = holder.human();
-            env_post(tx, ter(tecPATH_DRY));
+            env_post(tx, ter(tecFROZEN));
 
             // Withdraw to issuer instead (issuer is exempt from global freeze)
             tx = coverWithdraw(owner, brokerKeylet.key, USD(15));

@@ -54,6 +54,13 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
     if (amount.asset() != vaultAsset)
         return tecWRONG_ASSET;
 
+    // Only the broker owner can deposit cover
+    if (account != sleBroker->at(sfOwner))
+    {
+        JLOG(ctx.j.warn()) << "Account is not the owner of the LoanBroker.";
+        return tecNO_PERMISSION;
+    }
+
     auto const pseudoAccountID = sleBroker->at(sfAccount);
     // Cannot transfer a non-transferable Asset
     if (auto const ret =

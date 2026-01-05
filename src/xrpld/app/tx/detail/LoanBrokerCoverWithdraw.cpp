@@ -72,6 +72,13 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     if (amount.asset() != vaultAsset)
         return tecWRONG_ASSET;
 
+    // Only the broker owner can withdraw cover
+    if (account != sleBroker->at(sfOwner))
+    {
+        JLOG(ctx.j.warn()) << "Account is not the owner of the LoanBroker.";
+        return tecNO_PERMISSION;
+    }
+
     // The broker's pseudo-account is the source of funds.
     auto const pseudoAccountID = sleBroker->at(sfAccount);
     // Cannot transfer a non-transferable Asset
@@ -96,9 +103,9 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     if (auto const ter = requireAuth(ctx.view, vaultAsset, dstAcct, authType))
         return ter;
 
-    // Skip source freeze check here - let doWithdraw handle it.
-    // This allows global freeze cases to properly return tecPATH_DRY instead of
-    // tecFROZEN. Check for destination deep freeze, unless sending directly to
+    // Skip source freeze check here - let doWithdraw handle it, which will
+    // properly exempt the issuer from global freeze when the amendment is
+    // enabled. Check for destination deep freeze, unless sending directly to
     // the issuer
     if (dstAcct != vaultAsset.getIssuer())
     {
@@ -129,8 +136,8 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     // Check if the pseudo-account has sufficient funds.
     // Use fhIGNORE_FREEZE because we want to allow the transaction to proceed
     // to doApply where doWithdraw will perform the proper global freeze check
-    // and return tecPATH_DRY if appropriate. If we used fhZERO_IF_FROZEN here,
-    // we would return tecINSUFFICIENT_FUNDS prematurely.
+    // (exempting the issuer when the amendment is enabled). If we used
+    // fhZERO_IF_FROZEN here, we would return tecINSUFFICIENT_FUNDS prematurely.
     if (accountHolds(
             ctx.view,
             pseudoAccountID,

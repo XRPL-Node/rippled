@@ -79,9 +79,9 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
         !isTesSuccess(ter))
         return ter;
 
-    // Skip destination asset freeze check here - let doWithdraw handle it.
-    // This allows global freeze cases to properly return tecPATH_DRY instead
-    // of tecFROZEN.
+    // Skip destination asset freeze check here - let doWithdraw handle it,
+    // which will properly exempt the issuer from global freeze when the
+    // amendment is enabled.
 
     // Cannot return shares to the vault, if the underlying asset was frozen for
     // the submitter. Skip freeze check if either party is the issuer (applies
