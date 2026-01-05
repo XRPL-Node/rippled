@@ -873,6 +873,91 @@ struct EscrowToken_test : public beast::unit_test::suite
     }
 
     void
+    testIOUCancelDoApply(FeatureBitset features)
+    {
+        testcase("IOU Cancel DoApply");
+        using namespace test::jtx;
+        using namespace std::chrono;
+
+        // Test: Creator cancels their own escrow after deleting trust line.
+        // The trust line should be recreated and tokens returned.
+        {
+            Env env{*this, features};
+            auto const baseFee = env.current()->fees().base;
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const gw = Account("gw");
+            auto const USD = gw["USD"];
+
+            // Fund accounts
+            env.fund(XRP(10'000), alice, bob, gw);
+            env.close();
+
+            // Enable trust line locking for escrow
+            env(fset(gw, asfAllowTrustLineLocking));
+            env.close();
+
+            // Create trust lines
+            env.trust(USD(100'000), alice);
+            env.trust(USD(100'000), bob);
+            env.close();
+
+            // Issue tokens to alice
+            env(pay(gw, alice, USD(10'000)));
+            env.close();
+
+            // Alice creates IOU escrow to Bob with CancelAfter
+            auto const seq = env.seq(alice);
+            env(escrow::create(alice, bob, USD(1'000)),
+                escrow::finish_time(env.now() + 1s),
+                escrow::cancel_time(env.now() + 2s),
+                fee(baseFee));
+            env.close();
+
+            // Verify escrow was created and balance decreased
+            BEAST_EXPECT(env.balance(alice, USD) == USD(9'000));
+
+            // Alice pays back remaining tokens to gateway
+            env(pay(alice, gw, USD(9'000)));
+            env.close();
+
+            // Alice removes her trust line (balance is 0, so this succeeds)
+            // The escrowed 1,000 USD is NOT tracked in the trustline balance
+            env(trust(alice, USD(0)));
+            env.close();
+
+            // Verify trust line is gone
+            auto const trustLineKey =
+                keylet::line(alice.id(), gw.id(), USD.currency);
+            BEAST_EXPECT(!env.current()->exists(trustLineKey));
+
+            // Wait for CancelAfter to pass
+            env.close();
+            env.close();
+
+            // Alice cancels her own escrow
+            auto const expectedResult =
+                env.current()->rules().enabled(fixTokenEscrowV2)
+                ? ter(tesSUCCESS)
+                : ter(tefEXCEPTION);
+            env(escrow::cancel(alice, alice, seq),
+                fee(baseFee),
+                expectedResult);
+            env.close();
+
+            if (env.current()->rules().enabled(fixTokenEscrowV2))
+            {
+                // Verify the escrow was deleted
+                BEAST_EXPECT(!env.le(keylet::escrow(alice.id(), seq)));
+
+                // Verify trust line was recreated and alice got tokens back
+                BEAST_EXPECT(env.current()->exists(trustLineKey));
+                BEAST_EXPECT(env.balance(alice, USD) == USD(1'000));
+            }
+        }
+    }
+
+    void
     testIOUBalances(FeatureBitset features)
     {
         testcase("IOU Balances");
@@ -2859,6 +2944,80 @@ struct EscrowToken_test : public beast::unit_test::suite
     }
 
     void
+    testMPTCancelDoApply(FeatureBitset features)
+    {
+        testcase("MPT Cancel DoApply");
+        using namespace test::jtx;
+        using namespace std::chrono;
+
+        // Test: Creator cancels their own MPT escrow.
+        // Tokens should be returned and locked amount cleared.
+        {
+            Env env{*this, features};
+            auto const baseFee = env.current()->fees().base;
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const gw = Account("gw");
+
+            MPTTester mptGw(env, gw, {.holders = {alice, bob}});
+            mptGw.create(
+                {.ownerCount = 1,
+                 .holderCount = 0,
+                 .flags = tfMPTCanEscrow | tfMPTCanTransfer});
+            mptGw.authorize({.account = alice});
+            mptGw.authorize({.account = bob});
+            auto const MPT = mptGw["MPT"];
+
+            // Issue tokens to alice
+            env(pay(gw, alice, MPT(10'000)));
+            env.close();
+
+            // Alice creates MPT escrow to Bob with CancelAfter
+            auto const seq = env.seq(alice);
+            env(escrow::create(alice, bob, MPT(1'000)),
+                escrow::finish_time(env.now() + 1s),
+                escrow::cancel_time(env.now() + 2s),
+                fee(baseFee * 150));
+            env.close();
+
+            // Verify escrow was created and locked amount is tracked
+            BEAST_EXPECT(env.balance(alice, MPT) == MPT(9'000));
+            BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 1'000);
+
+            // Alice pays back remaining tokens to gateway
+            env(pay(alice, gw, MPT(9'000)));
+            env.close();
+
+            // Verify MPToken still exists with locked amount
+            BEAST_EXPECT(env.le(keylet::mptoken(MPT.mpt(), alice)));
+            BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 1'000);
+
+            // Wait for CancelAfter to pass
+            env.close();
+            env.close();
+
+            // Alice cancels her own escrow
+            env(escrow::cancel(alice, alice, seq),
+                fee(baseFee),
+                ter(tesSUCCESS));
+            env.close();
+
+            // Verify the escrow was deleted
+            BEAST_EXPECT(!env.le(keylet::escrow(alice.id(), seq)));
+
+            // Verify alice got tokens back and locked amount is cleared
+            BEAST_EXPECT(env.balance(alice, MPT) == MPT(1'000));
+            BEAST_EXPECT(mptEscrowed(env, alice, MPT) == 0);
+
+            // Now alice can delete her MPToken
+            env(pay(alice, gw, MPT(1'000)));
+            mptGw.authorize({.account = alice, .flags = tfMPTUnauthorize});
+            env.close();
+            BEAST_EXPECT(!env.le(keylet::mptoken(MPT.mpt(), alice)));
+        }
+    }
+
+    void
     testMPTBalances(FeatureBitset features)
     {
         testcase("MPT Balances");
@@ -3887,6 +4046,7 @@ struct EscrowToken_test : public beast::unit_test::suite
         testIOUFinishPreclaim(features);
         testIOUFinishDoApply(features);
         testIOUCancelPreclaim(features);
+        testIOUCancelDoApply(features);
         testIOUBalances(features);
         testIOUMetaAndOwnership(features);
         testIOURippleState(features);
@@ -3908,6 +4068,7 @@ struct EscrowToken_test : public beast::unit_test::suite
         testMPTFinishPreclaim(features);
         testMPTFinishDoApply(features);
         testMPTCancelPreclaim(features);
+        testMPTCancelDoApply(features);
         testMPTBalances(features);
         testMPTMetaAndOwnership(features);
         testMPTGateway(features);
@@ -3925,6 +4086,7 @@ public:
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
         testIOUWithFeats(all);
+        testIOUWithFeats(all - fixTokenEscrowV2);
         testMPTWithFeats(all);
         testMPTWithFeats(all - fixTokenEscrowV1);
     }
