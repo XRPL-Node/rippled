@@ -354,7 +354,7 @@ var searchData=
   ['loadtype_351',['loadType',['../structxrpl_1_1RPC_1_1Context.html#a6ffe33d3c5b1974c798519eb84301dfa',1,'xrpl::RPC::Context']]],
   ['loadtype_5f_352',['loadType_',['../classxrpl_1_1GRPCServerImpl_1_1CallData.html#abcca7986bcad34c5bc2ba252f65905f5',1,'xrpl::GRPCServerImpl::CallData']]],
   ['loadvalidatortoken_353',['loadValidatorToken',['../namespacexrpl.html#a811c23c5354112f9f2a800ed9fcfbdd1',1,'xrpl']]],
-  ['loan_354',['loan',['../namespacexrpl.html#aa040fac78e4975614b31771a1bc5f7ada4c9e7581028a01fc71dfc3997bd40912',1,'xrpl::LOAN'],['../namespacexrpl_1_1keylet.html#a815241502a868c86a9990734bb43c69a',1,'xrpl::keylet::loan(uint256 const &amp;loanBrokerID, std::uint32_t loanSeq) noexcept'],['../namespacexrpl_1_1keylet.html#a112ca0fc3efcb5a6e083108f3f7a88cb',1,'xrpl::keylet::loan(uint256 const &amp;key)']]],
+  ['loan_354',['loan',['../namespacexrpl_1_1keylet.html#a815241502a868c86a9990734bb43c69a',1,'xrpl::keylet::loan(uint256 const &amp;loanBrokerID, std::uint32_t loanSeq) noexcept'],['../namespacexrpl_1_1keylet.html#a112ca0fc3efcb5a6e083108f3f7a88cb',1,'xrpl::keylet::loan(uint256 const &amp;key)'],['../namespacexrpl.html#aa040fac78e4975614b31771a1bc5f7ada4c9e7581028a01fc71dfc3997bd40912',1,'xrpl::LOAN']]],
   ['loan_5fbroker_355',['LOAN_BROKER',['../namespacexrpl.html#aa040fac78e4975614b31771a1bc5f7ada92874a346cd096082b8b9489664c6e49',1,'xrpl']]],
   ['loan_5ftest_356',['Loan_test',['../classxrpl_1_1test_1_1Loan__test.html',1,'xrpl::test']]],
   ['loanaccruedinterest_357',['loanAccruedInterest',['../namespacexrpl_1_1detail.html#a68244c94afe5c9e0a34aed3ff10e1225',1,'xrpl::detail']]],
