@@ -79,14 +79,9 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
         !isTesSuccess(ter))
         return ter;
 
-    // Cannot withdraw from a Vault an Asset frozen for the destination account.
-    // Skip freeze check if either party is the issuer (applies to both IOUs and
-    // MPTs).
-    if (dstAcct != vaultAsset.getIssuer() && account != vaultAsset.getIssuer())
-    {
-        if (auto const ret = checkFrozen(ctx.view, dstAcct, vaultAsset))
-            return ret;
-    }
+    // Skip destination asset freeze check here - let doWithdraw handle it.
+    // This allows global freeze cases to properly return tecPATH_DRY instead
+    // of tecFROZEN.
 
     // Cannot return shares to the vault, if the underlying asset was frozen for
     // the submitter. Skip freeze check if either party is the issuer (applies

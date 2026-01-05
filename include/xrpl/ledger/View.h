@@ -299,6 +299,22 @@ checkDeepFrozen(
         asset.value());
 }
 
+[[nodiscard]] inline bool
+isAnyDeepOrIndividuallyFrozen(
+    ReadView const& view,
+    std::initializer_list<AccountID> const& accounts,
+    Asset const& asset,
+    int depth = 0)
+{
+    for (auto const& account : accounts)
+    {
+        if (isDeepFrozen(view, account, asset, depth) ||
+            isIndividualFrozen(view, account, asset))
+            return true;
+    }
+    return false;
+}
+
 [[nodiscard]] bool
 isLPTokenFrozen(
     ReadView const& view,

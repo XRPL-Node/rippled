@@ -331,7 +331,8 @@ isVaultPseudoAccountFrozen(
         // LCOV_EXCL_STOP
     }
 
-    return isAnyFrozen(view, {issuer, account}, vault->at(sfAsset), depth + 1);
+    return isAnyDeepOrIndividuallyFrozen(
+        view, {issuer, account}, vault->at(sfAsset), depth + 1);
 }
 
 bool
@@ -1435,6 +1436,16 @@ doWithdraw(
         // LCOV_EXCL_STOP
     }
 
+    if (dstAcct != senderAcct && dstAcct != amount.getIssuer() &&
+        senderAcct != amount.getIssuer())
+    {
+        if (isGlobalFrozen(view, amount.getIssuer()))
+        {
+            return view.rules().enabled(featureLendingProtocol) ? tecPATH_DRY
+                                                                : tecFROZEN;
+        }
+    }
+
     // Move the funds directly from the broker's pseudo-account to the
     // dstAcct
     return accountSend(
@@ -1456,7 +1467,10 @@ addEmptyHolding(
     auto const& issuerId = issue.getIssuer();
     auto const& currency = issue.currency;
     if (isGlobalFrozen(view, issuerId))
-        return tecFROZEN;  // LCOV_EXCL_LINE
+    {
+        return view.rules().enabled(featureLendingProtocol) ? tecPATH_DRY
+                                                            : tecFROZEN;
+    }
 
     auto const& srcId = issuerId;
     auto const& dstId = accountID;

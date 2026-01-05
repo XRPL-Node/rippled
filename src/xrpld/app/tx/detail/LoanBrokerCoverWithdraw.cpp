@@ -96,12 +96,12 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     if (auto const ter = requireAuth(ctx.view, vaultAsset, dstAcct, authType))
         return ter;
 
-    // Check for freezes, unless sending directly to the issuer
+    // Skip source freeze check here - let doWithdraw handle it.
+    // This allows global freeze cases to properly return tecPATH_DRY instead of
+    // tecFROZEN. Check for destination deep freeze, unless sending directly to
+    // the issuer
     if (dstAcct != vaultAsset.getIssuer())
     {
-        // Cannot send a frozen Asset
-        if (auto const ret = checkFrozen(ctx.view, pseudoAccountID, vaultAsset))
-            return ret;
         // Destination account cannot receive if asset is deep frozen
         if (auto const ret = checkDeepFrozen(ctx.view, dstAcct, vaultAsset))
             return ret;
@@ -126,19 +126,16 @@ LoanBrokerCoverWithdraw::preclaim(PreclaimContext const& ctx)
     if ((coverAvail - amount) < minimumCover)
         return tecINSUFFICIENT_FUNDS;
 
-    // Allow returning frozen/locked assets to issuer for both IOUs and MPTs.
-    // When withdrawing to the issuer, ignore freeze since frozen IOUs and
-    // locked MPTs can both be sent back to their issuer.
-    FreezeHandling const freezeHandling =
-        (dstAcct == vaultAsset.getIssuer() || account == vaultAsset.getIssuer())
-        ? FreezeHandling::fhIGNORE_FREEZE
-        : FreezeHandling::fhZERO_IF_FROZEN;
-
+    // Check if the pseudo-account has sufficient funds.
+    // Use fhIGNORE_FREEZE because we want to allow the transaction to proceed
+    // to doApply where doWithdraw will perform the proper global freeze check
+    // and return tecPATH_DRY if appropriate. If we used fhZERO_IF_FROZEN here,
+    // we would return tecINSUFFICIENT_FUNDS prematurely.
     if (accountHolds(
             ctx.view,
             pseudoAccountID,
             vaultAsset,
-            freezeHandling,
+            FreezeHandling::fhIGNORE_FREEZE,
             AuthHandling::ahZERO_IF_UNAUTHORIZED,
             ctx.j) < amount)
         return tecINSUFFICIENT_FUNDS;

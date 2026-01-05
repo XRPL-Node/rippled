@@ -2210,8 +2210,15 @@ class Freeze_test : public beast::unit_test::suite
 
             env_post(coverDeposit(issuer, brokerKeylet.key, USD(20)));
             env_post.close();
+
+            // Withdrawal to holder should fail due to global freeze
             tx = coverWithdraw(owner, brokerKeylet.key, USD(15));
             tx[sfDestination] = holder.human();
+            env_post(tx, ter(tecPATH_DRY));
+
+            // Withdraw to issuer instead (issuer is exempt from global freeze)
+            tx = coverWithdraw(owner, brokerKeylet.key, USD(15));
+            tx[sfDestination] = issuer.human();
             env_post(tx);
             env_post.close();
 
@@ -2223,6 +2230,24 @@ class Freeze_test : public beast::unit_test::suite
 
             env_post(del(owner, brokerKeylet.key));
             env_post.close();
+
+            // Withdraw remaining vault balances before deleting
+            // Holder has 40 shares (deposited 50, withdrew 10)
+            tx = vault.withdraw(
+                {.depositor = holder,
+                 .id = vaultKeylet.key,
+                 .amount = USD(40)});
+            tx[sfDestination] = issuer.human();
+            env_post(tx);
+            env_post.close();
+
+            // Issuer has 20 shares (deposited 20)
+            env_post(vault.withdraw(
+                {.depositor = issuer,
+                 .id = vaultKeylet.key,
+                 .amount = USD(20)}));
+            env_post.close();
+
             env_post(vault.del({.owner = owner, .id = vaultKeylet.key}));
         }
     }
