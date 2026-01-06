@@ -79,16 +79,22 @@ VaultWithdraw::preclaim(PreclaimContext const& ctx)
         !isTesSuccess(ter))
         return ter;
 
-    // Skip destination asset freeze check here - let doWithdraw handle it,
-    // which will properly exempt the issuer from global freeze when the
-    // amendment is enabled.
+    // Check if destination account is frozen for the vault asset.
+    // The checkFrozenLendingProtocol function implements the Global Freeze
+    // Issuer Amendment exemption: issuer can receive their own frozen assets.
+    if (auto const ret =
+            checkFrozenLendingProtocol(ctx.view, dstAcct, vaultAsset))
+        return ret;
 
     // Cannot return shares to the vault, if the underlying asset was frozen for
-    // the submitter. Skip freeze check if either party is the issuer (applies
-    // to both IOUs and MPTs).
+    // the submitter. Skip freeze check if either party is the issuer of the
+    // underlying asset (applies to both IOUs and MPTs). This is necessary
+    // because the shares are issued by the vault pseudo-account, not the
+    // underlying asset issuer, so we need to check the asset issuer explicitly.
     if (dstAcct != vaultAsset.getIssuer() && account != vaultAsset.getIssuer())
     {
-        if (auto const ret = checkFrozen(ctx.view, account, vaultShare))
+        if (auto const ret =
+                checkFrozenLendingProtocol(ctx.view, account, vaultShare))
             return ret;
     }
 

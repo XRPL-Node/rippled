@@ -505,8 +505,14 @@ class Freeze_test : public beast::unit_test::suite
 
         {
             // Payments
-            //    test: direct issues can be sent
-            env(pay(G1, A2, G1["USD"](1)));
+            //    test: direct issues behavior depends on featureLendingProtocol
+            // Before featureLendingProtocol: issuers CAN send under global
+            // freeze After featureLendingProtocol: issuers CANNOT send under
+            // global freeze
+            if (features[featureLendingProtocol])
+                env(pay(G1, A2, G1["USD"](1)), ter(tecPATH_DRY));
+            else
+                env(pay(G1, A2, G1["USD"](1)));
 
             //    test: direct redemptions can be sent
             env(pay(A2, G1, G1["USD"](1)));
@@ -2034,34 +2040,19 @@ class Freeze_test : public beast::unit_test::suite
         env(fset(issuer, asfGlobalFreeze));
         env.close();
 
-        // After global freeze, check issuer freeze state based on amendment
-        if (features[featureLendingProtocol])
-        {
-            // With amendment: issuer is NOT frozen for their own currency
-            BEAST_EXPECT(!isFrozen(
-                *env.current(), issuer.id(), USD.currency, issuer.id()));
+        // After global freeze, issuer IS frozen for their own currency
+        // Note: The featureLendingProtocol amendment provides issuer exemption
+        // from global freeze ONLY for Lending Protocol and Vault transactions,
+        // NOT for regular payment transactions. Regular payments remain frozen.
+        BEAST_EXPECT(
+            isFrozen(*env.current(), issuer.id(), USD.currency, issuer.id()));
 
-            // Verify issuer can still receive payments
-            env(pay(holder, issuer, USD(10)));
-            env.close();
+        // Issuer can still receive payments (always worked)
+        env(pay(holder, issuer, USD(10)));
+        env.close();
 
-            // Verify issuer can still send payments
-            env(pay(issuer, holder, USD(10)));
-            env.close();
-        }
-        else
-        {
-            // Without amendment: issuer IS frozen for their own currency
-            BEAST_EXPECT(isFrozen(
-                *env.current(), issuer.id(), USD.currency, issuer.id()));
-
-            // Issuer can still receive payments (always worked)
-            env(pay(holder, issuer, USD(10)));
-            env.close();
-
-            // But issuer cannot send payments (frozen)
-            env(pay(issuer, holder, USD(10)), ter(tecPATH_DRY));
-        }
+        // But issuer cannot send regular payments (frozen)
+        env(pay(issuer, holder, USD(10)), ter(tecPATH_DRY));
 
         // After global freeze, holder IS frozen (both scenarios)
         BEAST_EXPECT(
@@ -2109,8 +2100,8 @@ class Freeze_test : public beast::unit_test::suite
                 *env_pre.current(), holder.id(), USD.currency, issuer.id()));
         }
 
-        // Test post-amendment behavior (issuer is NOT frozen under global
-        // freeze)
+        // Test post-amendment behavior (issuer exemption applies ONLY to
+        // Lending Protocol and Vault transactions, NOT regular payments)
         if (features[featureLendingProtocol])
         {
             using namespace loanBroker;
@@ -2157,15 +2148,18 @@ class Freeze_test : public beast::unit_test::suite
             env_post(fset(issuer, asfGlobalFreeze));
             env_post.close();
 
-            BEAST_EXPECT(!isFrozen(
+            // Issuer IS frozen for their own currency under global freeze
+            // (issuer exemption only applies to Lending Protocol/Vault txs)
+            BEAST_EXPECT(isFrozen(
                 *env_post.current(), issuer.id(), USD.currency, issuer.id()));
 
             BEAST_EXPECT(isFrozen(
                 *env_post.current(), holder.id(), USD.currency, issuer.id()));
 
-            env_post(pay(issuer, holder, USD(10)));
-            env_post.close();
+            // Regular payments from issuer fail under global freeze
+            env_post(pay(issuer, holder, USD(10)), ter(tecPATH_DRY));
 
+            // Issuer can still receive regular payments
             env_post(pay(holder, issuer, USD(10)));
             env_post.close();
 

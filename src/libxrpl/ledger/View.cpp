@@ -191,6 +191,43 @@ isGlobalFrozen(ReadView const& view, Asset const& asset)
 }
 
 bool
+isGlobalFrozenWithIssuerExemption(
+    ReadView const& view,
+    Asset const& asset,
+    AccountID const& source,
+    AccountID const& destination)
+{
+    // If the asset is not globally frozen, return false immediately
+    if (!isGlobalFrozen(view, asset))
+        return false;
+
+    // Get the issuer from the asset
+    AccountID const issuer = std::visit(
+        [&]<ValidIssueType TIss>(TIss const& issue) -> AccountID {
+            if constexpr (std::is_same_v<TIss, Issue>)
+                return issue.getIssuer();
+            else
+            {
+                // For MPT, get issuer from issuance
+                if (auto const sle =
+                        view.read(keylet::mptIssuance(issue.getMptID())))
+                    return sle->getAccountID(sfIssuer);
+                return AccountID{};  // Should not happen
+            }
+        },
+        asset.value());
+
+    // Global Freeze Issuer Amendment: Issuer is exempt from their own global
+    // freeze. Only apply global freeze if neither source nor destination is the
+    // issuer. This function is specifically for Lending Protocol and Vault
+    // transactions.
+    if (source == issuer || destination == issuer)
+        return false;
+
+    return true;
+}
+
+bool
 isIndividualFrozen(
     ReadView const& view,
     AccountID const& account,
@@ -236,8 +273,11 @@ isFrozen(
     auto sle = view.read(keylet::account(issuer));
     if (sle && sle->isFlag(lsfGlobalFreeze))
     {
-        if (!view.rules().enabled(featureLendingProtocol) || issuer != account)
-            return true;
+        // isFrozen() returns TRUE for ALL accounts (including issuer) under
+        // global freeze Payment.cpp blocks issuer payments when
+        // featureLendingProtocol is enabled Lending Protocol txs use
+        // checkFrozenLendingProtocol() which provides issuer exemption
+        return true;
     }
     if (issuer != account)
     {
@@ -257,10 +297,6 @@ isFrozen(
     MPTIssue const& mptIssue,
     int depth)
 {
-    if (view.rules().enabled(featureLendingProtocol) &&
-        account == mptIssue.getIssuer())
-        return false;
-
     return isGlobalFrozen(view, mptIssue) ||
         isIndividualFrozen(view, account, mptIssue) ||
         isVaultPseudoAccountFrozen(view, account, mptIssue, depth);
@@ -1436,12 +1472,12 @@ doWithdraw(
         // LCOV_EXCL_STOP
     }
 
-    if (dstAcct != senderAcct && dstAcct != amount.getIssuer() &&
-        senderAcct != amount.getIssuer())
-    {
-        if (isGlobalFrozen(view, amount.getIssuer()))
-            return tecFROZEN;
-    }
+    // Check if source or destination is frozen
+    // Use the Lending Protocol specific freeze check with issuer exemption
+    if (dstAcct != sourceAcct &&
+        isGlobalFrozenWithIssuerExemption(
+            view, amount.asset(), sourceAcct, dstAcct))
+        return tecFROZEN;
 
     // Move the funds directly from the broker's pseudo-account to the
     // dstAcct

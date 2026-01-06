@@ -66,9 +66,11 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
     if (auto const ret =
             canTransfer(ctx.view, vaultAsset, account, pseudoAccountID))
         return ret;
-    // Cannot transfer a frozen Asset
-    if (auto const ret = checkFrozen(ctx.view, account, vaultAsset))
-        return ret;
+    // Cannot deposit if Asset is individually frozen for the depositor.
+    // Global freeze does NOT prevent owner from depositing to their own broker
+    // cover.
+    if (isIndividualFrozen(ctx.view, account, vaultAsset))
+        return vaultAsset.holds<Issue>() ? tecFROZEN : tecLOCKED;
     // Pseudo-account cannot receive if asset is deep frozen
     if (auto const ret = checkDeepFrozen(ctx.view, pseudoAccountID, vaultAsset))
         return ret;
@@ -77,11 +79,14 @@ LoanBrokerCoverDeposit::preclaim(PreclaimContext const& ctx)
             requireAuth(ctx.view, vaultAsset, account, AuthType::StrongAuth))
         return ret;
 
+    // We already checked individual freeze above, so use fhIGNORE_FREEZE here
+    // to allow deposits under global freeze (individual freeze was checked
+    // explicitly).
     if (accountSpendable(
             ctx.view,
             account,
             vaultAsset,
-            FreezeHandling::fhZERO_IF_FROZEN,
+            FreezeHandling::fhIGNORE_FREEZE,
             AuthHandling::ahZERO_IF_UNAUTHORIZED,
             ctx.j) < amount)
         return tecINSUFFICIENT_FUNDS;
