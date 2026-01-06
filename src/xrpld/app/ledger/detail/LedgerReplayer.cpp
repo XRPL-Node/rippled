@@ -2,16 +2,18 @@
 #include <xrpld/app/ledger/detail/LedgerDeltaAcquire.h>
 #include <xrpld/app/ledger/detail/SkipListAcquire.h>
 
+#include <xrpl/core/ServiceRegistry.h>
+
 namespace xrpl {
 
 LedgerReplayer::LedgerReplayer(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers& inboundLedgers,
     std::unique_ptr<PeerSetBuilder> peerSetBuilder)
-    : app_(app)
+    : registry_(registry)
     , inboundLedgers_(inboundLedgers)
     , peerSetBuilder_(std::move(peerSetBuilder))
-    , j_(app.journal("LedgerReplayer"))
+    , j_(registry.journal("LedgerReplayer"))
 {
 }
 
@@ -40,7 +42,7 @@ LedgerReplayer::replay(
     bool newSkipList = false;
     {
         std::lock_guard<std::mutex> lock(mtx_);
-        if (app_.isStopping())
+        if (registry_.isStopping())
             return;
         if (tasks_.size() >= LedgerReplayParameters::MAX_TASKS)
         {
@@ -70,7 +72,7 @@ LedgerReplayer::replay(
         if (!skipList)  // cannot find, or found but cannot lock
         {
             skipList = std::make_shared<SkipListAcquire>(
-                app_,
+                registry_.app(),
                 inboundLedgers_,
                 parameter.finishHash_,
                 peerSetBuilder_->build());
@@ -79,7 +81,7 @@ LedgerReplayer::replay(
         }
 
         task = std::make_shared<LedgerReplayTask>(
-            app_, inboundLedgers_, *this, skipList, std::move(parameter));
+            registry_, inboundLedgers_, *this, skipList, std::move(parameter));
         tasks_.push_back(task);
     }
 
@@ -124,7 +126,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
             bool newDelta = false;
             {
                 std::lock_guard<std::mutex> lock(mtx_);
-                if (app_.isStopping())
+                if (registry_.isStopping())
                     return;
                 auto i = deltas_.find(*skipListItem);
                 if (i != deltas_.end())
@@ -133,7 +135,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 if (!delta)  // cannot find, or found but cannot lock
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
-                        app_,
+                        registry_.app(),
                         inboundLedgers_,
                         *skipListItem,
                         seq,

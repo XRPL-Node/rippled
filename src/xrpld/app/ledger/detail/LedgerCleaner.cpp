@@ -4,6 +4,7 @@
 #include <xrpld/app/misc/LoadFeeTrack.h>
 
 #include <xrpl/beast/core/CurrentThreadName.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/jss.h>
 
 namespace xrpl {
@@ -24,7 +25,7 @@ Cleans up the ledger. Specifically, resolves these issues:
 
 class LedgerCleanerImp : public LedgerCleaner
 {
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::Journal const j_;
     mutable std::mutex mutex_;
 
@@ -53,8 +54,8 @@ class LedgerCleanerImp : public LedgerCleaner
 
     //--------------------------------------------------------------------------
 public:
-    LedgerCleanerImp(Application& app, beast::Journal journal)
-        : app_(app), j_(journal)
+    LedgerCleanerImp(ServiceRegistry& registry, beast::Journal journal)
+        : registry_(registry), j_(journal)
     {
     }
 
@@ -118,7 +119,7 @@ public:
     {
         LedgerIndex minRange = 0;
         LedgerIndex maxRange = 0;
-        app_.getLedgerMaster().getFullValidatedRange(minRange, maxRange);
+        registry_.getLedgerMaster().getFullValidatedRange(minRange, maxRange);
 
         {
             std::lock_guard lock(mutex_);
@@ -234,7 +235,7 @@ private:
         {
             JLOG(j_.warn())
                 << "Ledger #" << ledger->header().seq << ": " << mn.what();
-            app_.getInboundLedgers().acquire(
+            registry_.getInboundLedgers().acquire(
                 ledger->header().hash,
                 ledger->header().seq,
                 InboundLedger::Reason::GENERIC);
@@ -256,18 +257,18 @@ private:
         bool doNodes,
         bool doTxns)
     {
-        auto nodeLedger = app_.getInboundLedgers().acquire(
+        auto nodeLedger = registry_.getInboundLedgers().acquire(
             ledgerHash, ledgerIndex, InboundLedger::Reason::GENERIC);
         if (!nodeLedger)
         {
             JLOG(j_.debug()) << "Ledger " << ledgerIndex << " not available";
-            app_.getLedgerMaster().clearLedger(ledgerIndex);
-            app_.getInboundLedgers().acquire(
+            registry_.getLedgerMaster().clearLedger(ledgerIndex);
+            registry_.getInboundLedgers().acquire(
                 ledgerHash, ledgerIndex, InboundLedger::Reason::GENERIC);
             return false;
         }
 
-        auto dbLedger = loadByIndex(ledgerIndex, app_);
+        auto dbLedger = loadByIndex(ledgerIndex, registry_);
         if (!dbLedger || (dbLedger->header().hash != ledgerHash) ||
             (dbLedger->header().parentHash != nodeLedger->header().parentHash))
         {
@@ -277,23 +278,23 @@ private:
             doTxns = true;
         }
 
-        if (!app_.getLedgerMaster().fixIndex(ledgerIndex, ledgerHash))
+        if (!registry_.getLedgerMaster().fixIndex(ledgerIndex, ledgerHash))
         {
             JLOG(j_.debug())
                 << "ledger " << ledgerIndex << " had wrong entry in history";
             doTxns = true;
         }
 
-        if (doNodes && !nodeLedger->walkLedger(app_.journal("Ledger")))
+        if (doNodes && !nodeLedger->walkLedger(registry_.journal("Ledger")))
         {
             JLOG(j_.debug()) << "Ledger " << ledgerIndex << " is missing nodes";
-            app_.getLedgerMaster().clearLedger(ledgerIndex);
-            app_.getInboundLedgers().acquire(
+            registry_.getLedgerMaster().clearLedger(ledgerIndex);
+            registry_.getInboundLedgers().acquire(
                 ledgerHash, ledgerIndex, InboundLedger::Reason::GENERIC);
             return false;
         }
 
-        if (doTxns && !pendSaveValidated(app_, nodeLedger, true, false))
+        if (doTxns && !pendSaveValidated(registry_, nodeLedger, true, false))
         {
             JLOG(j_.debug()) << "Failed to save ledger " << ledgerIndex;
             return false;
@@ -316,7 +317,7 @@ private:
 
         if (!referenceLedger || (referenceLedger->header().seq < ledgerIndex))
         {
-            referenceLedger = app_.getLedgerMaster().getValidatedLedger();
+            referenceLedger = registry_.getLedgerMaster().getValidatedLedger();
             if (!referenceLedger)
             {
                 JLOG(j_.warn()) << "No validated ledger";
@@ -343,7 +344,7 @@ private:
                 {
                     // We found the hash and sequence of a better reference
                     // ledger.
-                    referenceLedger = app_.getInboundLedgers().acquire(
+                    referenceLedger = registry_.getInboundLedgers().acquire(
                         refHash, refIndex, InboundLedger::Reason::GENERIC);
                     if (referenceLedger)
                         ledgerHash =
@@ -375,7 +376,7 @@ private:
             bool doNodes;
             bool doTxns;
 
-            if (app_.getFeeTrack().isLoadedLocal())
+            if (registry_.getFeeTrack().isLoadedLocal())
             {
                 JLOG(j_.debug()) << "Waiting for load to subside";
                 std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -437,9 +438,9 @@ private:
 };
 
 std::unique_ptr<LedgerCleaner>
-make_LedgerCleaner(Application& app, beast::Journal journal)
+make_LedgerCleaner(ServiceRegistry& registry, beast::Journal journal)
 {
-    return std::make_unique<LedgerCleanerImp>(app, journal);
+    return std::make_unique<LedgerCleanerImp>(registry, journal);
 }
 
 }  // namespace xrpl

@@ -30,6 +30,8 @@
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/core/DatabaseCon.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
+#include <xrpld/ledger/FeatureSetServiceImpl.h>
+#include <xrpld/ledger/LedgerConfigServiceImpl.h>
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/overlay/PeerReservationTable.h>
 #include <xrpld/overlay/PeerSet.h>
@@ -151,6 +153,10 @@ public:
     std::unique_ptr<perf::PerfLog> perfLog_;
     Application::MutexType m_masterMutex;
 
+    // ServiceRegistry implementation that delegates to this Application
+    // Must be declared before m_txMaster since TransactionMaster needs it
+    std::unique_ptr<ServiceRegistryImpl> serviceRegistry_;
+
     // Required by the SHAMapStore
     TransactionMaster m_txMaster;
 
@@ -163,6 +169,8 @@ public:
 
     NodeCache m_tempNodeCache;
     CachedSLEs cachedSLEs_;
+    std::unique_ptr<FeatureSetService> featureSetService_;
+    std::unique_ptr<LedgerConfigService> ledgerConfigService_;
     std::optional<std::pair<PublicKey, SecretKey>> nodeIdentity_;
     ValidatorKeys const validatorKeys_;
 
@@ -218,9 +226,6 @@ public:
 
     std::unique_ptr<GRPCServer> grpcServer_;
 
-    // ServiceRegistry implementation that delegates to this Application
-    std::unique_ptr<ServiceRegistryImpl> serviceRegistry_;
-
     //--------------------------------------------------------------------------
 
     static std::size_t
@@ -271,7 +276,9 @@ public:
               logs_->journal("PerfLog"),
               [this] { signalStop("PerfLog"); }))
 
-        , m_txMaster(*this)
+        , serviceRegistry_(std::make_unique<ServiceRegistryImpl>(*this))
+
+        , m_txMaster(*serviceRegistry_)
 
         , m_collectorManager(make_CollectorManager(
               config_->section(SECTION_INSIGHT),
@@ -326,6 +333,12 @@ public:
               stopwatch(),
               logs_->journal("CachedSLEs"))
 
+        , featureSetService_(std::make_unique<FeatureSetServiceImpl>(*config_))
+
+        , ledgerConfigService_(std::make_unique<LedgerConfigServiceImpl>(
+              *config_,
+              *featureSetService_))
+
         , validatorKeys_(*config_, m_journal)
 
         , m_resourceManager(Resource::make_Manager(
@@ -337,7 +350,9 @@ public:
 
         , nodeFamily_(*this, *m_collectorManager)
 
-        , m_orderBookDB(*this)
+        , m_orderBookDB(
+              *serviceRegistry_,
+              {config_->PATH_SEARCH_MAX, config_->standalone()})
 
         , m_pathRequests(std::make_unique<PathRequests>(
               *this,
@@ -345,31 +360,43 @@ public:
               m_collectorManager->collector()))
 
         , m_ledgerMaster(std::make_unique<LedgerMaster>(
-              *this,
+              *serviceRegistry_,
               stopwatch(),
               m_collectorManager->collector(),
-              logs_->journal("LedgerMaster")))
+              logs_->journal("LedgerMaster"),
+              LedgerMaster::Config{
+                  config_->standalone(),
+                  config_->FETCH_DEPTH,
+                  config_->LEDGER_HISTORY,
+                  config_->getValueFor(SizedItem::ledgerSize),
+                  std::chrono::seconds{
+                      config_->getValueFor(SizedItem::ledgerAge)},
+                  config_->getValueFor(SizedItem::ledgerFetch),
+                  config_->LEDGER_REPLAY,
+                  &config_->features,
+              }))
 
-        , ledgerCleaner_(
-              make_LedgerCleaner(*this, logs_->journal("LedgerCleaner")))
+        , ledgerCleaner_(make_LedgerCleaner(
+              *serviceRegistry_,
+              logs_->journal("LedgerCleaner")))
 
         // VFALCO NOTE must come before NetworkOPs to prevent a crash due
         //             to dependencies in the destructor.
         //
         , m_inboundLedgers(make_InboundLedgers(
-              *this,
+              *serviceRegistry_,
               stopwatch(),
               m_collectorManager->collector()))
 
         , m_inboundTransactions(make_InboundTransactions(
-              *this,
+              *serviceRegistry_,
               m_collectorManager->collector(),
               [this](std::shared_ptr<SHAMap> const& set, bool fromAcquire) {
                   gotTXSet(set, fromAcquire);
               }))
 
         , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
-              *this,
+              *serviceRegistry_,
               *m_inboundLedgers,
               make_PeerSetBuilder(*this)))
 
@@ -457,7 +484,6 @@ public:
               std::chrono::milliseconds(100),
               get_io_context())
         , grpcServer_(std::make_unique<GRPCServer>(*this))
-        , serviceRegistry_(std::make_unique<ServiceRegistryImpl>(*this))
     {
         initAccountIdCache(config_->getValueFor(SizedItem::accountIdCacheSize));
 
@@ -692,6 +718,18 @@ public:
     cachedSLEs() override
     {
         return cachedSLEs_;
+    }
+
+    FeatureSetService&
+    getFeatureSetService() override
+    {
+        return *featureSetService_;
+    }
+
+    LedgerConfigService&
+    getLedgerConfigService() override
+    {
+        return *ledgerConfigService_;
     }
 
     AmendmentTable&
@@ -1229,6 +1267,8 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
     if (validatorKeys_.keys)
         setMaxDisallowedLedger();
 
+    m_ledgerMaster->setMaxDisallowedLedger(maxDisallowedLedger_);
+
     // Configure the amendments the server supports
     {
         auto const supported = []() {
@@ -1706,7 +1746,10 @@ ApplicationImp::startGenesisLedger()
                                              : std::vector<uint256>{};
 
     std::shared_ptr<Ledger> const genesis = std::make_shared<Ledger>(
-        create_genesis, *config_, initialAmendments, nodeFamily_);
+        create_genesis,
+        serviceRegistry_->getLedgerConfigService(),
+        initialAmendments,
+        nodeFamily_);
     m_ledgerMaster->storeLedger(genesis);
 
     auto const next =
@@ -1729,7 +1772,7 @@ ApplicationImp::getLastFullLedger()
 
     try
     {
-        auto const [ledger, seq, hash] = getLatestLedger(*this);
+        auto const [ledger, seq, hash] = getLatestLedger(*serviceRegistry_);
 
         if (!ledger)
             return ledger;
@@ -1843,8 +1886,11 @@ ApplicationImp::loadLedgerFromFile(std::string const& name)
             return nullptr;
         }
 
-        auto loadLedger =
-            std::make_shared<Ledger>(seq, closeTime, *config_, nodeFamily_);
+        auto loadLedger = std::make_shared<Ledger>(
+            seq,
+            closeTime,
+            serviceRegistry_->getLedgerConfigService(),
+            nodeFamily_);
         loadLedger->setTotalDrops(totalDrops);
 
         for (Json::UInt index = 0; index < ledger.get().size(); ++index)
@@ -1927,13 +1973,13 @@ ApplicationImp::loadOldLedger(
 
             if (hash.parseHex(ledgerID))
             {
-                loadLedger = loadByHash(hash, *this);
+                loadLedger = loadByHash(hash, *serviceRegistry_);
 
                 if (!loadLedger)
                 {
                     // Try to build the ledger from the back end
                     auto il = std::make_shared<InboundLedger>(
-                        *this,
+                        getServiceRegistry(),
                         hash,
                         0,
                         InboundLedger::Reason::GENERIC,
@@ -1954,7 +2000,7 @@ ApplicationImp::loadOldLedger(
             std::uint32_t index;
 
             if (beast::lexicalCastChecked(index, ledgerID))
-                loadLedger = loadByIndex(index, *this);
+                loadLedger = loadByIndex(index, *serviceRegistry_);
         }
 
         if (!loadLedger)
@@ -1969,7 +2015,8 @@ ApplicationImp::loadOldLedger(
 
             JLOG(m_journal.info()) << "Loading parent ledger";
 
-            loadLedger = loadByHash(replayLedger->header().parentHash, *this);
+            loadLedger = loadByHash(
+                replayLedger->header().parentHash, *serviceRegistry_);
             if (!loadLedger)
             {
                 JLOG(m_journal.info())
@@ -1977,7 +2024,7 @@ ApplicationImp::loadOldLedger(
 
                 // Try to build the ledger from the back end
                 auto il = std::make_shared<InboundLedger>(
-                    *this,
+                    getServiceRegistry(),
                     replayLedger->header().parentHash,
                     0,
                     InboundLedger::Reason::GENERIC,

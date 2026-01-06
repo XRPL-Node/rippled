@@ -10,7 +10,7 @@
 
 namespace xrpl {
 
-class Application;
+class ServiceRegistry;
 
 /** Manages the acquisition and lifetime of transaction sets.
  */
@@ -74,7 +74,7 @@ public:
 
 std::unique_ptr<InboundTransactions>
 make_InboundTransactions(
-    Application& app,
+    ServiceRegistry& registry,
     beast::insight::Collector::ptr const& collector,
     std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet);
 

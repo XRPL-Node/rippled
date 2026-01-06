@@ -11,8 +11,12 @@
 
 namespace xrpl {
 
-ConsensusTransSetSF::ConsensusTransSetSF(Application& app, NodeCache& nodeCache)
-    : app_(app), m_nodeCache(nodeCache), j_(app.journal("TransactionAcquire"))
+ConsensusTransSetSF::ConsensusTransSetSF(
+    ServiceRegistry& registry,
+    NodeCache& nodeCache)
+    : registry_(registry)
+    , m_nodeCache(nodeCache)
+    , j_(registry.journal("TransactionAcquire"))
 {
 }
 
@@ -45,10 +49,11 @@ ConsensusTransSetSF::gotNode(
                 stx->getTransactionID() == nodeHash.as_uint256(),
                 "xrpl::ConsensusTransSetSF::gotNode : transaction hash "
                 "match");
-            auto const pap = &app_;
-            app_.getJobQueue().addJob(jtTRANSACTION, "TXS->TXN", [pap, stx]() {
-                pap->getOPs().submitTransaction(stx);
-            });
+            auto const prg = &registry_;
+            registry_.getJobQueue().addJob(
+                jtTRANSACTION, "TXS->TXN", [prg, stx]() {
+                    prg->getOPs().submitTransaction(stx);
+                });
         }
         catch (std::exception const& ex)
         {
@@ -66,8 +71,8 @@ ConsensusTransSetSF::getNode(SHAMapHash const& nodeHash) const
     if (m_nodeCache.retrieve(nodeHash, nodeData))
         return nodeData;
 
-    auto txn =
-        app_.getMasterTransaction().fetch_from_cache(nodeHash.as_uint256());
+    auto txn = registry_.getMasterTransaction().fetch_from_cache(
+        nodeHash.as_uint256());
 
     if (txn)
     {

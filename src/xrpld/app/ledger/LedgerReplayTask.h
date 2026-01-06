@@ -3,7 +3,6 @@
 
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
-#include <xrpld/app/main/Application.h>
 
 #include <vector>
 
@@ -71,7 +70,7 @@ public:
 
     /**
      * Constructor
-     * @param app  Application reference
+     * @param registry The service registry
      * @param inboundLedgers  InboundLedgers reference
      * @param replayer  LedgerReplayer reference
      * @param skipListAcquirer  shared_ptr of SkipListAcquire subtask,
@@ -79,7 +78,7 @@ public:
      * @param parameter  parameter of the task
      */
     LedgerReplayTask(
-        Application& app,
+        ServiceRegistry& registry,
         InboundLedgers& inboundLedgers,
         LedgerReplayer& replayer,
         std::shared_ptr<SkipListAcquire>& skipListAcquirer,

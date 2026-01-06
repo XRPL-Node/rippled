@@ -11,7 +11,7 @@
 
 namespace xrpl {
 
-class Application;
+class ServiceRegistry;
 class STTx;
 
 // Tracks all transactions in memory
@@ -19,7 +19,7 @@ class STTx;
 class TransactionMaster
 {
 public:
-    TransactionMaster(Application& app);
+    TransactionMaster(ServiceRegistry& registry);
     TransactionMaster(TransactionMaster const&) = delete;
     TransactionMaster&
     operator=(TransactionMaster const&) = delete;
@@ -73,7 +73,7 @@ public:
     getCache();
 
 private:
-    Application& mApp;
+    ServiceRegistry& registry_;
     TaggedCache<uint256, Transaction> mCache;
 };
 

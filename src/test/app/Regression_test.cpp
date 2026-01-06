@@ -8,6 +8,7 @@
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/StringUtilities.h>
 #include <xrpl/json/json_reader.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/jss.h>
 
@@ -46,7 +47,7 @@ struct Regression_test : public beast::unit_test::suite
         // closed ledger and work with it directly.
         auto closed = std::make_shared<Ledger>(
             create_genesis,
-            env.app().config(),
+            env.app().getServiceRegistry().getLedgerConfigService(),
             std::vector<uint256>{},
             env.app().getNodeFamily());
         auto expectedDrops = INITIAL_XRP;

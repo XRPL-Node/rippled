@@ -1,3 +1,4 @@
+#include <test/core/MockLedgerConfigService.h>
 #include <test/jtx.h>
 
 #include <xrpld/app/ledger/Ledger.h>
@@ -118,9 +119,10 @@ class View_test : public beast::unit_test::suite
         using namespace jtx;
         Env env(*this);
         Config config;
+        MockLedgerConfigService ledgerConfigService{config};
         std::shared_ptr<Ledger const> const genesis = std::make_shared<Ledger>(
             create_genesis,
-            config,
+            ledgerConfigService,
             std::vector<uint256>{},
             env.app().getNodeFamily());
         auto const ledger = std::make_shared<Ledger>(
@@ -385,9 +387,10 @@ class View_test : public beast::unit_test::suite
         using namespace jtx;
         Env env(*this);
         Config config;
+        MockLedgerConfigService ledgerConfigService{config};
         std::shared_ptr<Ledger const> const genesis = std::make_shared<Ledger>(
             create_genesis,
-            config,
+            ledgerConfigService,
             std::vector<uint256>{},
             env.app().getNodeFamily());
         auto const ledger = std::make_shared<Ledger>(
@@ -654,9 +657,10 @@ class View_test : public beast::unit_test::suite
         using namespace jtx;
         Env env(*this);
         Config config;
+        MockLedgerConfigService ledgerConfigService{config};
         std::shared_ptr<Ledger const> const genesis = std::make_shared<Ledger>(
             create_genesis,
-            config,
+            ledgerConfigService,
             std::vector<uint256>{},
             env.app().getNodeFamily());
         auto const ledger = std::make_shared<Ledger>(
@@ -1043,10 +1047,11 @@ class View_test : public beast::unit_test::suite
         {
             Env env(*this);
             Config config;
+            MockLedgerConfigService ledgerConfigService{config};
             std::shared_ptr<Ledger const> const genesis =
                 std::make_shared<Ledger>(
                     create_genesis,
-                    config,
+                    ledgerConfigService,
                     std::vector<uint256>{},
                     env.app().getNodeFamily());
             auto const ledger = std::make_shared<Ledger>(

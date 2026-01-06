@@ -41,7 +41,7 @@ void
 saveLedgerAsync(Application& app, std::uint32_t seq)
 {
     if (auto l = app.getLedgerMaster().getLedgerBySeq(seq))
-        pendSaveValidated(app, l, false, false);
+        pendSaveValidated(app.getServiceRegistry(), l, false, false);
 }
 
 }  // namespace xrpl

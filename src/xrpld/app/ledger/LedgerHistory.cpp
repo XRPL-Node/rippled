@@ -4,6 +4,7 @@
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/chrono.h>
 #include <xrpl/basics/contract.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
 
 namespace xrpl {
@@ -12,23 +13,24 @@ namespace xrpl {
 
 LedgerHistory::LedgerHistory(
     beast::insight::Collector::ptr const& collector,
-    Application& app)
-    : app_(app)
+    ServiceRegistry& registry,
+    Config const& config)
+    : registry_(registry)
     , collector_(collector)
     , mismatch_counter_(collector->make_counter("ledger.history", "mismatch"))
     , m_ledgers_by_hash(
           "LedgerCache",
-          app_.config().getValueFor(SizedItem::ledgerSize),
-          std::chrono::seconds{app_.config().getValueFor(SizedItem::ledgerAge)},
+          config.ledgerCacheSize,
+          config.ledgerCacheAge,
           stopwatch(),
-          app_.journal("TaggedCache"))
+          registry_.journal("TaggedCache"))
     , m_consensus_validated(
           "ConsensusValidated",
           64,
           std::chrono::minutes{5},
           stopwatch(),
-          app_.journal("TaggedCache"))
-    , j_(app.journal("LedgerHistory"))
+          registry_.journal("TaggedCache"))
+    , j_(registry.journal("LedgerHistory"))
 {
 }
 
@@ -78,7 +80,7 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
         }
     }
 
-    std::shared_ptr<Ledger const> ret = loadByIndex(index, app_);
+    std::shared_ptr<Ledger const> ret = loadByIndex(index, registry_);
 
     if (!ret)
         return ret;
@@ -118,7 +120,7 @@ LedgerHistory::getLedgerByHash(LedgerHash const& hash)
         return ret;
     }
 
-    ret = loadByHash(hash, app_);
+    ret = loadByHash(hash, registry_);
 
     if (!ret)
         return ret;

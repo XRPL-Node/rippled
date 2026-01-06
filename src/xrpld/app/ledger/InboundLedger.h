@@ -3,7 +3,6 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/overlay/PeerSet.h>
 
 #include <xrpl/basics/CountedObject.h>
@@ -13,6 +12,8 @@
 #include <utility>
 
 namespace xrpl {
+
+class ServiceRegistry;
 
 // A ledger we are trying to acquire
 class InboundLedger final : public TimeoutCounter,
@@ -30,7 +31,7 @@ public:
     };
 
     InboundLedger(
-        Application& app,
+        ServiceRegistry& registry,
         uint256 const& hash,
         std::uint32_t seq,
         Reason reason,

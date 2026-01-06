@@ -1,6 +1,5 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/DecayingSample.h>
@@ -9,6 +8,7 @@
 #include <xrpl/beast/container/aged_map.h>
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/core/PerfLog.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/jss.h>
 
 #include <exception>
@@ -21,7 +21,7 @@ namespace xrpl {
 class InboundLedgersImp : public InboundLedgers
 {
 private:
-    Application& app_;
+    ServiceRegistry& registry_;
     std::mutex fetchRateMutex_;
     // measures ledgers per second, constants are important
     DecayWindow<30, clock_type> fetchRate_;
@@ -32,13 +32,13 @@ public:
     static constexpr std::chrono::minutes const kReacquireInterval{5};
 
     InboundLedgersImp(
-        Application& app,
+        ServiceRegistry& registry,
         clock_type& clock,
         beast::insight::Collector::ptr const& collector,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder)
-        : app_(app)
+        : registry_(registry)
         , fetchRate_(clock.now())
-        , j_(app.journal("InboundLedger"))
+        , j_(registry.journal("InboundLedger"))
         , m_clock(clock)
         , mRecentFailures(clock)
         , mCounter(collector->make_counter("ledger_fetches"))
@@ -59,7 +59,7 @@ public:
                 "xrpl::InboundLedgersImp::acquire::doAcquire : nonzero hash");
 
             // probably not the right rule
-            if (app_.getOPs().isNeedNetworkLedger() &&
+            if (registry_.getOPs().isNeedNetworkLedger() &&
                 (reason != InboundLedger::Reason::GENERIC) &&
                 (reason != InboundLedger::Reason::CONSENSUS))
                 return {};
@@ -82,7 +82,7 @@ public:
                 else
                 {
                     inbound = std::make_shared<InboundLedger>(
-                        app_,
+                        registry_,
                         hash,
                         seq,
                         reason,
@@ -191,7 +191,7 @@ public:
             // Stash the data for later processing and see if we need to
             // dispatch
             if (ledger->gotData(std::weak_ptr<Peer>(peer), packet))
-                app_.getJobQueue().addJob(
+                registry_.getJobQueue().addJob(
                     jtLEDGER_DATA, "processLedgerData", [ledger]() {
                         ledger->runData();
                     });
@@ -206,7 +206,7 @@ public:
         // useful.
         if (packet->type() == protocol::liAS_NODE)
         {
-            app_.getJobQueue().addJob(
+            registry_.getJobQueue().addJob(
                 jtLEDGER_DATA, "gotStaleData", [this, packet]() {
                     gotStaleData(packet);
                 });
@@ -260,7 +260,7 @@ public:
                 s.erase();
                 newNode->serializeWithPrefix(s);
 
-                app_.getLedgerMaster().addFetchPack(
+                registry_.getLedgerMaster().addFetchPack(
                     newNode->getHash().as_uint256(),
                     std::make_shared<Blob>(s.begin(), s.end()));
             }
@@ -449,12 +449,12 @@ private:
 
 std::unique_ptr<InboundLedgers>
 make_InboundLedgers(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers::clock_type& clock,
     beast::insight::Collector::ptr const& collector)
 {
     return std::make_unique<InboundLedgersImp>(
-        app, clock, collector, make_PeerSetBuilder(app));
+        registry, clock, collector, make_PeerSetBuilder(registry.app()));
 }
 
 }  // namespace xrpl

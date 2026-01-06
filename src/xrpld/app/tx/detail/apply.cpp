@@ -3,6 +3,7 @@
 #include <xrpld/app/tx/applySteps.h>
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/TxFlags.h>
 
@@ -128,6 +129,18 @@ apply(
     return apply(app, view, [&]() mutable {
         return preflight(app, view.rules(), tx, flags, j);
     });
+}
+
+// ServiceRegistry overload - delegates to Application version
+ApplyResult
+apply(
+    ServiceRegistry& registry,
+    OpenView& view,
+    STTx const& tx,
+    ApplyFlags flags,
+    beast::Journal j)
+{
+    return apply(registry.app(), view, tx, flags, j);
 }
 
 ApplyResult

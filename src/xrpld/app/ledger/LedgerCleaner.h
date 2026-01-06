@@ -1,13 +1,13 @@
 #ifndef XRPL_APP_LEDGER_LEDGERCLEANER_H_INCLUDED
 #define XRPL_APP_LEDGER_LEDGERCLEANER_H_INCLUDED
 
-#include <xrpld/app/main/Application.h>
-
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/beast/utility/PropertyStream.h>
 #include <xrpl/json/json_value.h>
 
 namespace xrpl {
+
+class ServiceRegistry;
 
 /** Check the ledger/transaction databases to make sure they have continuity */
 class LedgerCleaner : public beast::PropertyStream::Source
@@ -41,7 +41,7 @@ public:
 };
 
 std::unique_ptr<LedgerCleaner>
-make_LedgerCleaner(Application& app, beast::Journal journal);
+make_LedgerCleaner(ServiceRegistry& registry, beast::Journal journal);
 
 }  // namespace xrpl
 

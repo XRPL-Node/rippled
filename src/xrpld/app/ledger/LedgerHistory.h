@@ -2,7 +2,6 @@
 #define XRPL_APP_LEDGER_LEDGERHISTORY_H_INCLUDED
 
 #include <xrpld/app/ledger/Ledger.h>
-#include <xrpld/app/main/Application.h>
 
 #include <xrpl/beast/insight/Collector.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
@@ -11,15 +10,24 @@
 
 namespace xrpl {
 
+class ServiceRegistry;
+
 // VFALCO TODO Rename to OldLedgers ?
 
 /** Retains historical ledgers. */
 class LedgerHistory
 {
 public:
+    struct Config
+    {
+        int ledgerCacheSize;
+        std::chrono::seconds ledgerCacheAge;
+    };
+
     LedgerHistory(
         beast::insight::Collector::ptr const& collector,
-        Application& app);
+        ServiceRegistry& registry,
+        Config const& config);
 
     /** Track a ledger
         @return `true` if the ledger was already tracked
@@ -103,7 +111,7 @@ private:
         std::optional<uint256> const& validatedConsensusHash,
         Json::Value const& consensus);
 
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::insight::Collector::ptr collector_;
     beast::insight::Counter mismatch_counter_;
 

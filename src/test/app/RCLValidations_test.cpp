@@ -1,3 +1,4 @@
+#include <test/core/MockLedgerConfigService.h>
 #include <test/jtx.h>
 
 #include <xrpld/app/consensus/RCLValidations.h>
@@ -56,9 +57,10 @@ class RCLValidations_test : public beast::unit_test::suite
 
         jtx::Env env(*this);
         Config config;
+        MockLedgerConfigService ledgerConfigService{config};
         auto prev = std::make_shared<Ledger const>(
             create_genesis,
-            config,
+            ledgerConfigService,
             std::vector<uint256>{},
             env.app().getNodeFamily());
         history.push_back(prev);
@@ -219,9 +221,10 @@ class RCLValidations_test : public beast::unit_test::suite
         jtx::Env env(*this);
         auto& j = env.journal;
         Config config;
+        MockLedgerConfigService ledgerConfigService{config};
         auto prev = std::make_shared<Ledger const>(
             create_genesis,
-            config,
+            ledgerConfigService,
             std::vector<uint256>{},
             env.app().getNodeFamily());
         history.push_back(prev);

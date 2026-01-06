@@ -1,4 +1,5 @@
 #include <xrpld/app/main/Application.h>
+#include <xrpld/core/Config.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
 
 namespace xrpl {
@@ -42,6 +43,18 @@ CachedSLEs&
 ServiceRegistryImpl::cachedSLEs()
 {
     return app_.cachedSLEs();
+}
+
+FeatureSetService&
+ServiceRegistryImpl::getFeatureSetService()
+{
+    return app_.getFeatureSetService();
+}
+
+LedgerConfigService&
+ServiceRegistryImpl::getLedgerConfigService()
+{
+    return app_.getLedgerConfigService();
 }
 
 // Protocol and validation services
@@ -240,6 +253,31 @@ perf::PerfLog&
 ServiceRegistryImpl::getPerfLog()
 {
     return app_.getPerfLog();
+}
+
+// Configuration and state
+bool
+ServiceRegistryImpl::isStopping() const
+{
+    return app_.isStopping();
+}
+
+beast::Journal
+ServiceRegistryImpl::journal(std::string const& name)
+{
+    return app_.journal(name);
+}
+
+boost::asio::io_context&
+ServiceRegistryImpl::getIOContext()
+{
+    return app_.getIOContext();
+}
+
+Application&
+ServiceRegistryImpl::app()
+{
+    return app_;
 }
 
 }  // namespace xrpl

@@ -1,6 +1,5 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/OrderBookDB.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/AMMUtils.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/core/Config.h>
@@ -11,15 +10,19 @@
 
 namespace xrpl {
 
-OrderBookDB::OrderBookDB(Application& app)
-    : app_(app), seq_(0), j_(app.journal("OrderBookDB"))
+OrderBookDB::OrderBookDB(ServiceRegistry& registry, Config const& config)
+    : registry_(registry)
+    , pathSearchMax_(config.pathSearchMax)
+    , standalone_(config.standalone)
+    , seq_(0)
+    , j_(registry.journal("OrderBookDB"))
 {
 }
 
 void
 OrderBookDB::setup(std::shared_ptr<ReadView const> const& ledger)
 {
-    if (!app_.config().standalone() && app_.getOPs().isNeedNetworkLedger())
+    if (!standalone_ && registry_.getOPs().isNeedNetworkLedger())
     {
         JLOG(j_.warn()) << "Eliding full order book update: no ledger";
         return;
@@ -42,12 +45,12 @@ OrderBookDB::setup(std::shared_ptr<ReadView const> const& ledger)
     JLOG(j_.debug()) << "Full order book update: " << seq << " to "
                      << ledger->seq();
 
-    if (app_.config().PATH_SEARCH_MAX != 0)
+    if (pathSearchMax_ != 0)
     {
-        if (app_.config().standalone())
+        if (standalone_)
             update(ledger);
         else
-            app_.getJobQueue().addJob(
+            registry_.getJobQueue().addJob(
                 jtUPDATE_PF,
                 "OrderBookDB::update: " + std::to_string(ledger->seq()),
                 [this, ledger]() { update(ledger); });
@@ -57,7 +60,7 @@ OrderBookDB::setup(std::shared_ptr<ReadView const> const& ledger)
 void
 OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
 {
-    if (app_.config().PATH_SEARCH_MAX == 0)
+    if (pathSearchMax_ == 0)
         return;  // pathfinding has been disabled
 
     // A newer full update job is pending
@@ -85,7 +88,7 @@ OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
     {
         for (auto& sle : ledger->sles)
         {
-            if (app_.isStopping())
+            if (registry_.isStopping())
             {
                 JLOG(j_.info())
                     << "Update halted because the process is stopping";
@@ -153,7 +156,7 @@ OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
         xrpDomainBooks_.swap(xrpDomainBooks);
     }
 
-    app_.getLedgerMaster().newOrderBookDB();
+    registry_.getLedgerMaster().newOrderBookDB();
 }
 
 void

@@ -5,6 +5,7 @@
 #include <xrpld/app/misc/CanonicalTXSet.h>
 #include <xrpld/app/tx/apply.h>
 
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/Feature.h>
 
 namespace xrpl {
@@ -22,7 +23,7 @@ buildLedgerImpl(
     NetClock::time_point closeTime,
     bool const closeTimeCorrect,
     NetClock::duration closeResolution,
-    Application& app,
+    ServiceRegistry& registry,
     beast::Journal j,
     ApplyTxs&& applyTxs)
 {
@@ -165,7 +166,7 @@ buildLedger(
     NetClock::time_point closeTime,
     bool const closeTimeCorrect,
     NetClock::duration closeResolution,
-    Application& app,
+    ServiceRegistry& registry,
     CanonicalTXSet& txns,
     std::set<TxID>& failedTxns,
     beast::Journal j)
@@ -179,14 +180,14 @@ buildLedger(
         closeTime,
         closeTimeCorrect,
         closeResolution,
-        app,
+        registry,
         j,
         [&](OpenView& accum, std::shared_ptr<Ledger> const& built) {
             JLOG(j.debug())
                 << "Attempting to apply " << txns.size() << " transactions";
 
-            auto const applied =
-                applyTransactions(app, built, txns, failedTxns, accum, j);
+            auto const applied = applyTransactions(
+                registry.app(), built, txns, failedTxns, accum, j);
 
             if (!txns.empty() || !failedTxns.empty())
                 JLOG(j.debug())
@@ -208,7 +209,7 @@ std::shared_ptr<Ledger>
 buildLedger(
     LedgerReplay const& replayData,
     ApplyFlags applyFlags,
-    Application& app,
+    ServiceRegistry& registry,
     beast::Journal j)
 {
     auto const& replayLedger = replayData.replay();
@@ -220,11 +221,12 @@ buildLedger(
         replayLedger->header().closeTime,
         ((replayLedger->header().closeFlags & sLCF_NoConsensusTime) == 0),
         replayLedger->header().closeTimeResolution,
-        app,
+        registry,
         j,
         [&](OpenView& accum, std::shared_ptr<Ledger> const& built) {
             for (auto& tx : replayData.orderedTxns())
-                applyTransaction(app, accum, *tx.second, false, applyFlags, j);
+                applyTransaction(
+                    registry.app(), accum, *tx.second, false, applyFlags, j);
         });
 }
 

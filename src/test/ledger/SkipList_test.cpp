@@ -1,8 +1,10 @@
+#include <test/core/MockLedgerConfigService.h>
 #include <test/jtx/Env.h>
 
 #include <xrpld/app/ledger/Ledger.h>
 
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/core/FeatureSetService.h>
 #include <xrpl/ledger/View.h>
 
 namespace xrpl {
@@ -17,9 +19,10 @@ class SkipList_test : public beast::unit_test::suite
         std::vector<std::shared_ptr<Ledger>> history;
         {
             Config config;
+            MockLedgerConfigService ledgerConfigService{config};
             auto prev = std::make_shared<Ledger>(
                 create_genesis,
-                config,
+                ledgerConfigService,
                 std::vector<uint256>{},
                 env.app().getNodeFamily());
             history.push_back(prev);

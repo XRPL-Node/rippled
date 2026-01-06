@@ -1,8 +1,6 @@
 #ifndef XRPL_APP_LEDGER_TIMEOUTCOUNTER_H_INCLUDED
 #define XRPL_APP_LEDGER_TIMEOUTCOUNTER_H_INCLUDED
 
-#include <xrpld/app/main/Application.h>
-
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/core/Job.h>
 
@@ -11,6 +9,8 @@
 #include <mutex>
 
 namespace xrpl {
+
+class ServiceRegistry;
 
 /**
     This class is an "active" object. It maintains its own timer
@@ -71,7 +71,7 @@ protected:
     };
 
     TimeoutCounter(
-        Application& app,
+        ServiceRegistry& registry,
         uint256 const& targetHash,
         std::chrono::milliseconds timeoutInterval,
         QueueJobParameter&& jobParameter,
@@ -103,7 +103,7 @@ protected:
 
     // Used in this class for access to boost::asio::io_context and
     // xrpl::Overlay. Used in subtypes for the kitchen sink.
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::Journal journal_;
     mutable std::recursive_mutex mtx_;
 

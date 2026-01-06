@@ -2,18 +2,20 @@
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/ledger/PendingSaves.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/consensus/LedgerTiming.h>
-#include <xrpld/core/Config.h>
+#include <xrpld/core/Config.h>  // for Config::FEE_UNITS_DEPRECATED
 #include <xrpld/core/SociDB.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/core/FeatureSetService.h>
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/nodestore/Database.h>
 #include <xrpl/nodestore/detail/DatabaseNodeImp.h>
 #include <xrpl/protocol/Feature.h>
@@ -148,15 +150,16 @@ public:
 
 Ledger::Ledger(
     create_genesis_t,
-    Config const& config,
+    LedgerConfigService& configService,
     std::vector<uint256> const& amendments,
     Family& family)
     : mImmutable(false)
     , txMap_(SHAMapType::TRANSACTION, family)
     , stateMap_(SHAMapType::STATE, family)
-    , rules_{config.features}
+    , rules_{configService.getFeatureSetService().features()}
     , j_(beast::Journal(beast::Journal::getNullSink()))
 {
+    auto const config = configService.getLedgerConfig();
     header_.seq = 1;
     header_.drops = INITIAL_XRP;
     header_.closeTimeResolution = ledgerGenesisTimeResolution;
@@ -185,22 +188,19 @@ Ledger::Ledger(
         if (std::find(amendments.begin(), amendments.end(), featureXRPFees) !=
             amendments.end())
         {
-            sle->at(sfBaseFeeDrops) = config.FEES.reference_fee;
-            sle->at(sfReserveBaseDrops) = config.FEES.account_reserve;
-            sle->at(sfReserveIncrementDrops) = config.FEES.owner_reserve;
+            sle->at(sfBaseFeeDrops) = config.reference_fee;
+            sle->at(sfReserveBaseDrops) = config.account_reserve;
+            sle->at(sfReserveIncrementDrops) = config.owner_reserve;
         }
         else
         {
-            if (auto const f =
-                    config.FEES.reference_fee.dropsAs<std::uint64_t>())
+            if (auto const f = config.reference_fee.dropsAs<std::uint64_t>())
                 sle->at(sfBaseFee) = *f;
-            if (auto const f =
-                    config.FEES.account_reserve.dropsAs<std::uint32_t>())
+            if (auto const f = config.account_reserve.dropsAs<std::uint32_t>())
                 sle->at(sfReserveBase) = *f;
-            if (auto const f =
-                    config.FEES.owner_reserve.dropsAs<std::uint32_t>())
+            if (auto const f = config.owner_reserve.dropsAs<std::uint32_t>())
                 sle->at(sfReserveIncrement) = *f;
-            sle->at(sfReferenceFeeUnits) = Config::FEE_UNITS_DEPRECATED;
+            sle->at(sfReferenceFeeUnits) = xrpl::Config::FEE_UNITS_DEPRECATED;
         }
         rawInsert(sle);
     }
@@ -213,13 +213,13 @@ Ledger::Ledger(
     LedgerHeader const& info,
     bool& loaded,
     bool acquire,
-    Config const& config,
+    LedgerConfigService& configService,
     Family& family,
     beast::Journal j)
     : mImmutable(true)
     , txMap_(SHAMapType::TRANSACTION, info.txHash, family)
     , stateMap_(SHAMapType::STATE, info.accountHash, family)
-    , rules_(config.features)
+    , rules_(configService.getFeatureSetService().features())
     , header_(info)
     , j_(j)
 {
@@ -244,7 +244,7 @@ Ledger::Ledger(
     txMap_.setImmutable();
     stateMap_.setImmutable();
 
-    defaultFees(config);
+    defaultFees(configService);
     if (!setup())
         loaded = false;
 
@@ -288,11 +288,14 @@ Ledger::Ledger(Ledger const& prevLedger, NetClock::time_point closeTime)
     }
 }
 
-Ledger::Ledger(LedgerHeader const& info, Config const& config, Family& family)
+Ledger::Ledger(
+    LedgerHeader const& info,
+    LedgerConfigService& configService,
+    Family& family)
     : mImmutable(true)
     , txMap_(SHAMapType::TRANSACTION, info.txHash, family)
     , stateMap_(SHAMapType::STATE, info.accountHash, family)
-    , rules_{config.features}
+    , rules_{configService.getFeatureSetService().features()}
     , header_(info)
     , j_(beast::Journal(beast::Journal::getNullSink()))
 {
@@ -302,18 +305,18 @@ Ledger::Ledger(LedgerHeader const& info, Config const& config, Family& family)
 Ledger::Ledger(
     std::uint32_t ledgerSeq,
     NetClock::time_point closeTime,
-    Config const& config,
+    LedgerConfigService& configService,
     Family& family)
     : mImmutable(false)
     , txMap_(SHAMapType::TRANSACTION, family)
     , stateMap_(SHAMapType::STATE, family)
-    , rules_{config.features}
+    , rules_{configService.getFeatureSetService().features()}
     , j_(beast::Journal(beast::Journal::getNullSink()))
 {
     header_.seq = ledgerSeq;
     header_.closeTime = closeTime;
     header_.closeTimeResolution = ledgerDefaultTimeResolution;
-    defaultFees(config);
+    defaultFees(configService);
     setup();
 }
 
@@ -653,17 +656,18 @@ Ledger::setup()
 }
 
 void
-Ledger::defaultFees(Config const& config)
+Ledger::defaultFees(LedgerConfigService& configService)
 {
+    auto const config = configService.getLedgerConfig();
     XRPL_ASSERT(
         fees_.base == 0 && fees_.reserve == 0 && fees_.increment == 0,
         "xrpl::Ledger::defaultFees : zero fees");
     if (fees_.base == 0)
-        fees_.base = config.FEES.reference_fee;
+        fees_.base = config.reference_fee;
     if (fees_.reserve == 0)
-        fees_.reserve = config.FEES.account_reserve;
+        fees_.reserve = config.account_reserve;
     if (fees_.increment == 0)
-        fees_.increment = config.FEES.owner_reserve;
+        fees_.increment = config.owner_reserve;
 }
 
 std::shared_ptr<SLE>
@@ -949,20 +953,21 @@ isFlagLedger(LedgerIndex seq)
 
 static bool
 saveValidatedLedger(
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& ledger,
     bool current)
 {
-    auto j = app.journal("Ledger");
+    auto j = registry.journal("Ledger");
     auto seq = ledger->header().seq;
-    if (!app.pendingSaves().startWork(seq))
+    if (!registry.pendingSaves().startWork(seq))
     {
         // The save was completed synchronously
         JLOG(j.debug()) << "Save aborted";
         return true;
     }
 
-    auto const db = dynamic_cast<SQLiteDatabase*>(&app.getRelationalDatabase());
+    auto const db =
+        dynamic_cast<SQLiteDatabase*>(&registry.getRelationalDatabase());
     if (!db)
         Throw<std::runtime_error>("Failed to get relational database");
 
@@ -970,7 +975,7 @@ saveValidatedLedger(
 
     // Clients can now trust the database for
     // information about this ledger sequence.
-    app.pendingSaves().finishWork(seq);
+    registry.pendingSaves().finishWork(seq);
     return res;
 }
 
@@ -979,19 +984,20 @@ saveValidatedLedger(
 */
 bool
 pendSaveValidated(
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& ledger,
     bool isSynchronous,
     bool isCurrent)
 {
-    if (!app.getHashRouter().setFlags(
+    if (!registry.getHashRouter().setFlags(
             ledger->header().hash, HashRouterFlags::SAVED))
     {
         // We have tried to save this ledger recently
-        auto stream = app.journal("Ledger").debug();
+        auto stream = registry.journal("Ledger").debug();
         JLOG(stream) << "Double pend save for " << ledger->header().seq;
 
-        if (!isSynchronous || !app.pendingSaves().pending(ledger->header().seq))
+        if (!isSynchronous ||
+            !registry.pendingSaves().pending(ledger->header().seq))
         {
             // Either we don't need it to be finished
             // or it is finished
@@ -1002,9 +1008,10 @@ pendSaveValidated(
     XRPL_ASSERT(
         ledger->isImmutable(), "xrpl::pendSaveValidated : immutable ledger");
 
-    if (!app.pendingSaves().shouldWork(ledger->header().seq, isSynchronous))
+    if (!registry.pendingSaves().shouldWork(
+            ledger->header().seq, isSynchronous))
     {
-        auto stream = app.journal("Ledger").debug();
+        auto stream = registry.journal("Ledger").debug();
         JLOG(stream) << "Pend save with seq in pending saves "
                      << ledger->header().seq;
 
@@ -1013,18 +1020,18 @@ pendSaveValidated(
 
     // See if we can use the JobQueue.
     if (!isSynchronous &&
-        app.getJobQueue().addJob(
+        registry.getJobQueue().addJob(
             isCurrent ? jtPUBLEDGER : jtPUBOLDLEDGER,
             std::to_string(ledger->seq()),
-            [&app, ledger, isCurrent]() {
-                saveValidatedLedger(app, ledger, isCurrent);
+            [&registry, ledger, isCurrent]() {
+                saveValidatedLedger(registry, ledger, isCurrent);
             }))
     {
         return true;
     }
 
     // The JobQueue won't do the Job.  Do the save synchronously.
-    return saveValidatedLedger(app, ledger, isCurrent);
+    return saveValidatedLedger(registry, ledger, isCurrent);
 }
 
 void
@@ -1046,21 +1053,24 @@ Ledger::invariants() const
  * Make ledger using info loaded from database.
  *
  * @param LedgerHeader: Ledger information.
- * @param app: Link to the Application.
+ * @param registry: The service registry.
  * @param acquire: Acquire the ledger if not found locally.
  * @return Shared pointer to the ledger.
  */
 std::shared_ptr<Ledger>
-loadLedgerHelper(LedgerHeader const& info, Application& app, bool acquire)
+loadLedgerHelper(
+    LedgerHeader const& info,
+    ServiceRegistry& registry,
+    bool acquire)
 {
     bool loaded;
     auto ledger = std::make_shared<Ledger>(
         info,
         loaded,
         acquire,
-        app.config(),
-        app.getNodeFamily(),
-        app.journal("Ledger"));
+        registry.getLedgerConfigService(),
+        registry.getNodeFamily(),
+        registry.journal("Ledger"));
 
     if (!loaded)
         ledger.reset();
@@ -1069,10 +1079,7 @@ loadLedgerHelper(LedgerHeader const& info, Application& app, bool acquire)
 }
 
 static void
-finishLoadByIndexOrHash(
-    std::shared_ptr<Ledger> const& ledger,
-    Config const& config,
-    beast::Journal j)
+finishLoadByIndexOrHash(std::shared_ptr<Ledger> const& ledger, beast::Journal j)
 {
     if (!ledger)
         return;
@@ -1089,36 +1096,38 @@ finishLoadByIndexOrHash(
 }
 
 std::tuple<std::shared_ptr<Ledger>, std::uint32_t, uint256>
-getLatestLedger(Application& app)
+getLatestLedger(ServiceRegistry& registry)
 {
     std::optional<LedgerHeader> const info =
-        app.getRelationalDatabase().getNewestLedgerInfo();
+        registry.getRelationalDatabase().getNewestLedgerInfo();
     if (!info)
         return {std::shared_ptr<Ledger>(), {}, {}};
-    return {loadLedgerHelper(*info, app, true), info->seq, info->hash};
+    return {loadLedgerHelper(*info, registry, true), info->seq, info->hash};
 }
 
 std::shared_ptr<Ledger>
-loadByIndex(std::uint32_t ledgerIndex, Application& app, bool acquire)
+loadByIndex(std::uint32_t ledgerIndex, ServiceRegistry& registry, bool acquire)
 {
     if (std::optional<LedgerHeader> info =
-            app.getRelationalDatabase().getLedgerInfoByIndex(ledgerIndex))
+            registry.getRelationalDatabase().getLedgerInfoByIndex(ledgerIndex))
     {
-        std::shared_ptr<Ledger> ledger = loadLedgerHelper(*info, app, acquire);
-        finishLoadByIndexOrHash(ledger, app.config(), app.journal("Ledger"));
+        std::shared_ptr<Ledger> ledger =
+            loadLedgerHelper(*info, registry, acquire);
+        finishLoadByIndexOrHash(ledger, registry.journal("Ledger"));
         return ledger;
     }
     return {};
 }
 
 std::shared_ptr<Ledger>
-loadByHash(uint256 const& ledgerHash, Application& app, bool acquire)
+loadByHash(uint256 const& ledgerHash, ServiceRegistry& registry, bool acquire)
 {
     if (std::optional<LedgerHeader> info =
-            app.getRelationalDatabase().getLedgerInfoByHash(ledgerHash))
+            registry.getRelationalDatabase().getLedgerInfoByHash(ledgerHash))
     {
-        std::shared_ptr<Ledger> ledger = loadLedgerHelper(*info, app, acquire);
-        finishLoadByIndexOrHash(ledger, app.config(), app.journal("Ledger"));
+        std::shared_ptr<Ledger> ledger =
+            loadLedgerHelper(*info, registry, acquire);
+        finishLoadByIndexOrHash(ledger, registry.journal("Ledger"));
         XRPL_ASSERT(
             !ledger || ledger->header().hash == ledgerHash,
             "xrpl::loadByHash : ledger hash match if loaded");

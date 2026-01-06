@@ -67,19 +67,19 @@ LedgerReplayTask::TaskParameter::canMergeInto(
 }
 
 LedgerReplayTask::LedgerReplayTask(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers& inboundLedgers,
     LedgerReplayer& replayer,
     std::shared_ptr<SkipListAcquire>& skipListAcquirer,
     TaskParameter&& parameter)
     : TimeoutCounter(
-          app,
+          registry,
           parameter.finishHash_,
           LedgerReplayParameters::TASK_TIMEOUT,
           {jtREPLAY_TASK,
            "LedgerReplayTask",
            LedgerReplayParameters::MAX_QUEUED_TASKS},
-          app.journal("LedgerReplayTask"))
+          registry.journal("LedgerReplayTask"))
     , inboundLedgers_(inboundLedgers)
     , replayer_(replayer)
     , parameter_(parameter)
@@ -136,7 +136,8 @@ LedgerReplayTask::trigger(ScopedLockType& sl)
 
     if (!parent_)
     {
-        parent_ = app_.getLedgerMaster().getLedgerByHash(parameter_.startHash_);
+        parent_ =
+            registry_.getLedgerMaster().getLedgerByHash(parameter_.startHash_);
         if (!parent_)
         {
             parent_ = inboundLedgers_.acquire(

@@ -3,7 +3,6 @@
 
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/LedgerReplayTask.h>
-#include <xrpld/app/main/Application.h>
 
 #include <xrpl/beast/utility/Journal.h>
 
@@ -11,6 +10,9 @@
 #include <vector>
 
 namespace xrpl {
+
+class ServiceRegistry;
+class InboundLedgers;
 
 namespace test {
 class LedgerReplayClient;
@@ -54,7 +56,7 @@ class LedgerReplayer final
 {
 public:
     LedgerReplayer(
-        Application& app,
+        ServiceRegistry& registry,
         InboundLedgers& inboundLedgers,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder);
 
@@ -133,7 +135,7 @@ private:
     hash_map<uint256, std::weak_ptr<LedgerDeltaAcquire>> deltas_;
     hash_map<uint256, std::weak_ptr<SkipListAcquire>> skipLists_;
 
-    Application& app_;
+    ServiceRegistry& registry_;
     InboundLedgers& inboundLedgers_;
     std::unique_ptr<PeerSetBuilder> peerSetBuilder_;
     beast::Journal j_;

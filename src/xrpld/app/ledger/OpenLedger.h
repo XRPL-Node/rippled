@@ -9,6 +9,7 @@
 #include <xrpl/basics/UnorderedContainers.h>
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/ledger/CachedSLEs.h>
 #include <xrpl/ledger/OpenView.h>
 
@@ -143,7 +144,7 @@ public:
     */
     void
     accept(
-        Application& app,
+        ServiceRegistry& registry,
         Rules const& rules,
         std::shared_ptr<Ledger const> const& ledger,
         OrderedTxs const& locals,
@@ -162,7 +163,7 @@ private:
     template <class FwdRange>
     static void
     apply(
-        Application& app,
+        ServiceRegistry& registry,
         OpenView& view,
         ReadView const& check,
         FwdRange const& txs,
@@ -177,7 +178,7 @@ private:
 
     static Result
     apply_one(
-        Application& app,
+        ServiceRegistry& registry,
         OpenView& view,
         std::shared_ptr<STTx const> const& tx,
         bool retry,
@@ -190,7 +191,7 @@ private:
 template <class FwdRange>
 void
 OpenLedger::apply(
-    Application& app,
+    ServiceRegistry& registry,
     OpenView& view,
     ReadView const& check,
     FwdRange const& txs,
@@ -207,7 +208,7 @@ OpenLedger::apply(
             auto const txId = tx->getTransactionID();
             if (check.txExists(txId))
                 continue;
-            auto const result = apply_one(app, view, tx, true, flags, j);
+            auto const result = apply_one(registry, view, tx, true, flags, j);
             if (result == Result::retry)
                 retries.insert(tx);
         }
@@ -224,7 +225,7 @@ OpenLedger::apply(
         auto iter = retries.begin();
         while (iter != retries.end())
         {
-            switch (apply_one(app, view, iter->second, retry, flags, j))
+            switch (apply_one(registry, view, iter->second, retry, flags, j))
             {
                 case Result::success:
                     ++changes;

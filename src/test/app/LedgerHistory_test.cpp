@@ -7,6 +7,8 @@
 
 #include <xrpl/beast/insight/NullCollector.h>
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/core/FeatureSetService.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/ledger/OpenView.h>
 
 #include <chrono>
@@ -38,7 +40,7 @@ public:
             assert(!stx);
             return std::make_shared<Ledger>(
                 create_genesis,
-                env.app().config(),
+                env.app().getServiceRegistry().getLedgerConfigService(),
                 std::vector<uint256>{},
                 env.app().getNodeFamily());
         }
@@ -83,7 +85,12 @@ public:
                 *this,
                 envconfig(),
                 std::make_unique<CheckMessageLogs>("MISMATCH ", &found)};
-            LedgerHistory lh{beast::insight::NullCollector::New(), env.app()};
+            LedgerHistory lh{
+                beast::insight::NullCollector::New(),
+                env.app().getServiceRegistry(),
+                {env.app().config().getValueFor(SizedItem::ledgerSize),
+                 std::chrono::seconds{
+                     env.app().config().getValueFor(SizedItem::ledgerAge)}}};
             auto const genesis = makeLedger({}, env, lh, 0s);
             uint256 const dummyTxHash{1};
             lh.builtLedger(genesis, dummyTxHash, {});
@@ -100,7 +107,12 @@ public:
                 envconfig(),
                 std::make_unique<CheckMessageLogs>(
                     "MISMATCH on close time", &found)};
-            LedgerHistory lh{beast::insight::NullCollector::New(), env.app()};
+            LedgerHistory lh{
+                beast::insight::NullCollector::New(),
+                env.app().getServiceRegistry(),
+                {env.app().config().getValueFor(SizedItem::ledgerSize),
+                 std::chrono::seconds{
+                     env.app().config().getValueFor(SizedItem::ledgerAge)}}};
             auto const genesis = makeLedger({}, env, lh, 0s);
             auto const ledgerA = makeLedger(genesis, env, lh, 4s);
             auto const ledgerB = makeLedger(genesis, env, lh, 40s);
@@ -120,7 +132,12 @@ public:
                 envconfig(),
                 std::make_unique<CheckMessageLogs>(
                     "MISMATCH on prior ledger", &found)};
-            LedgerHistory lh{beast::insight::NullCollector::New(), env.app()};
+            LedgerHistory lh{
+                beast::insight::NullCollector::New(),
+                env.app().getServiceRegistry(),
+                {env.app().config().getValueFor(SizedItem::ledgerSize),
+                 std::chrono::seconds{
+                     env.app().config().getValueFor(SizedItem::ledgerAge)}}};
             auto const genesis = makeLedger({}, env, lh, 0s);
             auto const ledgerA = makeLedger(genesis, env, lh, 4s);
             auto const ledgerB = makeLedger(genesis, env, lh, 40s);
@@ -146,7 +163,12 @@ public:
                 *this,
                 envconfig(),
                 std::make_unique<CheckMessageLogs>(msg, &found)};
-            LedgerHistory lh{beast::insight::NullCollector::New(), env.app()};
+            LedgerHistory lh{
+                beast::insight::NullCollector::New(),
+                env.app().getServiceRegistry(),
+                {env.app().config().getValueFor(SizedItem::ledgerSize),
+                 std::chrono::seconds{
+                     env.app().config().getValueFor(SizedItem::ledgerAge)}}};
 
             Account alice{"A1"};
             Account bob{"A2"};

@@ -223,7 +223,7 @@ saveValidatedLedger(
         aLedger = app.getAcceptedLedgerCache().fetch(ledger->header().hash);
         if (!aLedger)
         {
-            aLedger = std::make_shared<AcceptedLedger>(ledger, app);
+            aLedger = std::make_shared<AcceptedLedger>(ledger);
             app.getAcceptedLedgerCache().canonicalize_replace_client(
                 ledger->header().hash, aLedger);
         }
@@ -848,7 +848,8 @@ getAccountTxs(
                     << "Recovering ledger " << seq << ", txn " << txn->getID();
 
                 if (auto l = ledgerMaster.getLedgerBySeq(seq))
-                    pendSaveValidated(app, l, false, false);
+                    pendSaveValidated(
+                        app.getServiceRegistry(), l, false, false);
             }
 
             if (txn)

@@ -51,7 +51,7 @@ OpenLedger::modify(modify_type const& f)
 
 void
 OpenLedger::accept(
-    Application& app,
+    ServiceRegistry& registry,
     Rules const& rules,
     std::shared_ptr<Ledger const> const& ledger,
     OrderedTxs const& locals,
@@ -67,7 +67,7 @@ OpenLedger::accept(
     {
         // Handle disputed tx, outside lock
         using empty = std::vector<std::shared_ptr<STTx const>>;
-        apply(app, *next, *ledger, empty{}, retries, flags, j_);
+        apply(registry, *next, *ledger, empty{}, retries, flags, j_);
     }
     // Block calls to modify, otherwise
     // new tx going into the open ledger
@@ -77,7 +77,7 @@ OpenLedger::accept(
     if (!current_->txs.empty())
     {
         apply(
-            app,
+            registry,
             *next,
             *ledger,
             boost::adaptors::transform(
@@ -96,7 +96,7 @@ OpenLedger::accept(
         f(*next, j_);
     // Apply local tx
     for (auto const& item : locals)
-        app.getTxQ().apply(app, *next, item.second, flags, j_);
+        registry.getTxQ().apply(registry.app(), *next, item.second, flags, j_);
 
     // If we didn't relay this transaction recently, relay it to all peers
     for (auto const& txpair : next->txs)
@@ -118,7 +118,7 @@ OpenLedger::accept(
         }
         // LCOV_EXCL_STOP
 
-        if (auto const toSkip = app.getHashRouter().shouldRelay(txId))
+        if (auto const toSkip = registry.getHashRouter().shouldRelay(txId))
         {
             JLOG(j_.debug()) << "Relaying recovered tx " << txId;
             protocol::TMTransaction msg;
@@ -128,8 +128,8 @@ OpenLedger::accept(
             msg.set_rawtransaction(s.data(), s.size());
             msg.set_status(protocol::tsNEW);
             msg.set_receivetimestamp(
-                app.timeKeeper().now().time_since_epoch().count());
-            app.overlay().relay(txId, msg, *toSkip);
+                registry.timeKeeper().now().time_since_epoch().count());
+            registry.overlay().relay(txId, msg, *toSkip);
         }
     }
 
@@ -153,7 +153,7 @@ OpenLedger::create(
 
 auto
 OpenLedger::apply_one(
-    Application& app,
+    ServiceRegistry& registry,
     OpenView& view,
     std::shared_ptr<STTx const> const& tx,
     bool retry,
@@ -163,7 +163,7 @@ OpenLedger::apply_one(
     if (retry)
         flags = flags | tapRETRY;
     // If it's in anybody's proposed set, try to keep it in the ledger
-    auto const result = xrpl::apply(app, view, *tx, flags, j);
+    auto const result = xrpl::apply(registry, view, *tx, flags, j);
     if (result.applied || result.ter == terQUEUED)
         return Result::success;
     if (isTefFailure(result.ter) || isTemMalformed(result.ter) ||

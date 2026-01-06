@@ -14,6 +14,7 @@ namespace xrpl {
 
 class Application;
 class HashRouter;
+class ServiceRegistry;
 
 /** Describes the pre-processing validity of a transaction.
 
@@ -104,6 +105,15 @@ forceValidity(HashRouter& router, uint256 const& txid, Validity validity);
 ApplyResult
 apply(
     Application& app,
+    OpenView& view,
+    STTx const& tx,
+    ApplyFlags flags,
+    beast::Journal journal);
+
+// Overload for ServiceRegistry
+ApplyResult
+apply(
+    ServiceRegistry& registry,
     OpenView& view,
     STTx const& tx,
     ApplyFlags flags,

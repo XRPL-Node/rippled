@@ -3,11 +3,13 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionStateSF.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/overlay/Overlay.h>
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/core/FeatureSetService.h>
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/ServiceRegistry.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/protocol/HashPrefix.h>
 #include <xrpl/protocol/jss.h>
 #include <xrpl/resource/Fees.h>
@@ -55,18 +57,18 @@ enum {
 auto constexpr ledgerAcquireTimeout = 3000ms;
 
 InboundLedger::InboundLedger(
-    Application& app,
+    ServiceRegistry& registry,
     uint256 const& hash,
     std::uint32_t seq,
     Reason reason,
     clock_type& clock,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app,
+          registry,
           hash,
           ledgerAcquireTimeout,
           {jtLEDGER_DATA, "InboundLedger", 5},
-          app.journal("InboundLedger"))
+          registry.journal("InboundLedger"))
     , m_clock(clock)
     , mHaveHeader(false)
     , mHaveState(false)
@@ -88,7 +90,7 @@ InboundLedger::init(ScopedLockType& collectionLock)
     ScopedLockType sl(mtx_);
     collectionLock.unlock();
 
-    tryDB(app_.getNodeFamily().db());
+    tryDB(registry_.getNodeFamily().db());
     if (failed_)
         return;
 
@@ -110,11 +112,11 @@ InboundLedger::init(ScopedLockType& collectionLock)
     if (mReason == Reason::HISTORY)
         return;
 
-    app_.getLedgerMaster().storeLedger(mLedger);
+    registry_.getLedgerMaster().storeLedger(mLedger);
 
     // Check if this could be a newer fully-validated ledger
     if (mReason == Reason::CONSENSUS)
-        app_.getLedgerMaster().checkAccept(mLedger);
+        registry_.getLedgerMaster().checkAccept(mLedger);
 }
 
 std::size_t
@@ -122,7 +124,7 @@ InboundLedger::getPeerCount() const
 {
     auto const& peerIds = mPeerSet->getPeerIds();
     return std::count_if(peerIds.begin(), peerIds.end(), [this](auto id) {
-        return (app_.overlay().findPeerByShortID(id) != nullptr);
+        return (registry_.overlay().findPeerByShortID(id) != nullptr);
     });
 }
 
@@ -148,7 +150,7 @@ InboundLedger::checkLocal()
         if (mLedger)
             tryDB(mLedger->stateMap().family().db());
         else
-            tryDB(app_.getNodeFamily().db());
+            tryDB(registry_.getNodeFamily().db());
         if (failed_ || complete_)
         {
             done();
@@ -165,7 +167,7 @@ InboundLedger::~InboundLedger()
     for (auto& entry : mReceivedData)
     {
         if (entry.second->type() == protocol::liAS_NODE)
-            app_.getInboundLedgers().gotStaleData(entry.second);
+            registry_.getInboundLedgers().gotStaleData(entry.second);
     }
     if (!isDone())
     {
@@ -228,8 +230,8 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
             JLOG(journal_.trace()) << "Ledger header found in fetch pack";
             mLedger = std::make_shared<Ledger>(
                 deserializePrefixedHeader(makeSlice(data)),
-                app_.config(),
-                app_.getNodeFamily());
+                registry_.getLedgerConfigService(),
+                registry_.getNodeFamily());
             if (mLedger->header().hash != hash_ ||
                 (mSeq != 0 && mSeq != mLedger->header().seq))
             {
@@ -263,7 +265,7 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
         else
         {
             // Try to fetch the ledger header from a fetch pack
-            auto data = app_.getLedgerMaster().getFetchPack(hash_);
+            auto data = registry_.getLedgerMaster().getFetchPack(hash_);
             if (!data)
                 return;
 
@@ -295,7 +297,7 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
         else
         {
             TransactionStateSF filter(
-                mLedger->txMap().family().db(), app_.getLedgerMaster());
+                mLedger->txMap().family().db(), registry_.getLedgerMaster());
             if (mLedger->txMap().fetchRoot(
                     SHAMapHash{mLedger->header().txHash}, &filter))
             {
@@ -318,7 +320,7 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
             return;
         }
         AccountStateSF filter(
-            mLedger->stateMap().family().db(), app_.getLedgerMaster());
+            mLedger->stateMap().family().db(), registry_.getLedgerMaster());
         if (mLedger->stateMap().fetchRoot(
                 SHAMapHash{mLedger->header().accountHash}, &filter))
         {
@@ -444,24 +446,25 @@ InboundLedger::done()
         switch (mReason)
         {
             case Reason::HISTORY:
-                app_.getInboundLedgers().onLedgerFetched();
+                registry_.getInboundLedgers().onLedgerFetched();
                 break;
             default:
-                app_.getLedgerMaster().storeLedger(mLedger);
+                registry_.getLedgerMaster().storeLedger(mLedger);
                 break;
         }
     }
 
     // We hold the PeerSet lock, so must dispatch
-    app_.getJobQueue().addJob(
+    registry_.getJobQueue().addJob(
         jtLEDGER_DATA, "AcquisitionDone", [self = shared_from_this()]() {
             if (self->complete_ && !self->failed_)
             {
-                self->app_.getLedgerMaster().checkAccept(self->getLedger());
-                self->app_.getLedgerMaster().tryAdvance();
+                self->registry_.getLedgerMaster().checkAccept(
+                    self->getLedger());
+                self->registry_.getLedgerMaster().tryAdvance();
             }
             else
-                self->app_.getInboundLedgers().logFailure(
+                self->registry_.getInboundLedgers().logFailure(
                     self->hash_, self->mSeq);
         });
 }
@@ -498,7 +501,7 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
 
     if (!mHaveHeader)
     {
-        tryDB(app_.getNodeFamily().db());
+        tryDB(registry_.getNodeFamily().db());
         if (failed_)
         {
             JLOG(journal_.warn()) << " failed local for " << hash_;
@@ -549,7 +552,7 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                 auto const& peerIds = mPeerSet->getPeerIds();
                 std::for_each(
                     peerIds.begin(), peerIds.end(), [this, &packet](auto id) {
-                        if (auto p = app_.overlay().findPeerByShortID(id))
+                        if (auto p = registry_.overlay().findPeerByShortID(id))
                         {
                             mByHash = false;
                             p->send(packet);
@@ -623,7 +626,7 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
         else
         {
             AccountStateSF filter(
-                mLedger->stateMap().family().db(), app_.getLedgerMaster());
+                mLedger->stateMap().family().db(), registry_.getLedgerMaster());
 
             // Release the lock while we process the large state map
             sl.unlock();
@@ -698,7 +701,7 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
         else
         {
             TransactionStateSF filter(
-                mLedger->txMap().family().db(), app_.getLedgerMaster());
+                mLedger->txMap().family().db(), registry_.getLedgerMaster());
 
             auto nodes =
                 mLedger->txMap().getMissingNodes(missingNodesFind, &filter);
@@ -805,9 +808,11 @@ InboundLedger::takeHeader(std::string const& data)
     if (complete_ || failed_ || mHaveHeader)
         return true;
 
-    auto* f = &app_.getNodeFamily();
+    auto* f = &registry_.getNodeFamily();
     mLedger = std::make_shared<Ledger>(
-        deserializeHeader(makeSlice(data)), app_.config(), *f);
+        deserializeHeader(makeSlice(data)),
+        registry_.getLedgerConfigService(),
+        *f);
     if (mLedger->header().hash != hash_ ||
         (mSeq != 0 && mSeq != mLedger->header().seq))
     {
@@ -873,12 +878,14 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
                 mLedger->txMap(),
                 SHAMapHash{mLedger->header().txHash},
                 std::make_unique<TransactionStateSF>(
-                    mLedger->txMap().family().db(), app_.getLedgerMaster())};
+                    mLedger->txMap().family().db(),
+                    registry_.getLedgerMaster())};
         return {
             mLedger->stateMap(),
             SHAMapHash{mLedger->header().accountHash},
             std::make_unique<AccountStateSF>(
-                mLedger->stateMap().family().db(), app_.getLedgerMaster())};
+                mLedger->stateMap().family().db(),
+                registry_.getLedgerMaster())};
     }();
 
     try
@@ -951,7 +958,7 @@ InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
     }
 
     AccountStateSF filter(
-        mLedger->stateMap().family().db(), app_.getLedgerMaster());
+        mLedger->stateMap().family().db(), registry_.getLedgerMaster());
     san += mLedger->stateMap().addRootNode(
         SHAMapHash{mLedger->header().accountHash}, data, &filter);
     return san.isGood();
@@ -978,7 +985,7 @@ InboundLedger::takeTxRootNode(Slice const& data, SHAMapAddNode& san)
     }
 
     TransactionStateSF filter(
-        mLedger->txMap().family().db(), app_.getLedgerMaster());
+        mLedger->txMap().family().db(), registry_.getLedgerMaster());
     san += mLedger->txMap().addRootNode(
         SHAMapHash{mLedger->header().txHash}, data, &filter);
     return san.isGood();
@@ -999,7 +1006,7 @@ InboundLedger::getNeededHashes()
     if (!mHaveState)
     {
         AccountStateSF filter(
-            mLedger->stateMap().family().db(), app_.getLedgerMaster());
+            mLedger->stateMap().family().db(), registry_.getLedgerMaster());
         for (auto const& h : neededStateHashes(4, &filter))
         {
             ret.push_back(
@@ -1010,7 +1017,7 @@ InboundLedger::getNeededHashes()
     if (!mHaveTransactions)
     {
         TransactionStateSF filter(
-            mLedger->txMap().family().db(), app_.getLedgerMaster());
+            mLedger->txMap().family().db(), registry_.getLedgerMaster());
         for (auto const& h : neededTxHashes(4, &filter))
         {
             ret.push_back(std::make_pair(

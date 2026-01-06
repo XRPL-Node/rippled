@@ -7,6 +7,8 @@
 
 namespace xrpl {
 
+class ServiceRegistry;
+
 /** Manages the lifetime of inbound ledgers.
 
     @see InboundLedger
@@ -80,7 +82,7 @@ public:
 
 std::unique_ptr<InboundLedgers>
 make_InboundLedgers(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers::clock_type& clock,
     beast::insight::Collector::ptr const& collector);
 

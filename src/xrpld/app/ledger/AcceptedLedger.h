@@ -3,6 +3,8 @@
 
 #include <xrpld/app/ledger/AcceptedLedgerTx.h>
 
+#include <xrpl/core/ServiceRegistry.h>
+
 namespace xrpl {
 
 /** A ledger that has become irrevocable.
@@ -24,9 +26,7 @@ namespace xrpl {
 class AcceptedLedger : public CountedObject<AcceptedLedger>
 {
 public:
-    AcceptedLedger(
-        std::shared_ptr<ReadView const> const& ledger,
-        Application& app);
+    AcceptedLedger(std::shared_ptr<ReadView const> const& ledger);
 
     std::shared_ptr<ReadView const> const&
     getLedger() const

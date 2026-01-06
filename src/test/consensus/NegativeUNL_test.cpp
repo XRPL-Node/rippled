@@ -7,6 +7,8 @@
 #include <xrpld/app/tx/apply.h>
 
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/core/FeatureSetService.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/ledger/View.h>
 
 namespace xrpl {
@@ -212,7 +214,7 @@ class NegativeUNL_test : public beast::unit_test::suite
         // genesis ledger
         auto l = std::make_shared<Ledger>(
             create_genesis,
-            env.app().config(),
+            env.app().getServiceRegistry().getLedgerConfigService(),
             std::vector<uint256>{},
             env.app().getNodeFamily());
 
@@ -556,7 +558,7 @@ struct NetworkHistory
         static uint256 fake_amemdment;  // So we have different genesis ledgers
         auto l = std::make_shared<Ledger>(
             create_genesis,
-            env.app().config(),
+            env.app().getServiceRegistry().getLedgerConfigService(),
             std::vector<uint256>{fake_amemdment++},
             env.app().getNodeFamily());
         history.push_back(l);
@@ -1762,7 +1764,7 @@ class NegativeUNLVoteFilterValidations_test : public beast::unit_test::suite
         jtx::Env env(*this);
         auto l = std::make_shared<Ledger>(
             create_genesis,
-            env.app().config(),
+            env.app().getServiceRegistry().getLedgerConfigService(),
             std::vector<uint256>{},
             env.app().getNodeFamily());
 

@@ -1997,7 +1997,7 @@ NetworkOPsImp::switchLastClosedLedger(
         else
             rules.emplace(app_.config().features);
         app_.openLedger().accept(
-            app_,
+            app_.getServiceRegistry(),
             *rules,
             newLCL,
             OrderedTxs({}),
@@ -3090,7 +3090,7 @@ NetworkOPsImp::pubLedger(std::shared_ptr<ReadView const> const& lpAccepted)
         app_.getAcceptedLedgerCache().fetch(lpAccepted->header().hash);
     if (!alpAccepted)
     {
-        alpAccepted = std::make_shared<AcceptedLedger>(lpAccepted, app_);
+        alpAccepted = std::make_shared<AcceptedLedger>(lpAccepted);
         app_.getAcceptedLedgerCache().canonicalize_replace_client(
             lpAccepted->header().hash, alpAccepted);
     }

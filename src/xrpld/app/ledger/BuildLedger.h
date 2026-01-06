@@ -7,10 +7,10 @@
 
 namespace xrpl {
 
-class Application;
 class CanonicalTXSet;
 class Ledger;
 class LedgerReplay;
+class ServiceRegistry;
 class SHAMap;
 
 /** Build a new ledger by applying consensus transactions
@@ -22,7 +22,7 @@ class SHAMap;
     @param closeTime The time the ledger closed
     @param closeTimeCorrect Whether consensus agreed on close time
     @param closeResolution Resolution used to determine consensus close time
-    @param app Handle to application instance
+    @param registry The service registry
     @param txs On entry, transactions to apply; on exit, transactions that must
                be retried in next round.
     @param failedTxs Populated with transactions that failed in this round
@@ -35,7 +35,7 @@ buildLedger(
     NetClock::time_point closeTime,
     bool const closeTimeCorrect,
     NetClock::duration closeResolution,
-    Application& app,
+    ServiceRegistry& registry,
     CanonicalTXSet& txns,
     std::set<TxID>& failedTxs,
     beast::Journal j);
@@ -46,7 +46,7 @@ buildLedger(
 
     @param replayData Data of the ledger to replay
     @param applyFlags Flags to use when applying transactions
-    @param app Handle to application instance
+    @param registry The service registry
     @param j Journal to use for logging
     @return The newly built ledger
  */
@@ -54,7 +54,7 @@ std::shared_ptr<Ledger>
 buildLedger(
     LedgerReplay const& replayData,
     ApplyFlags applyFlags,
-    Application& app,
+    ServiceRegistry& registry,
     beast::Journal j);
 
 }  // namespace xrpl

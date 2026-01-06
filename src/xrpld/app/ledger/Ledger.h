@@ -1,8 +1,6 @@
 #ifndef XRPL_APP_LEDGER_LEDGER_H_INCLUDED
 #define XRPL_APP_LEDGER_LEDGER_H_INCLUDED
 
-#include <xrpld/core/Config.h>
-
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/core/TimeKeeper.h>
@@ -16,8 +14,9 @@
 
 namespace xrpl {
 
-class Application;
 class Job;
+class LedgerConfigService;
+class ServiceRegistry;
 class TransactionMaster;
 
 class SqliteStatement;
@@ -84,11 +83,14 @@ public:
     */
     Ledger(
         create_genesis_t,
-        Config const& config,
+        LedgerConfigService& configService,
         std::vector<uint256> const& amendments,
         Family& family);
 
-    Ledger(LedgerHeader const& info, Config const& config, Family& family);
+    Ledger(
+        LedgerHeader const& info,
+        LedgerConfigService& configService,
+        Family& family);
 
     /** Used for ledgers loaded from JSON files
 
@@ -98,7 +100,7 @@ public:
         LedgerHeader const& info,
         bool& loaded,
         bool acquire,
-        Config const& config,
+        LedgerConfigService& configService,
         Family& family,
         beast::Journal j);
 
@@ -114,7 +116,7 @@ public:
     Ledger(
         std::uint32_t ledgerSeq,
         NetClock::time_point closeTime,
-        Config const& config,
+        LedgerConfigService& configService,
         Family& family);
 
     ~Ledger() = default;
@@ -382,7 +384,7 @@ private:
     setup();
 
     void
-    defaultFees(Config const& config);
+    defaultFees(LedgerConfigService& configService);
 
     bool mImmutable;
 
@@ -417,23 +419,32 @@ isFlagLedger(LedgerIndex seq);
 
 extern bool
 pendSaveValidated(
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& ledger,
     bool isSynchronous,
     bool isCurrent);
 
 std::shared_ptr<Ledger>
-loadLedgerHelper(LedgerHeader const& sinfo, Application& app, bool acquire);
+loadLedgerHelper(
+    LedgerHeader const& sinfo,
+    ServiceRegistry& registry,
+    bool acquire);
 
 std::shared_ptr<Ledger>
-loadByIndex(std::uint32_t ledgerIndex, Application& app, bool acquire = true);
+loadByIndex(
+    std::uint32_t ledgerIndex,
+    ServiceRegistry& registry,
+    bool acquire = true);
 
 std::shared_ptr<Ledger>
-loadByHash(uint256 const& ledgerHash, Application& app, bool acquire = true);
+loadByHash(
+    uint256 const& ledgerHash,
+    ServiceRegistry& registry,
+    bool acquire = true);
 
 // Fetch the ledger with the highest sequence contained in the database
 extern std::tuple<std::shared_ptr<Ledger>, std::uint32_t, uint256>
-getLatestLedger(Application& app);
+getLatestLedger(ServiceRegistry& registry);
 
 /** Deserialize a SHAMapItem containing a single STTx
 

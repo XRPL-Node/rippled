@@ -639,7 +639,7 @@ RCLConsensus::Adaptor::doAccept(
         else
             rules.emplace(app_.config().features);
         app_.openLedger().accept(
-            app_,
+            app_.getServiceRegistry(),
             *rules,
             built.ledger_,
             localTxs_.getTxSet(),
@@ -766,14 +766,15 @@ RCLConsensus::Adaptor::buildLCL(
             XRPL_ASSERT(
                 replayData->parent()->header().hash == previousLedger.id(),
                 "xrpl::RCLConsensus::Adaptor::buildLCL : parent hash match");
-            return buildLedger(*replayData, tapNONE, app_, j_);
+            return buildLedger(
+                *replayData, tapNONE, app_.getServiceRegistry(), j_);
         }
         return buildLedger(
             previousLedger.ledger_,
             closeTime,
             closeTimeCorrect,
             closeResolution,
-            app_,
+            app_.getServiceRegistry(),
             retriableTxs,
             failedTxs,
             j_);

@@ -45,7 +45,7 @@ struct LedgerReplay_test : public beast::unit_test::suite
         auto const replayed = buildLedger(
             LedgerReplay(lastClosedParent, lastClosed),
             tapNONE,
-            env.app(),
+            env.app().getServiceRegistry(),
             env.journal);
 
         BEAST_EXPECT(replayed->header().hash == lastClosed->header().hash);
@@ -584,7 +584,7 @@ public:
         , serverMsgHandler(server.app, server.app.getLedgerReplayer())
         , clientMsgHandler(env.app(), replayer)
         , replayer(
-              env.app(),
+              env.app().getServiceRegistry(),
               inboundLedgers,
               std::make_unique<TestPeerSetBuilder>(
                   clientMsgHandler,

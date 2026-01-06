@@ -3,8 +3,8 @@
 
 #include <xrpld/app/ledger/AcceptedLedgerTx.h>
 #include <xrpld/app/ledger/BookListeners.h>
-#include <xrpld/app/main/Application.h>
 
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/MultiApiJson.h>
 #include <xrpl/protocol/UintTypes.h>
 
@@ -16,7 +16,13 @@ namespace xrpl {
 class OrderBookDB
 {
 public:
-    explicit OrderBookDB(Application& app);
+    struct Config
+    {
+        int pathSearchMax;
+        bool standalone;
+    };
+
+    OrderBookDB(ServiceRegistry& registry, Config const& config);
 
     void
     setup(std::shared_ptr<ReadView const> const& ledger);
@@ -56,7 +62,9 @@ public:
         MultiApiJson const& jvObj);
 
 private:
-    Application& app_;
+    ServiceRegistry& registry_;
+    int const pathSearchMax_;
+    bool const standalone_;
 
     // Maps order books by "issue in" to "issue out":
     hardened_hash_map<Issue, hardened_hash_set<Issue>> allBooks_;

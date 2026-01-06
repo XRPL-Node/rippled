@@ -49,8 +49,10 @@ using CachedSLEs = TaggedCache<uint256, SLE const>;
 
 class CollectorManager;
 class Family;
+class FeatureSetService;
 class HashRouter;
 class Logs;
+class LedgerConfigService;
 class LoadFeeTrack;
 class JobQueue;
 class InboundLedgers;
@@ -159,6 +161,10 @@ public:
     getTempNodeCache() = 0;
     virtual CachedSLEs&
     cachedSLEs() = 0;
+    virtual FeatureSetService&
+    getFeatureSetService() = 0;
+    virtual LedgerConfigService&
+    getLedgerConfigService() = 0;
     virtual AmendmentTable&
     getAmendmentTable() = 0;
     virtual HashRouter&

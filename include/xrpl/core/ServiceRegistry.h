@@ -4,8 +4,11 @@
 #include <xrpl/basics/Blob.h>
 #include <xrpl/basics/SHAMapHash.h>
 #include <xrpl/basics/TaggedCache.h>
+#include <xrpl/beast/utility/Journal.h>
 #include <xrpl/ledger/CachedSLEs.h>
 #include <xrpl/protocol/Protocol.h>
+
+#include <boost/asio/io_context.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -25,15 +28,19 @@ class PerfLog;
 
 class AcceptedLedger;
 class AmendmentTable;
+class Application;
 class Cluster;
 class CollectorManager;
+class Config;
 class DatabaseCon;
 class Family;
+class FeatureSetService;
 class HashRouter;
 class InboundLedgers;
 class InboundTransactions;
 class JobQueue;
 class LedgerCleaner;
+class LedgerConfigService;
 class LedgerMaster;
 class LedgerReplayer;
 class LoadFeeTrack;
@@ -98,6 +105,12 @@ public:
 
     virtual CachedSLEs&
     cachedSLEs() = 0;
+
+    virtual FeatureSetService&
+    getFeatureSetService() = 0;
+
+    virtual LedgerConfigService&
+    getLedgerConfigService() = 0;
 
     // Protocol and validation services
     virtual AmendmentTable&
@@ -200,6 +213,21 @@ public:
 
     virtual perf::PerfLog&
     getPerfLog() = 0;
+
+    // Configuration and state
+    virtual bool
+    isStopping() const = 0;
+
+    virtual beast::Journal
+    journal(std::string const& name) = 0;
+
+    virtual boost::asio::io_context&
+    getIOContext() = 0;
+
+    // Temporary: Get the underlying Application for functions that haven't
+    // been migrated yet. This should be removed once all code is migrated.
+    virtual Application&
+    app() = 0;
 };
 
 }  // namespace xrpl

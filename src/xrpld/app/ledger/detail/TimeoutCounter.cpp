@@ -1,18 +1,19 @@
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
 
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/ServiceRegistry.h>
 
 namespace xrpl {
 
 using namespace std::chrono_literals;
 
 TimeoutCounter::TimeoutCounter(
-    Application& app,
+    ServiceRegistry& registry,
     uint256 const& hash,
     std::chrono::milliseconds interval,
     QueueJobParameter&& jobParameter,
     beast::Journal journal)
-    : app_(app)
+    : registry_(registry)
     , journal_(journal)
     , hash_(hash)
     , timeouts_(0)
@@ -21,7 +22,7 @@ TimeoutCounter::TimeoutCounter(
     , progress_(false)
     , timerInterval_(interval)
     , queueJobParameter_(std::move(jobParameter))
-    , timer_(app_.getIOContext())
+    , timer_(registry_.getIOContext())
 {
     XRPL_ASSERT(
         (timerInterval_ > 10ms) && (timerInterval_ < 30s),
@@ -53,7 +54,7 @@ TimeoutCounter::queueJob(ScopedLockType& sl)
     if (isDone())
         return;
     if (queueJobParameter_.jobLimit &&
-        app_.getJobQueue().getJobCountTotal(queueJobParameter_.jobType) >=
+        registry_.getJobQueue().getJobCountTotal(queueJobParameter_.jobType) >=
             queueJobParameter_.jobLimit)
     {
         JLOG(journal_.debug()) << "Deferring " << queueJobParameter_.jobName
@@ -62,7 +63,7 @@ TimeoutCounter::queueJob(ScopedLockType& sl)
         return;
     }
 
-    app_.getJobQueue().addJob(
+    registry_.getJobQueue().addJob(
         queueJobParameter_.jobType,
         queueJobParameter_.jobName,
         [wptr = pmDowncast()]() {

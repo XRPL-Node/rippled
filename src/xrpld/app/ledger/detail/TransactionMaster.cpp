@@ -1,21 +1,21 @@
 #include <xrpld/app/ledger/TransactionMaster.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/Transaction.h>
 
 #include <xrpl/basics/TaggedCache.ipp>
 #include <xrpl/basics/chrono.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/STTx.h>
 
 namespace xrpl {
 
-TransactionMaster::TransactionMaster(Application& app)
-    : mApp(app)
+TransactionMaster::TransactionMaster(ServiceRegistry& registry)
+    : registry_(registry)
     , mCache(
           "TransactionCache",
           65536,
           std::chrono::minutes{30},
           stopwatch(),
-          mApp.journal("TaggedCache"))
+          registry_.journal("TaggedCache"))
 {
 }
 
@@ -52,7 +52,7 @@ TransactionMaster::fetch(uint256 const& txnID, error_code_i& ec)
     if (auto txn = fetch_from_cache(txnID); txn && !txn->isValidated())
         return std::pair{std::move(txn), nullptr};
 
-    auto v = Transaction::load(txnID, mApp, ec);
+    auto v = Transaction::load(txnID, registry_.app(), ec);
 
     if (std::holds_alternative<TxSearched>(v))
         return v;
@@ -79,7 +79,7 @@ TransactionMaster::fetch(
     if (auto txn = fetch_from_cache(txnID); txn && !txn->isValidated())
         return std::pair{std::move(txn), nullptr};
 
-    auto v = Transaction::load(txnID, mApp, range, ec);
+    auto v = Transaction::load(txnID, registry_.app(), range, ec);
 
     if (std::holds_alternative<TxSearched>(v))
         return v;

@@ -7,7 +7,6 @@
 #include <xrpld/app/ledger/LedgerHistory.h>
 #include <xrpld/app/ledger/LedgerHolder.h>
 #include <xrpld/app/ledger/LedgerReplay.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/CanonicalTXSet.h>
 
 #include <xrpl/basics/RangeSet.h>
@@ -24,6 +23,7 @@
 namespace xrpl {
 
 class Peer;
+class ServiceRegistry;
 class Transaction;
 
 // Tracks the current ledger and any ledgers in the process of closing
@@ -32,11 +32,24 @@ class Transaction;
 class LedgerMaster : public AbstractFetchPackContainer
 {
 public:
-    explicit LedgerMaster(
-        Application& app,
+    struct Config
+    {
+        bool standalone;
+        std::uint32_t fetchDepth;
+        std::uint32_t ledgerHistory;
+        int ledgerCacheSize;
+        std::chrono::seconds ledgerCacheAge;
+        int ledgerFetchSize;
+        bool ledgerReplay;
+        std::unordered_set<uint256, beast::uhash<>> const* features;
+    };
+
+    LedgerMaster(
+        ServiceRegistry& registry,
         Stopwatch& stopwatch,
         beast::insight::Collector::ptr const& collector,
-        beast::Journal journal);
+        beast::Journal journal,
+        Config const& config);
 
     virtual ~LedgerMaster() = default;
 
@@ -215,6 +228,9 @@ public:
     void
     clearLedgerCachePrior(LedgerIndex seq);
 
+    void
+    setMaxDisallowedLedger(LedgerIndex seq);
+
     // ledger replay
     void
     takeReplay(std::unique_ptr<LedgerReplay> replay);
@@ -295,7 +311,7 @@ private:
     bool
     newPFWork(char const* name, std::unique_lock<std::recursive_mutex>&);
 
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::Journal m_journal;
 
     std::recursive_mutex mutable m_mutex;
@@ -366,8 +382,17 @@ private:
     // without first wiping the database.
     LedgerIndex const max_ledger_difference_{1000000};
 
+    // Maximum ledger sequence that was persisted before this server started.
+    // Used to prevent a validator from signing proposals older than the last
+    // ledger it persisted.
+    LedgerIndex maxDisallowedLedger_{0};
+
     // Time that the previous upgrade warning was issued.
     TimeKeeper::time_point upgradeWarningPrevTime_{};
+
+    bool ledgerReplay_ = false;
+
+    std::unordered_set<uint256, beast::uhash<>> const* features_;
 
 private:
     struct Stats

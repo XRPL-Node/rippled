@@ -12,7 +12,7 @@ SkipListAcquire::SkipListAcquire(
     uint256 const& ledgerHash,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app,
+          app.getServiceRegistry(),
           ledgerHash,
           LedgerReplayParameters::SUB_TASK_TIMEOUT,
           {jtREPLAY_TASK,
@@ -44,7 +44,7 @@ SkipListAcquire::init(int numPeers)
 void
 SkipListAcquire::trigger(std::size_t limit, ScopedLockType& sl)
 {
-    if (auto const l = app_.getLedgerMaster().getLedgerByHash(hash_); l)
+    if (auto const l = registry_.getLedgerMaster().getLedgerByHash(hash_); l)
     {
         JLOG(journal_.trace()) << "existing ledger " << hash_;
         retrieveSkipList(l, sl);

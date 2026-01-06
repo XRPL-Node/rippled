@@ -24,7 +24,7 @@ TransactionAcquire::TransactionAcquire(
     uint256 const& hash,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app,
+          app.getServiceRegistry(),
           hash,
           TX_ACQUIRE_TIMEOUT,
           {jtTXN_DATA, "TransactionAcquire", {}},
@@ -33,7 +33,7 @@ TransactionAcquire::TransactionAcquire(
     , mPeerSet(std::move(peerSet))
 {
     mMap = std::make_shared<SHAMap>(
-        SHAMapType::TRANSACTION, hash, app_.getNodeFamily());
+        SHAMapType::TRANSACTION, hash, registry_.getNodeFamily());
     mMap->setUnbacked();
 }
 
@@ -53,15 +53,15 @@ TransactionAcquire::done()
 
         uint256 const& hash(hash_);
         std::shared_ptr<SHAMap> const& map(mMap);
-        auto const pap = &app_;
+        auto const psr = &registry_;
         // Note that, when we're in the process of shutting down, addJob()
         // may reject the request.  If that happens then giveSet() will
         // not be called.  That's fine.  According to David the giveSet() call
         // just updates the consensus and related structures when we acquire
         // a transaction set. No need to update them if we're shutting down.
-        app_.getJobQueue().addJob(
-            jtTXN_DATA, "completeAcquire", [pap, hash, map]() {
-                pap->getInboundTransactions().giveSet(hash, map, true);
+        registry_.getJobQueue().addJob(
+            jtTXN_DATA, "completeAcquire", [psr, hash, map]() {
+                psr->getInboundTransactions().giveSet(hash, map, true);
             });
     }
 }
@@ -124,7 +124,7 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
     }
     else
     {
-        ConsensusTransSetSF sf(app_, app_.getTempNodeCache());
+        ConsensusTransSetSF sf(registry_, registry_.getTempNodeCache());
         auto nodes = mMap->getMissingNodes(256, &sf);
 
         if (nodes.empty())
@@ -177,7 +177,7 @@ TransactionAcquire::takeNodes(
         if (data.empty())
             return SHAMapAddNode::invalid();
 
-        ConsensusTransSetSF sf(app_, app_.getTempNodeCache());
+        ConsensusTransSetSF sf(registry_, registry_.getTempNodeCache());
 
         for (auto const& d : data)
         {

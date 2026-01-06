@@ -7,6 +7,7 @@
 #include <xrpld/overlay/PeerSet.h>
 
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/ledger/LedgerConfigService.h>
 
 namespace xrpl {
 
@@ -17,7 +18,7 @@ LedgerDeltaAcquire::LedgerDeltaAcquire(
     std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app,
+          app.getServiceRegistry(),
           ledgerHash,
           LedgerReplayParameters::SUB_TASK_TIMEOUT,
           {jtREPLAY_TASK,
@@ -50,7 +51,7 @@ LedgerDeltaAcquire::init(int numPeers)
 void
 LedgerDeltaAcquire::trigger(std::size_t limit, ScopedLockType& sl)
 {
-    fullLedger_ = app_.getLedgerMaster().getLedgerByHash(hash_);
+    fullLedger_ = registry_.getLedgerMaster().getLedgerByHash(hash_);
     if (fullLedger_)
     {
         complete_ = true;
@@ -130,8 +131,10 @@ LedgerDeltaAcquire::processData(
     if (info.seq == ledgerSeq_)
     {
         // create a temporary ledger for building a LedgerReplay object later
-        replayTemp_ =
-            std::make_shared<Ledger>(info, app_.config(), app_.getNodeFamily());
+        replayTemp_ = std::make_shared<Ledger>(
+            info,
+            registry_.getLedgerConfigService(),
+            registry_.getNodeFamily());
         if (replayTemp_)
         {
             complete_ = true;
@@ -189,7 +192,7 @@ LedgerDeltaAcquire::tryBuild(std::shared_ptr<Ledger const> const& parent)
         "xrpl::LedgerDeltaAcquire::tryBuild : parent hash match");
     // build ledger
     LedgerReplay replayData(parent, replayTemp_, std::move(orderedTxns_));
-    fullLedger_ = buildLedger(replayData, tapNONE, app_, journal_);
+    fullLedger_ = buildLedger(replayData, tapNONE, registry_, journal_);
     if (fullLedger_ && fullLedger_->header().hash == hash_)
     {
         JLOG(journal_.info()) << "Built " << hash_;
@@ -223,16 +226,16 @@ LedgerDeltaAcquire::onLedgerBuilt(
         reasons.push_back(*reason);
         firstTime = false;
     }
-    app_.getJobQueue().addJob(
+    registry_.getJobQueue().addJob(
         jtREPLAY_TASK,
         "onLedgerBuilt",
-        [=, ledger = this->fullLedger_, &app = this->app_]() {
+        [=, ledger = this->fullLedger_, &registry = this->registry_]() {
             for (auto reason : reasons)
             {
                 switch (reason)
                 {
                     case InboundLedger::Reason::GENERIC:
-                        app.getLedgerMaster().storeLedger(ledger);
+                        registry.getLedgerMaster().storeLedger(ledger);
                         break;
                     default:
                         // TODO for other use cases
@@ -241,7 +244,7 @@ LedgerDeltaAcquire::onLedgerBuilt(
             }
 
             if (firstTime)
-                app.getLedgerMaster().tryAdvance();
+                registry.getLedgerMaster().tryAdvance();
         });
 }
 
