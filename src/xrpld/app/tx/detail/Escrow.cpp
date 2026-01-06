@@ -1285,10 +1285,10 @@ EscrowCancel::doApply()
                     return escrowUnlockApplyHelper<T>(
                         ctx_.view(),
                         parityRate,
-                        // fixTokenEscrowV2: Pass account SLE instead of escrow
-                        // SLE
-                        ctx_.view().rules().enabled(fixTokenEscrowV2) ? sle
-                                                                      : slep,
+                        // fixTokenEscrowV1_1: Pass account SLE instead of
+                        // escrow SLE
+                        ctx_.view().rules().enabled(fixTokenEscrowV1_1) ? sle
+                                                                        : slep,
                         mPriorBalance,
                         amount,
                         issuer,

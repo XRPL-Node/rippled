@@ -937,7 +937,7 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             // Alice cancels her own escrow
             auto const expectedResult =
-                env.current()->rules().enabled(fixTokenEscrowV2)
+                env.current()->rules().enabled(fixTokenEscrowV1_1)
                 ? ter(tesSUCCESS)
                 : ter(tefEXCEPTION);
             env(escrow::cancel(alice, alice, seq),
@@ -945,7 +945,7 @@ struct EscrowToken_test : public beast::unit_test::suite
                 expectedResult);
             env.close();
 
-            if (env.current()->rules().enabled(fixTokenEscrowV2))
+            if (env.current()->rules().enabled(fixTokenEscrowV1_1))
             {
                 // Verify the escrow was deleted
                 BEAST_EXPECT(!env.le(keylet::escrow(alice.id(), seq)));
@@ -4086,7 +4086,7 @@ public:
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
         testIOUWithFeats(all);
-        testIOUWithFeats(all - fixTokenEscrowV2);
+        testIOUWithFeats(all - fixTokenEscrowV1_1);
         testMPTWithFeats(all);
         testMPTWithFeats(all - fixTokenEscrowV1);
     }
