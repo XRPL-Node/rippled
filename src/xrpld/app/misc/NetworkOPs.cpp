@@ -4236,6 +4236,7 @@ NetworkOPsImp::subLedger(InfoSub::ref isrListener, Json::Value& jvResult)
         jvResult[jss::fee_base] = lpClosed->fees().base.jsonClipped();
         jvResult[jss::reserve_base] = lpClosed->fees().reserve.jsonClipped();
         jvResult[jss::reserve_inc] = lpClosed->fees().increment.jsonClipped();
+        jvResult[jss::network_id] = app_.config().NETWORK_ID;
         if (lpClosed->rules().enabled(featureSmartEscrow))
         {
             jvResult[jss::extension_compute] =
