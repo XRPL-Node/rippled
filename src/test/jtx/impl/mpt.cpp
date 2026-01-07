@@ -775,6 +775,98 @@ MPTTester::getClawbackProof(
     return proof;
 }
 
+Buffer
+MPTTester::getConvertProof(
+    Account const& holder,
+    std::uint64_t amount,
+    uint256 const& ctxHash,
+    std::pair<Buffer, Buffer> holderCiphertext,
+    std::pair<Buffer, Buffer> issuerCiphertext,
+    std::optional<std::pair<Buffer, Buffer>> auditorCiphertext) const
+{
+    if (!id_)
+        Throw<std::runtime_error>("MPT has not been created");
+
+    auto const sleHolder = env_.le(keylet::mptoken(*id_, holder.id()));
+    auto const sleIssuance = env_.le(keylet::mptIssuance(*id_));
+
+    size_t const zkpSize = auditorCiphertext ? 3 : 2;
+    size_t const zkpByteLength = zkpSize * ecEqualityProofLength;
+
+    if (!sleHolder || !sleIssuance || holderCiphertext.first.size() == 0 ||
+        issuerCiphertext.first.size() == 0)
+        return Buffer(zkpByteLength);
+
+    auto const generateProof = [amount, ctxHash](
+                                   Slice const& ciphertext,
+                                   Slice const& pubKey,
+                                   Slice const& randomness) {
+        secp256k1_pubkey c1, c2;
+        auto const ctx = secp256k1Context();
+        if (!secp256k1_ec_pubkey_parse(
+                ctx, &c1, ciphertext.data(), ecGamalEncryptedLength) ||
+            !secp256k1_ec_pubkey_parse(
+                ctx,
+                &c2,
+                ciphertext.data() + ecGamalEncryptedLength,
+                ecGamalEncryptedLength))
+        {
+            Throw<std::runtime_error>("Invalid Ciphertext");
+        }
+
+        secp256k1_pubkey pk;
+        std::memcpy(pk.data, pubKey.data(), ecPubKeyLength);
+        Buffer proof(ecEqualityProofLength);
+
+        if (secp256k1_equality_plaintext_prove(
+                ctx,
+                proof.data(),
+                &c1,
+                &c2,
+                &pk,
+                amount,
+                randomness.data(),
+                ctxHash.data()) != 1)
+        {
+            Throw<std::runtime_error>("Proof generation failed");
+        }
+        return proof;
+    };
+
+    Buffer zkp(zkpByteLength);
+
+    Buffer holderZkp = generateProof(
+        holderCiphertext.first, getPubKey(holder), holderCiphertext.second);
+
+    Buffer issuerZkp = generateProof(
+        issuerCiphertext.first, getPubKey(issuer_), issuerCiphertext.second);
+
+    // std::optional<Slice> auditorZkp;
+    // if (auditor)
+    // {
+    //     Slice auditorPubKey(
+    //         sleIssuance->getFieldVL(sfAuditorElGamalPublicKey).data(),
+    //         sleIssuance->getFieldVL(sfAuditorElGamalPublicKey).size());
+    //     Buffer auditorZkp = txArgs.auditorEncryptedAmt &&
+    //             sleIssuance->isFieldPresent(sfIssuerElGamalPublicKey)
+    //         ? generateProof(*txArgs.issuerEncryptedAmt, issuerPubKey)
+    //         : getDummyProof();
+    // }
+
+    // Pointer arithmetic to copy data into place
+    std::uint8_t* ptr = zkp.data();
+
+    // Copy Holder
+    std::memcpy(ptr, holderZkp.data(), holderZkp.size());
+    ptr += holderZkp.size();
+
+    // Copy Issuer
+    std::memcpy(ptr, issuerZkp.data(), issuerZkp.size());
+    ptr += issuerZkp.size();
+
+    return zkp;
+}
+
 std::optional<Buffer>
 MPTTester::getEncryptedBalance(
     Account const& account,
@@ -855,20 +947,39 @@ MPTTester::convert(MPTConvert const& arg)
     if (arg.holderPubKey)
         jv[sfHolderElGamalPublicKey.jsonName] = strHex(*arg.holderPubKey);
 
+    std::pair<Buffer, Buffer> holderCiphertext;
     if (arg.holderEncryptedAmt)
         jv[sfHolderEncryptedAmount.jsonName] = strHex(*arg.holderEncryptedAmt);
     else
-        jv[sfHolderEncryptedAmount.jsonName] =
-            strHex(encryptAmount(*arg.account, *arg.amt));
+    {
+        holderCiphertext = encryptAmount(*arg.account, *arg.amt);
+        jv[sfHolderEncryptedAmount.jsonName] = strHex(holderCiphertext.first);
+    }
 
+    std::pair<Buffer, Buffer> issuerCiphertext;
     if (arg.issuerEncryptedAmt)
         jv[sfIssuerEncryptedAmount.jsonName] = strHex(*arg.issuerEncryptedAmt);
     else
-        jv[sfIssuerEncryptedAmount.jsonName] =
-            strHex(encryptAmount(issuer_, *arg.amt));
+    {
+        issuerCiphertext = encryptAmount(issuer_, *arg.amt);
+        jv[sfIssuerEncryptedAmount.jsonName] = strHex(issuerCiphertext.first);
+    }
 
     if (arg.proof)
         jv[sfZKProof.jsonName] = *arg.proof;
+    else
+    {
+        uint256 const ctxHash = getConvertContextHash(
+            arg.account->id(), env_.seq(*arg.account), *id_, *arg.amt);
+        Buffer proof = getConvertProof(
+            *arg.account,
+            *arg.amt,
+            ctxHash,
+            holderCiphertext,
+            issuerCiphertext,
+            {});
+        jv[sfZKProof] = strHex(proof);
+    }
 
     auto const holderAmt = getBalance(*arg.account);
     auto const prevConfidentialOutstanding = getIssuanceConfidentialBalance();
@@ -965,18 +1076,19 @@ MPTTester::send(MPTConfidentialSend const& arg)
         jv[sfSenderEncryptedAmount] = strHex(*arg.senderEncryptedAmt);
     else
         jv[sfSenderEncryptedAmount] =
-            strHex(encryptAmount(*arg.account, *arg.amt));
+            strHex(encryptAmount(*arg.account, *arg.amt).first);
 
     if (arg.destEncryptedAmt)
         jv[sfDestinationEncryptedAmount] = strHex(*arg.destEncryptedAmt);
     else
         jv[sfDestinationEncryptedAmount] =
-            strHex(encryptAmount(*arg.dest, *arg.amt));
+            strHex(encryptAmount(*arg.dest, *arg.amt).first);
 
     if (arg.issuerEncryptedAmt)
         jv[sfIssuerEncryptedAmount] = strHex(*arg.issuerEncryptedAmt);
     else
-        jv[sfIssuerEncryptedAmount] = strHex(encryptAmount(issuer_, *arg.amt));
+        jv[sfIssuerEncryptedAmount] =
+            strHex(encryptAmount(issuer_, *arg.amt).first);
 
     if (arg.proof)
         jv[sfZKProof] = *arg.proof;
@@ -1179,7 +1291,7 @@ MPTTester::getPrivKey(Account const& account) const
     Throw<std::runtime_error>("Account does not have private key");
 }
 
-Buffer
+std::pair<Buffer, Buffer>
 MPTTester::encryptAmount(Account const& account, uint64_t amt) const
 {
     return ripple::encryptAmount(amt, getPubKey(account));
@@ -1308,13 +1420,13 @@ MPTTester::convertBack(MPTConvertBack const& arg)
         jv[sfHolderEncryptedAmount.jsonName] = strHex(*arg.holderEncryptedAmt);
     else
         jv[sfHolderEncryptedAmount.jsonName] =
-            strHex(encryptAmount(*arg.account, *arg.amt));
+            strHex(encryptAmount(*arg.account, *arg.amt).first);
 
     if (arg.issuerEncryptedAmt)
         jv[sfIssuerEncryptedAmount.jsonName] = strHex(*arg.issuerEncryptedAmt);
     else
         jv[sfIssuerEncryptedAmount.jsonName] =
-            strHex(encryptAmount(issuer_, *arg.amt));
+            strHex(encryptAmount(issuer_, *arg.amt).first);
 
     if (arg.proof)
         jv[sfZKProof.jsonName] = *arg.proof;

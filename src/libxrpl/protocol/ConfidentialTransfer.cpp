@@ -39,6 +39,20 @@ getClawbackContextHash(
     return s.getSHA512Half();
 }
 
+uint256
+getConvertContextHash(
+    AccountID const& account,
+    std::uint32_t sequence,
+    uint192 const& issuanceID,
+    std::uint64_t amount)
+{
+    Serializer s;
+    addCommonZKPFields(
+        s, ttCONFIDENTIAL_CONVERT, account, sequence, issuanceID, amount);
+
+    return s.getSHA512Half();
+}
+
 int
 secp256k1_elgamal_generate_keypair(
     secp256k1_context const* ctx,
@@ -842,7 +856,7 @@ proveEquality(
     return tesSUCCESS;
 }
 
-Buffer
+std::pair<Buffer, Buffer>
 encryptAmount(uint64_t amt, Slice const& pubKeySlice)
 {
     Buffer buf(ecGamalEncryptedTotalLength);
@@ -870,7 +884,7 @@ encryptAmount(uint64_t amt, Slice const& pubKeySlice)
         Throw<std::runtime_error>(
             "Failed to serialize into 66 byte compressed format");
 
-    return buf;
+    return std::make_pair(buf, Buffer(blindingFactor, 32));
 }
 
 Buffer
@@ -984,6 +998,36 @@ verifyEqualityProof(
     if (secp256k1_equality_plaintext_verify(
             secp256k1Context(),
             proof.data(),
+            &c1,
+            &c2,
+            &pubKey,
+            amount,
+            contextHash.data()) != 1)
+    {
+        return tecBAD_PROOF;
+    }
+
+    return tesSUCCESS;
+}
+
+TER
+verifyClawbackEqualityProof(
+    uint64_t const amount,
+    Slice const& proof,
+    Slice const& pubKeySlice,
+    Slice const& ciphertext,
+    uint256 const& contextHash)
+{
+    secp256k1_pubkey c1, c2;
+    if (!makeEcPair(ciphertext, c1, c2))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    secp256k1_pubkey pubKey;
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    if (secp256k1_equality_plaintext_verify(
+            secp256k1Context(),
+            proof.data(),
             &pubKey,
             &c2,
             &c1,
@@ -995,4 +1039,22 @@ verifyEqualityProof(
 
     return tesSUCCESS;
 }
+
+std::vector<Buffer>
+getEqualityProofs(Slice const& zkp)
+{
+    if (zkp.size() % ecEqualityProofLength != 0)
+        return {};
+    auto const count = zkp.size() / ecEqualityProofLength;
+
+    std::vector<Buffer> zkps;
+    zkps.reserve(count);
+
+    for (size_t i = 0; i < count; ++i)
+        zkps.emplace_back(
+            zkp.data() + (i * ecEqualityProofLength), ecEqualityProofLength);
+
+    return zkps;
+}
+
 }  // namespace ripple

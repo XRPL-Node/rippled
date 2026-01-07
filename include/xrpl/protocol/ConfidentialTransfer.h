@@ -34,6 +34,13 @@ getClawbackContextHash(
     std::uint64_t amount,
     AccountID const& holder);
 
+uint256
+getConvertContextHash(
+    AccountID const& account,
+    std::uint32_t sequence,
+    uint192 const& issuanceID,
+    std::uint64_t amount);
+
 /**
  * @brief Generates a new secp256k1 key pair.
  */
@@ -228,7 +235,8 @@ proveEquality(
     uint256 const& txHash,  // Transaction context data
     std::uint32_t const spendVersion);
 
-Buffer
+// returns ciphertext and the blinding factor used
+std::pair<Buffer, Buffer>
 encryptAmount(uint64_t amt, Slice const& pubKeySlice);
 
 Buffer
@@ -257,6 +265,17 @@ verifyEqualityProof(
     Slice const& pubKeySlice,
     Slice const& ciphertext,
     uint256 const& contextHash);
+
+TER
+verifyClawbackEqualityProof(
+    uint64_t const amount,
+    Slice const& proof,
+    Slice const& pubKeySlice,
+    Slice const& ciphertext,
+    uint256 const& contextHash);
+
+std::vector<Buffer>
+getEqualityProofs(Slice const& zkp);
 
 }  // namespace ripple
 

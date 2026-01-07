@@ -37,8 +37,10 @@ ConfidentialConvert::preflight(PreflightContext const& ctx)
         ctx.tx[sfHolderElGamalPublicKey].length() != ecPubKeyLength)
         return temMALFORMED;
 
-    // if (ctx.tx[sfZKProof].length() != ecEqualityProofLength)
-    //     return temMALFORMED;
+    auto const expectedCount =
+        ctx.tx.isFieldPresent(sfAuditorEncryptedAmount) ? 3 : 2;
+    if (ctx.tx[sfZKProof].size() != expectedCount * ecEqualityProofLength)
+        return temMALFORMED;
 
     return tesSUCCESS;
 }
@@ -94,35 +96,56 @@ ConfidentialConvert::preclaim(PreclaimContext const& ctx)
         ctx.tx.isFieldPresent(sfHolderElGamalPublicKey))
         return tecDUPLICATE;
 
-    // auto const holderPubKey = ctx.tx.isFieldPresent(sfHolderElGamalPublicKey)
-    //     ? ctx.tx[sfHolderElGamalPublicKey]
-    //     : (*sleMptoken)[sfHolderElGamalPublicKey];
+    auto const holderPubKey = ctx.tx.isFieldPresent(sfHolderElGamalPublicKey)
+        ? ctx.tx[sfHolderElGamalPublicKey]
+        : (*sleMptoken)[sfHolderElGamalPublicKey];
 
-    // auto const contextHash = getContextHash(
-    //     ctx.tx[sfMPTokenIssuanceID],
-    //     ctx.tx[sfMPTAmount],
-    //     ctx.tx[sfAccount],
-    //     ctx.tx.getTxnType());
+    auto const contextHash = getConvertContextHash(
+        ctx.tx[sfAccount],
+        ctx.tx[sfSequence],
+        ctx.tx[sfMPTokenIssuanceID],
+        ctx.tx[sfMPTAmount]);
 
-    // // check equality proof
-    // auto checkEqualityProof = [&](auto const& encryptedAmount,
-    //                               auto const& pubKey) -> TER {
-    //     return verifyEqualityProof(
-    //         ctx.tx[sfMPTAmount],
-    //         ctx.tx[sfZKProof],
-    //         pubKey,
-    //         encryptedAmount,
-    //         contextHash);
-    // };
+    bool const hasAuditor = ctx.tx.isFieldPresent(sfAuditorEncryptedAmount);
 
-    // if (!isTesSuccess(checkEqualityProof(
-    //         ctx.tx[sfHolderEncryptedAmount], holderPubKey)) ||
-    //     !isTesSuccess(checkEqualityProof(
-    //         ctx.tx[sfIssuerEncryptedAmount],
-    //         (*sleIssuance)[sfIssuerElGamalPublicKey])))
-    // {
-    //     return tecBAD_PROOF;
-    // }
+    std::vector<Buffer> const zkps = getEqualityProofs(ctx.tx[sfZKProof]);
+
+    auto const& amount = ctx.tx[sfMPTAmount];
+
+    // we already checked proof size in preflight, still do sanity check here
+    // since we are going to access individual vector entries
+    auto const expectedCount = ctx.tx[sfZKProof].size() / ecEqualityProofLength;
+    if (zkps.size() != expectedCount)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // check equality proof
+    if (!isTesSuccess(verifyEqualityProof(
+            amount,
+            zkps[0],
+            holderPubKey,
+            ctx.tx[sfHolderEncryptedAmount],
+            contextHash)) ||
+        !isTesSuccess(verifyEqualityProof(
+            amount,
+            zkps[1],
+            (*sleIssuance)[sfIssuerElGamalPublicKey],
+            ctx.tx[sfIssuerEncryptedAmount],
+            contextHash)))
+    {
+        return tecBAD_PROOF;
+    }
+
+    // Verify Auditor proof if present
+    if (hasAuditor &&
+        !isTesSuccess(verifyEqualityProof(
+            amount,
+            zkps[2],
+            (*sleIssuance)[sfAuditorElGamalPublicKey],
+            ctx.tx[sfAuditorEncryptedAmount],
+            contextHash)))
+    {
+        return tecBAD_PROOF;
+    }
 
     return tesSUCCESS;
 }
@@ -196,19 +219,20 @@ ConfidentialConvert::doApply()
         {
             // encrypt sfConfidentialBalanceSpending with zero balance
             Buffer out;
-            out = encryptAmount(0, (*sleMptoken)[sfHolderElGamalPublicKey]);
+            out =
+                encryptAmount(0, (*sleMptoken)[sfHolderElGamalPublicKey]).first;
             (*sleMptoken)[sfConfidentialBalanceSpending] = out;
         }
         catch (std::exception const& e)
         {
-            return tecINTERNAL;
+            return tecINTERNAL;  // LCOV_EXCL_LINE
         }
     }
     else
     {
         // both sfIssuerEncryptedBalance and sfConfidentialBalanceInbox should
         // exist together
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
     }
 
     view().update(sleIssuance);
