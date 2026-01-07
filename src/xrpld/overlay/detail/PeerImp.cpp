@@ -2983,7 +2983,8 @@ PeerImp::checkTransaction(
             // Don't do anything with pseudo transactions except put them in the
             // TransactionMaster cache
             std::string reason;
-            auto tx = std::make_shared<Transaction>(stx, reason, app_);
+            auto tx = std::make_shared<Transaction>(
+                stx, reason, app_.getServiceRegistry());
             XRPL_ASSERT(
                 tx->getStatus() == NEW,
                 "xrpl::PeerImp::checkTransaction Transaction created "
@@ -3049,7 +3050,8 @@ PeerImp::checkTransaction(
         }
 
         std::string reason;
-        auto tx = std::make_shared<Transaction>(stx, reason, app_);
+        auto tx = std::make_shared<Transaction>(
+            stx, reason, app_.getServiceRegistry());
 
         if (tx->getStatus() == INVALID)
         {

@@ -224,6 +224,9 @@ public:
     virtual boost::asio::io_context&
     getIOContext() = 0;
 
+    virtual Logs&
+    logs() = 0;
+
     // Temporary: Get the underlying Application for functions that haven't
     // been migrated yet. This should be removed once all code is migrated.
     virtual Application&

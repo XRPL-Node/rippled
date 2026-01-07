@@ -14,13 +14,13 @@ convertBlobsToTxResult(
     std::string const& status,
     Blob const& rawTxn,
     Blob const& rawMeta,
-    Application& app)
+    ServiceRegistry& registry)
 {
     SerialIter it(makeSlice(rawTxn));
     auto txn = std::make_shared<STTx const>(it);
     std::string reason;
 
-    auto tr = std::make_shared<Transaction>(txn, reason, app);
+    auto tr = std::make_shared<Transaction>(txn, reason, registry);
 
     auto metaset = std::make_shared<TxMeta>(tr->getID(), ledger_index, rawMeta);
 
@@ -30,7 +30,7 @@ convertBlobsToTxResult(
             Transaction::sqlTransactionStatus(status),
             ledger_index,
             metaset->getAsObject().getFieldU32(sfTransactionIndex),
-            app.config().NETWORK_ID);
+            registry.app().config().NETWORK_ID);
     else
         tr->setStatus(Transaction::sqlTransactionStatus(status), ledger_index);
 
@@ -38,10 +38,10 @@ convertBlobsToTxResult(
 };
 
 void
-saveLedgerAsync(Application& app, std::uint32_t seq)
+saveLedgerAsync(ServiceRegistry& registry, std::uint32_t seq)
 {
-    if (auto l = app.getLedgerMaster().getLedgerBySeq(seq))
-        pendSaveValidated(app.getServiceRegistry(), l, false, false);
+    if (auto l = registry.getLedgerMaster().getLedgerBySeq(seq))
+        pendSaveValidated(registry, l, false, false);
 }
 
 }  // namespace xrpl

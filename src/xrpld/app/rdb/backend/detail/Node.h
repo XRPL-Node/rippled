@@ -2,7 +2,7 @@
 #define XRPL_APP_RDB_BACKEND_DETAIL_NODE_H_INCLUDED
 
 #include <xrpld/app/ledger/Ledger.h>
-#include <xrpld/app/rdb/RelationalDatabase.h>
+#include <xrpld/app/rdb/backend/RelationalDatabase.h>
 #include <xrpld/core/Config.h>
 
 namespace xrpl {
@@ -103,7 +103,7 @@ getRowsMinMax(soci::session& session, TableType type);
  * @brief saveValidatedLedger Saves ledger into database.
  * @param lgrDB Link to ledgers database.
  * @param txnDB Link to transactions database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param ledger The ledger.
  * @param current True if ledger is current.
  * @return True is saving was successfull.
@@ -112,7 +112,7 @@ bool
 saveValidatedLedger(
     DatabaseCon& ldgDB,
     std::unique_ptr<DatabaseCon> const& txnDB,
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& ledger,
     bool current);
 
@@ -225,7 +225,7 @@ getHashesByIndex(
  * @brief getTxHistory Returns given number of most recent transactions
  *        starting from given number of entry.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param startIndex Offset of first returned entry.
  * @param quantity Number of returned entries.
  * @return Vector of shared pointers to transactions sorted in
@@ -235,7 +235,7 @@ getHashesByIndex(
 std::pair<std::vector<std::shared_ptr<Transaction>>, int>
 getTxHistory(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerIndex startIndex,
     int quantity);
 
@@ -243,7 +243,7 @@ getTxHistory(
  * @brief getOldestAccountTxs Returns oldest transactions for given
  *        account which match given criteria starting from given offset.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param ledgerMaster LedgerMaster object.
  * @param options Struct AccountTxOptions which contain criteria to match:
  *        the account, minimum and maximum ledger numbers to search,
@@ -261,7 +261,7 @@ getTxHistory(
 std::pair<RelationalDatabase::AccountTxs, int>
 getOldestAccountTxs(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerMaster& ledgerMaster,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j);
@@ -270,7 +270,7 @@ getOldestAccountTxs(
  * @brief getNewestAccountTxs Returns newest transactions for given
  *        account which match given criteria starting from given offset.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param ledgerMaster LedgerMaster object.
  * @param options Struct AccountTxOptions which contain criteria to match:
  *        the account, minimum and maximum ledger numbers to search,
@@ -288,7 +288,7 @@ getOldestAccountTxs(
 std::pair<RelationalDatabase::AccountTxs, int>
 getNewestAccountTxs(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerMaster& ledgerMaster,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j);
@@ -298,7 +298,7 @@ getNewestAccountTxs(
  *        for given account which match given criteria starting from given
  *        offset.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param options Struct AccountTxOptions which contain criteria to match:
  *        the account, minimum and maximum ledger numbers to search,
  *        offset of first entry to return, number of transactions to return,
@@ -315,7 +315,7 @@ getNewestAccountTxs(
 std::pair<std::vector<RelationalDatabase::txnMetaLedgerType>, int>
 getOldestAccountTxsB(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j);
 
@@ -324,7 +324,7 @@ getOldestAccountTxsB(
  *        for given account which match given criteria starting from given
  *        offset.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param options Struct AccountTxOptions which contain criteria to match:
  *        the account, minimum and maximum ledger numbers to search,
  *        offset of first entry to return, number of transactions to return,
@@ -341,7 +341,7 @@ getOldestAccountTxsB(
 std::pair<std::vector<RelationalDatabase::txnMetaLedgerType>, int>
 getNewestAccountTxsB(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j);
 
@@ -406,7 +406,7 @@ newestAccountTxPage(
  *        and range given then check if all ledgers from the range are
  *        present in the database.
  * @param session Session with database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param id Hash of the transaction.
  * @param range Range of ledgers to check, if present.
  * @param ec Default value of error code.
@@ -420,7 +420,7 @@ newestAccountTxPage(
 std::variant<RelationalDatabase::AccountTx, TxSearched>
 getTransaction(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     uint256 const& id,
     std::optional<ClosedInterval<uint32_t>> const& range,
     error_code_i& ec);

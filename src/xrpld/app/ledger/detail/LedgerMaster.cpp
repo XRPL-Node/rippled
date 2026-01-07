@@ -13,7 +13,7 @@
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/misc/ValidatorList.h>
 #include <xrpld/app/paths/PathRequests.h>
-#include <xrpld/app/rdb/RelationalDatabase.h>
+#include <xrpld/app/rdb/backend/RelationalDatabase.h>
 #include <xrpld/overlay/Overlay.h>
 #include <xrpld/overlay/Peer.h>
 

@@ -1,5 +1,4 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/Transaction.h>
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
@@ -7,6 +6,7 @@
 #include <xrpld/rpc/CTID.h>
 
 #include <xrpl/basics/safe_cast.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/jss.h>
 
@@ -15,8 +15,8 @@ namespace xrpl {
 Transaction::Transaction(
     std::shared_ptr<STTx const> const& stx,
     std::string& reason,
-    Application& app) noexcept
-    : mTransaction(stx), mApp(app), j_(app.journal("Ledger"))
+    ServiceRegistry& registry) noexcept
+    : mTransaction(stx), registry_(registry), j_(registry.journal("Ledger"))
 {
     try
     {
@@ -81,7 +81,7 @@ Transaction::transactionFromSQL(
     boost::optional<std::uint64_t> const& ledgerSeq,
     boost::optional<std::string> const& status,
     Blob const& rawTxn,
-    Application& app)
+    ServiceRegistry& registry)
 {
     std::uint32_t const inLedger =
         rangeCheckedCast<std::uint32_t>(ledgerSeq.value_or(0));
@@ -89,7 +89,7 @@ Transaction::transactionFromSQL(
     SerialIter it(makeSlice(rawTxn));
     auto txn = std::make_shared<STTx const>(it);
     std::string reason;
-    auto tr = std::make_shared<Transaction>(txn, reason, app);
+    auto tr = std::make_shared<Transaction>(txn, reason, registry);
 
     tr->setStatus(sqlTransactionStatus(status));
     tr->setLedger(inLedger);
@@ -160,7 +160,8 @@ Transaction::getJson(JsonOptions options, bool binary) const
 
         if (options & JsonOptions::include_date)
         {
-            auto ct = mApp.getLedgerMaster().getCloseTimeBySeq(mLedgerIndex);
+            auto ct =
+                registry_.getLedgerMaster().getCloseTimeBySeq(mLedgerIndex);
             if (ct)
                 ret[jss::date] = ct->time_since_epoch().count();
         }

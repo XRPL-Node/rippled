@@ -6,7 +6,6 @@
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/consensus/LedgerTiming.h>
 #include <xrpld/core/Config.h>  // for Config::FEE_UNITS_DEPRECATED
-#include <xrpld/core/SociDB.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/contract.h>

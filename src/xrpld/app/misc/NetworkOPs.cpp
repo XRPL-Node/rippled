@@ -1223,7 +1223,8 @@ NetworkOPsImp::submitTransaction(std::shared_ptr<STTx const> const& iTrans)
 
     std::string reason;
 
-    auto tx = std::make_shared<Transaction>(trans, reason, app_);
+    auto tx =
+        std::make_shared<Transaction>(trans, reason, app_.getServiceRegistry());
 
     m_job_queue.addJob(jtTRANSACTION, "submitTxn", [this, tx]() {
         auto t = tx;
@@ -1390,7 +1391,8 @@ NetworkOPsImp::processTransactionSet(CanonicalTXSet const& set)
     for (auto const& [_, tx] : set)
     {
         std::string reason;
-        auto transaction = std::make_shared<Transaction>(tx, reason, app_);
+        auto transaction = std::make_shared<Transaction>(
+            tx, reason, app_.getServiceRegistry());
 
         if (transaction->getStatus() == INVALID)
         {
@@ -1569,7 +1571,8 @@ NetworkOPsImp::apply(std::unique_lock<std::mutex>& batchLock)
                         batchLock.lock();
                     std::string reason;
                     auto const trans = sterilize(*txNext);
-                    auto t = std::make_shared<Transaction>(trans, reason, app_);
+                    auto t = std::make_shared<Transaction>(
+                        trans, reason, app_.getServiceRegistry());
                     if (t->getApplying())
                         break;
                     submit_held.emplace_back(t, false, false, FailHard::no);

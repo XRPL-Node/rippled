@@ -3,14 +3,15 @@
 #include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/ledger/PendingSaves.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
-#include <xrpld/app/rdb/RelationalDatabase.h>
+#include <xrpld/app/rdb/backend/RelationalDatabase.h>
 #include <xrpld/app/rdb/backend/detail/Node.h>
-#include <xrpld/core/DatabaseCon.h>
-#include <xrpld/core/SociDB.h>
 
 #include <xrpl/basics/BasicConfig.h>
 #include <xrpl/basics/StringUtilities.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/rdb/DatabaseCon.h>
+#include <xrpl/rdb/SociDB.h>
 
 #include <boost/range/adaptor/transformed.hpp>
 
@@ -70,9 +71,9 @@ makeLedgerDBs(
             boost::format("PRAGMA cache_size=-%d;") %
             kilobytes(config.getValueFor(SizedItem::txnDBCache)));
 
-        if (!setup.standAlone || setup.startUp == Config::LOAD ||
-            setup.startUp == Config::LOAD_FILE ||
-            setup.startUp == Config::REPLAY)
+        if (!setup.standAlone || setup.startUp == StartUpType::LOAD ||
+            setup.startUp == StartUpType::LOAD_FILE ||
+            setup.startUp == StartUpType::REPLAY)
         {
             // Check if AccountTransactions has primary key
             std::string cid, name, type;
@@ -172,11 +173,11 @@ bool
 saveValidatedLedger(
     DatabaseCon& ldgDB,
     std::unique_ptr<DatabaseCon> const& txnDB,
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& ledger,
     bool current)
 {
-    auto j = app.journal("Ledger");
+    auto j = registry.journal("Ledger");
     auto seq = ledger->header().seq;
 
     // TODO(tom): Fix this hard-coded SQL!
@@ -213,28 +214,29 @@ saveValidatedLedger(
         Serializer s(128);
         s.add32(HashPrefix::ledgerMaster);
         addRaw(ledger->header(), s);
-        app.getNodeStore().store(
+        registry.getNodeStore().store(
             hotLEDGER, std::move(s.modData()), ledger->header().hash, seq);
     }
 
     std::shared_ptr<AcceptedLedger> aLedger;
     try
     {
-        aLedger = app.getAcceptedLedgerCache().fetch(ledger->header().hash);
+        aLedger =
+            registry.getAcceptedLedgerCache().fetch(ledger->header().hash);
         if (!aLedger)
         {
             aLedger = std::make_shared<AcceptedLedger>(ledger);
-            app.getAcceptedLedgerCache().canonicalize_replace_client(
+            registry.getAcceptedLedgerCache().canonicalize_replace_client(
                 ledger->header().hash, aLedger);
         }
     }
     catch (std::exception const&)
     {
         JLOG(j.warn()) << "An accepted ledger was missing nodes";
-        app.getLedgerMaster().failedSave(seq, ledger->header().hash);
+        registry.getLedgerMaster().failedSave(seq, ledger->header().hash);
         // Clients can now trust the database for information about this
         // ledger sequence.
-        app.pendingSaves().finishWork(seq);
+        registry.pendingSaves().finishWork(seq);
         return false;
     }
 
@@ -253,7 +255,7 @@ saveValidatedLedger(
             *db << boost::str(deleteLedger % seq);
         }
 
-        if (app.config().useTxTables())
+        if (registry.app().config().useTxTables())
         {
             if (!txnDB)
             {
@@ -335,11 +337,11 @@ saveValidatedLedger(
                             seq, acceptedLedgerTx->getEscMeta()) +
                         ";");
 
-                app.getMasterTransaction().inLedger(
+                registry.getMasterTransaction().inLedger(
                     transactionID,
                     seq,
                     acceptedLedgerTx->getTxnSeq(),
-                    app.config().NETWORK_ID);
+                    registry.app().config().NETWORK_ID);
             }
 
             tr.commit();
@@ -625,7 +627,7 @@ getHashesByIndex(
 std::pair<std::vector<std::shared_ptr<Transaction>>, int>
 getTxHistory(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerIndex startIndex,
     int quantity)
 {
@@ -661,7 +663,7 @@ getTxHistory(
                 rawTxn.clear();
 
             if (auto trans = Transaction::transactionFromSQL(
-                    ledgerSeq, status, rawTxn, app))
+                    ledgerSeq, status, rawTxn, registry))
             {
                 total++;
                 txs.push_back(trans);
@@ -676,7 +678,7 @@ getTxHistory(
  * @brief transactionsSQL Returns a SQL query for selecting the oldest or newest
  *        transactions in decoded or binary form for the account that matches
  *        the given criteria starting from the provided offset.
- * @param app Application object.
+ * @param registry The service registry.
  * @param selection List of table fields to select from the database.
  * @param options Struct AccountTxOptions which contains the criteria to match:
  *        the account, the ledger search range, the offset of the first entry to
@@ -691,7 +693,7 @@ getTxHistory(
  */
 static std::string
 transactionsSQL(
-    Application& app,
+    ServiceRegistry& registry,
     std::string selection,
     RelationalDatabase::AccountTxOptions const& options,
     bool descending,
@@ -769,7 +771,7 @@ transactionsSQL(
  *        account that matches the given criteria starting from the provided
  *        offset.
  * @param session Session with the database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param ledgerMaster LedgerMaster object.
  * @param options Struct AccountTxOptions which contains the criteria to match:
  *        the account, the ledger search range, the offset of the first entry to
@@ -788,7 +790,7 @@ transactionsSQL(
 static std::pair<RelationalDatabase::AccountTxs, int>
 getAccountTxs(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerMaster& ledgerMaster,
     RelationalDatabase::AccountTxOptions const& options,
     bool descending,
@@ -797,7 +799,7 @@ getAccountTxs(
     RelationalDatabase::AccountTxs ret;
 
     std::string sql = transactionsSQL(
-        app,
+        registry,
         "AccountTransactions.LedgerSeq,Status,RawTxn,TxnMeta",
         options,
         descending,
@@ -836,8 +838,8 @@ getAccountTxs(
             else
                 txnMeta.clear();
 
-            auto txn =
-                Transaction::transactionFromSQL(ledgerSeq, status, rawTxn, app);
+            auto txn = Transaction::transactionFromSQL(
+                ledgerSeq, status, rawTxn, registry);
 
             if (txnMeta.empty())
             {  // Work around a bug that could leave the metadata missing
@@ -848,8 +850,7 @@ getAccountTxs(
                     << "Recovering ledger " << seq << ", txn " << txn->getID();
 
                 if (auto l = ledgerMaster.getLedgerBySeq(seq))
-                    pendSaveValidated(
-                        app.getServiceRegistry(), l, false, false);
+                    pendSaveValidated(registry, l, false, false);
             }
 
             if (txn)
@@ -869,23 +870,23 @@ getAccountTxs(
 std::pair<RelationalDatabase::AccountTxs, int>
 getOldestAccountTxs(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerMaster& ledgerMaster,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j)
 {
-    return getAccountTxs(session, app, ledgerMaster, options, false, j);
+    return getAccountTxs(session, registry, ledgerMaster, options, false, j);
 }
 
 std::pair<RelationalDatabase::AccountTxs, int>
 getNewestAccountTxs(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     LedgerMaster& ledgerMaster,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j)
 {
-    return getAccountTxs(session, app, ledgerMaster, options, true, j);
+    return getAccountTxs(session, registry, ledgerMaster, options, true, j);
 }
 
 /**
@@ -893,7 +894,7 @@ getNewestAccountTxs(
  *        form for the account that matches given criteria starting from
  *        the provided offset.
  * @param session Session with the database.
- * @param app Application object.
+ * @param registry The service registry.
  * @param options Struct AccountTxOptions which contains the criteria to match:
  *        the account, the ledger search range, the offset of the first entry to
  *        return, the number of transactions to return, and a flag if this
@@ -911,7 +912,7 @@ getNewestAccountTxs(
 static std::pair<std::vector<RelationalDatabase::txnMetaLedgerType>, int>
 getAccountTxsB(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     RelationalDatabase::AccountTxOptions const& options,
     bool descending,
     beast::Journal j)
@@ -919,7 +920,7 @@ getAccountTxsB(
     std::vector<RelationalDatabase::txnMetaLedgerType> ret;
 
     std::string sql = transactionsSQL(
-        app,
+        registry,
         "AccountTransactions.LedgerSeq,Status,RawTxn,TxnMeta",
         options,
         descending,
@@ -969,21 +970,21 @@ getAccountTxsB(
 std::pair<std::vector<RelationalDatabase::txnMetaLedgerType>, int>
 getOldestAccountTxsB(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j)
 {
-    return getAccountTxsB(session, app, options, false, j);
+    return getAccountTxsB(session, registry, options, false, j);
 }
 
 std::pair<std::vector<RelationalDatabase::txnMetaLedgerType>, int>
 getNewestAccountTxsB(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     RelationalDatabase::AccountTxOptions const& options,
     beast::Journal j)
 {
-    return getAccountTxsB(session, app, options, true, j);
+    return getAccountTxsB(session, registry, options, true, j);
 }
 
 /**
@@ -1211,7 +1212,7 @@ newestAccountTxPage(
 std::variant<RelationalDatabase::AccountTx, TxSearched>
 getTransaction(
     soci::session& session,
-    Application& app,
+    ServiceRegistry& registry,
     uint256 const& id,
     std::optional<ClosedInterval<uint32_t>> const& range,
     error_code_i& ec)
@@ -1264,8 +1265,8 @@ getTransaction(
 
     try
     {
-        auto txn =
-            Transaction::transactionFromSQL(ledgerSeq, status, rawTxn, app);
+        auto txn = Transaction::transactionFromSQL(
+            ledgerSeq, status, rawTxn, registry);
 
         if (!ledgerSeq)
             return std::pair{std::move(txn), nullptr};
@@ -1279,7 +1280,7 @@ getTransaction(
     }
     catch (std::exception& e)
     {
-        JLOG(app.journal("Ledger").warn())
+        JLOG(registry.journal("Ledger").warn())
             << "Unable to deserialize transaction from raw SQL value. Error: "
             << e.what();
 

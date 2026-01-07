@@ -274,6 +274,12 @@ ServiceRegistryImpl::getIOContext()
     return app_.getIOContext();
 }
 
+Logs&
+ServiceRegistryImpl::logs()
+{
+    return app_.logs();
+}
+
 Application&
 ServiceRegistryImpl::app()
 {

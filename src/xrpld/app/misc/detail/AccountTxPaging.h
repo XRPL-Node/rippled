@@ -1,7 +1,7 @@
 #ifndef XRPL_APP_MISC_IMPL_ACCOUNTTXPAGING_H_INCLUDED
 #define XRPL_APP_MISC_IMPL_ACCOUNTTXPAGING_H_INCLUDED
 
-#include <xrpld/app/rdb/RelationalDatabase.h>
+#include <xrpld/app/rdb/backend/RelationalDatabase.h>
 
 #include <cstdint>
 
@@ -16,10 +16,10 @@ convertBlobsToTxResult(
     std::string const& status,
     Blob const& rawTxn,
     Blob const& rawMeta,
-    Application& app);
+    ServiceRegistry& registry);
 
 void
-saveLedgerAsync(Application& app, std::uint32_t seq);
+saveLedgerAsync(ServiceRegistry& registry, std::uint32_t seq);
 
 }  // namespace xrpl
 

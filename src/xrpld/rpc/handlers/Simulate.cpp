@@ -352,7 +352,8 @@ doSimulate(RPC::JsonContext& context)
     }
 
     std::string reason;
-    auto transaction = std::make_shared<Transaction>(stTx, reason, context.app);
+    auto transaction = std::make_shared<Transaction>(
+        stTx, reason, context.app.getServiceRegistry());
     // Actually run the transaction through the transaction processor
     try
     {

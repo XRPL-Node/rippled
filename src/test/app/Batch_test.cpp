@@ -3824,8 +3824,8 @@ class Batch_test : public beast::unit_test::suite
             Serializer s;
             jt.stx->add(s);
             std::string reason;
-            auto transaction =
-                std::make_shared<Transaction>(jt.stx, reason, env.app());
+            auto transaction = std::make_shared<Transaction>(
+                jt.stx, reason, env.app().getServiceRegistry());
             env.app().getOPs().processTransaction(
                 transaction, false, true, NetworkOPs::FailHard::yes);
             return transaction->getID();

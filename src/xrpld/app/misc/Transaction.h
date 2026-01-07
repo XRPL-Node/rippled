@@ -3,6 +3,7 @@
 
 #include <xrpl/basics/RangeSet.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/STBase.h>
@@ -50,7 +51,7 @@ public:
     Transaction(
         std::shared_ptr<STTx const> const&,
         std::string&,
-        Application&) noexcept;
+        ServiceRegistry&) noexcept;
 
     // The two boost::optional parameters are because SOCI requires
     // boost::optional (not std::optional) parameters.
@@ -59,7 +60,7 @@ public:
         boost::optional<std::uint64_t> const& ledgerSeq,
         boost::optional<std::string> const& status,
         Blob const& rawTxn,
-        Application& app);
+        ServiceRegistry& registry);
 
     // The boost::optional parameter is because SOCI requires
     // boost::optional (not std::optional) parameters.
@@ -409,7 +410,7 @@ private:
     std::optional<CurrentLedgerState> currentLedgerState_;
 
     std::shared_ptr<STTx const> mTransaction;
-    Application& mApp;
+    ServiceRegistry& registry_;
     beast::Journal j_;
 };
 

@@ -678,7 +678,8 @@ transactionConstructImpl(
     Transaction::pointer tpTrans;
     {
         std::string reason;
-        tpTrans = std::make_shared<Transaction>(stTx, reason, app);
+        tpTrans = std::make_shared<Transaction>(
+            stTx, reason, app.getServiceRegistry());
         if (tpTrans->getStatus() != NEW)
         {
             ret.first = RPC::make_error(
@@ -714,8 +715,8 @@ transactionConstructImpl(
             }
 
             std::string reason;
-            auto tpTransNew =
-                std::make_shared<Transaction>(sttxNew, reason, app);
+            auto tpTransNew = std::make_shared<Transaction>(
+                sttxNew, reason, app.getServiceRegistry());
 
             if (tpTransNew)
             {

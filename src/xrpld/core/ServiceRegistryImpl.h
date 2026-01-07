@@ -164,6 +164,9 @@ public:
     boost::asio::io_context&
     getIOContext() override;
 
+    Logs&
+    logs() override;
+
     // Temporary: Get the underlying Application
     Application&
     app() override;

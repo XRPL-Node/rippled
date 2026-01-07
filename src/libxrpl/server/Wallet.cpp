@@ -1,4 +1,5 @@
-#include <xrpld/app/rdb/Wallet.h>
+#include <xrpl/rdb/DBInit.h>
+#include <xrpl/server/Wallet.h>
 
 #include <boost/format.hpp>
 
@@ -7,7 +8,7 @@ namespace xrpl {
 std::unique_ptr<DatabaseCon>
 makeWalletDB(DatabaseCon::Setup const& setup, beast::Journal j)
 {
-    // wallet database
+    // node identity database
     return std::make_unique<DatabaseCon>(
         setup, WalletDBName, std::array<std::string, 0>(), WalletDBInit, j);
 }
@@ -18,7 +19,7 @@ makeTestWalletDB(
     std::string const& dbname,
     beast::Journal j)
 {
-    // wallet database
+    // node identity database
     return std::make_unique<DatabaseCon>(
         setup, dbname.data(), std::array<std::string, 0>(), WalletDBInit, j);
 }
@@ -218,7 +219,7 @@ createFeatureVotes(soci::session& session)
     session << sql, soci::into(featureVotesCount);
     bool exists = static_cast<bool>(*featureVotesCount);
 
-    // Create FeatureVotes table in WalletDB if it doesn't exist
+    // Create FeatureVotes table in NodeIdentityDB if it doesn't exist
     if (!exists)
     {
         session << "CREATE TABLE  FeatureVotes ( "
