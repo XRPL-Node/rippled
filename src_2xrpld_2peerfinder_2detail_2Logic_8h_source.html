@@ -724,7 +724,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><span class="comment">                This is a temporary measure. Once we know our own IP</span></div>
 <div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="comment">                address, the correct solution is to put it into the Livecache</span></div>
 <div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="comment">                at hops 0, and go through the regular handout path. This way</span></div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="comment">                we avoid handing our address out too frequenty, which this code</span></div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="comment">                we avoid handing our address out too frequently, which this code</span></div>
 <div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="comment">                suffers from.</span></div>
 <div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="comment">            */</span></div>
 <div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span>            <span class="comment">// Add an entry for ourselves if:</span></div>
@@ -1007,7 +1007,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>            <span class="comment">// Address must exist</span></div>
 <div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>            <span class="keywordflow">if</span> (iter == <a class="code hl_variable" href="classxrpl_1_1PeerFinder_1_1Logic.html#acba6bf9ec0e6cfeadb635501f32f6a76">connectedAddresses_</a>.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/multiset/end.html">end</a>())</div>
 <div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>                <a class="code hl_function" href="namespacexrpl.html#a16550239e117c441e0e17bd1c67beeba">LogicError</a>(</div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>                    <span class="stringliteral">&quot;PeerFinder::Logic::remove(): remote_endpont &quot;</span></div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>                    <span class="stringliteral">&quot;PeerFinder::Logic::remove(): remote_endpoint &quot;</span></div>
 <div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>                    <span class="stringliteral">&quot;address missing from connectedAddresses_&quot;</span>);</div>
 <div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span> </div>
 <div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>            <a class="code hl_variable" href="classxrpl_1_1PeerFinder_1_1Logic.html#acba6bf9ec0e6cfeadb635501f32f6a76">connectedAddresses_</a>.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/multiset/erase.html">erase</a>(iter);</div>
@@ -1035,7 +1035,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span>            <span class="keyword">auto</span> iter(<a class="code hl_variable" href="classxrpl_1_1PeerFinder_1_1Logic.html#ad10f6a1bdca3cb2722cc72911b201149">fixed_</a>.find(slot-&gt;remote_endpoint()));</div>
 <div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span>            <span class="keywordflow">if</span> (iter == <a class="code hl_variable" href="classxrpl_1_1PeerFinder_1_1Logic.html#ad10f6a1bdca3cb2722cc72911b201149">fixed_</a>.end())</div>
 <div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span>                <a class="code hl_function" href="namespacexrpl.html#a16550239e117c441e0e17bd1c67beeba">LogicError</a>(</div>
-<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span>                    <span class="stringliteral">&quot;PeerFinder::Logic::on_closed(): remote_endpont &quot;</span></div>
+<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span>                    <span class="stringliteral">&quot;PeerFinder::Logic::on_closed(): remote_endpoint &quot;</span></div>
 <div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span>                    <span class="stringliteral">&quot;missing from fixed_&quot;</span>);</div>
 <div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span> </div>
 <div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span>            iter-&gt;second.failure(<a class="code hl_variable" href="classxrpl_1_1PeerFinder_1_1Logic.html#a896accfff0f78457a5d66094804ff273">m_clock</a>.<a class="code hl_function" href="classbeast_1_1abstract__clock.html#ac9a577663353bfea66a096f12cb85293">now</a>());</div>
