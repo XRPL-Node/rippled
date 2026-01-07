@@ -524,7 +524,7 @@ To build dependencies and xprld with sanitizer instrumentation, set the
 `SANITIZERS` environment variable(only once before running conan and cmake) and use the `sanitizers` profile in conan:
 
 ```bash
-export SANITIZERS=Address,UndefinedBehavior
+export SANITIZERS=address,undefinedbehavior
 
 conan install .. --output-folder . --profile:all sanitizers --build missing --settings build_type=Debug
 

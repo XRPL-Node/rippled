@@ -232,6 +232,8 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             f"-{architecture['platform'][architecture['platform'].find('/')+1:]}"
         )
         config_name += f"-{build_type.lower()}"
+        if "-Dcoverage=ON" in cmake_args:
+            config_name += "-coverage"
         if "-Dunity=ON" in cmake_args:
             config_name += "-unity"
 
@@ -254,7 +256,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     "build_type": build_type,
                     "os": os,
                     "architecture": architecture,
-                    "sanitizers": "Address,UndefinedBehavior",
+                    "sanitizers": "address,undefinedbehavior",
                 }
             )
             # TSAN is deactivated due to seg faults with latest compilers.
@@ -269,7 +271,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                         "build_type": build_type,
                         "os": os,
                         "architecture": architecture,
-                        "sanitizers": "Thread,UndefinedBehavior",
+                        "sanitizers": "thread,undefinedbehavior",
                     }
                 )
         else:

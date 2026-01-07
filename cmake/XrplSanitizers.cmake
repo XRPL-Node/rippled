@@ -3,11 +3,11 @@
 
    This module reads the following environment variables:
    - SANITIZERS: The sanitizers to enable. Possible values:
-     - "Address"
-     - "Address,UndefinedBehavior"
-     - "Thread"
-     - "Thread,UndefinedBehavior"
-     - "UndefinedBehavior"
+     - "address"
+     - "address,undefinedbehavior"
+     - "thread"
+     - "thread,undefinedbehavior"
+     - "undefinedbehavior"
 
 	   The compiler type and platform are detected in CompilationEnv.cmake.
    The sanitizer compile options are applied to the 'common' interface library
@@ -26,25 +26,25 @@ endif()
 message(STATUS "Configuring sanitizers: ${SANITIZERS}")
 
 # Parse SANITIZERS value to determine which sanitizers to enable
-set(ENABLE_ASAN FALSE)
-set(ENABLE_TSAN FALSE)
-set(ENABLE_UBSAN FALSE)
+set(enable_asan FALSE)
+set(enable_tsan FALSE)
+set(enable_ubsan FALSE)
 
 # Normalize SANITIZERS into a list
-set(_san_list "${SANITIZERS}")
-string(REPLACE "," ";" _san_list "${_san_list}")
-separate_arguments(_san_list)
+set(san_list "${SANITIZERS}")
+string(REPLACE "," ";" san_list "${san_list}")
+separate_arguments(san_list)
 
-foreach(_san IN LISTS _san_list)
-    if(_san STREQUAL "Address")
-        set(ENABLE_ASAN TRUE)
-    elseif(_san STREQUAL "Thread")
-        set(ENABLE_TSAN TRUE)
-    elseif(_san STREQUAL "UndefinedBehavior")
-        set(ENABLE_UBSAN TRUE)
+foreach(san IN LISTS san_list)
+    if(san STREQUAL "address")
+        set(enable_asan TRUE)
+    elseif(san STREQUAL "thread")
+        set(enable_tsan TRUE)
+    elseif(san STREQUAL "undefinedbehavior")
+        set(enable_ubsan TRUE)
     else()
-        message(FATAL_ERROR "Unsupported sanitizer type: ${_san}"
-              "Supported: Address, Thread, UndefinedBehavior and their combinations.")
+        message(FATAL_ERROR "Unsupported sanitizer type: ${san}"
+              "Supported: address, thread, undefinedbehavior and their combinations.")
     endif()
 endforeach()
 
@@ -54,13 +54,13 @@ set(SANITIZERS_COMPILE_FLAGS "-fno-omit-frame-pointer" "-O1")
 # Build the sanitizer flags list
 set(SANITIZERS_FLAGS)
 
-if(ENABLE_ASAN)
+if(enable_asan)
     list(APPEND SANITIZERS_FLAGS "address")
-elseif(ENABLE_TSAN)
+elseif(enable_tsan)
     list(APPEND SANITIZERS_FLAGS "thread")
 endif()
 
-if(ENABLE_UBSAN)
+if(enable_ubsan)
     # UB sanitizer flags
     if(is_clang)
         # Clang supports additional UB checks. More info here https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
@@ -87,11 +87,11 @@ if(is_gcc)
     # Suppress false positive warnings in GCC with stringop-overflow
     list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-stringop-overflow")
 
-    if(is_amd64 AND ENABLE_ASAN)
+    if(is_amd64 AND enable_asan)
         message(STATUS "  Using large code model (-mcmodel=large)")
         list(APPEND SANITIZERS_COMPILE_FLAGS "-mcmodel=large")
         list(APPEND SANITIZERS_RELOCATION_FLAGS "-mcmodel=large")
-    elseif(ENABLE_TSAN)
+    elseif(enable_tsan)
         # GCC doesn't support atomic_thread_fence with tsan. Suppress warnings.
         list(APPEND SANITIZERS_COMPILE_FLAGS "-Wno-tsan")
         message(STATUS "  Using medium code model (-mcmodel=medium)")
@@ -139,18 +139,18 @@ target_compile_options(common INTERFACE
 target_link_options(common INTERFACE ${SANITIZERS_LINK_FLAGS})
 
 # Define SANITIZERS macro for BuildInfo.cpp
-set(SANITIZERS_LIST)
-if(ENABLE_ASAN)
-    list(APPEND SANITIZERS_LIST "ASAN")
+set(sanitizers_list)
+if(enable_asan)
+    list(APPEND sanitizers_list "ASAN")
 endif()
-if(ENABLE_TSAN)
-    list(APPEND SANITIZERS_LIST "TSAN")
+if(enable_tsan)
+    list(APPEND sanitizers_list "TSAN")
 endif()
-if(ENABLE_UBSAN)
-    list(APPEND SANITIZERS_LIST "UBSAN")
+if(enable_ubsan)
+    list(APPEND sanitizers_list "UBSAN")
 endif()
 
-if(SANITIZERS_LIST)
-    list(JOIN SANITIZERS_LIST "_" SANITIZERS_STR)
-    target_compile_definitions(common INTERFACE SANITIZERS=${SANITIZERS_STR})
+if(sanitizers_list)
+    list(JOIN sanitizers_list "." sanitizers_str)
+    target_compile_definitions(common INTERFACE SANITIZERS=${sanitizers_str})
 endif()

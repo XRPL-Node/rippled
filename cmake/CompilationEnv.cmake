@@ -49,6 +49,8 @@ endif()
 set(is_64bit FALSE)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(is_64bit TRUE)
+else()
+  message(FATAL_ERROR "This project should only be built on 64bit architectures.")
 endif()
 set(pointer_size "${CMAKE_SIZEOF_VOID_P}")
 
@@ -65,8 +67,8 @@ endif()
 # Keep legacy uppercase alias for existing code
 set(IS_AMD64 ${is_amd64})
 
-# Sanitizer configuration from environment (flags set in XrplSanitizers.cmake)
-if($ENV{SANITIZERS} AND $ENV{SANITIZERS} MATCHES "Address|Thread|UndefinedBehavior")
+# Sanitizer configuration read from environment. We then set appropriate flags in XrplSanitizers.cmake
+if($ENV{SANITIZERS} AND $ENV{SANITIZERS} MATCHES "address|thread|undefinedbehavior")
   set(SANITIZERS_ENABLED TRUE)
 else()
   set(SANITIZERS_ENABLED FALSE)
