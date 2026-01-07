@@ -3,11 +3,11 @@
 
    This module reads the following environment variables:
    - SANITIZERS: The sanitizers to enable. Possible values:
-     - "Address"
-     - "Address,UndefinedBehavior"
-     - "Thread"
-     - "Thread,UndefinedBehavior"
-     - "UndefinedBehavior"
+     - "address"
+     - "address,undefinedbehavior"
+     - "thread"
+     - "thread,undefinedbehavior"
+     - "undefinedbehavior"
 
 	   The compiler type and platform are detected in CompilationEnv.cmake.
    The sanitizer compile options are applied to the 'common' interface library
@@ -36,15 +36,15 @@ string(REPLACE "," ";" _san_list "${_san_list}")
 separate_arguments(_san_list)
 
 foreach(_san IN LISTS _san_list)
-    if(_san STREQUAL "Address")
+    if(_san STREQUAL "address")
         set(ENABLE_ASAN TRUE)
-    elseif(_san STREQUAL "Thread")
+    elseif(_san STREQUAL "thread")
         set(ENABLE_TSAN TRUE)
-    elseif(_san STREQUAL "UndefinedBehavior")
+    elseif(_san STREQUAL "undefinedbehavior")
         set(ENABLE_UBSAN TRUE)
     else()
         message(FATAL_ERROR "Unsupported sanitizer type: ${_san}"
-              "Supported: Address, Thread, UndefinedBehavior and their combinations.")
+              "Supported: address, thread, undefinedbehavior and their combinations.")
     endif()
 endforeach()
 

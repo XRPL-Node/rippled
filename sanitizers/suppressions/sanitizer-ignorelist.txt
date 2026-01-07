@@ -1,3 +1,7 @@
+# We were seeing some false positives and some repeated errors(since these are library files) in following files.
+# Clang will skip instrumenting the files added here.
+# We should fix the underlying issues(if any) and remove these entries.
+
 deadlock:libxrpl/beast/utility/beast_Journal.cpp
 deadlock:libxrpl/beast/utility/beast_Journal.cpp
 deadlock:libxrpl/beast/utility/beast_PropertyStream.cpp

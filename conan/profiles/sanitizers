@@ -5,21 +5,21 @@ include(default)
 [conf]
 {% if sanitizers %}
     {% if compiler == "gcc" %}
-        {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
+        {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
             {% set model_code = "" %}
             {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1", "-Wno-stringop-overflow"] %}
 
-            {% if "Address" in sanitizers %}
+            {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
                 {% set model_code = "-mcmodel=large" %}
-            {% elif "Thread" in sanitizers %}
+            {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
                 {% set model_code = "-mcmodel=medium" %}
                 {% set _ = extra_cxxflags.append("-Wno-tsan") %}
             {% endif %}
 
-            {% if "UndefinedBehavior" in sanitizers %}
+            {% if "undefinedbehavior" in sanitizers %}
                 {% set _ = sanitizer_list.append("undefined") %}
                 {% set _ = sanitizer_list.append("float-divide-by-zero") %}
             {% endif %}
@@ -31,17 +31,17 @@ include(default)
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
         {% endif %}
     {% elif compiler == "apple-clang" or compiler == "clang" %}
-        {% if "Address" in sanitizers or "Thread" in sanitizers or "UndefinedBehavior" in sanitizers %}
+        {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
             {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1"] %}
 
-            {% if "Address" in sanitizers %}
+            {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
-            {% elif "Thread" in sanitizers %}
+            {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
             {% endif %}
 
-            {% if "UndefinedBehavior" in sanitizers %}
+            {% if "undefinedbehavior" in sanitizers %}
                 {% set _ = sanitizer_list.append("undefined") %}
                 {% set _ = sanitizer_list.append("float-divide-by-zero") %}
                 {% set _ = sanitizer_list.append("unsigned-integer-overflow") %}

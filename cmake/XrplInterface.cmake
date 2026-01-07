@@ -44,8 +44,6 @@ if(jemalloc)
   target_link_libraries(opts INTERFACE jemalloc::jemalloc)
 endif ()
 
-# Sanitizer configuration is handled in XrplSanitizers.cmake
-
 #[===================================================================[
    xrpld transitive library deps via an interface library
 #]===================================================================]
