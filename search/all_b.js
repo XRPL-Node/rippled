@@ -137,7 +137,7 @@ var searchData=
   ['delays_134',['delays',['../structxrpl_1_1test_1_1csf_1_1Peer.html#acb5ab9829c83399a60b6b58099baa9e1',1,'xrpl::test::csf::Peer']]],
   ['delegatable_135',['delegatable',['../namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148daf708354f10e0c20bc6e8af971f0b0bd7',1,'xrpl']]],
   ['delegatabletx_5f_136',['delegatableTx_',['../classxrpl_1_1Permission.html#a87efe11e4e7eb13ad84536b745987a54',1,'xrpl::Permission']]],
-  ['delegate_137',['delegate',['../namespacexrpl.html#aa040fac78e4975614b31771a1bc5f7ada728f601ddf976d05ffa0d99cc27e8366',1,'xrpl::DELEGATE'],['../namespacexrpl_1_1keylet.html#ac3f0f170756c48ccc7d68d01cd94e538',1,'xrpl::keylet::delegate()'],['../structxrpl_1_1test_1_1jtx_1_1MPTSet.html#af8c9a91b898ad41bb8e1a85eab90fbb2',1,'xrpl::test::jtx::MPTSet::delegate']]],
+  ['delegate_137',['delegate',['../namespacexrpl_1_1keylet.html#ac3f0f170756c48ccc7d68d01cd94e538',1,'xrpl::keylet::delegate()'],['../namespacexrpl.html#aa040fac78e4975614b31771a1bc5f7ada728f601ddf976d05ffa0d99cc27e8366',1,'xrpl::DELEGATE'],['../structxrpl_1_1test_1_1jtx_1_1MPTSet.html#af8c9a91b898ad41bb8e1a85eab90fbb2',1,'xrpl::test::jtx::MPTSet::delegate']]],
   ['delegate_5f_138',['delegate_',['../structxrpl_1_1test_1_1jtx_1_1delegate_1_1as.html#a04b3a10e2c10898274c89b10eb74f66e',1,'xrpl::test::jtx::delegate::as']]],
   ['delegate_5ftest_139',['Delegate_test',['../classxrpl_1_1test_1_1Delegate__test.html',1,'xrpl::test']]],
   ['delegateset_140',['delegateset',['../classxrpl_1_1DelegateSet.html#a4e23ee3b1c119c49f146c486b8a1af07',1,'xrpl::DelegateSet::DelegateSet()'],['../classxrpl_1_1DelegateSet.html',1,'xrpl::DelegateSet']]],
