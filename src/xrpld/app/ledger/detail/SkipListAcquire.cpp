@@ -1,24 +1,23 @@
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/detail/SkipListAcquire.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/overlay/PeerSet.h>
 
 namespace xrpl {
 
 SkipListAcquire::SkipListAcquire(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers& inboundLedgers,
     uint256 const& ledgerHash,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app.getServiceRegistry(),
+          registry,
           ledgerHash,
           LedgerReplayParameters::SUB_TASK_TIMEOUT,
           {jtREPLAY_TASK,
            "SkipListAcquire",
            LedgerReplayParameters::MAX_QUEUED_TASKS},
-          app.journal("LedgerReplaySkipList"))
+          registry.journal("LedgerReplaySkipList"))
     , inboundLedgers_(inboundLedgers)
     , peerSet_(std::move(peerSet))
 {

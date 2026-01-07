@@ -2,16 +2,16 @@
 #define XRPL_APP_LEDGER_LEDGERREPLAYMSGHANDLER_H_INCLUDED
 
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/messages.h>
 
 namespace xrpl {
-class Application;
 class LedgerReplayer;
 
 class LedgerReplayMsgHandler final
 {
 public:
-    LedgerReplayMsgHandler(Application& app, LedgerReplayer& replayer);
+    LedgerReplayMsgHandler(ServiceRegistry& registry, LedgerReplayer& replayer);
     ~LedgerReplayMsgHandler() = default;
 
     /**
@@ -49,7 +49,7 @@ public:
         std::shared_ptr<protocol::TMReplayDeltaResponse> const& msg);
 
 private:
-    Application& app_;
+    ServiceRegistry& registry_;
     LedgerReplayer& replayer_;
     beast::Journal journal_;
 };

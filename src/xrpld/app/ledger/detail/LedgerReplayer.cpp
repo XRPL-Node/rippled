@@ -72,7 +72,7 @@ LedgerReplayer::replay(
         if (!skipList)  // cannot find, or found but cannot lock
         {
             skipList = std::make_shared<SkipListAcquire>(
-                registry_.app(),
+                registry_,
                 inboundLedgers_,
                 parameter.finishHash_,
                 peerSetBuilder_->build());
@@ -135,7 +135,7 @@ LedgerReplayer::createDeltas(std::shared_ptr<LedgerReplayTask> task)
                 if (!delta)  // cannot find, or found but cannot lock
                 {
                     delta = std::make_shared<LedgerDeltaAcquire>(
-                        registry_.app(),
+                        registry_,
                         inboundLedgers_,
                         *skipListItem,
                         seq,

@@ -1,7 +1,6 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/detail/LedgerReplayMsgHandler.h>
-#include <xrpld/app/main/Application.h>
 
 #include <xrpl/protocol/LedgerHeader.h>
 
@@ -9,11 +8,11 @@
 
 namespace xrpl {
 LedgerReplayMsgHandler::LedgerReplayMsgHandler(
-    Application& app,
+    ServiceRegistry& registry,
     LedgerReplayer& replayer)
-    : app_(app)
+    : registry_(registry)
     , replayer_(replayer)
-    , journal_(app.journal("LedgerReplayMsgHandler"))
+    , journal_(registry.journal("LedgerReplayMsgHandler"))
 {
 }
 
@@ -39,7 +38,7 @@ LedgerReplayMsgHandler::processProofPathRequest(
 
     uint256 const key(packet.key());
     uint256 const ledgerHash(packet.ledgerhash());
-    auto ledger = app_.getLedgerMaster().getLedgerByHash(ledgerHash);
+    auto ledger = registry_.getLedgerMaster().getLedgerByHash(ledgerHash);
     if (!ledger)
     {
         JLOG(journal_.debug())
@@ -174,7 +173,7 @@ LedgerReplayMsgHandler::processReplayDeltaRequest(
     reply.set_ledgerhash(packet.ledgerhash());
 
     uint256 const ledgerHash{packet.ledgerhash()};
-    auto ledger = app_.getLedgerMaster().getLedgerByHash(ledgerHash);
+    auto ledger = registry_.getLedgerMaster().getLedgerByHash(ledgerHash);
     if (!ledger || !ledger->isImmutable())
     {
         JLOG(journal_.debug())
@@ -222,7 +221,7 @@ LedgerReplayMsgHandler::processReplayDeltaResponse(
 
     auto numTxns = reply.transaction_size();
     std::map<std::uint32_t, std::shared_ptr<STTx const>> orderedTxns;
-    SHAMap txMap(SHAMapType::TRANSACTION, app_.getNodeFamily());
+    SHAMap txMap(SHAMapType::TRANSACTION, registry_.getNodeFamily());
     try
     {
         for (int i = 0; i < numTxns; ++i)

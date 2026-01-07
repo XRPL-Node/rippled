@@ -106,7 +106,7 @@ PeerImp::PeerImp(
           headers_,
           FEATURE_LEDGER_REPLAY,
           app_.config().LEDGER_REPLAY))
-    , ledgerReplayMsgHandler_(app, app.getLedgerReplayer())
+    , ledgerReplayMsgHandler_(app.getServiceRegistry(), app.getLedgerReplayer())
 {
     JLOG(journal_.info())
         << "compression enabled " << (compressionEnabled_ == Compressed::On)

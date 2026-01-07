@@ -38,14 +38,14 @@ public:
 
     /**
      * Constructor
-     * @param app  Application reference
+     * @param registry The service registry
      * @param inboundLedgers  InboundLedgers reference
      * @param ledgerHash  hash of the ledger
      * @param ledgerSeq  sequence number of the ledger
      * @param peerSet  manage a set of peers that we will ask for the ledger
      */
     LedgerDeltaAcquire(
-        Application& app,
+        ServiceRegistry& registry,
         InboundLedgers& inboundLedgers,
         uint256 const& ledgerHash,
         std::uint32_t ledgerSeq,

@@ -2,8 +2,6 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/detail/TransactionAcquire.h>
-#include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 
 #include <memory>
 
@@ -20,15 +18,15 @@ enum {
 };
 
 TransactionAcquire::TransactionAcquire(
-    Application& app,
+    ServiceRegistry& registry,
     uint256 const& hash,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app.getServiceRegistry(),
+          registry,
           hash,
           TX_ACQUIRE_TIMEOUT,
           {jtTXN_DATA, "TransactionAcquire", {}},
-          app.journal("TransactionAcquire"))
+          registry.journal("TransactionAcquire"))
     , mHaveRoot(false)
     , mPeerSet(std::move(peerSet))
 {

@@ -4,7 +4,6 @@
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
-#include <xrpld/app/main/Application.h>
 
 #include <xrpl/shamap/SHAMap.h>
 
@@ -48,13 +47,13 @@ public:
 
     /**
      * Constructor
-     * @param app  Application reference
+     * @param registry The service registry
      * @param inboundLedgers  InboundLedgers reference
      * @param ledgerHash  hash of the ledger that has the skip list
      * @param peerSet  manage a set of peers that we will ask for the skip list
      */
     SkipListAcquire(
-        Application& app,
+        ServiceRegistry& registry,
         InboundLedgers& inboundLedgers,
         uint256 const& ledgerHash,
         std::unique_ptr<PeerSet> peerSet);

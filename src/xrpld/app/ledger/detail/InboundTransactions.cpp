@@ -1,8 +1,6 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/detail/TransactionAcquire.h>
-#include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/core/JobQueue.h>
@@ -45,19 +43,19 @@ class InboundTransactionsImp : public InboundTransactions
 {
 public:
     InboundTransactionsImp(
-        Application& app,
+        ServiceRegistry& registry,
         beast::insight::Collector::ptr const& collector,
         std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet,
         std::unique_ptr<PeerSetBuilder> peerSetBuilder)
-        : app_(app)
+        : registry_(registry)
         , m_seq(0)
         , m_zeroSet(m_map[uint256()])
         , m_gotSet(std::move(gotSet))
         , m_peerSetBuilder(std::move(peerSetBuilder))
-        , j_(app_.journal("InboundTransactions"))
+        , j_(registry.journal("InboundTransactions"))
     {
         m_zeroSet.mSet = std::make_shared<SHAMap>(
-            SHAMapType::TRANSACTION, uint256(), app_.getNodeFamily());
+            SHAMapType::TRANSACTION, uint256(), registry_.getNodeFamily());
         m_zeroSet.mSet->setUnbacked();
     }
 
@@ -100,7 +98,7 @@ public:
                 return std::shared_ptr<SHAMap>();
 
             ta = std::make_shared<TransactionAcquire>(
-                app_, hash, m_peerSetBuilder->build());
+                registry_, hash, m_peerSetBuilder->build());
 
             auto& obj = m_map[hash];
             obj.mAcquire = ta;
@@ -226,7 +224,7 @@ public:
 private:
     using MapType = hash_map<uint256, InboundTransactionSet>;
 
-    Application& app_;
+    ServiceRegistry& registry_;
 
     std::recursive_mutex mLock;
 
@@ -255,7 +253,7 @@ make_InboundTransactions(
     std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet)
 {
     return std::make_unique<InboundTransactionsImp>(
-        registry.app(),
+        registry,
         collector,
         std::move(gotSet),
         make_PeerSetBuilder(registry.app()));

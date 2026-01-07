@@ -3,6 +3,7 @@
 
 #include <xrpld/overlay/PeerSet.h>
 
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/shamap/SHAMap.h>
 
 namespace xrpl {
@@ -18,7 +19,7 @@ public:
     using pointer = std::shared_ptr<TransactionAcquire>;
 
     TransactionAcquire(
-        Application& app,
+        ServiceRegistry& registry,
         uint256 const& hash,
         std::unique_ptr<PeerSet> peerSet);
     ~TransactionAcquire() = default;

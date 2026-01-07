@@ -1,5 +1,4 @@
 #include <xrpld/app/ledger/OpenLedger.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/tx/apply.h>

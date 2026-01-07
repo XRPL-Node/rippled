@@ -466,7 +466,9 @@ struct LedgerServer
         : env(suite)
         , app(env.app())
         , ledgerMaster(env.app().getLedgerMaster())
-        , msgHandler(env.app(), env.app().getLedgerReplayer())
+        , msgHandler(
+              env.app().getServiceRegistry(),
+              env.app().getLedgerReplayer())
         , param(p)
     {
         assert(param.initLedgers > 0);
@@ -581,8 +583,10 @@ public:
               server.app.getLedgerMaster(),
               ledgerMaster,
               inboundBhvr)
-        , serverMsgHandler(server.app, server.app.getLedgerReplayer())
-        , clientMsgHandler(env.app(), replayer)
+        , serverMsgHandler(
+              server.app.getServiceRegistry(),
+              server.app.getLedgerReplayer())
+        , clientMsgHandler(env.app().getServiceRegistry(), replayer)
         , replayer(
               env.app().getServiceRegistry(),
               inboundLedgers,

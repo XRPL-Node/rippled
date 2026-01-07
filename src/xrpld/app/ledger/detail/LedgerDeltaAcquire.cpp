@@ -3,7 +3,6 @@
 #include <xrpld/app/ledger/LedgerReplay.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/detail/LedgerDeltaAcquire.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/overlay/PeerSet.h>
 
 #include <xrpl/core/JobQueue.h>
@@ -12,19 +11,19 @@
 namespace xrpl {
 
 LedgerDeltaAcquire::LedgerDeltaAcquire(
-    Application& app,
+    ServiceRegistry& registry,
     InboundLedgers& inboundLedgers,
     uint256 const& ledgerHash,
     std::uint32_t ledgerSeq,
     std::unique_ptr<PeerSet> peerSet)
     : TimeoutCounter(
-          app.getServiceRegistry(),
+          registry,
           ledgerHash,
           LedgerReplayParameters::SUB_TASK_TIMEOUT,
           {jtREPLAY_TASK,
            "LedgerReplayDelta",
            LedgerReplayParameters::MAX_QUEUED_TASKS},
-          app.journal("LedgerReplayDelta"))
+          registry.journal("LedgerReplayDelta"))
     , inboundLedgers_(inboundLedgers)
     , ledgerSeq_(ledgerSeq)
     , peerSet_(std::move(peerSet))
