@@ -690,7 +690,7 @@ var searchData=
   ['ismemberresult_687',['IsMemberResult',['../structxrpl_1_1detail_1_1MultiApiJson.html#ad49ca484599d438d7ca2feddbd5e1aca',1,'xrpl::detail::MultiApiJson']]],
   ['ismemookay_688',['isMemoOkay',['../namespacexrpl.html#a5c8c58dd2d48e75839629a826203d784',1,'xrpl']]],
   ['ismetadatapresent_689',['isMetadataPresent',['../classxrpl_1_1test_1_1jtx_1_1MPTTester.html#a46d5725a48e8c02ae18471b91ae04019',1,'xrpl::test::jtx::MPTTester']]],
-  ['ismultinearray_690',['ismultinearray',['../classJson_1_1StyledWriter.html#ae39ca61f2b6318df425a9f2248466cb9',1,'Json::StyledWriter::isMultineArray()'],['../classJson_1_1StyledStreamWriter.html#a57a01e64802b997b174107d782346b47',1,'Json::StyledStreamWriter::isMultineArray()']]],
+  ['ismultilinearray_690',['ismultilinearray',['../classJson_1_1StyledWriter.html#a37124038a1137c2996e3596b684b3ea0',1,'Json::StyledWriter::isMultilineArray()'],['../classJson_1_1StyledStreamWriter.html#a60d5f34d1a6d3647f253abe30b6c1e85',1,'Json::StyledStreamWriter::isMultilineArray()']]],
   ['ismultipleendpoints_691',['isMultipleEndpoints',['../classxrpl_1_1test_1_1DNS__test.html#a75532f7f0a033155a2f9bc65f91f24cf',1,'xrpl::test::DNS_test']]],
   ['ismultisigning_692',['isMultiSigning',['../classxrpl_1_1RPC_1_1detail_1_1SigningForParams.html#a7b7799500dc4a37a1e819b2bd89d8456',1,'xrpl::RPC::detail::SigningForParams']]],
   ['isnan_693',['isnan',['http://en.cppreference.com/w/cpp/numeric/math/isnan.html',1,'std']]],
