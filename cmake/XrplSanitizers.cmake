@@ -151,6 +151,6 @@ if(ENABLE_UBSAN)
 endif()
 
 if(SANITIZERS_LIST)
-    list(JOIN SANITIZERS_LIST "_" SANITIZERS_STR)
+    list(JOIN SANITIZERS_LIST "." SANITIZERS_STR)
     target_compile_definitions(common INTERFACE SANITIZERS=${SANITIZERS_STR})
 endif()
