@@ -333,7 +333,7 @@ doSubscribe(RPC::JsonContext& context)
                             lpLedger,
                             field == jss::asks ? reversed(book) : book,
                             takerID ? *takerID : noAccount(),
-                            RPC::Tuning::bookOffers.rdefault,
+                            RPC::Tuning::bookOffers.rDefault,
                             jvMarker,
                             jvOffers);
 
