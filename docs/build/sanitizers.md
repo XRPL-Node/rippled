@@ -102,7 +102,7 @@ export LSAN_OPTIONS="suppressions=path/to/lsan.supp:halt_on_error=0:log_path=lsa
 - Boost context switching (used in `Workers.cpp`) confuses ASAN's stack tracking
 - Since we usually don't build Boost(because we don't want to instrument Boost and detect issues in Boost code) with ASAN but use Boost containers in ASAN instrumented rippled code, it generates false positives. Building dependencies with ASAN instrumentation reduces false positives.
 - See: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow
-- More such flags are detailed here: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
+- More such flags are detailed [here](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags)
 
 ### ThreadSanitizer (TSan)
 
@@ -113,7 +113,7 @@ export TSAN_OPTIONS="suppressions=path/to/tsan.supp halt_on_error=0 log_path=tsa
 ./xrpld --unittest --unittest-jobs=5
 ```
 
-More details: https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual
+More details [here](https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual).
 
 ### LeakSanitizer (LSan)
 
@@ -123,7 +123,7 @@ LSan is automatically enabled with ASAN. To disable it:
 export ASAN_OPTIONS="detect_leaks=0"
 ```
 
-More details here: https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer
+More details [here](https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer).
 
 ### undefinedbehaviorSanitizer (UBSan)
 
@@ -134,7 +134,7 @@ export UBSAN_OPTIONS="suppressions=path/to/ubsan.supp:print_stacktrace=1:halt_on
 ./xrpld --unittest --unittest-jobs=5
 ```
 
-More details here: https://clang.llvm.org/docs/undefinedbehaviorSanitizer.html
+More details [here](https://clang.llvm.org/docs/undefinedbehaviorSanitizer.html).
 
 ## Suppression Files
 
@@ -162,12 +162,13 @@ More details here: https://clang.llvm.org/docs/undefinedbehaviorSanitizer.html
 - **Purpose**: Suppress undefinedbehaviorSanitizer errors
 - **Format**: `<error_type>:<pattern>` (e.g., `unsigned-integer-overflow:protobuf`)
 - **Covers**: Intentional overflows in sanitizers/suppressions libraries (protobuf, gRPC, stdlib)
+- More info [UBSan suppressions](https://clang.llvm.org/docs/SanitizerSpecialCaseList.html).
 
 ### [`tsan.supp`](../../sanitizers/suppressions/tsan.supp)
 
 - **Purpose**: Suppress ThreadSanitizer data race warnings
 - **Format**: `race:<pattern>` where pattern matches function/file names
-- **More info**: [ThreadSanitizerSuppressions](https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions)
+- **More info**: [ThreadSanitizer suppressions](https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions)
 
 ### [`sanitizer-ignorelist.txt`](../../sanitizers/suppressions/sanitizer-ignorelist.txt)
 
@@ -201,5 +202,5 @@ Then review the log files: `asan.log.*`, `ubsan.log.*`, `tsan.log.*`
 - [AddressSanitizer Wiki](https://github.com/google/sanitizers/wiki/AddressSanitizer)
 - [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags)
 - [Container Overflow Detection](https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow)
-- [undefinedbehaviorSanitizer](https://clang.llvm.org/docs/undefinedbehaviorSanitizer.html)
+- [UndefinedBehavior Sanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
 - [ThreadSanitizer](https://github.com/google/sanitizers/wiki/ThreadSanitizerCppManual)
