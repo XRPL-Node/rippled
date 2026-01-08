@@ -2,7 +2,7 @@
 #define XRPL_APP_CONSENSUS_RCLCXLEDGER_H_INCLUDED
 
 #include <xrpld/app/ledger/Ledger.h>
-#include <xrpld/app/ledger/LedgerToJson.h>
+#include <xrpld/app/rpc/LedgerToJson.h>
 
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/RippleLedgerHash.h>

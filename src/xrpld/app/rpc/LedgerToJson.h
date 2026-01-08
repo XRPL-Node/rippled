@@ -1,5 +1,5 @@
-#ifndef XRPL_APP_LEDGER_LEDGERTOJSON_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGERTOJSON_H_INCLUDED
+#ifndef XRPL_APP_RPC_LEDGERTOJSON_H_INCLUDED
+#define XRPL_APP_RPC_LEDGERTOJSON_H_INCLUDED
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/LedgerMaster.h>

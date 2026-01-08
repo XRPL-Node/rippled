@@ -4,7 +4,6 @@
 #include <xrpld/app/ledger/LedgerCleaner.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
-#include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/ledger/OpenLedger.h>
 #include <xrpld/app/ledger/OrderBookDB.h>
 #include <xrpld/app/ledger/PendingSaves.h>
@@ -25,6 +24,7 @@
 #include <xrpld/app/misc/ValidatorSite.h>
 #include <xrpld/app/paths/PathRequests.h>
 #include <xrpld/app/rdb/backend/RelationalDatabase.h>
+#include <xrpld/app/rpc/LedgerToJson.h>
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
 #include <xrpld/ledger/FeatureSetServiceImpl.h>

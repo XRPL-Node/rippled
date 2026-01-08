@@ -1,4 +1,4 @@
-#include <xrpld/app/ledger/LedgerToJson.h>
+#include <xrpld/app/rpc/LedgerToJson.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/GRPCHandlers.h>
 #include <xrpld/rpc/Role.h>
