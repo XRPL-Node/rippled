@@ -2,7 +2,6 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/PendingSaves.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
-#include <xrpld/app/rdb/backend/RelationalDatabase.h>
 #include <xrpld/app/rdb/backend/detail/Node.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
 
@@ -11,6 +10,7 @@
 #include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/rdb/DatabaseCon.h>
+#include <xrpl/rdb/RelationalDatabase.h>
 #include <xrpl/rdb/SociDB.h>
 
 #include <boost/range/adaptor/transformed.hpp>

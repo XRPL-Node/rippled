@@ -1,293 +1,246 @@
 #ifndef XRPL_APP_RDB_BACKEND_SQLITEDATABASE_H_INCLUDED
 #define XRPL_APP_RDB_BACKEND_SQLITEDATABASE_H_INCLUDED
 
-#include <xrpld/app/rdb/backend/RelationalDatabase.h>
+#include <xrpl/rdb/RelationalDatabase.h>
+
+#include <memory>
 
 namespace xrpl {
 
-class SQLiteDatabase : public RelationalDatabase
+class Config;
+class JobQueue;
+class ServiceRegistry;
+
+class SQLiteDatabase final : public RelationalDatabase
 {
 public:
-    /**
-     * @brief getTransactionsMinLedgerSeq Returns the minimum ledger sequence
-     *        stored in the Transactions table.
-     * @return Ledger sequence or no value if no ledgers exist.
-     */
-    virtual std::optional<LedgerIndex>
-    getTransactionsMinLedgerSeq() = 0;
+    SQLiteDatabase(
+        ServiceRegistry& registry,
+        Config const& config,
+        JobQueue& jobQueue)
+        : registry_(registry)
+        , useTxTables_(config.useTxTables())
+        , j_(registry.journal("SQLiteDatabase"))
+    {
+        DatabaseCon::Setup const setup = setup_DatabaseCon(config, j_);
+        if (!makeLedgerDBs(
+                config,
+                setup,
+                DatabaseCon::CheckpointerSetup{&jobQueue, &registry_.logs()}))
+        {
+            std::string_view constexpr error =
+                "Failed to create ledger databases";
 
-    /**
-     * @brief getAccountTransactionsMinLedgerSeq Returns the minimum ledger
-     *        sequence stored in the AccountTransactions table.
-     * @return Ledger sequence or no value if no ledgers exist.
-     */
-    virtual std::optional<LedgerIndex>
-    getAccountTransactionsMinLedgerSeq() = 0;
+            JLOG(j_.fatal()) << error;
+            Throw<std::runtime_error>(error.data());
+        }
+    }
 
-    /**
-     * @brief deleteTransactionByLedgerSeq Deletes transactions from the ledger
-     *        with the given sequence.
-     * @param ledgerSeq Ledger sequence.
-     */
-    virtual void
-    deleteTransactionByLedgerSeq(LedgerIndex ledgerSeq) = 0;
+    std::optional<LedgerIndex>
+    getMinLedgerSeq() override;
 
-    /**
-     * @brief deleteBeforeLedgerSeq Deletes all ledgers with a sequence number
-     *        less than or equal to the given ledger sequence.
-     * @param ledgerSeq Ledger sequence.
-     */
-    virtual void
-    deleteBeforeLedgerSeq(LedgerIndex ledgerSeq) = 0;
+    std::optional<LedgerIndex>
+    getTransactionsMinLedgerSeq() override;
 
-    /**
-     * @brief deleteTransactionsBeforeLedgerSeq Deletes all transactions with
-     *        a sequence number less than or equal to the given ledger
-     *        sequence.
-     * @param ledgerSeq Ledger sequence.
-     */
-    virtual void
-    deleteTransactionsBeforeLedgerSeq(LedgerIndex ledgerSeq) = 0;
+    std::optional<LedgerIndex>
+    getAccountTransactionsMinLedgerSeq() override;
 
-    /**
-     * @brief deleteAccountTransactionsBeforeLedgerSeq Deletes all account
-     *        transactions with a sequence number less than or equal to the
-     *        given ledger sequence.
-     * @param ledgerSeq Ledger sequence.
-     */
-    virtual void
-    deleteAccountTransactionsBeforeLedgerSeq(LedgerIndex ledgerSeq) = 0;
+    std::optional<LedgerIndex>
+    getMaxLedgerSeq() override;
 
-    /**
-     * @brief getTransactionCount Returns the number of transactions.
-     * @return Number of transactions.
-     */
-    virtual std::size_t
-    getTransactionCount() = 0;
+    void
+    deleteTransactionByLedgerSeq(LedgerIndex ledgerSeq) override;
 
-    /**
-     * @brief getAccountTransactionCount Returns the number of account
-     *        transactions.
-     * @return Number of account transactions.
-     */
-    virtual std::size_t
-    getAccountTransactionCount() = 0;
+    void
+    deleteBeforeLedgerSeq(LedgerIndex ledgerSeq) override;
 
-    /**
-     * @brief getLedgerCountMinMax Returns the minimum ledger sequence,
-     *        maximum ledger sequence and total number of saved ledgers.
-     * @return Struct CountMinMax which contains the minimum sequence,
-     *         maximum sequence and number of ledgers.
-     */
-    virtual struct CountMinMax
-    getLedgerCountMinMax() = 0;
+    void
+    deleteTransactionsBeforeLedgerSeq(LedgerIndex ledgerSeq) override;
 
-    /**
-     * @brief saveValidatedLedger Saves a ledger into the database.
-     * @param ledger The ledger.
-     * @param current True if the ledger is current.
-     * @return True if saving was successful.
-     */
-    virtual bool
+    void
+    deleteAccountTransactionsBeforeLedgerSeq(LedgerIndex ledgerSeq) override;
+
+    std::size_t
+    getTransactionCount() override;
+
+    std::size_t
+    getAccountTransactionCount() override;
+
+    RelationalDatabase::CountMinMax
+    getLedgerCountMinMax() override;
+
+    bool
     saveValidatedLedger(
         std::shared_ptr<Ledger const> const& ledger,
-        bool current) = 0;
+        bool current) override;
 
-    /**
-     * @brief getLimitedOldestLedgerInfo Returns the info of the oldest ledger
-     *        whose sequence number is greater than or equal to the given
-     *        sequence number.
-     * @param ledgerFirstIndex Minimum ledger sequence.
-     * @return Ledger info if found, otherwise no value.
-     */
-    virtual std::optional<LedgerHeader>
-    getLimitedOldestLedgerInfo(LedgerIndex ledgerFirstIndex) = 0;
+    std::optional<LedgerHeader>
+    getLedgerInfoByIndex(LedgerIndex ledgerSeq) override;
 
-    /**
-     * @brief getLimitedNewestLedgerInfo Returns the info of the newest ledger
-     *        whose sequence number is greater than or equal to the given
-     *        sequence number.
-     * @param ledgerFirstIndex Minimum ledger sequence.
-     * @return Ledger info if found, otherwise no value.
-     */
-    virtual std::optional<LedgerHeader>
-    getLimitedNewestLedgerInfo(LedgerIndex ledgerFirstIndex) = 0;
+    std::optional<LedgerHeader>
+    getNewestLedgerInfo() override;
 
-    /**
-     * @brief getOldestAccountTxs Returns the oldest transactions for the
-     *        account that matches the given criteria starting from the provided
-     *        offset.
-     * @param options Struct AccountTxOptions which contains the criteria to
-     *        match: the account, ledger search range, the offset of the first
-     *        entry to return, the number of transactions to return, a flag if
-     *        this number is unlimited.
-     * @return Vector of pairs of found transactions and their metadata
-     *         sorted in ascending order by account sequence.
-     */
-    virtual AccountTxs
-    getOldestAccountTxs(AccountTxOptions const& options) = 0;
+    std::optional<LedgerHeader>
+    getLimitedOldestLedgerInfo(LedgerIndex ledgerFirstIndex) override;
 
-    /**
-     * @brief getNewestAccountTxs Returns the newest transactions for the
-     *        account that matches the given criteria starting from the provided
-     *        offset.
-     * @param options Struct AccountTxOptions which contains the criteria to
-     *        match: the account, the ledger search range, the offset of  the
-     *        first entry to return, the number of transactions to return, a
-     *        flag if this number unlimited.
-     * @return Vector of pairs of found transactions and their metadata
-     *         sorted in descending order by account sequence.
-     */
-    virtual AccountTxs
-    getNewestAccountTxs(AccountTxOptions const& options) = 0;
+    std::optional<LedgerHeader>
+    getLimitedNewestLedgerInfo(LedgerIndex ledgerFirstIndex) override;
 
-    /**
-     * @brief getOldestAccountTxsB Returns the oldest transactions in binary
-     *        form for the account that matches the given criteria starting from
-     *        the provided offset.
-     * @param options Struct AccountTxOptions which contains the criteria to
-     *        match: the account, the ledger search range, the offset of the
-     *        first entry to return, the number of transactions to return, a
-     *        flag if this number unlimited.
-     * @return Vector of tuples of found transactions, their metadata and
-     *         account sequences sorted in ascending order by account sequence.
-     */
-    virtual MetaTxsList
-    getOldestAccountTxsB(AccountTxOptions const& options) = 0;
+    std::optional<LedgerHeader>
+    getLedgerInfoByHash(uint256 const& ledgerHash) override;
 
-    /**
-     * @brief getNewestAccountTxsB Returns the newest transactions in binary
-     *        form for the account that matches the given criteria starting from
-     *        the provided offset.
-     * @param options Struct AccountTxOptions which contains the criteria to
-     *        match: the account, the ledger search range, the offset of the
-     *        first entry to return, the number of transactions to return, a
-     *        flag if this number is unlimited.
-     * @return Vector of tuples of found transactions, their metadata and
-     *         account sequences sorted in descending order by account
-     *         sequence.
-     */
-    virtual MetaTxsList
-    getNewestAccountTxsB(AccountTxOptions const& options) = 0;
+    uint256
+    getHashByIndex(LedgerIndex ledgerIndex) override;
 
-    /**
-     * @brief oldestAccountTxPage Returns the oldest transactions for the
-     *        account that matches the given criteria starting from the
-     *        provided marker.
-     * @param options Struct AccountTxPageOptions which contains the criteria to
-     *        match: the account, the ledger search range, the marker of first
-     *        returned entry, the number of transactions to return, a flag if
-     *        this number is unlimited.
-     * @return Vector of pairs of found transactions and their metadata
-     *         sorted in ascending order by account sequence and a marker
-     *         for the next search if the search was not finished.
-     */
-    virtual std::pair<AccountTxs, std::optional<AccountTxMarker>>
-    oldestAccountTxPage(AccountTxPageOptions const& options) = 0;
+    std::optional<LedgerHashPair>
+    getHashesByIndex(LedgerIndex ledgerIndex) override;
 
-    /**
-     * @brief newestAccountTxPage Returns the newest transactions for the
-     *        account that matches the given criteria starting from the provided
-     *        marker.
-     * @param options Struct AccountTxPageOptions which contains the criteria to
-     *        match: the account, the ledger search range, the marker of the
-     *        first returned entry, the number of transactions to return, a flag
-     *        if this number unlimited.
-     * @return Vector of pairs of found transactions and their metadata
-     *         sorted in descending order by account sequence and a marker
-     *         for the next search if the search was not finished.
-     */
-    virtual std::pair<AccountTxs, std::optional<AccountTxMarker>>
-    newestAccountTxPage(AccountTxPageOptions const& options) = 0;
+    std::map<LedgerIndex, LedgerHashPair>
+    getHashesByIndex(LedgerIndex minSeq, LedgerIndex maxSeq) override;
 
-    /**
-     * @brief oldestAccountTxPageB Returns the oldest transactions in binary
-     *        form for the account that matches the given criteria starting from
-     *        the provided marker.
-     * @param options Struct AccountTxPageOptions which contains criteria to
-     *        match: the account, the ledger search range, the marker of the
-     *        first returned entry, the number of transactions to return, a flag
-     *        if this number unlimited.
-     * @return Vector of tuples of found transactions, their metadata and
-     *         account sequences sorted in ascending order by account
-     *         sequence and a marker for the next search if the search was not
-     *         finished.
-     */
-    virtual std::pair<MetaTxsList, std::optional<AccountTxMarker>>
-    oldestAccountTxPageB(AccountTxPageOptions const& options) = 0;
+    std::vector<std::shared_ptr<Transaction>>
+    getTxHistory(LedgerIndex startIndex) override;
 
-    /**
-     * @brief newestAccountTxPageB Returns the newest transactions in binary
-     *        form for the account that matches the given criteria starting from
-     *        the provided marker.
-     * @param options Struct AccountTxPageOptions which contains the criteria to
-     *        match: the account, the ledger search range, the marker of the
-     *        first returned entry, the number of transactions to return, a flag
-     *        if this number is unlimited.
-     * @return Vector of tuples of found transactions, their metadata and
-     *         account sequences sorted in descending order by account
-     *         sequence and a marker for the next search if the search was not
-     *         finished.
-     */
-    virtual std::pair<MetaTxsList, std::optional<AccountTxMarker>>
-    newestAccountTxPageB(AccountTxPageOptions const& options) = 0;
+    AccountTxs
+    getOldestAccountTxs(AccountTxOptions const& options) override;
 
-    /**
-     * @brief getTransaction Returns the transaction with the given hash. If a
-     *        range is provided but the transaction is not found, then check if
-     *        all ledgers in the range are present in the database.
-     * @param id Hash of the transaction.
-     * @param range Range of ledgers to check, if present.
-     * @param ec Default error code value.
-     * @return Transaction and its metadata if found, otherwise TxSearched::all
-     *         if a range is provided and all ledgers from the range are present
-     *         in the database, TxSearched::some if a range is provided and not
-     *         all ledgers are present, TxSearched::unknown if the range is not
-     *         provided or a deserializing error occurred. In the last case the
-     *         error code is returned via the ec parameter, in other cases the
-     *         default error code is not changed.
-     */
-    virtual std::variant<AccountTx, TxSearched>
+    AccountTxs
+    getNewestAccountTxs(AccountTxOptions const& options) override;
+
+    MetaTxsList
+    getOldestAccountTxsB(AccountTxOptions const& options) override;
+
+    MetaTxsList
+    getNewestAccountTxsB(AccountTxOptions const& options) override;
+
+    std::pair<AccountTxs, std::optional<AccountTxMarker>>
+    oldestAccountTxPage(AccountTxPageOptions const& options) override;
+
+    std::pair<AccountTxs, std::optional<AccountTxMarker>>
+    newestAccountTxPage(AccountTxPageOptions const& options) override;
+
+    std::pair<MetaTxsList, std::optional<AccountTxMarker>>
+    oldestAccountTxPageB(AccountTxPageOptions const& options) override;
+
+    std::pair<MetaTxsList, std::optional<AccountTxMarker>>
+    newestAccountTxPageB(AccountTxPageOptions const& options) override;
+
+    std::variant<AccountTx, TxSearched>
     getTransaction(
         uint256 const& id,
-        std::optional<ClosedInterval<uint32_t>> const& range,
-        error_code_i& ec) = 0;
+        std::optional<ClosedInterval<std::uint32_t>> const& range,
+        error_code_i& ec) override;
+
+    std::uint32_t
+    getKBUsedAll() override;
+
+    std::uint32_t
+    getKBUsedLedger() override;
+
+    std::uint32_t
+    getKBUsedTransaction() override;
+
+    void
+    closeLedgerDB() override;
+
+    void
+    closeTransactionDB() override;
 
     /**
-     * @brief getKBUsedAll Returns the amount of space used by all databases.
-     * @return Space in kilobytes.
+     * @brief ledgerDbHasSpace Checks if the ledger database has available
+     *        space.
+     * @param config Config object.
+     * @return True if space is available.
      */
-    virtual uint32_t
-    getKBUsedAll() = 0;
+    bool
+    ledgerDbHasSpace(Config const& config);
 
     /**
-     * @brief getKBUsedLedger Returns the amount of space space used by the
-     *        ledger database.
-     * @return Space in kilobytes.
+     * @brief transactionDbHasSpace Checks if the transaction database has
+     *        available space.
+     * @param config Config object.
+     * @return True if space is available.
      */
-    virtual uint32_t
-    getKBUsedLedger() = 0;
+    bool
+    transactionDbHasSpace(Config const& config);
+
+private:
+    ServiceRegistry& registry_;
+    bool const useTxTables_;
+    beast::Journal j_;
+    std::unique_ptr<DatabaseCon> lgrdb_, txdb_;
 
     /**
-     * @brief getKBUsedTransaction Returns the amount of space used by the
+     * @brief makeLedgerDBs Opens ledger and transaction databases for the node
+     *        store, and stores their descriptors in private member variables.
+     * @param config Config object.
+     * @param setup Path to the databases and other opening parameters.
+     * @param checkpointerSetup Checkpointer parameters.
+     * @return True if node databases opened successfully.
+     */
+    bool
+    makeLedgerDBs(
+        Config const& config,
+        DatabaseCon::Setup const& setup,
+        DatabaseCon::CheckpointerSetup const& checkpointerSetup);
+
+    /**
+     * @brief existsLedger Checks if the node store ledger database exists.
+     * @return True if the node store ledger database exists.
+     */
+    bool
+    existsLedger()
+    {
+        return static_cast<bool>(lgrdb_);
+    }
+
+    /**
+     * @brief existsTransaction Checks if the node store transaction database
+     *        exists.
+     * @return True if the node store transaction database exists.
+     */
+    bool
+    existsTransaction()
+    {
+        return static_cast<bool>(txdb_);
+    }
+
+    /**
+     * @brief checkoutTransaction Checks out and returns node store ledger
+     *        database.
+     * @return Session to the node store ledger database.
+     */
+    auto
+    checkoutLedger()
+    {
+        return lgrdb_->checkoutDb();
+    }
+
+    /**
+     * @brief checkoutTransaction Checks out and returns the node store
      *        transaction database.
-     * @return Space in kilobytes.
+     * @return Session to the node store transaction database.
      */
-    virtual uint32_t
-    getKBUsedTransaction() = 0;
-
-    /**
-     * @brief Closes the ledger database
-     */
-    virtual void
-    closeLedgerDB() = 0;
-
-    /**
-     * @brief Closes the transaction database
-     */
-    virtual void
-    closeTransactionDB() = 0;
+    auto
+    checkoutTransaction()
+    {
+        return txdb_->checkoutDb();
+    }
 };
+
+/**
+ * @brief setup_RelationalDatabase Creates and returns a SQLiteDatabase
+ *        instance based on configuration.
+ * @param registry The service registry.
+ * @param config Config object.
+ * @param jobQueue JobQueue object.
+ * @return Unique pointer to the SQLiteDatabase implementation.
+ */
+std::unique_ptr<SQLiteDatabase>
+setup_RelationalDatabase(
+    ServiceRegistry& registry,
+    Config const& config,
+    JobQueue& jobQueue);
 
 }  // namespace xrpl
 

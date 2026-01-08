@@ -23,7 +23,7 @@
 #include <xrpld/app/misc/ValidatorKeys.h>
 #include <xrpld/app/misc/ValidatorSite.h>
 #include <xrpld/app/paths/PathRequests.h>
-#include <xrpld/app/rdb/backend/RelationalDatabase.h>
+#include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
@@ -204,7 +204,7 @@ public:
     boost::asio::steady_timer sweepTimer_;
     boost::asio::steady_timer entropyTimer_;
 
-    std::unique_ptr<RelationalDatabase> mRelationalDatabase;
+    std::unique_ptr<SQLiteDatabase> relationalDatabase_;
     std::unique_ptr<DatabaseCon> mWalletDB;
     std::unique_ptr<Overlay> overlay_;
     std::optional<uint256> trapTxID_;
@@ -835,10 +835,10 @@ public:
     getRelationalDatabase() override
     {
         XRPL_ASSERT(
-            mRelationalDatabase,
+            relationalDatabase_,
             "xrpl::ApplicationImp::getRelationalDatabase : non-null "
             "relational database");
-        return *mRelationalDatabase;
+        return *relationalDatabase_;
     }
 
     DatabaseCon&
@@ -878,7 +878,7 @@ public:
 
         try
         {
-            mRelationalDatabase = RelationalDatabase::init(
+            relationalDatabase_ = setup_RelationalDatabase(
                 getServiceRegistry(), *config_, *m_jobQueue);
 
             // wallet database
@@ -1005,7 +1005,7 @@ public:
     doSweep()
     {
         if (!config_->standalone() &&
-            !getRelationalDatabase().transactionDbHasSpace(*config_))
+            !relationalDatabase_->transactionDbHasSpace(*config_))
         {
             signalStop("Out of transaction DB space");
         }
