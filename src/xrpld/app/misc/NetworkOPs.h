@@ -2,14 +2,15 @@
 #define XRPL_APP_MISC_NETWORKOPS_H_INCLUDED
 
 #include <xrpld/app/consensus/RCLCxPeerPos.h>
-#include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/main/Application.h>
 
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/STValidation.h>
+#include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/messages.h>
 #include <xrpl/server/InfoSub.h>
+#include <xrpl/shamap/SHAMap.h>
 
 #include <boost/asio.hpp>
 

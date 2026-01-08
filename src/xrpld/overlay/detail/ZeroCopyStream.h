@@ -6,6 +6,7 @@
 #include <boost/asio/buffer.hpp>
 
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/stubs/common.h>
 
 namespace xrpl {
 
