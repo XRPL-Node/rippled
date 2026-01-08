@@ -3,10 +3,10 @@
 #include <xrpld/app/ledger/LedgerReplay.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/detail/LedgerDeltaAcquire.h>
-#include <xrpld/overlay/PeerSet.h>
 
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/ledger/LedgerConfigService.h>
+#include <xrpl/overlay/PeerSet.h>
 
 namespace xrpl {
 

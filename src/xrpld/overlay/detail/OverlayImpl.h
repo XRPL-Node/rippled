@@ -2,11 +2,8 @@
 #define XRPL_OVERLAY_OVERLAYIMPL_H_INCLUDED
 
 #include <xrpld/app/main/Application.h>
-#include <xrpld/overlay/Message.h>
-#include <xrpld/overlay/Overlay.h>
 #include <xrpld/overlay/Slot.h>
 #include <xrpld/overlay/detail/Handshake.h>
-#include <xrpld/overlay/detail/TrafficCount.h>
 #include <xrpld/overlay/detail/TxMetrics.h>
 #include <xrpld/peerfinder/PeerfinderManager.h>
 #include <xrpld/rpc/ServerHandler.h>
@@ -16,6 +13,9 @@
 #include <xrpl/basics/chrono.h>
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/core/Job.h>
+#include <xrpl/overlay/Message.h>
+#include <xrpl/overlay/Overlay.h>
+#include <xrpl/overlay/detail/TrafficCount.h>
 #include <xrpl/resource/ResourceManager.h>
 #include <xrpl/server/Handoff.h>
 

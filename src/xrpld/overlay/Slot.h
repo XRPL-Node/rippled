@@ -2,7 +2,6 @@
 #define XRPL_OVERLAY_SLOT_H_INCLUDED
 
 #include <xrpld/core/Config.h>
-#include <xrpld/overlay/Peer.h>
 #include <xrpld/overlay/ReduceRelayCommon.h>
 
 #include <xrpl/basics/Log.h>
@@ -10,6 +9,7 @@
 #include <xrpl/basics/random.h>
 #include <xrpl/beast/container/aged_unordered_map.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/overlay/Peer.h>
 #include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/messages.h>
 

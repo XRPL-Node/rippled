@@ -25,7 +25,6 @@
 #include <xrpld/consensus/Consensus.h>
 #include <xrpld/consensus/ConsensusParms.h>
 #include <xrpld/overlay/Cluster.h>
-#include <xrpld/overlay/Overlay.h>
 #include <xrpld/overlay/predicates.h>
 #include <xrpld/rpc/BookChanges.h>
 #include <xrpld/rpc/CTID.h>
@@ -41,6 +40,7 @@
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/crypto/RFC1751.h>
 #include <xrpl/crypto/csprng.h>
+#include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/MultiApiJson.h>

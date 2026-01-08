@@ -5,7 +5,6 @@
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/overlay/detail/ConnectAttempt.h>
 #include <xrpld/overlay/detail/PeerImp.h>
-#include <xrpld/overlay/detail/TrafficCount.h>
 #include <xrpld/overlay/detail/Tuning.h>
 #include <xrpld/overlay/predicates.h>
 #include <xrpld/peerfinder/make_Manager.h>
@@ -16,6 +15,7 @@
 #include <xrpl/basics/make_SSLContext.h>
 #include <xrpl/basics/random.h>
 #include <xrpl/beast/core/LexicalCast.h>
+#include <xrpl/overlay/detail/TrafficCount.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/rdb/RelationalDatabase.h>
 #include <xrpl/server/SimpleWriter.h>

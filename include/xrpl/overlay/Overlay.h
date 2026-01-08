@@ -1,10 +1,9 @@
 #ifndef XRPL_OVERLAY_OVERLAY_H_INCLUDED
 #define XRPL_OVERLAY_OVERLAY_H_INCLUDED
 
-#include <xrpld/overlay/Peer.h>
-
 #include <xrpl/beast/utility/PropertyStream.h>
 #include <xrpl/json/json_value.h>
+#include <xrpl/overlay/Peer.h>
 #include <xrpl/server/Handoff.h>
 
 #include <boost/asio/ip/tcp.hpp>

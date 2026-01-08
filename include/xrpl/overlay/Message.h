@@ -1,9 +1,8 @@
 #ifndef XRPL_OVERLAY_MESSAGE_H_INCLUDED
 #define XRPL_OVERLAY_MESSAGE_H_INCLUDED
 
-#include <xrpld/overlay/Compression.h>
-
 #include <xrpl/basics/ByteUtilities.h>
+#include <xrpl/overlay/Compression.h>
 #include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/messages.h>
 

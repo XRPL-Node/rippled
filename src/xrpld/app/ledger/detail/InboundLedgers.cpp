@@ -1,6 +1,7 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/misc/NetworkOPs.h>
+#include <xrpld/overlay/PeerSetImp.h>
 
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
@@ -454,7 +455,7 @@ make_InboundLedgers(
     beast::insight::Collector::ptr const& collector)
 {
     return std::make_unique<InboundLedgersImp>(
-        registry, clock, collector, make_PeerSetBuilder(registry.app()));
+        registry, clock, collector, make_PeerSetBuilder(registry));
 }
 
 }  // namespace xrpl

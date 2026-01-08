@@ -6,8 +6,6 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/overlay/Compression.h>
-#include <xrpld/overlay/Message.h>
 #include <xrpld/overlay/detail/Handshake.h>
 #include <xrpld/overlay/detail/ProtocolMessage.h>
 #include <xrpld/overlay/detail/ZeroCopyStream.h>
@@ -15,6 +13,8 @@
 #include <xrpl/basics/random.h>
 #include <xrpl/beast/unit_test.h>
 #include <xrpl/beast/utility/Journal.h>
+#include <xrpl/overlay/Compression.h>
+#include <xrpl/overlay/Message.h>
 #include <xrpl/protocol/HashPrefix.h>
 #include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/SecretKey.h>

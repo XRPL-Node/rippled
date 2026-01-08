@@ -2,8 +2,9 @@
 #define XRPL_APP_PEERS_PEERSET_H_INCLUDED
 
 #include <xrpld/app/main/Application.h>
-#include <xrpld/overlay/Peer.h>
 #include <xrpld/overlay/detail/ProtocolMessage.h>
+
+#include <xrpl/overlay/Peer.h>
 
 namespace xrpl {
 
@@ -61,17 +62,6 @@ public:
     virtual std::unique_ptr<PeerSet>
     build() = 0;
 };
-
-std::unique_ptr<PeerSetBuilder>
-make_PeerSetBuilder(Application& app);
-
-/**
- * Make a dummy PeerSet that does not do anything.
- * @note For the use case of InboundLedger in ApplicationImp::loadOldLedger(),
- *       where a real PeerSet is not needed.
- */
-std::unique_ptr<PeerSet>
-make_DummyPeerSet(Application& app);
 
 }  // namespace xrpl
 

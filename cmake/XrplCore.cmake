@@ -143,12 +143,21 @@ target_link_libraries(xrpl.libxrpl.server PUBLIC
   xrpl.libxrpl.resource
 )
 
+add_module(xrpl overlay)
+target_link_libraries(xrpl.libxrpl.overlay PUBLIC
+  xrpl.libxrpl.basics
+  xrpl.libxrpl.json
+  xrpl.libxrpl.protocol
+  xrpl.libxrpl.rdb
+)
+
 add_module(xrpl ledger)
 target_link_libraries(xrpl.libxrpl.ledger PUBLIC
   xrpl.libxrpl.basics
   xrpl.libxrpl.json
   xrpl.libxrpl.protocol
   xrpl.libxrpl.rdb
+  xrpl.libxrpl.overlay
 )
 
 add_library(xrpl.libxrpl)

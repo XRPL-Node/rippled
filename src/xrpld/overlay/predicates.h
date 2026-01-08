@@ -1,8 +1,8 @@
 #ifndef XRPL_OVERLAY_PREDICATES_H_INCLUDED
 #define XRPL_OVERLAY_PREDICATES_H_INCLUDED
 
-#include <xrpld/overlay/Message.h>
-#include <xrpld/overlay/Peer.h>
+#include <xrpl/overlay/Message.h>
+#include <xrpl/overlay/Peer.h>
 
 #include <set>
 

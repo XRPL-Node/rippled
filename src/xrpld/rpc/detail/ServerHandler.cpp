@@ -1,7 +1,6 @@
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/core/ConfigSections.h>
-#include <xrpld/overlay/Overlay.h>
 #include <xrpld/rpc/RPCHandler.h>
 #include <xrpld/rpc/Role.h>
 #include <xrpld/rpc/ServerHandler.h>
@@ -18,6 +17,7 @@
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/json/json_reader.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/ApiVersion.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/RPCErr.h>

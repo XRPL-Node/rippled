@@ -1,7 +1,8 @@
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/detail/SkipListAcquire.h>
-#include <xrpld/overlay/PeerSet.h>
+
+#include <xrpl/overlay/PeerSet.h>
 
 namespace xrpl {
 

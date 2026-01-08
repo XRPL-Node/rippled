@@ -1,15 +1,14 @@
-#include <xrpld/app/main/Application.h>
-#include <xrpld/overlay/Overlay.h>
-#include <xrpld/overlay/PeerSet.h>
-
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/ServiceRegistry.h>
+#include <xrpl/overlay/Overlay.h>
+#include <xrpl/overlay/PeerSet.h>
 
 namespace xrpl {
 
 class PeerSetImpl : public PeerSet
 {
 public:
-    PeerSetImpl(Application& app);
+    PeerSetImpl(ServiceRegistry& registry);
 
     void
     addPeers(
@@ -30,15 +29,15 @@ public:
 private:
     // Used in this class for access to boost::asio::io_context and
     // xrpl::Overlay.
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::Journal journal_;
 
     /** The identifiers of the peers we are tracking. */
     std::set<Peer::id_t> peers_;
 };
 
-PeerSetImpl::PeerSetImpl(Application& app)
-    : app_(app), journal_(app.journal("PeerSet"))
+PeerSetImpl::PeerSetImpl(ServiceRegistry& registry)
+    : registry_(registry), journal_(registry.journal("PeerSet"))
 {
 }
 
@@ -50,7 +49,7 @@ PeerSetImpl::addPeers(
 {
     using ScoredPeer = std::pair<int, std::shared_ptr<Peer>>;
 
-    auto const& overlay = app_.overlay();
+    auto const& overlay = registry_.overlay();
 
     std::vector<ScoredPeer> pairs;
     pairs.reserve(overlay.size());
@@ -94,7 +93,7 @@ PeerSetImpl::sendRequest(
 
     for (auto id : peers_)
     {
-        if (auto p = app_.overlay().findPeerByShortID(id))
+        if (auto p = registry_.overlay().findPeerByShortID(id))
             p->send(packet);
     }
 }
@@ -108,30 +107,31 @@ PeerSetImpl::getPeerIds() const
 class PeerSetBuilderImpl : public PeerSetBuilder
 {
 public:
-    PeerSetBuilderImpl(Application& app) : app_(app)
+    PeerSetBuilderImpl(ServiceRegistry& registry) : registry_(registry)
     {
     }
 
     virtual std::unique_ptr<PeerSet>
     build() override
     {
-        return std::make_unique<PeerSetImpl>(app_);
+        return std::make_unique<PeerSetImpl>(registry_);
     }
 
 private:
-    Application& app_;
+    ServiceRegistry& registry_;
 };
 
 std::unique_ptr<PeerSetBuilder>
-make_PeerSetBuilder(Application& app)
+make_PeerSetBuilder(ServiceRegistry& registry)
 {
-    return std::make_unique<PeerSetBuilderImpl>(app);
+    return std::make_unique<PeerSetBuilderImpl>(registry);
 }
 
 class DummyPeerSet : public PeerSet
 {
 public:
-    DummyPeerSet(Application& app) : j_(app.journal("DummyPeerSet"))
+    DummyPeerSet(ServiceRegistry& registry)
+        : j_(registry.journal("DummyPeerSet"))
     {
     }
 
@@ -166,9 +166,9 @@ private:
 };
 
 std::unique_ptr<PeerSet>
-make_DummyPeerSet(Application& app)
+make_DummyPeerSet(ServiceRegistry& registry)
 {
-    return std::make_unique<DummyPeerSet>(app);
+    return std::make_unique<DummyPeerSet>(registry);
 }
 
 }  // namespace xrpl

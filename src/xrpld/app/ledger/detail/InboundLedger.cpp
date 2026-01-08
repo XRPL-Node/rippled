@@ -3,7 +3,6 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionStateSF.h>
-#include <xrpld/overlay/Overlay.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/core/FeatureSetService.h>

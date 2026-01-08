@@ -1,9 +1,8 @@
 #ifndef XRPL_APP_LEDGER_TRANSACTIONACQUIRE_H_INCLUDED
 #define XRPL_APP_LEDGER_TRANSACTIONACQUIRE_H_INCLUDED
 
-#include <xrpld/overlay/PeerSet.h>
-
 #include <xrpl/core/ServiceRegistry.h>
+#include <xrpl/overlay/PeerSet.h>
 #include <xrpl/shamap/SHAMap.h>
 
 namespace xrpl {

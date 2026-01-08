@@ -1,10 +1,10 @@
 #ifndef XRPL_OVERLAY_MAKE_OVERLAY_H_INCLUDED
 #define XRPL_OVERLAY_MAKE_OVERLAY_H_INCLUDED
 
-#include <xrpld/overlay/Overlay.h>
 #include <xrpld/rpc/ServerHandler.h>
 
 #include <xrpl/basics/Resolver.h>
+#include <xrpl/overlay/Overlay.h>
 
 #include <boost/asio/io_context.hpp>
 

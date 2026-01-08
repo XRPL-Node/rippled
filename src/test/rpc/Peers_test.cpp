@@ -2,8 +2,8 @@
 #include <test/jtx/Env.h>
 
 #include <xrpld/overlay/Cluster.h>
-#include <xrpld/overlay/Overlay.h>
 
+#include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/jss.h>
 
 #include <unordered_map>

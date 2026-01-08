@@ -30,7 +30,7 @@
 #include <xrpld/ledger/FeatureSetServiceImpl.h>
 #include <xrpld/ledger/LedgerConfigServiceImpl.h>
 #include <xrpld/overlay/Cluster.h>
-#include <xrpld/overlay/PeerSet.h>
+#include <xrpld/overlay/PeerSetImp.h>
 #include <xrpld/overlay/make_Overlay.h>
 #include <xrpld/shamap/NodeFamily.h>
 
@@ -44,6 +44,7 @@
 #include <xrpl/crypto/csprng.h>
 #include <xrpl/json/json_reader.h>
 #include <xrpl/nodestore/DummyScheduler.h>
+#include <xrpl/overlay/PeerSet.h>
 #include <xrpl/protocol/ApiVersion.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/protocol/Feature.h>
@@ -397,7 +398,7 @@ public:
         , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
               *serviceRegistry_,
               *m_inboundLedgers,
-              make_PeerSetBuilder(*this)))
+              make_PeerSetBuilder(getServiceRegistry())))
 
         , m_acceptedLedgerCache(
               "AcceptedLedger",
@@ -1984,7 +1985,7 @@ ApplicationImp::loadOldLedger(
                         0,
                         InboundLedger::Reason::GENERIC,
                         stopwatch(),
-                        make_DummyPeerSet(*this));
+                        make_DummyPeerSet(getServiceRegistry()));
                     if (il->checkLocal())
                         loadLedger = il->getLedger();
                 }
@@ -2029,7 +2030,7 @@ ApplicationImp::loadOldLedger(
                     0,
                     InboundLedger::Reason::GENERIC,
                     stopwatch(),
-                    make_DummyPeerSet(*this));
+                    make_DummyPeerSet(getServiceRegistry()));
 
                 if (il->checkLocal())
                     loadLedger = il->getLedger();

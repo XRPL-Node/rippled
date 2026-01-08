@@ -9,10 +9,10 @@
 #include <xrpld/app/ledger/detail/LedgerDeltaAcquire.h>
 #include <xrpld/app/ledger/detail/LedgerReplayMsgHandler.h>
 #include <xrpld/app/ledger/detail/SkipListAcquire.h>
-#include <xrpld/overlay/PeerSet.h>
 #include <xrpld/overlay/detail/PeerImp.h>
 
 #include <xrpl/basics/Slice.h>
+#include <xrpl/overlay/PeerSet.h>
 
 #include <chrono>
 #include <thread>

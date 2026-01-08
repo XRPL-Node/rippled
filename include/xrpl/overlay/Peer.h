@@ -1,11 +1,10 @@
 #ifndef XRPL_OVERLAY_PEER_H_INCLUDED
 #define XRPL_OVERLAY_PEER_H_INCLUDED
 
-#include <xrpld/overlay/Message.h>
-
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/beast/net/IPEndpoint.h>
 #include <xrpl/json/json_value.h>
+#include <xrpl/overlay/Message.h>
 #include <xrpl/protocol/PublicKey.h>
 
 namespace xrpl {

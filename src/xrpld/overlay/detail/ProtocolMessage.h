@@ -1,11 +1,11 @@
 #ifndef XRPL_OVERLAY_PROTOCOLMESSAGE_H_INCLUDED
 #define XRPL_OVERLAY_PROTOCOLMESSAGE_H_INCLUDED
 
-#include <xrpld/overlay/Compression.h>
-#include <xrpld/overlay/Message.h>
 #include <xrpld/overlay/detail/ZeroCopyStream.h>
 
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/overlay/Compression.h>
+#include <xrpl/overlay/Message.h>
 #include <xrpl/protocol/messages.h>
 
 #include <boost/asio/buffer.hpp>

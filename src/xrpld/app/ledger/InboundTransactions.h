@@ -1,9 +1,8 @@
 #ifndef XRPL_APP_LEDGER_INBOUNDTRANSACTIONS_H_INCLUDED
 #define XRPL_APP_LEDGER_INBOUNDTRANSACTIONS_H_INCLUDED
 
-#include <xrpld/overlay/Peer.h>
-
 #include <xrpl/beast/clock/abstract_clock.h>
+#include <xrpl/overlay/Peer.h>
 #include <xrpl/shamap/SHAMap.h>
 
 #include <memory>

@@ -20,6 +20,7 @@ install (
     xrpl.libxrpl.crypto
     xrpl.libxrpl.json
     xrpl.libxrpl.rdb
+    xrpl.libxrpl.overlay
     xrpl.libxrpl.ledger
     xrpl.libxrpl.net
     xrpl.libxrpl.nodestore

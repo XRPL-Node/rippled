@@ -13,8 +13,6 @@
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/misc/ValidatorList.h>
 #include <xrpld/app/paths/PathRequests.h>
-#include <xrpld/overlay/Overlay.h>
-#include <xrpld/overlay/Peer.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/MathUtilities.h>
@@ -25,6 +23,7 @@
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/core/TimeKeeper.h>
+#include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/protocol/HashPrefix.h>
 #include <xrpl/protocol/digest.h>

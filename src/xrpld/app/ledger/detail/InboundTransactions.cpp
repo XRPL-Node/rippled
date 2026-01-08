@@ -1,6 +1,7 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/detail/TransactionAcquire.h>
+#include <xrpld/overlay/PeerSetImp.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/core/JobQueue.h>
@@ -253,10 +254,7 @@ make_InboundTransactions(
     std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet)
 {
     return std::make_unique<InboundTransactionsImp>(
-        registry,
-        collector,
-        std::move(gotSet),
-        make_PeerSetBuilder(registry.app()));
+        registry, collector, std::move(gotSet), make_PeerSetBuilder(registry));
 }
 
 }  // namespace xrpl

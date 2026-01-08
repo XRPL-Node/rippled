@@ -3,6 +3,7 @@
 
 #include <xrpld/app/consensus/RCLCxPeerPos.h>
 #include <xrpld/app/ledger/Ledger.h>
+#include <xrpld/app/main/Application.h>
 
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/ledger/ReadView.h>
