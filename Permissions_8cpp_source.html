@@ -95,7 +95,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#pragma push_macro(&quot;TRANSACTION&quot;)</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#undef TRANSACTION</span></div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#define TRANSACTION(tag, value, name, delegatable, amendment, ...) \</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#define TRANSACTION(tag, value, name, delegable, amendment, ...) \</span></div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">    {value, amendment},</span></div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &lt;xrpl/protocol/detail/transactions.macro&gt;</span></div>
@@ -108,7 +108,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#pragma push_macro(&quot;TRANSACTION&quot;)</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#undef TRANSACTION</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#define TRANSACTION(tag, value, name, delegatable, ...) {value, delegatable},</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#define TRANSACTION(tag, value, name, delegable, ...) {value, delegable},</span></div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#include &lt;xrpl/protocol/detail/transactions.macro&gt;</span></div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
@@ -268,7 +268,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>        !rules.<a class="code hl_function" href="classxrpl_1_1Rules.html#a125114e27f806d1517096cbee50a2b04">enabled</a>(txFeaturesIt-&gt;second))</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="keywordflow">if</span> (it-&gt;second == <a class="code hl_enumvalue" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65">Delegation::notDelegatable</a>)</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="keywordflow">if</span> (it-&gt;second == <a class="code hl_enumvalue" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828">Delegation::notDelegable</a>)</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
@@ -320,7 +320,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacexrpl_html"><div class="ttname"><a href="namespacexrpl.html">xrpl</a></div><div class="ttdoc">Use hash_* containers for keys that do not need a cryptographically secure hashing algorithm.</div><div class="ttdef"><b>Definition</b> <a href="algorithm_8h_source.html#l00006">algorithm.h:6</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a2302c0748b98cd689ea7eea653eda396"><div class="ttname"><a href="namespacexrpl.html#a2302c0748b98cd689ea7eea653eda396">xrpl::TxType</a></div><div class="ttdeci">TxType</div><div class="ttdoc">Transaction type identifiers.</div><div class="ttdef"><b>Definition</b> <a href="TxFormats_8h_source.html#l00037">TxFormats.h:38</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a748d5f3500038734c2e091fbcafe1ce6"><div class="ttname"><a href="namespacexrpl.html#a748d5f3500038734c2e091fbcafe1ce6">xrpl::GranularPermissionType</a></div><div class="ttdeci">GranularPermissionType</div><div class="ttdoc">We have both transaction type permissions and granular type permissions.</div><div class="ttdef"><b>Definition</b> <a href="Permissions_8h_source.html#l00020">Permissions.h:20</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65"><div class="ttname"><a href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65">xrpl::notDelegatable</a></div><div class="ttdeci">@ notDelegatable</div><div class="ttdef"><b>Definition</b> <a href="Permissions_8h_source.html#l00032">Permissions.h:32</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828"><div class="ttname"><a href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828">xrpl::notDelegable</a></div><div class="ttdeci">@ notDelegable</div><div class="ttdef"><b>Definition</b> <a href="Permissions_8h_source.html#l00032">Permissions.h:32</a></div></div>
 <div class="ttc" id="aoptional_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/optional.html">std::optional</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

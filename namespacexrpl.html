@@ -2237,8 +2237,8 @@ Enumerations</h2></td></tr>
 <tr class="memitem:a748d5f3500038734c2e091fbcafe1ce6" id="r_a748d5f3500038734c2e091fbcafe1ce6"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a748d5f3500038734c2e091fbcafe1ce6">GranularPermissionType</a> : std::uint32_t </td></tr>
 <tr class="memdesc:a748d5f3500038734c2e091fbcafe1ce6"><td class="mdescLeft">&#160;</td><td class="mdescRight">We have both transaction type permissions and granular type permissions.  <a href="namespacexrpl.html#a748d5f3500038734c2e091fbcafe1ce6">More...</a><br /></td></tr>
 <tr class="separator:a748d5f3500038734c2e091fbcafe1ce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af02fc40fb59be7e5f8ee0c33efc7148d" id="r_af02fc40fb59be7e5f8ee0c33efc7148d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148d">Delegation</a> { <a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148daf708354f10e0c20bc6e8af971f0b0bd7">delegatable</a>
-, <a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65">notDelegatable</a>
+<tr class="memitem:af02fc40fb59be7e5f8ee0c33efc7148d" id="r_af02fc40fb59be7e5f8ee0c33efc7148d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148d">Delegation</a> { <a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae1a6b2acbf70d302b99c789e9f6f65c4">delegable</a>
+, <a class="el" href="namespacexrpl.html#af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828">notDelegable</a>
  }</td></tr>
 <tr class="separator:af02fc40fb59be7e5f8ee0c33efc7148d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb1a9b1647370fa776aaad063944ea17" id="r_acb1a9b1647370fa776aaad063944ea17"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#acb1a9b1647370fa776aaad063944ea17">ECDSACanonicality</a> { <a class="el" href="namespacexrpl.html#acb1a9b1647370fa776aaad063944ea17a9f3fda2fef6dda85970e12ce9a9b8cbe">canonical</a>
@@ -9558,8 +9558,8 @@ ledger.
       </table>
 </div><div class="memdoc">
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="af02fc40fb59be7e5f8ee0c33efc7148daf708354f10e0c20bc6e8af971f0b0bd7" name="af02fc40fb59be7e5f8ee0c33efc7148daf708354f10e0c20bc6e8af971f0b0bd7"></a>delegatable&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65" name="af02fc40fb59be7e5f8ee0c33efc7148dae4d385d0b511f8e1312f4e6d732f5a65"></a>notDelegatable&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="af02fc40fb59be7e5f8ee0c33efc7148dae1a6b2acbf70d302b99c789e9f6f65c4" name="af02fc40fb59be7e5f8ee0c33efc7148dae1a6b2acbf70d302b99c789e9f6f65c4"></a>delegable&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828" name="af02fc40fb59be7e5f8ee0c33efc7148dae04ac43f4434f148243ca3ed541ce828"></a>notDelegable&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="Permissions_8h_source.html#l00032">32</a> of file <a class="el" href="Permissions_8h_source.html">Permissions.h</a>.</p>
@@ -60947,8 +60947,8 @@ template&lt;class T &gt; </div>
 <div class="line">        {protocol::mtMANIFESTS, TrafficCount::category::manifests},</div>
 <div class="line">        {protocol::mtENDPOINTS, TrafficCount::category::overlay},</div>
 <div class="line">        {protocol::mtTRANSACTION, TrafficCount::category::transaction},</div>
-<div class="line">        {protocol::mtVALIDATORLIST, TrafficCount::category::validatorlist},</div>
-<div class="line">        {protocol::mtVALIDATORLISTCOLLECTION,</div>
+<div class="line">        {protocol::mtVALIDATOR_LIST, TrafficCount::category::validatorlist},</div>
+<div class="line">        {protocol::mtVALIDATOR_LIST_COLLECTION,</div>
 <div class="line">         TrafficCount::category::validatorlist},</div>
 <div class="line">        {protocol::mtVALIDATION, TrafficCount::category::validation},</div>
 <div class="line">        {protocol::mtPROPOSE_LEDGER, TrafficCount::category::proposal},</div>
