@@ -21,9 +21,10 @@ install (
     xrpl.libxrpl.json
     xrpl.libxrpl.rdb
     xrpl.libxrpl.overlay
-    xrpl.libxrpl.ledger
-    xrpl.libxrpl.net
     xrpl.libxrpl.nodestore
+    xrpl.libxrpl.ledger
+    xrpl.libxrpl.conditions
+    xrpl.libxrpl.net
     xrpl.libxrpl.protocol
     xrpl.libxrpl.resource
     xrpl.libxrpl.server
