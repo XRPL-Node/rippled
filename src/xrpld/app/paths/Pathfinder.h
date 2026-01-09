@@ -30,7 +30,7 @@ public:
         STAmount const& dstAmount,
         std::optional<STAmount> const& srcAmount,
         std::optional<uint256> const& domain,
-        Application& app);
+        ServiceRegistry& registry);
     Pathfinder(Pathfinder const&) = delete;
     Pathfinder&
     operator=(Pathfinder const&) = delete;
@@ -200,7 +200,7 @@ private:
 
     hash_map<Issue, int> mPathsOutCountMap;
 
-    Application& app_;
+    ServiceRegistry& registry_;
     beast::Journal const j_;
 
     // Add ripple paths

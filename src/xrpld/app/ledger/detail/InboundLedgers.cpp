@@ -1,6 +1,5 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/overlay/PeerSetImp.h>
 
 #include <xrpl/basics/DecayingSample.h>
@@ -11,6 +10,7 @@
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/server/NetworkOPs.h>
 
 #include <exception>
 #include <memory>

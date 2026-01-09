@@ -1,5 +1,4 @@
 #include <xrpld/app/ledger/OrderBookDB.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/paths/Pathfinder.h>
 #include <xrpld/app/paths/RippleCalc.h>
 #include <xrpld/app/paths/RippleLineCache.h>
@@ -8,6 +7,7 @@
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/join.h>
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/ledger/PaymentSandbox.h>
 
@@ -148,7 +148,7 @@ Pathfinder::Pathfinder(
     STAmount const& saDstAmount,
     std::optional<STAmount> const& srcAmount,
     std::optional<uint256> const& domain,
-    Application& app)
+    ServiceRegistry& registry)
     : mSrcAccount(uSrcAccount)
     , mDstAccount(uDstAccount)
     , mEffectiveDst(
@@ -169,8 +169,8 @@ Pathfinder::Pathfinder(
     , mDomain(domain)
     , mLedger(cache->getLedger())
     , mRLCache(cache)
-    , app_(app)
-    , j_(app.journal("Pathfinder"))
+    , registry_(registry)
+    , j_(registry.journal("Pathfinder"))
 {
     XRPL_ASSERT(
         !uSrcIssuer || isXRP(uSrcCurrency) == isXRP(uSrcIssuer.value()),
@@ -210,7 +210,8 @@ Pathfinder::findPaths(
         return true;
     }
 
-    m_loadEvent = app_.getJobQueue().makeLoadEvent(jtPATH_FIND, "FindPath");
+    m_loadEvent =
+        registry_.getJobQueue().makeLoadEvent(jtPATH_FIND, "FindPath");
     auto currencyIsXRP = isXRP(mSrcCurrency);
 
     bool useIssuerAccount = mSrcIssuer && !currencyIsXRP && !isXRP(*mSrcIssuer);
@@ -356,7 +357,7 @@ Pathfinder::getPathLiquidity(
             mSrcAccount,
             pathSet,
             mDomain,
-            app_.logs(),
+            registry_.logs(),
             &rcInput);
         // If we can't get even the minimum liquidity requested, we're done.
         if (rc.result() != tesSUCCESS)
@@ -377,7 +378,7 @@ Pathfinder::getPathLiquidity(
                 mSrcAccount,
                 pathSet,
                 mDomain,
-                app_.logs(),
+                registry_.logs(),
                 &rcInput);
 
             // If we found further liquidity, add it into the result.
@@ -417,7 +418,7 @@ Pathfinder::computePathRanks(
             mSrcAccount,
             STPathSet(),
             mDomain,
-            app_.logs(),
+            registry_.logs(),
             &rcInput);
 
         if (rc.result() == tesSUCCESS)
@@ -729,7 +730,7 @@ Pathfinder::getPathsOut(
 
     if (!bFrozen)
     {
-        count = app_.getOrderBookDB().getBookSize(issue, mDomain);
+        count = registry_.getOrderBookDB().getBookSize(issue, mDomain);
 
         if (auto const lines = mRLCache->getRippleLines(account, direction))
         {
@@ -1116,7 +1117,7 @@ Pathfinder::addLink(
         {
             // to XRP only
             if (!bOnXRP &&
-                app_.getOrderBookDB().isBookToXRP(
+                registry_.getOrderBookDB().isBookToXRP(
                     {uEndCurrency, uEndIssuer}, mDomain))
             {
                 STPathElement pathElement(
@@ -1130,7 +1131,7 @@ Pathfinder::addLink(
         else
         {
             bool bDestOnly = (addFlags & afOB_LAST) != 0;
-            auto books = app_.getOrderBookDB().getBooksByTakerPays(
+            auto books = registry_.getOrderBookDB().getBooksByTakerPays(
                 {uEndCurrency, uEndIssuer}, mDomain);
             JLOG(j_.trace())
                 << books.size() << " books found from this currency/issuer";

@@ -39,7 +39,7 @@ paths::operator()(Env& env, JTx& jt) const
         amount,
         std::nullopt,
         domain,
-        env.app());
+        env.app().getServiceRegistry());
     if (!pf.findPaths(depth_))
         return;
 

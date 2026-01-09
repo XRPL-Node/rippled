@@ -1,4 +1,3 @@
-#include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/ValidatorList.h>
 #include <xrpld/app/misc/ValidatorSite.h>
 #include <xrpld/overlay/Cluster.h>
@@ -18,6 +17,7 @@
 #include <xrpl/overlay/detail/TrafficCount.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/rdb/RelationalDatabase.h>
+#include <xrpl/server/NetworkOPs.h>
 #include <xrpl/server/SimpleWriter.h>
 #include <xrpl/server/Wallet.h>
 
