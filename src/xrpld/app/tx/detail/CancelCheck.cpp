@@ -1,4 +1,3 @@
-#include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/tx/detail/CancelCheck.h>
 
 #include <xrpl/basics/Log.h>
