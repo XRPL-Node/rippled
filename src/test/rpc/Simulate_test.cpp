@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012-2017 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <test/jtx.h>
 #include <test/jtx/Env.h>
 #include <test/jtx/envconfig.h>
@@ -33,7 +14,7 @@
 #include <optional>
 #include <tuple>
 
-namespace ripple {
+namespace xrpl {
 
 namespace test {
 
@@ -280,7 +261,7 @@ class Simulate_test : public beast::unit_test::suite
         {
             // `seed` field included
             Json::Value params = Json::objectValue;
-            params[jss::seed] = "doesnt_matter";
+            params[jss::seed] = "random_data";
             Json::Value tx_json = Json::objectValue;
             tx_json[jss::TransactionType] = jss::AccountSet;
             tx_json[jss::Account] = env.master.human();
@@ -293,7 +274,7 @@ class Simulate_test : public beast::unit_test::suite
         {
             // `secret` field included
             Json::Value params = Json::objectValue;
-            params[jss::secret] = "doesnt_matter";
+            params[jss::secret] = "random_data";
             Json::Value tx_json = Json::objectValue;
             tx_json[jss::TransactionType] = jss::AccountSet;
             tx_json[jss::Account] = env.master.human();
@@ -306,7 +287,7 @@ class Simulate_test : public beast::unit_test::suite
         {
             // `seed_hex` field included
             Json::Value params = Json::objectValue;
-            params[jss::seed_hex] = "doesnt_matter";
+            params[jss::seed_hex] = "random_data";
             Json::Value tx_json = Json::objectValue;
             tx_json[jss::TransactionType] = jss::AccountSet;
             tx_json[jss::Account] = env.master.human();
@@ -319,7 +300,7 @@ class Simulate_test : public beast::unit_test::suite
         {
             // `passphrase` field included
             Json::Value params = Json::objectValue;
-            params[jss::passphrase] = "doesnt_matter";
+            params[jss::passphrase] = "random_data";
             Json::Value tx_json = Json::objectValue;
             tx_json[jss::TransactionType] = jss::AccountSet;
             tx_json[jss::Account] = env.master.human();
@@ -1046,7 +1027,7 @@ class Simulate_test : public beast::unit_test::suite
 
         auto jv = credentials::create(subject, issuer, credType);
         uint32_t const t =
-            env.current()->info().parentCloseTime.time_since_epoch().count();
+            env.current()->header().parentCloseTime.time_since_epoch().count();
         jv[sfExpiration.jsonName] = t;
         env(jv);
         env.close();
@@ -1335,8 +1316,8 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Simulate, rpc, ripple);
+BEAST_DEFINE_TESTSUITE(Simulate, rpc, xrpl);
 
 }  // namespace test
 
-}  // namespace ripple
+}  // namespace xrpl

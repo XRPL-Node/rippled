@@ -1,24 +1,5 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012-2017 Ripple Labs Inc
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_TEST_CSF_PEER_H_INCLUDED
-#define RIPPLE_TEST_CSF_PEER_H_INCLUDED
+#ifndef XRPL_TEST_CSF_PEER_H_INCLUDED
+#define XRPL_TEST_CSF_PEER_H_INCLUDED
 
 #include <test/csf/CollectorRef.h>
 #include <test/csf/Scheduler.h>
@@ -39,7 +20,7 @@
 
 #include <algorithm>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 namespace csf {
 
@@ -423,7 +404,7 @@ struct Peer
         {
             minDuration = std::min(minDuration, link.data.delay);
 
-            // Send a messsage to neighbors to find the ledger
+            // Send a message to neighbors to find the ledger
             net.send(
                 this, link.target, [to = link.target, from = this, ledgerID]() {
                     if (auto it = to->ledgers.find(ledgerID);
@@ -741,7 +722,7 @@ struct Peer
     template <class M>
     struct BroadcastMesg
     {
-        M mesg;
+        M msg;
         std::size_t seq;
         PeerID origin;
     };
@@ -767,7 +748,7 @@ struct Peer
                 // used on the other end
                 if (link.target->router.lastObservedSeq[bm.origin] < bm.seq)
                 {
-                    issue(Relay<M>{link.target->id, bm.mesg});
+                    issue(Relay<M>{link.target->id, bm.msg});
                     net.send(
                         this,
                         link.target,
@@ -784,12 +765,12 @@ struct Peer
     void
     receive(BroadcastMesg<M> const& bm, PeerID from)
     {
-        issue(Receive<M>{from, bm.mesg});
+        issue(Receive<M>{from, bm.msg});
         if (router.lastObservedSeq[bm.origin] < bm.seq)
         {
             router.lastObservedSeq[bm.origin] = bm.seq;
-            schedule(delays.onReceive(bm.mesg), [this, bm, from] {
-                if (handle(bm.mesg))
+            schedule(delays.onReceive(bm.msg), [this, bm, from] {
+                if (handle(bm.msg))
                     send(bm, from);
             });
         }
@@ -1002,5 +983,5 @@ struct Peer
 
 }  // namespace csf
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl
 #endif

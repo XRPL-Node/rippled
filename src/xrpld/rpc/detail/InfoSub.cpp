@@ -1,25 +1,6 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/rpc/InfoSub.h>
 
-namespace ripple {
+namespace xrpl {
 
 // This is the primary interface into the "client" portion of the program.
 // Code that wants to do normal operations on the network such as
@@ -27,9 +8,9 @@ namespace ripple {
 // should use this interface. The RPC code will primarily be a light wrapper
 // over this code.
 
-// Eventually, it will check the node's operating mode (synched, unsynched,
-// etectera) and defer to the correct means of processing. The current
-// code assumes this node is synched (and will continue to do so until
+// Eventually, it will check the node's operating mode (synced, unsynced,
+// etcetera) and defer to the correct means of processing. The current
+// code assumes this node is synced (and will continue to do so until
 // there's a functional network.
 
 InfoSub::InfoSub(Source& source) : m_source(source), mSeq(assign_id())
@@ -145,8 +126,8 @@ unsigned int
 InfoSub::getApiVersion() const noexcept
 {
     XRPL_ASSERT(
-        apiVersion_ > 0, "ripple::InfoSub::getApiVersion : valid API version");
+        apiVersion_ > 0, "xrpl::InfoSub::getApiVersion : valid API version");
     return apiVersion_;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

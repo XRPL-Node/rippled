@@ -17,7 +17,7 @@
 #include <thread>
 #include <variant>
 
-namespace ripple {
+namespace xrpl {
 namespace tests {
 
 /**
@@ -394,7 +394,7 @@ public:
             {
                 // strong goes out of scope while weak is still in scope
                 // This checks that partialDelete has run to completion
-                // before the desturctor is called. A sleep is inserted
+                // before the destructor is called. A sleep is inserted
                 // inside the partial delete to make sure the destructor is
                 // given an opportunity to run durring partial delete.
                 BEAST_EXPECT(cur == partiallyDeleted);
@@ -887,6 +887,6 @@ public:
     }
 };  // namespace tests
 
-BEAST_DEFINE_TESTSUITE(IntrusiveShared, basics, ripple);
+BEAST_DEFINE_TESTSUITE(IntrusiveShared, basics, xrpl);
 }  // namespace tests
-}  // namespace ripple
+}  // namespace xrpl

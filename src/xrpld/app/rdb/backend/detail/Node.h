@@ -1,30 +1,11 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2020 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_APP_RDB_BACKEND_DETAIL_NODE_H_INCLUDED
-#define RIPPLE_APP_RDB_BACKEND_DETAIL_NODE_H_INCLUDED
+#ifndef XRPL_APP_RDB_BACKEND_DETAIL_NODE_H_INCLUDED
+#define XRPL_APP_RDB_BACKEND_DETAIL_NODE_H_INCLUDED
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/rdb/RelationalDatabase.h>
 #include <xrpld/core/Config.h>
 
-namespace ripple {
+namespace xrpl {
 namespace detail {
 
 /* Need to change TableTypeCount if TableType is modified. */
@@ -45,7 +26,7 @@ struct DatabasePairValid
  * @param checkpointerSetup Database checkpointer setup.
  * @param j Journal.
  * @return Struct DatabasePairValid which contain unique pointers to ledger
- *         and transaction databases and flag if opening was successfull.
+ *         and transaction databases and flag if opening was successful.
  */
 DatabasePairValid
 makeLedgerDBs(
@@ -125,12 +106,12 @@ getRowsMinMax(soci::session& session, TableType type);
  * @param app Application object.
  * @param ledger The ledger.
  * @param current True if ledger is current.
- * @return True is saving was successfull.
+ * @return True is saving was successful.
  */
 bool
 saveValidatedLedger(
     DatabaseCon& ldgDB,
-    DatabaseCon& txnDB,
+    std::unique_ptr<DatabaseCon> const& txnDB,
     Application& app,
     std::shared_ptr<Ledger const> const& ledger,
     bool current);
@@ -142,7 +123,7 @@ saveValidatedLedger(
  * @param j Journal.
  * @return Ledger or none if ledger not found.
  */
-std::optional<LedgerInfo>
+std::optional<LedgerHeader>
 getLedgerInfoByIndex(
     soci::session& session,
     LedgerIndex ledgerSeq,
@@ -154,18 +135,18 @@ getLedgerInfoByIndex(
  * @param j Journal.
  * @return Ledger info or none if ledger not found.
  */
-std::optional<LedgerInfo>
+std::optional<LedgerHeader>
 getNewestLedgerInfo(soci::session& session, beast::Journal j);
 
 /**
  * @brief getLimitedOldestLedgerInfo Returns info of oldest ledger
- *        from ledgers with sequences greather or equal to given.
+ *        from ledgers with sequences greater or equal to given.
  * @param session Session with database.
  * @param ledgerFirstIndex Minimum ledger sequence.
  * @param j Journal.
  * @return Ledger info or none if ledger not found.
  */
-std::optional<LedgerInfo>
+std::optional<LedgerHeader>
 getLimitedOldestLedgerInfo(
     soci::session& session,
     LedgerIndex ledgerFirstIndex,
@@ -173,13 +154,13 @@ getLimitedOldestLedgerInfo(
 
 /**
  * @brief getLimitedNewestLedgerInfo Returns info of newest ledger
- *        from ledgers with sequences greather or equal to given.
+ *        from ledgers with sequences greater or equal to given.
  * @param session Session with database.
  * @param ledgerFirstIndex Minimum ledger sequence.
  * @param j Journal.
  * @return Ledger info or none if ledger not found.
  */
-std::optional<LedgerInfo>
+std::optional<LedgerHeader>
 getLimitedNewestLedgerInfo(
     soci::session& session,
     LedgerIndex ledgerFirstIndex,
@@ -192,7 +173,7 @@ getLimitedNewestLedgerInfo(
  * @param j Journal.
  * @return Ledger or none if ledger not found.
  */
-std::optional<LedgerInfo>
+std::optional<LedgerHeader>
 getLedgerInfoByHash(
     soci::session& session,
     uint256 const& ledgerHash,
@@ -224,8 +205,8 @@ getHashesByIndex(
 
 /**
  * @brief getHashesByIndex Returns hash of the ledger and hash of parent
- *        ledger for all ledgers with seqyences from given minimum limit
- *        to fiven maximum limit.
+ *        ledger for all ledgers with sequences from given minimum limit
+ *        to given maximum limit.
  * @param session Session with database.
  * @param minSeq Minimum ledger sequence.
  * @param maxSeq Maximum ledger sequence.
@@ -433,7 +414,7 @@ newestAccountTxPage(
  *         given and all ledgers from range are present in the database,
  *         TxSearched::some if range given and not all ledgers are present,
  *         TxSearched::unknown if range not given or deserializing error
- *         occured. In the last case error code modified in ec link
+ *         occurred. In the last case error code modified in ec link
  *         parameter, in other cases default error code remained.
  */
 std::variant<RelationalDatabase::AccountTx, TxSearched>
@@ -455,6 +436,6 @@ bool
 dbHasSpace(soci::session& session, Config const& config, beast::Journal j);
 
 }  // namespace detail
-}  // namespace ripple
+}  // namespace xrpl
 
 #endif
