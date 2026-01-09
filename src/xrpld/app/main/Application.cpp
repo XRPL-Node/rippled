@@ -15,7 +15,6 @@
 #include <xrpld/app/main/NodeIdentity.h>
 #include <xrpld/app/main/NodeStoreScheduler.h>
 #include <xrpld/app/misc/AmendmentTable.h>
-#include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/SHAMapStore.h>
@@ -41,6 +40,7 @@
 #include <xrpl/basics/random.h>
 #include <xrpl/beast/asio/io_latency_probe.h>
 #include <xrpl/beast/core/LexicalCast.h>
+#include <xrpl/core/HashRouter.h>
 #include <xrpl/core/PeerReservationTable.h>
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/crypto/csprng.h>

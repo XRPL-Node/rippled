@@ -1,7 +1,6 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/PendingSaves.h>
-#include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/consensus/LedgerTiming.h>
 #include <xrpld/core/Config.h>  // for Config::FEE_UNITS_DEPRECATED
 
@@ -9,6 +8,7 @@
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/core/FeatureSetService.h>
+#include <xrpl/core/HashRouter.h>
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>

@@ -2,12 +2,12 @@
 #include <test/jtx/TestHelpers.h>
 #include <test/jtx/utility.h>
 
-#include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/Transaction.h>
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/app/tx/detail/Batch.h>
 
+#include <xrpl/core/HashRouter.h>
 #include <xrpl/protocol/Batch.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/STParsedJSON.h>

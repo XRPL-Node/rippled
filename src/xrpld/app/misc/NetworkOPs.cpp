@@ -11,7 +11,6 @@
 #include <xrpld/app/main/Tuning.h>
 #include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/DeliverMax.h>
-#include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/Transaction.h>
@@ -37,6 +36,7 @@
 #include <xrpl/basics/safe_cast.h>
 #include <xrpl/basics/scope.h>
 #include <xrpl/beast/utility/rngfill.h>
+#include <xrpl/core/HashRouter.h>
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/crypto/RFC1751.h>
 #include <xrpl/crypto/csprng.h>
