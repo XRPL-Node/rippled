@@ -51,7 +51,12 @@ public:
         {
             OpenView accum(&*res);
             applyTransaction(
-                env.app(), accum, *stx, false, tapNONE, env.journal);
+                env.app().getServiceRegistry(),
+                accum,
+                *stx,
+                false,
+                tapNONE,
+                env.journal);
             accum.apply(*res);
         }
         res->updateSkipList();

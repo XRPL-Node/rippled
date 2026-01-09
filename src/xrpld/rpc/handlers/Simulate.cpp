@@ -217,7 +217,7 @@ simulateTxn(RPC::JsonContext& context, std::shared_ptr<Transaction> transaction)
     // Process the transaction
     OpenView view = *context.app.openLedger().current();
     auto const result = context.app.getTxQ().apply(
-        context.app,
+        context.app.getServiceRegistry(),
         view,
         transaction->getSTransaction(),
         tapDRY_RUN,

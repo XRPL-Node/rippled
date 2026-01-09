@@ -26,6 +26,7 @@
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
 #include <xrpld/app/tx/apply.h>
+#include <xrpld/core/NetworkIDServiceImpl.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
 #include <xrpld/ledger/FeatureSetServiceImpl.h>
 #include <xrpld/ledger/LedgerConfigServiceImpl.h>
@@ -171,6 +172,7 @@ public:
     CachedSLEs cachedSLEs_;
     std::unique_ptr<FeatureSetService> featureSetService_;
     std::unique_ptr<LedgerConfigService> ledgerConfigService_;
+    std::unique_ptr<NetworkIDService> networkIDService_;
     std::optional<std::pair<PublicKey, SecretKey>> nodeIdentity_;
     ValidatorKeys const validatorKeys_;
 
@@ -338,6 +340,8 @@ public:
         , ledgerConfigService_(std::make_unique<LedgerConfigServiceImpl>(
               *config_,
               *featureSetService_))
+
+        , networkIDService_(std::make_unique<NetworkIDServiceImpl>(*config_))
 
         , validatorKeys_(*config_, m_journal)
 
@@ -730,6 +734,12 @@ public:
     getLedgerConfigService() override
     {
         return *ledgerConfigService_;
+    }
+
+    NetworkIDService&
+    getNetworkIDService() override
+    {
+        return *networkIDService_;
     }
 
     AmendmentTable&

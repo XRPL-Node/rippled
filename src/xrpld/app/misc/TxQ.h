@@ -253,7 +253,7 @@ public:
     */
     ApplyResult
     apply(
-        Application& app,
+        ServiceRegistry& registry,
         OpenView& view,
         std::shared_ptr<STTx const> const& tx,
         ApplyFlags flags,
@@ -271,7 +271,7 @@ public:
         @return Whether any transactions were added to the `view`.
     */
     bool
-    accept(Application& app, OpenView& view);
+    accept(ServiceRegistry& registry, OpenView& view);
 
     /**
         Update fee metrics and clean up the queue in preparation for
@@ -286,7 +286,10 @@ public:
         that have no candidates under them are removed.
     */
     void
-    processClosedLedger(Application& app, ReadView const& view, bool timeLeap);
+    processClosedLedger(
+        ServiceRegistry& registry,
+        ReadView const& view,
+        bool timeLeap);
 
     /** Return the next sequence that would go in the TxQ for an account. */
     SeqProxy
@@ -341,7 +344,7 @@ public:
         @returns a `Json objectvalue`
     */
     Json::Value
-    doRPC(Application& app) const;
+    doRPC(ServiceRegistry& registry) const;
 
 private:
     // Implementation for nextQueuableSeq().  The passed lock must be held.
@@ -413,7 +416,7 @@ private:
         */
         std::size_t
         update(
-            Application& app,
+            ServiceRegistry& registry,
             ReadView const& view,
             bool timeLeap,
             TxQ::Setup const& setup);
@@ -581,7 +584,7 @@ private:
 
         /// Attempt to apply the queued transaction to the open ledger.
         ApplyResult
-        apply(Application& app, OpenView& view, beast::Journal j);
+        apply(ServiceRegistry& registry, OpenView& view, beast::Journal j);
 
         /// Potential @ref TxConsequences of applying this transaction
         /// to the open ledger.
@@ -716,7 +719,7 @@ private:
     // attempt to directly apply that transaction to the ledger.
     std::optional<ApplyResult>
     tryDirectApply(
-        Application& app,
+        ServiceRegistry& registry,
         OpenView& view,
         std::shared_ptr<STTx const> const& tx,
         ApplyFlags flags,
@@ -820,7 +823,7 @@ private:
     */
     ApplyResult
     tryClearAccountQueueUpThruTx(
-        Application& app,
+        ServiceRegistry& registry,
         OpenView& view,
         STTx const& tx,
         AccountMap::iterator const& accountIter,

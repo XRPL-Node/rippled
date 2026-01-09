@@ -52,6 +52,9 @@ public:
     LedgerConfigService&
     getLedgerConfigService() override;
 
+    NetworkIDService&
+    getNetworkIDService() override;
+
     // Protocol and validation services
     AmendmentTable&
     getAmendmentTable() override;
@@ -166,6 +169,9 @@ public:
 
     Logs&
     logs() override;
+
+    std::optional<uint256> const&
+    trapTxID() const override;
 
     // Temporary: Get the underlying Application
     Application&

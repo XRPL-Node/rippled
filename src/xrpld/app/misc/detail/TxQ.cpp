@@ -63,7 +63,7 @@ increase(FeeLevel64 level, std::uint32_t increasePercent)
 
 std::size_t
 TxQ::FeeMetrics::update(
-    Application& app,
+    ServiceRegistry& registry,
     ReadView const& view,
     bool timeLeap,
     TxQ::Setup const& setup)
@@ -277,7 +277,7 @@ TxQ::MaybeTx::MaybeTx(
 }
 
 ApplyResult
-TxQ::MaybeTx::apply(Application& app, OpenView& view, beast::Journal j)
+TxQ::MaybeTx::apply(ServiceRegistry& registry, OpenView& view, beast::Journal j)
 {
     // If the rules or flags change, preflight again
     XRPL_ASSERT(
@@ -290,13 +290,13 @@ TxQ::MaybeTx::apply(Application& app, OpenView& view, beast::Journal j)
                         << " rules or flags have changed. Flags from "
                         << pfresult->flags << " to " << flags;
 
-        pfresult.emplace(
-            preflight(app, view.rules(), pfresult->tx, flags, pfresult->j));
+        pfresult.emplace(preflight(
+            registry, view.rules(), pfresult->tx, flags, pfresult->j));
     }
 
-    auto pcresult = preclaim(*pfresult, app, view);
+    auto pcresult = preclaim(*pfresult, registry, view);
 
-    return doApply(pcresult, app, view);
+    return doApply(pcresult, registry, view);
 }
 
 TxQ::TxQAccount::TxQAccount(std::shared_ptr<STTx const> const& txn)
@@ -497,7 +497,7 @@ TxQ::erase(
 
 ApplyResult
 TxQ::tryClearAccountQueueUpThruTx(
-    Application& app,
+    ServiceRegistry& registry,
     OpenView& view,
     STTx const& tx,
     TxQ::AccountMap::iterator const& accountIter,
@@ -543,7 +543,7 @@ TxQ::tryClearAccountQueueUpThruTx(
     // Attempt to apply the queued transactions.
     for (auto it = beginTxIter; it != endTxIter; ++it)
     {
-        auto txResult = it->second.apply(app, view, j);
+        auto txResult = it->second.apply(registry, view, j);
         // Succeed or fail, use up a retry, because if the overall
         // process fails, we want the attempt to count. If it all
         // succeeds, the MaybeTx will be destructed, so it'll be
@@ -578,7 +578,8 @@ TxQ::tryClearAccountQueueUpThruTx(
     }
     // Apply the current tx. Because the state of the view has been changed
     // by the queued txs, we also need to preclaim again.
-    auto const txResult = doApply(preclaim(pfresult, app, view), app, view);
+    auto const txResult =
+        doApply(preclaim(pfresult, registry, view), registry, view);
 
     if (txResult.applied)
     {
@@ -709,7 +710,7 @@ TxQ::tryClearAccountQueueUpThruTx(
 //
 ApplyResult
 TxQ::apply(
-    Application& app,
+    ServiceRegistry& registry,
     OpenView& view,
     std::shared_ptr<STTx const> const& tx,
     ApplyFlags flags,
@@ -720,13 +721,13 @@ TxQ::apply(
     // See if the transaction is valid, properly formed,
     // etc. before doing potentially expensive queue
     // replace and multi-transaction operations.
-    auto const pfresult = preflight(app, view.rules(), *tx, flags, j);
+    auto const pfresult = preflight(registry, view.rules(), *tx, flags, j);
     if (pfresult.ter != tesSUCCESS)
         return {pfresult.ter, false};
 
     // See if the transaction paid a high enough fee that it can go straight
     // into the ledger.
-    if (auto directApplied = tryDirectApply(app, view, tx, flags, j))
+    if (auto directApplied = tryDirectApply(registry, view, tx, flags, j))
         return *directApplied;
 
     // If we get past tryDirectApply() without returning then we expect
@@ -1144,7 +1145,7 @@ TxQ::apply(
     // is valid.  So we use a special entry point that runs all of the
     // preclaim checks with the exception of the sequence check.
     auto const pcresult =
-        preclaim(pfresult, app, multiTxn ? multiTxn->openView : view);
+        preclaim(pfresult, registry, multiTxn ? multiTxn->openView : view);
     if (!pcresult.likelyToClaimFee)
         return {pcresult.ter, false};
 
@@ -1181,7 +1182,7 @@ TxQ::apply(
         OpenView sandbox(open_ledger, &view, view.rules());
 
         auto result = tryClearAccountQueueUpThruTx(
-            app,
+            registry,
             sandbox,
             *tx,
             accountIter,
@@ -1342,11 +1343,14 @@ TxQ::apply(
 
 */
 void
-TxQ::processClosedLedger(Application& app, ReadView const& view, bool timeLeap)
+TxQ::processClosedLedger(
+    ServiceRegistry& registry,
+    ReadView const& view,
+    bool timeLeap)
 {
     std::lock_guard lock(mutex_);
 
-    feeMetrics_.update(app, view, timeLeap, setup_);
+    feeMetrics_.update(registry, view, timeLeap, setup_);
     auto const& snapshot = feeMetrics_.getSnapshot();
 
     auto ledgerSeq = view.header().seq;
@@ -1411,7 +1415,7 @@ TxQ::processClosedLedger(Application& app, ReadView const& view, bool timeLeap)
         * the next tx in the queue, simply ordered by fee.
 */
 bool
-TxQ::accept(Application& app, OpenView& view)
+TxQ::accept(ServiceRegistry& registry, OpenView& view)
 {
     /* Move transactions from the queue from largest fee level to smallest.
        As we add more transactions, the required fee level will increase.
@@ -1455,7 +1459,7 @@ TxQ::accept(Application& app, OpenView& view)
                              << candidateIter->txID << " to open ledger.";
 
             auto const [txnResult, didApply, _metadata] =
-                candidateIter->apply(app, view, j_);
+                candidateIter->apply(registry, view, j_);
 
             if (didApply)
             {
@@ -1655,7 +1659,7 @@ TxQ::getRequiredFeeLevel(
 
 std::optional<ApplyResult>
 TxQ::tryDirectApply(
-    Application& app,
+    ServiceRegistry& registry,
     OpenView& view,
     std::shared_ptr<STTx const> const& tx,
     ApplyFlags flags,
@@ -1694,7 +1698,7 @@ TxQ::tryDirectApply(
                          << " to open ledger.";
 
         auto const [txnResult, didApply, metadata] =
-            xrpl::apply(app, view, *tx, flags, j);
+            xrpl::apply(registry, view, *tx, flags, j);
 
         JLOG(j_.trace()) << "New transaction " << transactionID
                          << (didApply ? " applied successfully with "
@@ -1835,9 +1839,9 @@ TxQ::getTxs() const
 }
 
 Json::Value
-TxQ::doRPC(Application& app) const
+TxQ::doRPC(ServiceRegistry& registry) const
 {
-    auto const view = app.openLedger().current();
+    auto const view = registry.app().openLedger().current();
     if (!view)
     {
         BOOST_ASSERT(false);

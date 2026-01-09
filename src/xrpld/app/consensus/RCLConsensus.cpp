@@ -649,7 +649,7 @@ RCLConsensus::Adaptor::doAccept(
             "consensus",
             [&](OpenView& view, beast::Journal j) {
                 // Stuff the ledger with transactions from the queue.
-                return app_.getTxQ().accept(app_, view);
+                return app_.getTxQ().accept(app_.getServiceRegistry(), view);
             });
 
         // Signal a potential fee change to subscribers after the open ledger
@@ -782,7 +782,8 @@ RCLConsensus::Adaptor::buildLCL(
 
     // Update fee computations based on accepted txs
     using namespace std::chrono_literals;
-    app_.getTxQ().processClosedLedger(app_, *built, roundTime > 5s);
+    app_.getTxQ().processClosedLedger(
+        app_.getServiceRegistry(), *built, roundTime > 5s);
 
     // And stash the ledger in the ledger master
     if (ledgerMaster_.storeLedger(built))

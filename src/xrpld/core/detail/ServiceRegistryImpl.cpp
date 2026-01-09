@@ -57,6 +57,12 @@ ServiceRegistryImpl::getLedgerConfigService()
     return app_.getLedgerConfigService();
 }
 
+NetworkIDService&
+ServiceRegistryImpl::getNetworkIDService()
+{
+    return app_.getNetworkIDService();
+}
+
 // Protocol and validation services
 AmendmentTable&
 ServiceRegistryImpl::getAmendmentTable()
@@ -278,6 +284,12 @@ Logs&
 ServiceRegistryImpl::logs()
 {
     return app_.logs();
+}
+
+std::optional<uint256> const&
+ServiceRegistryImpl::trapTxID() const
+{
+    return app_.trapTxID();
 }
 
 Application&

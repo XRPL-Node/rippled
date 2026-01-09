@@ -165,6 +165,8 @@ public:
     getFeatureSetService() = 0;
     virtual LedgerConfigService&
     getLedgerConfigService() = 0;
+    virtual NetworkIDService&
+    getNetworkIDService() = 0;
     virtual AmendmentTable&
     getAmendmentTable() = 0;
     virtual HashRouter&

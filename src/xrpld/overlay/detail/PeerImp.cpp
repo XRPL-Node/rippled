@@ -3023,8 +3023,7 @@ PeerImp::checkTransaction(
             if (auto [valid, validReason] = checkValidity(
                     app_.getHashRouter(),
                     *stx,
-                    app_.getLedgerMaster().getValidatedRules(),
-                    app_.config());
+                    app_.getLedgerMaster().getValidatedRules());
                 valid != Validity::Valid)
             {
                 if (!validReason.empty())

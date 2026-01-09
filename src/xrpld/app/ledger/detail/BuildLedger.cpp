@@ -79,7 +79,7 @@ buildLedgerImpl(
 
 std::size_t
 applyTransactions(
-    Application& app,
+    ServiceRegistry& registry,
     std::shared_ptr<Ledger const> const& built,
     CanonicalTXSet& txns,
     std::set<TxID>& failed,
@@ -111,7 +111,7 @@ applyTransactions(
                 }
 
                 switch (applyTransaction(
-                    app, view, *it->second, certainRetry, tapNONE, j))
+                    registry, view, *it->second, certainRetry, tapNONE, j))
                 {
                     case ApplyTransactionResult::Success:
                         it = txns.erase(it);
@@ -186,8 +186,8 @@ buildLedger(
             JLOG(j.debug())
                 << "Attempting to apply " << txns.size() << " transactions";
 
-            auto const applied = applyTransactions(
-                registry.app(), built, txns, failedTxns, accum, j);
+            auto const applied =
+                applyTransactions(registry, built, txns, failedTxns, accum, j);
 
             if (!txns.empty() || !failedTxns.empty())
                 JLOG(j.debug())
@@ -226,7 +226,7 @@ buildLedger(
         [&](OpenView& accum, std::shared_ptr<Ledger> const& built) {
             for (auto& tx : replayData.orderedTxns())
                 applyTransaction(
-                    registry.app(), accum, *tx.second, false, applyFlags, j);
+                    registry, accum, *tx.second, false, applyFlags, j);
         });
 }
 

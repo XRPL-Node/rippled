@@ -10,7 +10,7 @@ namespace xrpl {
 Json::Value
 doFee(RPC::JsonContext& context)
 {
-    auto result = context.app.getTxQ().doRPC(context.app);
+    auto result = context.app.getTxQ().doRPC(context.app.getServiceRegistry());
     if (result.type() == Json::objectValue)
         return result;
 

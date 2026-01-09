@@ -1203,8 +1203,7 @@ NetworkOPsImp::submitTransaction(std::shared_ptr<STTx const> const& iTrans)
         auto const [validity, reason] = checkValidity(
             registry_.getHashRouter(),
             *trans,
-            m_ledgerMaster.getValidatedRules(),
-            registry_.app().config());
+            m_ledgerMaster.getValidatedRules());
 
         if (validity != Validity::Valid)
         {
@@ -1264,11 +1263,8 @@ NetworkOPsImp::preProcessTransaction(std::shared_ptr<Transaction>& transaction)
     // NOTE eahennis - I think this check is redundant,
     // but I'm not 100% sure yet.
     // If so, only cost is looking up HashRouter flags.
-    auto const [validity, reason] = checkValidity(
-        registry_.getHashRouter(),
-        sttx,
-        view->rules(),
-        registry_.app().config());
+    auto const [validity, reason] =
+        checkValidity(registry_.getHashRouter(), sttx, view->rules());
     XRPL_ASSERT(
         validity == Validity::Valid,
         "xrpl::NetworkOPsImp::processTransaction : valid validity");
@@ -1507,7 +1503,7 @@ NetworkOPsImp::apply(std::unique_lock<std::mutex>& batchLock)
                             flags |= tapFAIL_HARD;
 
                         auto const result = registry_.getTxQ().apply(
-                            registry_.app(),
+                            registry_,
                             view,
                             e.transaction->getSTransaction(),
                             flags,
@@ -1996,7 +1992,7 @@ NetworkOPsImp::switchLastClosedLedger(
     clearNeedNetworkLedger();
 
     // Update fee computations.
-    registry_.getTxQ().processClosedLedger(registry_.app(), *newLCL, true);
+    registry_.getTxQ().processClosedLedger(registry_, *newLCL, true);
 
     // Caller must own master lock
     {
@@ -2022,7 +2018,7 @@ NetworkOPsImp::switchLastClosedLedger(
             "jump",
             [&](OpenView& view, beast::Journal j) {
                 // Stuff the ledger with transactions from the queue.
-                return registry_.getTxQ().accept(registry_.app(), view);
+                return registry_.getTxQ().accept(registry_, view);
             });
     }
 

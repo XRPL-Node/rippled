@@ -4,6 +4,7 @@
 #include <xrpld/app/tx/apply.h>
 
 #include <xrpl/ledger/CachedView.h>
+#include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/TxFlags.h>
 
 #include <boost/range/adaptor/transformed.hpp>
@@ -93,7 +94,7 @@ OpenLedger::accept(
         f(*next, j_);
     // Apply local tx
     for (auto const& item : locals)
-        registry.getTxQ().apply(registry.app(), *next, item.second, flags, j_);
+        registry.getTxQ().apply(registry, *next, item.second, flags, j_);
 
     // If we didn't relay this transaction recently, relay it to all peers
     for (auto const& txpair : next->txs)
