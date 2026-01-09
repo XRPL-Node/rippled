@@ -1416,7 +1416,7 @@ class Batch_test : public beast::unit_test::suite
             env.app().openLedger().modify([&](OpenView& view,
                                               beast::Journal j) {
                 auto const result = xrpl::apply(
-                    env.app(), view, *jt.stx, tapNONE, j);
+                    env.app().getServiceRegistry(), view, *jt.stx, tapNONE, j);
                 BEAST_EXPECT(
                     !result.applied && result.ter == temARRAY_TOO_LARGE);
                 return result.applied;
@@ -1462,7 +1462,7 @@ class Batch_test : public beast::unit_test::suite
             env.app().openLedger().modify([&](OpenView& view,
                                               beast::Journal j) {
                 auto const result = xrpl::apply(
-                    env.app(), view, *jt.stx, tapNONE, j);
+                    env.app().getServiceRegistry(), view, *jt.stx, tapNONE, j);
                 BEAST_EXPECT(
                     !result.applied && result.ter == temARRAY_TOO_LARGE);
                 return result.applied;
@@ -3737,7 +3737,7 @@ class Batch_test : public beast::unit_test::suite
         BEAST_EXPECT(reason == "Cannot submit pseudo transactions.");
         env.app().openLedger().modify([&](OpenView& view, beast::Journal j) {
             auto const result = xrpl::apply(
-                env.app(), view, stx, tapNONE, j);
+                env.app().getServiceRegistry(), view, stx, tapNONE, j);
             BEAST_EXPECT(!result.applied && result.ter == temINVALID_FLAG);
             return result.applied;
         });
