@@ -1,25 +1,6 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012-2014 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/GRPCHandlers.h>
-#include <xrpld/rpc/detail/RPCHelpers.h>
+#include <xrpld/rpc/detail/RPCLedgerHelpers.h>
 #include <xrpld/rpc/handlers/LedgerEntryHelpers.h>
 
 #include <xrpl/basics/StringUtilities.h>
@@ -35,9 +16,7 @@
 #include <xrpl/protocol/STXChainBridge.h>
 #include <xrpl/protocol/jss.h>
 
-#include <functional>
-
-namespace ripple {
+namespace xrpl {
 
 static Expected<uint256, Json::Value>
 parseObjectID(
@@ -92,16 +71,17 @@ parseAMM(Json::Value const& params, Json::StaticString const fieldName)
         return Unexpected(value.error());
     }
 
-    try
-    {
-        auto const issue = issueFromJson(params[jss::asset]);
-        auto const issue2 = issueFromJson(params[jss::asset2]);
-        return keylet::amm(issue, issue2).key;
-    }
-    catch (std::runtime_error const&)
-    {
-        return LedgerEntryHelpers::malformedError("malformedRequest", "");
-    }
+    auto const asset = LedgerEntryHelpers::requiredIssue(
+        params, jss::asset, "malformedRequest");
+    if (!asset)
+        return Unexpected(asset.error());
+
+    auto const asset2 = LedgerEntryHelpers::requiredIssue(
+        params, jss::asset2, "malformedRequest");
+    if (!asset2)
+        return Unexpected(asset2.error());
+
+    return keylet::amm(*asset, *asset2).key;
 }
 
 static Expected<uint256, Json::Value>
@@ -197,18 +177,41 @@ static Expected<STArray, Json::Value>
 parseAuthorizeCredentials(Json::Value const& jv)
 {
     if (!jv.isArray())
+    {
         return LedgerEntryHelpers::invalidFieldError(
             "malformedAuthorizedCredentials",
             jss::authorized_credentials,
             "array");
-    STArray arr(sfAuthorizeCredentials, jv.size());
+    }
+
+    std::uint32_t const n = jv.size();
+    if (n > maxCredentialsArraySize)
+    {
+        return Unexpected(LedgerEntryHelpers::malformedError(
+            "malformedAuthorizedCredentials",
+            "Invalid field '" + std::string(jss::authorized_credentials) +
+                "', array too long."));
+    }
+
+    if (n == 0)
+    {
+        return Unexpected(LedgerEntryHelpers::malformedError(
+            "malformedAuthorizedCredentials",
+            "Invalid field '" + std::string(jss::authorized_credentials) +
+                "', array empty."));
+    }
+
+    STArray arr(sfAuthorizeCredentials, n);
     for (auto const& jo : jv)
     {
         if (!jo.isObject())
+        {
             return LedgerEntryHelpers::invalidFieldError(
                 "malformedAuthorizedCredentials",
                 jss::authorized_credentials,
                 "array");
+        }
+
         if (auto const value = LedgerEntryHelpers::hasRequired(
                 jo,
                 {jss::issuer, jss::credential_type},
@@ -279,13 +282,6 @@ parseDepositPreauth(Json::Value const& dp, Json::StaticString const fieldName)
     auto const arr = parseAuthorizeCredentials(ac);
     if (!arr.has_value())
         return Unexpected(arr.error());
-    if (arr->empty() || (arr->size() > maxCredentialsArraySize))
-    {
-        return LedgerEntryHelpers::invalidFieldError(
-            "malformedAuthorizedCredentials",
-            jss::authorized_credentials,
-            "array");
-    }
 
     auto const& sorted = credentials::makeSorted(arr.value());
     if (sorted.empty())
@@ -398,6 +394,46 @@ static Expected<uint256, Json::Value>
 parseLedgerHashes(Json::Value const& params, Json::StaticString const fieldName)
 {
     return parseObjectID(params, fieldName, "hex string");
+}
+
+static Expected<uint256, Json::Value>
+parseLoanBroker(Json::Value const& params, Json::StaticString const fieldName)
+{
+    if (!params.isObject())
+    {
+        return parseObjectID(params, fieldName, "hex string");
+    }
+
+    auto const id = LedgerEntryHelpers::requiredAccountID(
+        params, jss::owner, "malformedOwner");
+    if (!id)
+        return Unexpected(id.error());
+    auto const seq =
+        LedgerEntryHelpers::requiredUInt32(params, jss::seq, "malformedSeq");
+    if (!seq)
+        return Unexpected(seq.error());
+
+    return keylet::loanbroker(*id, *seq).key;
+}
+
+static Expected<uint256, Json::Value>
+parseLoan(Json::Value const& params, Json::StaticString const fieldName)
+{
+    if (!params.isObject())
+    {
+        return parseObjectID(params, fieldName, "hex string");
+    }
+
+    auto const id = LedgerEntryHelpers::requiredUInt256(
+        params, jss::loan_broker_id, "malformedLoanBrokerID");
+    if (!id)
+        return Unexpected(id.error());
+    auto const seq = LedgerEntryHelpers::requiredUInt32(
+        params, jss::loan_seq, "malformedSeq");
+    if (!seq)
+        return Unexpected(seq.error());
+
+    return keylet::loan(*id, *seq).key;
 }
 
 static Expected<uint256, Json::Value>
@@ -883,4 +919,4 @@ doLedgerEntryGrpc(
     *(response.mutable_ledger()) = request.ledger();
     return {response, status};
 }
-}  // namespace ripple
+}  // namespace xrpl

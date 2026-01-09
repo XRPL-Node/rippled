@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2018 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/tx/detail/DepositPreauth.h>
 
 #include <xrpl/basics/Log.h>
@@ -28,7 +9,7 @@
 
 #include <optional>
 
-namespace ripple {
+namespace xrpl {
 
 bool
 DepositPreauth::checkExtraFeatures(PreflightContext const& ctx)
@@ -138,7 +119,7 @@ DepositPreauth::preclaim(PreclaimContext const& ctx)
                 return tecNO_ISSUER;
             auto [it, ins] = sorted.emplace(issuer, o[sfCredentialType]);
             if (!ins)
-                return tefINTERNAL;
+                return tefINTERNAL;  // LCOV_EXCL_LINE
         }
 
         // Verify that the Preauth entry they asked to add is not already
@@ -198,7 +179,7 @@ DepositPreauth::doApply()
                          << (page ? "success" : "failure");
 
         if (!page)
-            return tecDIR_FULL;
+            return tecDIR_FULL;  // LCOV_EXCL_LINE
 
         slePreauth->setFieldU64(sfOwnerNode, *page);
 
@@ -216,7 +197,7 @@ DepositPreauth::doApply()
     {
         auto const sleOwner = view().peek(keylet::account(account_));
         if (!sleOwner)
-            return tefINTERNAL;
+            return tefINTERNAL;  // LCOV_EXCL_LINE
 
         // A preauth counts against the reserve of the issuing account, but we
         // check the starting balance because we want to allow dipping into the
@@ -246,7 +227,7 @@ DepositPreauth::doApply()
         Keylet const preauthKey = keylet::depositPreauth(account_, sortedTX);
         auto slePreauth = std::make_shared<SLE>(preauthKey);
         if (!slePreauth)
-            return tefINTERNAL;
+            return tefINTERNAL;  // LCOV_EXCL_LINE
 
         slePreauth->setAccountID(sfAccount, account_);
         slePreauth->peekFieldArray(sfAuthorizeCredentials) =
@@ -262,7 +243,7 @@ DepositPreauth::doApply()
                          << (page ? "success" : "failure");
 
         if (!page)
-            return tecDIR_FULL;
+            return tecDIR_FULL;  // LCOV_EXCL_LINE
 
         slePreauth->setFieldU64(sfOwnerNode, *page);
 
@@ -299,14 +280,16 @@ DepositPreauth::removeFromLedger(
     std::uint64_t const page{(*slePreauth)[sfOwnerNode]};
     if (!view.dirRemove(keylet::ownerDir(account), page, preauthIndex, false))
     {
+        // LCOV_EXCL_START
         JLOG(j.fatal()) << "Unable to delete DepositPreauth from owner.";
         return tefBAD_LEDGER;
+        // LCOV_EXCL_STOP
     }
 
     // If we succeeded, update the DepositPreauth owner's reserve.
     auto const sleOwner = view.peek(keylet::account(account));
     if (!sleOwner)
-        return tefINTERNAL;
+        return tefINTERNAL;  // LCOV_EXCL_LINE
 
     adjustOwnerCount(view, sleOwner, -1, j);
 
@@ -316,4 +299,4 @@ DepositPreauth::removeFromLedger(
     return tesSUCCESS;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

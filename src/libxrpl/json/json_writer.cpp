@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/json/json_forwards.h>
 #include <xrpl/json/json_value.h>
@@ -98,7 +79,7 @@ valueToString(double value)
     // of precision requested below.
     char buffer[32];
     // Print into the buffer. We need not request the alternative representation
-    // that always has a decimal point because JSON doesn't distingish the
+    // that always has a decimal point because JSON doesn't distinguish the
     // concepts of reals and integers.
 #if defined(_MSC_VER) && \
     defined(__STDC_SECURE_LIB__)  // Use secure version with visual studio 2005
@@ -127,7 +108,7 @@ valueToQuotedString(char const* value)
     // We have to walk value and escape any special characters.
     // Appending to std::string is not efficient, but this should be rare.
     // (Note: forward slashes are *not* rare, but I am not escaping them.)
-    unsigned maxsize = strlen(value) * 2 + 3;  // allescaped+quotes+NULL
+    unsigned maxsize = strlen(value) * 2 + 3;  // all-escaped+quotes+NULL
     std::string result;
     result.reserve(maxsize);  // to avoid lots of mallocs
     result += "\"";
@@ -366,7 +347,7 @@ StyledWriter::writeArrayValue(Value const& value)
         pushValue("[]");
     else
     {
-        bool isArrayMultiLine = isMultineArray(value);
+        bool isArrayMultiLine = isMultilineArray(value);
 
         if (isArrayMultiLine)
         {
@@ -417,7 +398,7 @@ StyledWriter::writeArrayValue(Value const& value)
 }
 
 bool
-StyledWriter::isMultineArray(Value const& value)
+StyledWriter::isMultilineArray(Value const& value)
 {
     int size = value.size();
     bool isMultiLine = size * 3 >= rightMargin_;
@@ -592,7 +573,7 @@ StyledStreamWriter::writeArrayValue(Value const& value)
         pushValue("[]");
     else
     {
-        bool isArrayMultiLine = isMultineArray(value);
+        bool isArrayMultiLine = isMultilineArray(value);
 
         if (isArrayMultiLine)
         {
@@ -643,7 +624,7 @@ StyledStreamWriter::writeArrayValue(Value const& value)
 }
 
 bool
-StyledStreamWriter::isMultineArray(Value const& value)
+StyledStreamWriter::isMultilineArray(Value const& value)
 {
     int size = value.size();
     bool isMultiLine = size * 3 >= rightMargin_;

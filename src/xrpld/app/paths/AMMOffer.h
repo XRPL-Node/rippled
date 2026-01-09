@@ -1,31 +1,12 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2023 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_APP_AMMOFFER_H_INCLUDED
-#define RIPPLE_APP_AMMOFFER_H_INCLUDED
+#ifndef XRPL_APP_AMMOFFER_H_INCLUDED
+#define XRPL_APP_AMMOFFER_H_INCLUDED
 
 #include <xrpl/ledger/ApplyView.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Quality.h>
 #include <xrpl/protocol/TER.h>
 
-namespace ripple {
+namespace xrpl {
 
 template <typename TIn, typename TOut>
 class AMMLiquidity;
@@ -101,7 +82,7 @@ public:
      */
     TAmounts<TIn, TOut>
     limitOut(
-        TAmounts<TIn, TOut> const& offrAmt,
+        TAmounts<TIn, TOut> const& offerAmount,
         TOut const& limit,
         bool roundUp) const;
 
@@ -110,8 +91,10 @@ public:
      * current quality.
      */
     TAmounts<TIn, TOut>
-    limitIn(TAmounts<TIn, TOut> const& offrAmt, TIn const& limit, bool roundUp)
-        const;
+    limitIn(
+        TAmounts<TIn, TOut> const& offerAmount,
+        TIn const& limit,
+        bool roundUp) const;
 
     QualityFunction
     getQualityFunc() const;
@@ -146,6 +129,6 @@ public:
     checkInvariant(TAmounts<TIn, TOut> const& consumed, beast::Journal j) const;
 };
 
-}  // namespace ripple
+}  // namespace xrpl
 
-#endif  // RIPPLE_APP_AMMOFFER_H_INCLUDED
+#endif  // XRPL_APP_AMMOFFER_H_INCLUDED
