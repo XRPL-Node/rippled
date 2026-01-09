@@ -1,9 +1,10 @@
 #ifndef XRPL_APP_PATHS_PATHREQUESTS_H_INCLUDED
 #define XRPL_APP_PATHS_PATHREQUESTS_H_INCLUDED
 
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/paths/PathRequest.h>
 #include <xrpld/app/paths/RippleLineCache.h>
+
+#include <xrpl/core/ServiceRegistry.h>
 
 #include <atomic>
 #include <mutex>
@@ -16,10 +17,14 @@ class PathRequests
 public:
     /** A collection of all PathRequest instances. */
     PathRequests(
-        Application& app,
+        PathRequest::Setup const& setup,
+        ServiceRegistry& registry,
         beast::Journal journal,
         beast::insight::Collector::ptr const& collector)
-        : app_(app), mJournal(journal), mLastIdentifier(0)
+        : setup_(setup)
+        , registry_(registry)
+        , mJournal(journal)
+        , mLastIdentifier(0)
     {
         mFast = collector->make_event("pathfind_fast");
         mFull = collector->make_event("pathfind_full");
@@ -83,7 +88,8 @@ private:
     void
     insertPathRequest(PathRequest::pointer const&);
 
-    Application& app_;
+    PathRequest::Setup const setup_;
+    ServiceRegistry& registry_;
     beast::Journal mJournal;
 
     beast::insight::Event mFast;

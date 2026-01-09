@@ -1,12 +1,9 @@
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/paths/AccountCurrencies.h>
 #include <xrpld/app/paths/PathRequest.h>
 #include <xrpld/app/paths/PathRequests.h>
 #include <xrpld/app/paths/RippleCalc.h>
 #include <xrpld/app/paths/detail/PathfinderUtils.h>
-#include <xrpld/core/Config.h>
 #include <xrpld/rpc/detail/Tuning.h>
 
 #include <xrpl/basics/Log.h>
@@ -21,12 +18,14 @@
 namespace xrpl {
 
 PathRequest::PathRequest(
-    Application& app,
+    Setup const& setup,
+    ServiceRegistry& registry,
     std::shared_ptr<InfoSub> const& subscriber,
     int id,
     PathRequests& owner,
     beast::Journal journal)
-    : app_(app)
+    : setup_(setup)
+    , registry_(registry)
     , m_journal(journal)
     , mOwner(owner)
     , wpSubscriber(subscriber)
@@ -43,13 +42,15 @@ PathRequest::PathRequest(
 }
 
 PathRequest::PathRequest(
-    Application& app,
+    Setup const& setup,
+    ServiceRegistry& registry,
     std::function<void(void)> const& completion,
     Resource::Consumer& consumer,
     int id,
     PathRequests& owner,
     beast::Journal journal)
-    : app_(app)
+    : setup_(setup)
+    , registry_(registry)
     , m_journal(journal)
     , mOwner(owner)
     , fCompletion(completion)
@@ -479,7 +480,7 @@ PathRequest::getPathFinder(
         dst_amount,
         saSendMax,
         domain,
-        app_);
+        registry_);
     if (pathfinder->findPaths(level, continueCallback))
         pathfinder->computePathRanks(max_paths_, continueCallback);
     else
@@ -577,7 +578,7 @@ PathRequest::findPaths(
             *raSrcAccount,  // --> Account sending from.
             ps,             // --> Path set.
             domain,         // --> Domain.
-            app_.logs(),
+            registry_.logs(),
             &rcInput);
 
         if (!convert_all_ && !fullLiquidityPath.empty() &&
@@ -598,7 +599,7 @@ PathRequest::findPaths(
                 *raSrcAccount,  // --> Account sending from.
                 ps,             // --> Path set.
                 domain,         // --> Domain.
-                app_.logs());
+                registry_.logs());
 
             if (rc.result() != tesSUCCESS)
             {
@@ -687,36 +688,36 @@ PathRequest::doUpdate(
     if (jvId)
         newStatus[jss::id] = jvId;
 
-    bool loaded = app_.getFeeTrack().isLoadedLocal();
+    bool loaded = registry_.getFeeTrack().isLoadedLocal();
 
     if (iLevel == 0)
     {
         // first pass
         if (loaded || fast)
-            iLevel = app_.config().PATH_SEARCH_FAST;
+            iLevel = setup_.pathSearchFast;
         else
-            iLevel = app_.config().PATH_SEARCH;
+            iLevel = setup_.pathSearch;
     }
-    else if ((iLevel == app_.config().PATH_SEARCH_FAST) && !fast)
+    else if ((iLevel == setup_.pathSearchFast) && !fast)
     {
         // leaving fast pathfinding
-        iLevel = app_.config().PATH_SEARCH;
-        if (loaded && (iLevel > app_.config().PATH_SEARCH_FAST))
+        iLevel = setup_.pathSearch;
+        if (loaded && (iLevel > setup_.pathSearchFast))
             --iLevel;
     }
     else if (bLastSuccess)
     {
         // decrement, if possible
-        if (iLevel > app_.config().PATH_SEARCH ||
-            (loaded && (iLevel > app_.config().PATH_SEARCH_FAST)))
+        if (iLevel > setup_.pathSearch ||
+            (loaded && (iLevel > setup_.pathSearchFast)))
             --iLevel;
     }
     else
     {
         // adjust as needed
-        if (!loaded && (iLevel < app_.config().PATH_SEARCH_MAX))
+        if (!loaded && (iLevel < setup_.pathSearchMax))
             ++iLevel;
-        if (loaded && (iLevel > app_.config().PATH_SEARCH_FAST))
+        if (loaded && (iLevel > setup_.pathSearchFast))
             --iLevel;
     }
 

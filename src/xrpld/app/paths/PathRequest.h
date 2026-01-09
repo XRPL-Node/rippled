@@ -1,11 +1,11 @@
 #ifndef XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
 #define XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
 
-#include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/Pathfinder.h>
 #include <xrpld/app/paths/RippleLineCache.h>
 
 #include <xrpl/basics/base_uint.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/UintTypes.h>
 #include <xrpl/server/InfoSub.h>
@@ -37,11 +37,33 @@ public:
     using ref = pointer const&;
     using wref = wptr const&;
 
+    /** Configuration for path search aggressiveness.
+     *
+     * These values control the search depth and resource consumption
+     * of pathfinding operations. Higher values result in exponentially
+     * higher resource usage.
+     */
+    struct Setup
+    {
+        /** Default constructor with standard values */
+        explicit Setup() = default;
+
+        /** Default search aggressiveness */
+        int pathSearch = 2;
+
+        /** Fast search aggressiveness (used when loaded or fast mode) */
+        int pathSearchFast = 2;
+
+        /** Maximum search aggressiveness */
+        int pathSearchMax = 3;
+    };
+
 public:
     // path_find semantics
     // Subscriber is updated
     PathRequest(
-        Application& app,
+        Setup const& setup,
+        ServiceRegistry& registry,
         std::shared_ptr<InfoSub> const& subscriber,
         int id,
         PathRequests&,
@@ -50,7 +72,8 @@ public:
     // ripple_path_find semantics
     // Completion function is called after path update is complete
     PathRequest(
-        Application& app,
+        Setup const& setup,
+        ServiceRegistry& registry,
         std::function<void(void)> const& completion,
         Resource::Consumer& consumer,
         int id,
@@ -115,7 +138,8 @@ private:
     int
     parseJson(Json::Value const&);
 
-    Application& app_;
+    Setup const setup_;
+    ServiceRegistry& registry_;
     beast::Journal m_journal;
 
     std::recursive_mutex mLock;

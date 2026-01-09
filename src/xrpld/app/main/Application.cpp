@@ -14,6 +14,8 @@
 #include <xrpld/app/main/LoadManager.h>
 #include <xrpld/app/main/NodeIdentity.h>
 #include <xrpld/app/main/NodeStoreScheduler.h>
+#include <xrpld/app/main/setup_HashRouter.h>
+#include <xrpld/app/main/setup_PathRequest.h>
 #include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/NetworkOPs.h>
@@ -21,7 +23,6 @@
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/misc/ValidatorKeys.h>
 #include <xrpld/app/misc/ValidatorSite.h>
-#include <xrpld/app/misc/setup_HashRouter.h>
 #include <xrpld/app/paths/PathRequests.h>
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
@@ -360,7 +361,8 @@ public:
               {config_->PATH_SEARCH_MAX, config_->standalone()})
 
         , m_pathRequests(std::make_unique<PathRequests>(
-              *this,
+              setup_PathRequest(*config_),
+              *serviceRegistry_,
               logs_->journal("PathRequest"),
               m_collectorManager->collector()))
 

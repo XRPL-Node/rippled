@@ -1,4 +1,4 @@
-#include <xrpld/app/misc/setup_HashRouter.h>
+#include <xrpld/app/main/setup_HashRouter.h>
 #include <xrpld/core/Config.h>
 
 #include <xrpl/basics/chrono.h>

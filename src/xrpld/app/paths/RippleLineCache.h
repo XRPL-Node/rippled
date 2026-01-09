@@ -1,7 +1,6 @@
 #ifndef XRPL_APP_PATHS_RIPPLELINECACHE_H_INCLUDED
 #define XRPL_APP_PATHS_RIPPLELINECACHE_H_INCLUDED
 
-#include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/TrustLine.h>
 
 #include <xrpl/basics/CountedObject.h>

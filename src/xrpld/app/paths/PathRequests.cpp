@@ -1,5 +1,4 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/main/Application.h>
 #include <xrpld/app/paths/PathRequests.h>
 
 #include <xrpl/basics/Log.h>
@@ -41,7 +40,7 @@ PathRequests::getLineCache(
         // weak_ptr, and will immediately discard it if there are no other
         // references.
         lineCache_ = lineCache = std::make_shared<RippleLineCache>(
-            ledger, app_.journal("RippleLineCache"));
+            ledger, registry_.journal("RippleLineCache"));
     }
     return lineCache;
 }
@@ -49,8 +48,8 @@ PathRequests::getLineCache(
 void
 PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
 {
-    auto event =
-        app_.getJobQueue().makeLoadEvent(jtPATH_FIND, "PathRequest::updateAll");
+    auto event = registry_.getJobQueue().makeLoadEvent(
+        jtPATH_FIND, "PathRequest::updateAll");
 
     std::vector<PathRequest::wptr> requests;
     std::shared_ptr<RippleLineCache> cache;
@@ -62,7 +61,7 @@ PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
         cache = getLineCache(inLedger, true);
     }
 
-    bool newRequests = app_.getLedgerMaster().isNewPathRequest();
+    bool newRequests = registry_.getLedgerMaster().isNewPathRequest();
     bool mustBreak = false;
 
     JLOG(mJournal.trace()) << "updateAll seq=" << cache->getLedger()->seq()
@@ -86,7 +85,7 @@ PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
         JLOG(mJournal.trace()) << "updateAll looping";
         for (auto const& wr : requests)
         {
-            if (app_.getJobQueue().isStopping())
+            if (registry_.getJobQueue().isStopping())
                 break;
 
             auto request = wr.lock();
@@ -159,7 +158,7 @@ PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
             }
 
             mustBreak =
-                !newRequests && app_.getLedgerMaster().isNewPathRequest();
+                !newRequests && registry_.getLedgerMaster().isNewPathRequest();
 
             // We weren't handling new requests and then
             // there was a new request
@@ -173,11 +172,11 @@ PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
         }
         else if (newRequests)
         {  // we only did new requests, so we always need a last pass
-            newRequests = app_.getLedgerMaster().isNewPathRequest();
+            newRequests = registry_.getLedgerMaster().isNewPathRequest();
         }
         else
         {  // if there are no new requests, we are done
-            newRequests = app_.getLedgerMaster().isNewPathRequest();
+            newRequests = registry_.getLedgerMaster().isNewPathRequest();
             if (!newRequests)
                 break;
         }
@@ -195,7 +194,7 @@ PathRequests::updateAll(std::shared_ptr<ReadView const> const& inLedger)
             lastCache = cache;
             cache = getLineCache(cache->getLedger(), false);
         }
-    } while (!app_.getJobQueue().isStopping());
+    } while (!registry_.getJobQueue().isStopping());
 
     JLOG(mJournal.debug()) << "updateAll complete: " << processed
                            << " processed and " << removed << " removed";
@@ -234,7 +233,7 @@ PathRequests::makePathRequest(
     Json::Value const& requestJson)
 {
     auto req = std::make_shared<PathRequest>(
-        app_, subscriber, ++mLastIdentifier, *this, mJournal);
+        setup_, registry_, subscriber, ++mLastIdentifier, *this, mJournal);
 
     auto [valid, jvRes] =
         req->doCreate(getLineCache(inLedger, false), requestJson);
@@ -243,7 +242,7 @@ PathRequests::makePathRequest(
     {
         subscriber->setRequest(req);
         insertPathRequest(req);
-        app_.getLedgerMaster().newPathRequest();
+        registry_.getLedgerMaster().newPathRequest();
     }
     return std::move(jvRes);
 }
@@ -260,7 +259,13 @@ PathRequests::makeLegacyPathRequest(
     // This assignment must take place before the
     // completion function is called
     req = std::make_shared<PathRequest>(
-        app_, completion, consumer, ++mLastIdentifier, *this, mJournal);
+        setup_,
+        registry_,
+        completion,
+        consumer,
+        ++mLastIdentifier,
+        *this,
+        mJournal);
 
     auto [valid, jvRes] = req->doCreate(getLineCache(inLedger, false), request);
 
@@ -271,7 +276,7 @@ PathRequests::makeLegacyPathRequest(
     else
     {
         insertPathRequest(req);
-        if (!app_.getLedgerMaster().newPathRequest())
+        if (!registry_.getLedgerMaster().newPathRequest())
         {
             // The newPathRequest failed.  Tell the caller.
             jvRes = rpcError(rpcTOO_BUSY);
@@ -289,10 +294,10 @@ PathRequests::doLegacyPathRequest(
     Json::Value const& request)
 {
     auto cache = std::make_shared<RippleLineCache>(
-        inLedger, app_.journal("RippleLineCache"));
+        inLedger, registry_.journal("RippleLineCache"));
 
     auto req = std::make_shared<PathRequest>(
-        app_, [] {}, consumer, ++mLastIdentifier, *this, mJournal);
+        setup_, registry_, [] {}, consumer, ++mLastIdentifier, *this, mJournal);
 
     auto [valid, jvRes] = req->doCreate(cache, request);
     if (valid)
