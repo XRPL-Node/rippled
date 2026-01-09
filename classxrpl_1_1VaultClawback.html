@@ -340,6 +340,8 @@ Protected Attributes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pri-methods" name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
+<tr class="memitem:af5054682a428ecc3132f6d814bf4f746" id="r_af5054682a428ecc3132f6d814bf4f746"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1Expected.html">Expected</a>&lt; <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a>, <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> &gt;, <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1VaultClawback.html#af5054682a428ecc3132f6d814bf4f746">assetsToClawback</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> &gt; const &amp;vault, <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> const &gt; const &amp;sleShareIssuance, <a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;holder, <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> const &amp;<a class="el" href="namespacexrpl.html#ae85a654befbab3ced6edd17c24de008a">clawbackAmount</a>)</td></tr>
+<tr class="separator:af5054682a428ecc3132f6d814bf4f746"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adba3cd5fdf6ef41d5ad2a5a5a8f9be04" id="r_adba3cd5fdf6ef41d5ad2a5a5a8f9be04"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a>, <a class="el" href="classxrpl_1_1XRPAmount.html">XRPAmount</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1Transactor.html#adba3cd5fdf6ef41d5ad2a5a5a8f9be04">reset</a> (<a class="el" href="classxrpl_1_1XRPAmount.html">XRPAmount</a> fee)</td></tr>
 <tr class="memdesc:adba3cd5fdf6ef41d5ad2a5a5a8f9be04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the context, discarding any changes made and adjust the fee.  <br /></td></tr>
 <tr class="separator:adba3cd5fdf6ef41d5ad2a5a5a8f9be04"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -450,7 +452,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00017">17</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00016">16</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
 
 </div>
 </div>
@@ -507,7 +509,57 @@ Static Private Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="classxrpl_1_1Transactor.html#a812d1e3e83c7edfdc358a1737ccd54b3">xrpl::Transactor</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00121">121</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00324">324</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
+
+</div>
+</div>
+<a id="af5054682a428ecc3132f6d814bf4f746" name="af5054682a428ecc3132f6d814bf4f746"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5054682a428ecc3132f6d814bf4f746">&#9670;&#160;</a></span>assetsToClawback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classxrpl_1_1Expected.html">Expected</a>&lt; <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a>, <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> &gt;, <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a> &gt; xrpl::VaultClawback::assetsToClawback </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> &gt; const &amp;&#160;</td>
+          <td class="paramname"><em>vault</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> const &gt; const &amp;&#160;</td>
+          <td class="paramname"><em>sleShareIssuance</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;&#160;</td>
+          <td class="paramname"><em>holder</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> const &amp;&#160;</td>
+          <td class="paramname"><em>clawbackAmount</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00220">220</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
 
 </div>
 </div>

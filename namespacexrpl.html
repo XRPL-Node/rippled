@@ -5199,6 +5199,8 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 <tr class="separator:a37ea70cba59380db9cbcb461174d8b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab19a92828d0d9e50e99f37c77463a554" id="r_ab19a92828d0d9e50e99f37c77463a554"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab19a92828d0d9e50e99f37c77463a554">removeDeletedTrustLines</a> (<a class="el" href="classxrpl_1_1ApplyView.html">ApplyView</a> &amp;view, <a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> &gt; const &amp;trustLines, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> viewJ)</td></tr>
 <tr class="separator:ab19a92828d0d9e50e99f37c77463a554"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae85a654befbab3ced6edd17c24de008a" id="r_ae85a654befbab3ced6edd17c24de008a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1STAmount.html">STAmount</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ae85a654befbab3ced6edd17c24de008a">clawbackAmount</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> const &gt; const &amp;vault, <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/optional.html">std::optional</a>&lt; <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> &gt; const &amp;maybeAmount, <a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;account)</td></tr>
+<tr class="separator:ae85a654befbab3ced6edd17c24de008a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecec53b274887bf29f9c2fcf2f0fe244" id="r_aecec53b274887bf29f9c2fcf2f0fe244"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#aecec53b274887bf29f9c2fcf2f0fe244">shouldCloseLedger</a> (bool anyTransactions, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> prevProposers, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> proposersClosed, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> proposersValidated, <a class="elRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::milliseconds</a> prevRoundTime, <a class="elRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::milliseconds</a> timeSincePrevClose, <a class="elRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::milliseconds</a> openTime, <a class="elRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::milliseconds</a> idleInterval, <a class="el" href="structxrpl_1_1ConsensusParms.html">ConsensusParms</a> const  &amp;parms, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j, <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="elRef" href="http://en.cppreference.com/w/cpp/io/basic_stringstream.html">std::stringstream</a> &gt; const  &amp;clog={})</td></tr>
 <tr class="memdesc:aecec53b274887bf29f9c2fcf2f0fe244"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines whether the current ledger should close at this time.  <br /></td></tr>
 <tr class="separator:aecec53b274887bf29f9c2fcf2f0fe244"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -8362,7 +8364,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="InvariantCheck_8h_source.html#l00906">906</a> of file <a class="el" href="InvariantCheck_8h_source.html">InvariantCheck.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="InvariantCheck_8h_source.html#l00907">907</a> of file <a class="el" href="InvariantCheck_8h_source.html">InvariantCheck.h</a>.</p>
 
 </div>
 </div>
@@ -45363,7 +45365,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="InvariantCheck_8cpp_source.html#l01950">1950</a> of file <a class="el" href="InvariantCheck_8cpp_source.html">InvariantCheck.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="InvariantCheck_8cpp_source.html#l01951">1951</a> of file <a class="el" href="InvariantCheck_8cpp_source.html">InvariantCheck.cpp</a>.</p>
 
 </div>
 </div>
@@ -45386,7 +45388,7 @@ template&lt;&gt; </div>
 <dl class="section return"><dt>Returns</dt><dd><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/tuple.html">std::tuple</a> of instances that implement the required invariant check methods</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classxrpl_1_1InvariantChecker__PROTOTYPE.html" title="Prototype for invariant check implementations.">xrpl::InvariantChecker_PROTOTYPE</a> </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="InvariantCheck_8h_source.html#l00941">941</a> of file <a class="el" href="InvariantCheck_8h_source.html">InvariantCheck.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="InvariantCheck_8h_source.html#l00942">942</a> of file <a class="el" href="InvariantCheck_8h_source.html">InvariantCheck.h</a>.</p>
 
 </div>
 </div>
@@ -46434,6 +46436,42 @@ template&lt;class TIn , class TOut &gt; </div>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01036">1036</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+
+</div>
+</div>
+<a id="ae85a654befbab3ced6edd17c24de008a" name="ae85a654befbab3ced6edd17c24de008a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae85a654befbab3ced6edd17c24de008a">&#9670;&#160;</a></span>clawbackAmount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> xrpl::clawbackAmount </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> const &gt; const &amp;&#160;</td>
+          <td class="paramname"><em>vault</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/optional.html">std::optional</a>&lt; <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> &gt; const &amp;&#160;</td>
+          <td class="paramname"><em>maybeAmount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;&#160;</td>
+          <td class="paramname"><em>account</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="VaultClawback_8cpp_source.html#l00041">41</a> of file <a class="el" href="VaultClawback_8cpp_source.html">VaultClawback.cpp</a>.</p>
 
 </div>
 </div>
