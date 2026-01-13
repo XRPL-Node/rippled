@@ -16,8 +16,6 @@
 #include <xrpld/app/main/NodeStoreScheduler.h>
 #include <xrpld/app/main/setup_HashRouter.h>
 #include <xrpld/app/main/setup_PathRequest.h>
-#include <xrpld/app/misc/AmendmentTable.h>
-#include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/SHAMapStore.h>
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/app/misc/ValidatorKeys.h>
@@ -26,7 +24,7 @@
 #include <xrpld/app/paths/PathRequests.h>
 #include <xrpld/app/rdb/backend/SQLiteDatabase.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
-#include <xrpld/app/tx/apply.h>
+#include <xrpld/core/ConfigSections.h>
 #include <xrpld/core/NetworkIDServiceImpl.h>
 #include <xrpld/core/ServiceRegistryImpl.h>
 #include <xrpld/ledger/FeatureSetServiceImpl.h>
@@ -46,6 +44,7 @@
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/crypto/csprng.h>
 #include <xrpl/json/json_reader.h>
+#include <xrpl/ledger/AmendmentTable.h>
 #include <xrpl/nodestore/DummyScheduler.h>
 #include <xrpl/overlay/PeerSet.h>
 #include <xrpl/protocol/ApiVersion.h>
@@ -55,7 +54,9 @@
 #include <xrpl/protocol/STParsedJSON.h>
 #include <xrpl/rdb/DatabaseCon.h>
 #include <xrpl/resource/Fees.h>
+#include <xrpl/server/LoadFeeTrack.h>
 #include <xrpl/server/Wallet.h>
+#include <xrpl/tx/apply.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/steady_timer.hpp>

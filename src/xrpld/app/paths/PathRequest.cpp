@@ -1,8 +1,6 @@
-#include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/paths/AccountCurrencies.h>
 #include <xrpld/app/paths/PathRequest.h>
 #include <xrpld/app/paths/PathRequests.h>
-#include <xrpld/app/paths/RippleCalc.h>
 #include <xrpld/app/paths/detail/PathfinderUtils.h>
 #include <xrpld/rpc/detail/Tuning.h>
 
@@ -11,6 +9,8 @@
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/RPCErr.h>
 #include <xrpl/protocol/UintTypes.h>
+#include <xrpl/server/LoadFeeTrack.h>
+#include <xrpl/tx/paths/RippleCalc.h>
 
 #include <optional>
 #include <tuple>

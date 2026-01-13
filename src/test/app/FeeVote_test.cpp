@@ -2,7 +2,6 @@
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/misc/FeeVote.h>
-#include <xrpld/app/tx/apply.h>
 
 #include <xrpl/basics/BasicConfig.h>
 #include <xrpl/core/FeatureSetService.h>
@@ -13,6 +12,7 @@
 #include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/SecretKey.h>
+#include <xrpl/tx/apply.h>
 
 namespace xrpl {
 namespace test {

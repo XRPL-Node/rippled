@@ -23,6 +23,7 @@ install (
     xrpl.libxrpl.overlay
     xrpl.libxrpl.nodestore
     xrpl.libxrpl.ledger
+    xrpl.libxrpl.tx
     xrpl.libxrpl.conditions
     xrpl.libxrpl.net
     xrpl.libxrpl.protocol

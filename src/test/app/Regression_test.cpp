@@ -3,7 +3,6 @@
 #include <test/jtx/envconfig.h>
 
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/tx/apply.h>
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/StringUtilities.h>
@@ -11,6 +10,7 @@
 #include <xrpl/ledger/LedgerConfigService.h>
 #include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/tx/apply.h>
 
 namespace xrpl {
 namespace test {

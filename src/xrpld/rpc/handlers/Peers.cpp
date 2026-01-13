@@ -1,5 +1,4 @@
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/rpc/Context.h>
 
@@ -7,6 +6,7 @@
 #include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/server/LoadFeeTrack.h>
 
 namespace xrpl {
 

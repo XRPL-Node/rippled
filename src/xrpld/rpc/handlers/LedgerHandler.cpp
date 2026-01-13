@@ -1,5 +1,4 @@
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/rpc/LedgerToJson.h>
 #include <xrpld/rpc/GRPCHandlers.h>
 #include <xrpld/rpc/Role.h>
@@ -9,6 +8,7 @@
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/jss.h>
 #include <xrpl/resource/Fees.h>
+#include <xrpl/server/LoadFeeTrack.h>
 
 namespace xrpl {
 namespace RPC {

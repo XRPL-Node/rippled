@@ -1,12 +1,12 @@
-#include <xrpld/app/paths/Credit.h>
 #include <xrpld/app/paths/detail/StepChecks.h>
-#include <xrpld/app/paths/detail/Steps.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/ledger/PaymentSandbox.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/IOUAmount.h>
 #include <xrpl/protocol/Quality.h>
+#include <xrpl/tx/paths/Credit.h>
+#include <xrpl/tx/paths/detail/Steps.h>
 
 #include <boost/container/flat_set.hpp>
 
