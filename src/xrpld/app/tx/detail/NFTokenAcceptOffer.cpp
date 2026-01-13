@@ -493,6 +493,7 @@ NFTokenAcceptOffer::doApply()
                     return tecINTERNAL;
                     // LCOV_EXCL_STOP
                 }
+                JLOG(j_.trace()) << "Deleted offer " << offer->key();
                 foundExpired = true;
             }
             return tesSUCCESS;
