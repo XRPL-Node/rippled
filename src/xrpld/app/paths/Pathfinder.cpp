@@ -1,4 +1,3 @@
-#include <xrpld/app/ledger/OrderBookDB.h>
 #include <xrpld/app/paths/Pathfinder.h>
 #include <xrpld/app/paths/RippleCalc.h>
 #include <xrpld/app/paths/RippleLineCache.h>
@@ -9,6 +8,7 @@
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/to_string.h>
+#include <xrpl/ledger/OrderBookDB.h>
 #include <xrpl/ledger/PaymentSandbox.h>
 
 #include <tuple>

@@ -292,6 +292,12 @@ ServiceRegistryImpl::trapTxID() const
     return app_.trapTxID();
 }
 
+DatabaseCon&
+ServiceRegistryImpl::getWalletDB()
+{
+    return app_.getWalletDB();
+}
+
 Application&
 ServiceRegistryImpl::app()
 {

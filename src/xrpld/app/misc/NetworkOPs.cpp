@@ -6,7 +6,6 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/LocalTxs.h>
 #include <xrpld/app/ledger/OpenLedger.h>
-#include <xrpld/app/ledger/OrderBookDB.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
 #include <xrpld/app/main/LoadManager.h>
 #include <xrpld/app/main/Tuning.h>
@@ -41,6 +40,7 @@
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/crypto/RFC1751.h>
 #include <xrpl/crypto/csprng.h>
+#include <xrpl/ledger/OrderBookDB.h>
 #include <xrpl/overlay/Overlay.h>
 #include <xrpl/protocol/BuildInfo.h>
 #include <xrpl/protocol/Feature.h>

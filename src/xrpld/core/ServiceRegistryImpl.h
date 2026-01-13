@@ -173,6 +173,9 @@ public:
     std::optional<uint256> const&
     trapTxID() const override;
 
+    DatabaseCon&
+    getWalletDB() override;
+
     // Temporary: Get the underlying Application
     Application&
     app() override;

@@ -1,9 +1,9 @@
 #ifndef XRPL_APP_LEDGER_ACCEPTEDLEDGER_H_INCLUDED
 #define XRPL_APP_LEDGER_ACCEPTEDLEDGER_H_INCLUDED
 
-#include <xrpld/app/ledger/AcceptedLedgerTx.h>
-
+#include <xrpl/basics/CountedObject.h>
 #include <xrpl/core/ServiceRegistry.h>
+#include <xrpl/ledger/AcceptedLedgerTx.h>
 
 namespace xrpl {
 

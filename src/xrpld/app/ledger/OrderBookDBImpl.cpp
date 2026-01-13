@@ -1,5 +1,5 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
-#include <xrpld/app/ledger/OrderBookDB.h>
+#include <xrpld/app/ledger/OrderBookDBImpl.h>
 #include <xrpld/app/misc/AMMUtils.h>
 
 #include <xrpl/basics/Log.h>
@@ -8,7 +8,9 @@
 
 namespace xrpl {
 
-OrderBookDB::OrderBookDB(ServiceRegistry& registry, Config const& config)
+OrderBookDBImpl::OrderBookDBImpl(
+    ServiceRegistry& registry,
+    OrderBookDBConfig const& config)
     : registry_(registry)
     , pathSearchMax_(config.pathSearchMax)
     , standalone_(config.standalone)
@@ -17,8 +19,14 @@ OrderBookDB::OrderBookDB(ServiceRegistry& registry, Config const& config)
 {
 }
 
+std::unique_ptr<OrderBookDB>
+make_OrderBookDB(ServiceRegistry& registry, OrderBookDBConfig const& config)
+{
+    return std::make_unique<OrderBookDBImpl>(registry, config);
+}
+
 void
-OrderBookDB::setup(std::shared_ptr<ReadView const> const& ledger)
+OrderBookDBImpl::setup(std::shared_ptr<ReadView const> const& ledger)
 {
     if (!standalone_ && registry_.getOPs().isNeedNetworkLedger())
     {
@@ -56,7 +64,7 @@ OrderBookDB::setup(std::shared_ptr<ReadView const> const& ledger)
 }
 
 void
-OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
+OrderBookDBImpl::update(std::shared_ptr<ReadView const> const& ledger)
 {
     if (pathSearchMax_ == 0)
         return;  // pathfinding has been disabled
@@ -158,7 +166,7 @@ OrderBookDB::update(std::shared_ptr<ReadView const> const& ledger)
 }
 
 void
-OrderBookDB::addOrderBook(Book const& book)
+OrderBookDBImpl::addOrderBook(Book const& book)
 {
     bool toXRP = isXRP(book.out);
 
@@ -177,7 +185,7 @@ OrderBookDB::addOrderBook(Book const& book)
 
 // return list of all orderbooks that want this issuerID and currencyID
 std::vector<Book>
-OrderBookDB::getBooksByTakerPays(
+OrderBookDBImpl::getBooksByTakerPays(
     Issue const& issue,
     std::optional<uint256> const& domain)
 {
@@ -207,7 +215,7 @@ OrderBookDB::getBooksByTakerPays(
 }
 
 int
-OrderBookDB::getBookSize(
+OrderBookDBImpl::getBookSize(
     Issue const& issue,
     std::optional<uint256> const& domain)
 {
@@ -229,7 +237,7 @@ OrderBookDB::getBookSize(
 }
 
 bool
-OrderBookDB::isBookToXRP(Issue const& issue, std::optional<Domain> domain)
+OrderBookDBImpl::isBookToXRP(Issue const& issue, std::optional<Domain> domain)
 {
     std::lock_guard sl(mLock);
     if (domain)
@@ -238,7 +246,7 @@ OrderBookDB::isBookToXRP(Issue const& issue, std::optional<Domain> domain)
 }
 
 BookListeners::pointer
-OrderBookDB::makeBookListeners(Book const& book)
+OrderBookDBImpl::makeBookListeners(Book const& book)
 {
     std::lock_guard sl(mLock);
     auto ret = getBookListeners(book);
@@ -258,7 +266,7 @@ OrderBookDB::makeBookListeners(Book const& book)
 }
 
 BookListeners::pointer
-OrderBookDB::getBookListeners(Book const& book)
+OrderBookDBImpl::getBookListeners(Book const& book)
 {
     BookListeners::pointer ret;
     std::lock_guard sl(mLock);
@@ -273,7 +281,7 @@ OrderBookDB::getBookListeners(Book const& book)
 // Based on the meta, send the meta to the streams that are listening.
 // We need to determine which streams a given meta effects.
 void
-OrderBookDB::processTxn(
+OrderBookDBImpl::processTxn(
     std::shared_ptr<ReadView const> const& ledger,
     AcceptedLedgerTx const& alTx,
     MultiApiJson const& jvObj)

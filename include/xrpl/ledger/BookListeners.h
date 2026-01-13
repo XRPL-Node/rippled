@@ -1,6 +1,7 @@
-#ifndef XRPL_APP_LEDGER_BOOKLISTENERS_H_INCLUDED
-#define XRPL_APP_LEDGER_BOOKLISTENERS_H_INCLUDED
+#ifndef XRPL_LEDGER_BOOKLISTENERS_H_INCLUDED
+#define XRPL_LEDGER_BOOKLISTENERS_H_INCLUDED
 
+#include <xrpl/basics/UnorderedContainers.h>
 #include <xrpl/protocol/MultiApiJson.h>
 #include <xrpl/server/InfoSub.h>
 
