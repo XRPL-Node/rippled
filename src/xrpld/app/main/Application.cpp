@@ -6,7 +6,7 @@
 #include <xrpld/app/ledger/LedgerReplayer.h>
 #include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/ledger/OpenLedger.h>
-#include <xrpld/app/ledger/OrderBookDB.h>
+#include <xrpld/app/ledger/OrderBookDBImpl.h>
 #include <xrpld/app/ledger/PendingSaves.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
 #include <xrpld/app/main/Application.h>
@@ -176,8 +176,7 @@ public:
 
     std::unique_ptr<NodeStore::Database> m_nodeStore;
     NodeFamily nodeFamily_;
-    // VFALCO TODO Make OrderBookDB abstract
-    OrderBookDB m_orderBookDB;
+    std::unique_ptr<OrderBookDB> m_orderBookDB;
     std::unique_ptr<PathRequests> m_pathRequests;
     std::unique_ptr<LedgerMaster> m_ledgerMaster;
     std::unique_ptr<LedgerCleaner> ledgerCleaner_;
@@ -344,7 +343,9 @@ public:
 
         , nodeFamily_(*this, *m_collectorManager)
 
-        , m_orderBookDB(*this)
+        , m_orderBookDB(make_OrderBookDB(
+              *serviceRegistry_,
+              {config_->PATH_SEARCH_MAX, config_->standalone()}))
 
         , m_pathRequests(std::make_unique<PathRequests>(
               *this,
@@ -685,7 +686,7 @@ public:
     OrderBookDB&
     getOrderBookDB() override
     {
-        return m_orderBookDB;
+        return *m_orderBookDB;
     }
 
     PathRequests&
@@ -1262,7 +1263,7 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
         Section const& upVoted = config_->section(SECTION_AMENDMENTS);
 
         m_amendmentTable = make_AmendmentTable(
-            *this,
+            getServiceRegistry(),
             config().AMENDMENT_MAJORITY_TIME,
             supported,
             upVoted,
@@ -1326,7 +1327,7 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
             forcedRange->first, forcedRange->second);
     }
 
-    m_orderBookDB.setup(getLedgerMaster().getCurrentLedger());
+    m_orderBookDB->setup(getLedgerMaster().getCurrentLedger());
 
     nodeIdentity_ = getNodeIdentity(*this, cmdline);
 
