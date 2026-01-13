@@ -4,11 +4,11 @@
 #include <xrpl/basics/RangeSet.h>
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/core/ServiceRegistry.h>
+#include <xrpl/protocol/LedgerHeader.h>
 #include <xrpl/protocol/LedgerShortcut.h>
 #include <xrpl/protocol/TxMeta.h>
 #include <xrpl/protocol/TxSearched.h>
 #include <xrpl/rdb/DatabaseCon.h>
-#include <xrpl/protocol/LedgerHeader.h>
 
 #include <boost/filesystem.hpp>
 #include <boost/variant.hpp>
