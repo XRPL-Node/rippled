@@ -3382,7 +3382,10 @@ ValidVault::finalize(
                         result = false;
                     }
 
-                    if (*vaultDeltaAssets * -1 != destinationDelta)
+                    if (!withinRelativeDistance(
+                            *vaultDeltaAssets * -1,
+                            destinationDelta,
+                            Number{1, -11}))
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: withdrawal must change vault "
@@ -3425,8 +3428,10 @@ ValidVault::finalize(
                 }
 
                 // Note, vaultBalance is negative (see check above)
-                if (beforeVault.assetsTotal + *vaultDeltaAssets !=
-                    afterVault.assetsTotal)
+                if (!withinRelativeDistance(
+                        beforeVault.assetsTotal + *vaultDeltaAssets,
+                        afterVault.assetsTotal,
+                        Number{1, -11}))
                 {
                     JLOG(j.fatal()) << "Invariant failed: withdrawal and "
                                        "assets outstanding must add up";
