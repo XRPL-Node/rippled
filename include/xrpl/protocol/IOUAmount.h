@@ -26,8 +26,10 @@ class IOUAmount : private boost::totally_ordered<IOUAmount>,
                   private boost::additive<IOUAmount>
 {
 private:
-    std::int64_t mantissa_;
-    int exponent_;
+    using mantissa_type = std::int64_t;
+    using exponent_type = int;
+    mantissa_type mantissa_;
+    exponent_type exponent_;
 
     /** Adjusts the mantissa and exponent to the proper range.
 
@@ -38,18 +40,23 @@ private:
     void
     normalize();
 
+    static IOUAmount
+    fromNumber(Number const& number);
+
 public:
     /* The range for the mantissa when normalized */
-    static std::int64_t constexpr minMantissa = 1000000000000000ull;
-    static std::int64_t constexpr maxMantissa = 9999999999999999ull;
+    // log(2^63,10) ~ 18.96
+    //
+    static std::int64_t constexpr minMantissa = STAmount::cMinValue;
+    static std::int64_t constexpr maxMantissa = STAmount::cMaxValue;
     /* The range for the exponent when normalized */
-    static int constexpr minExponent = -96;
-    static int constexpr maxExponent = 80;
+    static int constexpr minExponent = STAmount::cMinOffset;
+    static int constexpr maxExponent = STAmount::cMaxOffset;
 
     IOUAmount() = default;
     explicit IOUAmount(Number const& other);
     IOUAmount(beast::Zero);
-    IOUAmount(std::int64_t mantissa, int exponent);
+    IOUAmount(mantissa_type mantissa, exponent_type exponent);
 
     IOUAmount& operator=(beast::Zero);
 
@@ -78,10 +85,10 @@ public:
     int
     signum() const noexcept;
 
-    int
+    exponent_type
     exponent() const noexcept;
 
-    std::int64_t
+    mantissa_type
     mantissa() const noexcept;
 
     static IOUAmount
@@ -99,7 +106,7 @@ inline IOUAmount::IOUAmount(beast::Zero)
     *this = beast::zero;
 }
 
-inline IOUAmount::IOUAmount(std::int64_t mantissa, int exponent)
+inline IOUAmount::IOUAmount(mantissa_type mantissa, exponent_type exponent)
     : mantissa_(mantissa), exponent_(exponent)
 {
     normalize();
@@ -156,13 +163,13 @@ IOUAmount::signum() const noexcept
     return (mantissa_ < 0) ? -1 : (mantissa_ ? 1 : 0);
 }
 
-inline int
+inline IOUAmount::exponent_type
 IOUAmount::exponent() const noexcept
 {
     return exponent_;
 }
 
-inline std::int64_t
+inline IOUAmount::mantissa_type
 IOUAmount::mantissa() const noexcept
 {
     return mantissa_;

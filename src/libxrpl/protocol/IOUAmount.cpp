@@ -1,8 +1,11 @@
+#include <xrpl/protocol/IOUAmount.h>
+// Do not remove. Forces IOUAmount.h to stay first, to verify it can compile
+// without any hidden dependencies
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/basics/Number.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/beast/utility/Zero.h>
-#include <xrpl/protocol/IOUAmount.h>
+#include <xrpl/protocol/STAmount.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -40,6 +43,17 @@ setSTNumberSwitchover(bool v)
 }
 
 IOUAmount
+IOUAmount::fromNumber(Number const& number)
+{
+    // Need to create a default IOUAmount and assign directly so it doesn't try
+    // to normalize, which calls fromNumber
+    IOUAmount result{};
+    std::tie(result.mantissa_, result.exponent_) =
+        number.normalizeToRange(minMantissa, maxMantissa);
+    return result;
+}
+
+IOUAmount
 IOUAmount::minPositiveAmount()
 {
     return IOUAmount(minMantissa, minExponent);
@@ -57,8 +71,7 @@ IOUAmount::normalize()
     if (getSTNumberSwitchover())
     {
         Number const v{mantissa_, exponent_};
-        mantissa_ = v.mantissa();
-        exponent_ = v.exponent();
+        *this = fromNumber(v);
         if (exponent_ > maxExponent)
             Throw<std::overflow_error>("value overflow");
         if (exponent_ < minExponent)
@@ -99,8 +112,7 @@ IOUAmount::normalize()
         mantissa_ = -mantissa_;
 }
 
-IOUAmount::IOUAmount(Number const& other)
-    : mantissa_(other.mantissa()), exponent_(other.exponent())
+IOUAmount::IOUAmount(Number const& other) : IOUAmount(fromNumber(other))
 {
     if (exponent_ > maxExponent)
         Throw<std::overflow_error>("value overflow");
