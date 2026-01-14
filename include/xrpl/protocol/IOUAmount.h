@@ -44,15 +44,6 @@ private:
     fromNumber(Number const& number);
 
 public:
-    /* The range for the mantissa when normalized */
-    // log(2^63,10) ~ 18.96
-    //
-    static std::int64_t constexpr minMantissa = STAmount::cMinValue;
-    static std::int64_t constexpr maxMantissa = STAmount::cMaxValue;
-    /* The range for the exponent when normalized */
-    static int constexpr minExponent = STAmount::cMinOffset;
-    static int constexpr maxExponent = STAmount::cMaxOffset;
-
     IOUAmount() = default;
     explicit IOUAmount(Number const& other);
     IOUAmount(beast::Zero);
