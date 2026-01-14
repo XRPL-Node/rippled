@@ -6,6 +6,7 @@
 #include <test/jtx/ter.h>
 #include <test/jtx/txflags.h>
 
+#include <xrpl/protocol/ConfidentialTransfer.h>
 #include <xrpl/protocol/UintTypes.h>
 
 #include <cstdint>
@@ -104,6 +105,7 @@ struct MPTCreate
 struct MPTInit
 {
     Holders holders = {};
+    std::optional<Account> auditor = std::nullopt;
     PrettyAmount const xrp = XRP(10'000);
     PrettyAmount const xrpHolders = XRP(10'000);
     bool fund = true;
@@ -118,6 +120,7 @@ struct MPTInitDef
     Env& env;
     Account issuer;
     Holders holders = {};
+    std::optional<Account> auditor = std::nullopt;
     std::uint16_t transferFee = 0;
     std::optional<std::uint64_t> pay = std::nullopt;
     std::uint32_t flags = MPTDEXFlags;
@@ -162,7 +165,8 @@ struct MPTSet
     std::optional<std::string> metadata = std::nullopt;
     std::optional<Account> delegate = std::nullopt;
     std::optional<uint256> domainID = std::nullopt;
-    std::optional<Buffer> pubKey = std::nullopt;
+    std::optional<Buffer> issuerPubKey = std::nullopt;
+    std::optional<Buffer> auditorPubKey = std::nullopt;
     std::optional<TER> err = std::nullopt;
 };
 
@@ -203,6 +207,7 @@ struct MPTConfidentialSend
     std::optional<Buffer> senderEncryptedAmt = std::nullopt;
     std::optional<Buffer> destEncryptedAmt = std::nullopt;
     std::optional<Buffer> issuerEncryptedAmt = std::nullopt;
+    std::optional<Buffer> auditorEncryptedAmt = std::nullopt;
     std::optional<std::vector<std::string>> credentials = std::nullopt;
     std::optional<std::uint32_t> ownerCount = std::nullopt;
     std::optional<std::uint32_t> holderCount = std::nullopt;
@@ -218,6 +223,7 @@ struct MPTConvertBack
     std::optional<std::string> proof = std::nullopt;
     std::optional<Buffer> holderEncryptedAmt = std::nullopt;
     std::optional<Buffer> issuerEncryptedAmt = std::nullopt;
+    std::optional<Buffer> auditorEncryptedAmt = std::nullopt;
     std::optional<std::uint32_t> ownerCount = std::nullopt;
     std::optional<std::uint32_t> holderCount = std::nullopt;
     std::optional<std::uint32_t> flags = std::nullopt;
@@ -242,6 +248,7 @@ class MPTTester
     Env& env_;
     Account const issuer_;
     std::unordered_map<std::string, Account> const holders_;
+    std::optional<Account> const auditor_;
     std::optional<MPTID> id_;
     bool close_;
     std::unordered_map<AccountID, Buffer> pubKeys;
@@ -252,6 +259,7 @@ public:
         ISSUER_ENCRYPTED_BALANCE,
         HOLDER_ENCRYPTED_INBOX,
         HOLDER_ENCRYPTED_SPENDING,
+        AUDITOR_ENCRYPTED_BALANCE,
     };
 
     MPTTester(Env& env, Account const& issuer, MPTInit const& constr = {});
@@ -342,6 +350,13 @@ public:
     {
         return issuer_;
     }
+
+    std::optional<Account> const&
+    auditor() const
+    {
+        return auditor_;
+    }
+
     Account const&
     holder(std::string const& h) const;
 
@@ -401,8 +416,8 @@ public:
     Buffer
     getPrivKey(Account const& account) const;
 
-    std::pair<Buffer, Buffer>
-    encryptAmount(Account const& account, uint64_t amt) const;
+    CiphertextComponents
+    encryptAmount(Account const& account, uint64_t const amt) const;
 
     uint64_t
     decryptAmount(Account const& account, Buffer const& amt) const;
@@ -427,9 +442,9 @@ public:
         Account const& holder,
         std::uint64_t amount,
         uint256 const& ctxHash,
-        std::pair<Buffer, Buffer> holderCiphertext,
-        std::pair<Buffer, Buffer> issuerCiphertext,
-        std::optional<std::pair<Buffer, Buffer>> auditorCiphertext) const;
+        CiphertextComponents holderCiphertext,
+        CiphertextComponents issuerCiphertext,
+        std::optional<CiphertextComponents> auditorCiphertext) const;
 
 private:
     using SLEP = SLE::const_pointer;

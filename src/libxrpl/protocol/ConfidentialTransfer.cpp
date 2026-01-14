@@ -856,8 +856,8 @@ proveEquality(
     return tesSUCCESS;
 }
 
-std::pair<Buffer, Buffer>
-encryptAmount(uint64_t amt, Slice const& pubKeySlice)
+CiphertextComponents
+encryptAmount(uint64_t const amt, Slice const& pubKeySlice)
 {
     Buffer buf(ecGamalEncryptedTotalLength);
 
@@ -884,7 +884,7 @@ encryptAmount(uint64_t amt, Slice const& pubKeySlice)
         Throw<std::runtime_error>(
             "Failed to serialize into 66 byte compressed format");
 
-    return std::make_pair(buf, Buffer(blindingFactor, 32));
+    return {std::move(buf), Buffer(blindingFactor, 32)};
 }
 
 Buffer
@@ -1055,6 +1055,30 @@ getEqualityProofs(Slice const& zkp)
             zkp.data() + (i * ecEqualityProofLength), ecEqualityProofLength);
 
     return zkps;
+}
+
+NotTEC
+checkEncryptedAmountFormat(STObject const& object)
+{
+    if (object[sfHolderEncryptedAmount].length() !=
+            ecGamalEncryptedTotalLength ||
+        object[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
+        return temBAD_CIPHERTEXT;
+
+    bool const hasAuditor = object.isFieldPresent(sfAuditorEncryptedAmount);
+    if (hasAuditor &&
+        object[sfAuditorEncryptedAmount].length() !=
+            ecGamalEncryptedTotalLength)
+        return temBAD_CIPHERTEXT;
+
+    if (!isValidCiphertext(object[sfHolderEncryptedAmount]) ||
+        !isValidCiphertext(object[sfIssuerEncryptedAmount]))
+        return temBAD_CIPHERTEXT;
+
+    if (hasAuditor && !isValidCiphertext(object[sfAuditorEncryptedAmount]))
+        return temBAD_CIPHERTEXT;
+
+    return tesSUCCESS;
 }
 
 }  // namespace ripple

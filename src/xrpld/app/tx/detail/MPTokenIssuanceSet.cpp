@@ -71,7 +71,10 @@ MPTokenIssuanceSet::preflight(PreflightContext const& ctx)
     auto const metadata = ctx.tx[~sfMPTokenMetadata];
     auto const transferFee = ctx.tx[~sfTransferFee];
     auto const isMutate = mutableFlags || metadata || transferFee;
-    auto const hasElGamalKey = ctx.tx.isFieldPresent(sfIssuerElGamalPublicKey);
+    auto const hasIssuerElGamalKey =
+        ctx.tx.isFieldPresent(sfIssuerElGamalPublicKey);
+    auto const hasAuditorElGamalKey =
+        ctx.tx.isFieldPresent(sfAuditorElGamalPublicKey);
     auto const txFlags = ctx.tx.getFlags();
 
     auto const mutatePrivacy = mutableFlags &&
@@ -83,7 +86,7 @@ MPTokenIssuanceSet::preflight(PreflightContext const& ctx)
     if (isMutate && !ctx.rules.enabled(featureDynamicMPT))
         return temDISABLED;
 
-    if ((hasElGamalKey || mutatePrivacy) &&
+    if ((hasIssuerElGamalKey || hasAuditorElGamalKey || mutatePrivacy) &&
         !ctx.rules.enabled(featureConfidentialTransfer))
         return temDISABLED;
 
@@ -91,13 +94,6 @@ MPTokenIssuanceSet::preflight(PreflightContext const& ctx)
         return temMALFORMED;
 
     if (mutatePrivacy && hasHolder)
-        return temMALFORMED;
-
-    if (hasElGamalKey && hasHolder)
-        return temMALFORMED;
-
-    if (hasElGamalKey &&
-        ctx.tx[sfIssuerElGamalPublicKey].length() != ecPubKeyLength)
         return temMALFORMED;
 
     // fails if both flags are set
@@ -114,7 +110,8 @@ MPTokenIssuanceSet::preflight(PreflightContext const& ctx)
         ctx.rules.enabled(featureConfidentialTransfer))
     {
         // Is this transaction actually changing anything ?
-        if (txFlags == 0 && !hasDomain && !hasElGamalKey && !isMutate)
+        if (txFlags == 0 && !hasDomain && !hasIssuerElGamalKey &&
+            !hasAuditorElGamalKey && !isMutate)
             return temMALFORMED;
     }
 
@@ -157,6 +154,20 @@ MPTokenIssuanceSet::preflight(PreflightContext const& ctx)
                 return temMALFORMED;
         }
     }
+
+    if (hasHolder && (hasIssuerElGamalKey || hasAuditorElGamalKey))
+        return temMALFORMED;
+
+    if (hasAuditorElGamalKey && !hasIssuerElGamalKey)
+        return temMALFORMED;
+
+    if (hasIssuerElGamalKey &&
+        ctx.tx[sfIssuerElGamalPublicKey].length() != ecPubKeyLength)
+        return temMALFORMED;
+
+    if (hasAuditorElGamalKey &&
+        ctx.tx[sfAuditorElGamalPublicKey].length() != ecPubKeyLength)
+        return temMALFORMED;
 
     return tesSUCCESS;
 }
@@ -301,9 +312,16 @@ MPTokenIssuanceSet::preclaim(PreclaimContext const& ctx)
             return tecNO_PERMISSION;
     }
 
-    // cannot update public key
+    // cannot update issuer public key
     if (ctx.tx.isFieldPresent(sfIssuerElGamalPublicKey) &&
         sleMptIssuance->isFieldPresent(sfIssuerElGamalPublicKey))
+    {
+        return tecNO_PERMISSION;
+    }
+
+    // cannot update auditor public key
+    if (ctx.tx.isFieldPresent(sfAuditorElGamalPublicKey) &&
+        sleMptIssuance->isFieldPresent(sfAuditorElGamalPublicKey))
     {
         return tecNO_PERMISSION;
     }
@@ -312,6 +330,20 @@ MPTokenIssuanceSet::preclaim(PreclaimContext const& ctx)
         !sleMptIssuance->isFlag(lsfMPTCanPrivacy))
     {
         return tecNO_PERMISSION;
+    }
+
+    if (ctx.tx.isFieldPresent(sfAuditorElGamalPublicKey) &&
+        !sleMptIssuance->isFlag(lsfMPTCanPrivacy))
+    {
+        return tecNO_PERMISSION;
+    }
+
+    // cannot upload key if there's circulating supply of COA
+    if ((ctx.tx.isFieldPresent(sfIssuerElGamalPublicKey) ||
+         ctx.tx.isFieldPresent(sfAuditorElGamalPublicKey)) &&
+        sleMptIssuance->isFieldPresent(sfConfidentialOutstandingAmount))
+    {
+        return tecNO_PERMISSION;  // LCOV_EXCL_LINE
     }
 
     return tesSUCCESS;
@@ -409,6 +441,16 @@ MPTokenIssuanceSet::doApply()
             "MPTokenIssuanceSet::doApply : modifying MPTokenIssuance");
 
         sle->setFieldVL(sfIssuerElGamalPublicKey, *pubKey);
+    }
+
+    if (auto const pubKey = ctx_.tx[~sfAuditorElGamalPublicKey])
+    {
+        // This is enforced in preflight.
+        XRPL_ASSERT(
+            sle->getType() == ltMPTOKEN_ISSUANCE,
+            "MPTokenIssuanceSet::doApply : modifying MPTokenIssuance");
+
+        sle->setFieldVL(sfAuditorElGamalPublicKey, *pubKey);
     }
 
     view().update(sle);

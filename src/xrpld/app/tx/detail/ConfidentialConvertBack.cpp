@@ -20,17 +20,11 @@ ConfidentialConvertBack::preflight(PreflightContext const& ctx)
     if (MPTIssue(ctx.tx[sfMPTokenIssuanceID]).getIssuer() == ctx.tx[sfAccount])
         return temMALFORMED;
 
-    if (ctx.tx[sfHolderEncryptedAmount].length() !=
-            ecGamalEncryptedTotalLength ||
-        ctx.tx[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
-        return temBAD_CIPHERTEXT;
+    if (auto const res = checkEncryptedAmountFormat(ctx.tx); !isTesSuccess(res))
+        return res;
 
     if (ctx.tx[sfMPTAmount] == 0 || ctx.tx[sfMPTAmount] > maxMPTokenAmount)
         return temBAD_AMOUNT;
-
-    if (!isValidCiphertext(ctx.tx[sfHolderEncryptedAmount]) ||
-        !isValidCiphertext(ctx.tx[sfIssuerEncryptedAmount]))
-        return temBAD_CIPHERTEXT;
 
     // todo: update with correct size of proof since it might also contain range
     // proof
@@ -52,8 +46,13 @@ ConfidentialConvertBack::preclaim(PreclaimContext const& ctx)
     if (!sleIssuance->isFlag(lsfMPTCanPrivacy))
         return tecNO_PERMISSION;
 
-    // already checked in preflight, but should also check that issuer on the
-    // issuance isn't the account either
+    // tx must include auditor ciphertext if the issuance has enabled auditing
+    if (sleIssuance->isFieldPresent(sfAuditorElGamalPublicKey) &&
+        !ctx.tx.isFieldPresent(sfAuditorEncryptedAmount))
+        return tecNO_PERMISSION;
+
+    // already checked in preflight, but should also check that issuer on
+    // the issuance isn't the account either
     if (sleIssuance->getAccountID(sfIssuer) == ctx.tx[sfAccount])
         return tefINTERNAL;  // LCOV_EXCL_LINE
 
@@ -144,6 +143,8 @@ ConfidentialConvertBack::doApply()
     (*sleMptoken)[sfConfidentialBalanceVersion] =
         (*sleMptoken)[~sfConfidentialBalanceVersion].value_or(0u) + 1u;
 
+    std::optional<Slice> const auditorEc = ctx_.tx[~sfAuditorEncryptedAmount];
+
     // homomorphically subtract holder's encrypted balance
     {
         Buffer res(ecGamalEncryptedTotalLength);
@@ -168,6 +169,19 @@ ConfidentialConvertBack::doApply()
             return tecINTERNAL;
 
         (*sleMptoken)[sfIssuerEncryptedBalance] = res;
+    }
+
+    if (auditorEc)
+    {
+        Buffer res(ecGamalEncryptedTotalLength);
+        if (TER const ter = homomorphicSubtract(
+                (*sleMptoken)[sfAuditorEncryptedBalance],
+                ctx_.tx[sfAuditorEncryptedAmount],
+                res);
+            !isTesSuccess(ter))
+            return tecINTERNAL;
+
+        (*sleMptoken)[sfAuditorEncryptedBalance] = res;
     }
 
     view().update(sleIssuance);
