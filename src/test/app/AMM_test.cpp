@@ -5013,13 +5013,20 @@ private:
             },
             [&](Env& env) {
                 BEAST_EXPECT(
-                    lp2TSTBalance ==
+                    !env.current()->rules().enabled(featureSingleAssetVault) &&
+                    !env.current()->rules().enabled(featureLendingProtocol));
+                auto const lp2Balance =
                     getAccountLines(env, LP2, TST)["lines"][0u]["balance"]
-                        .asString());
+                        .asString();
+                BEAST_EXPECTS(
+                    lp2TSTBalance == lp2Balance,
+                    "Got: " + lp2Balance + ", Expected: " + lp2TSTBalance);
                 auto const offer = getAccountOffers(env, LP2)["offers"][0u];
                 BEAST_EXPECT(lp2TakerGets == offer["taker_gets"].asString());
-                BEAST_EXPECT(
-                    lp2TakerPays == offer["taker_pays"]["value"].asString());
+                auto const takerPays = offer["taker_pays"]["value"].asString();
+                BEAST_EXPECTS(
+                    lp2TakerPays == takerPays,
+                    "Got: " + takerPays + ", Expected: " + lp2TakerPays);
             });
     }
 
@@ -7906,7 +7913,7 @@ private:
     void
     run() override
     {
-        FeatureBitset const all{jtx::testable_amendments()};
+        FeatureBitset const all{testable_amendments()};
         FeatureBitset const featuresNoSAV =
             all - featureSingleAssetVault - featureLendingProtocol;
         testInvalidInstance();
