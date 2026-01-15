@@ -163,7 +163,7 @@ var searchData=
   ['expectlt_160',['expectLt',['../structxrpl_1_1SeqProxy__test.html#a2c9d852ed222afeb7967a0b2b85526fb',1,'xrpl::SeqProxy_test']]],
   ['expectnotequals_161',['expectNotEquals',['../classxrpl_1_1TestSuite.html#ab57e26a6eebeee3e44a7a6032b18e25b',1,'xrpl::TestSuite']]],
   ['expectoffers_162',['expectOffers',['../namespacexrpl_1_1test_1_1jtx.html#a2aec062b106aaf169980ea3072d6c55c',1,'xrpl::test::jtx']]],
-  ['expectoutput_163',['expectOutput',['../structWriterFixture.html#a35e63c9f61e87a49d0234347f04aab7e',1,'WriterFixture']]],
+  ['expectoutput_163',['expectOutput',['../classWriterFixture.html#a35e63c9f61e87a49d0234347f04aab7e',1,'WriterFixture']]],
   ['expectprice_164',['expectPrice',['../classxrpl_1_1test_1_1jtx_1_1oracle_1_1Oracle.html#a8da4380a3941a0d519577bfe85f20c2e',1,'xrpl::test::jtx::oracle::Oracle']]],
   ['expectresult_165',['expectResult',['../classxrpl_1_1test_1_1TestOutputSuite.html#aff6c68bb4e86483e40f97c0f270e38e5',1,'xrpl::test::TestOutputSuite']]],
   ['expecttoken_166',['expectToken',['../classJson_1_1Reader.html#a42fabdc924e82f84457c25d2f97cc12f',1,'Json::Reader']]],

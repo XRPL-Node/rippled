@@ -185,7 +185,7 @@ var searchData=
   ['checkout_5ftest_5findex_182',['checkout_test_index',['../structxrpl_1_1detail_1_1multi__runner__base_1_1inner.html#a5ad1c2274e63c2e5288a4591c4b9266e',1,'xrpl::detail::multi_runner_base::inner::checkout_test_index()'],['../classxrpl_1_1detail_1_1multi__runner__base.html#a08f24bbf705d873a8a8f1be64fc08d1f',1,'xrpl::detail::multi_runner_base::checkout_test_index()']]],
   ['checkoutdb_183',['checkoutDb',['../classxrpl_1_1DatabaseCon.html#a910a595db33b746c4bae6a006b135715',1,'xrpl::DatabaseCon']]],
   ['checkoutledger_184',['checkoutLedger',['../classxrpl_1_1SQLiteDatabaseImp.html#a63c07c5d1b3de9150f789fee8ee2ba13',1,'xrpl::SQLiteDatabaseImp']]],
-  ['checkoutputandreset_185',['checkOutputAndReset',['../structWriterFixture.html#ac629fffcf20ea4719fc34607a9a0a13e',1,'WriterFixture']]],
+  ['checkoutputandreset_185',['checkOutputAndReset',['../classWriterFixture.html#ac629fffcf20ea4719fc34607a9a0a13e',1,'WriterFixture']]],
   ['checkoutstrongreffromweak_186',['checkoutStrongRefFromWeak',['../structxrpl_1_1IntrusiveRefCounts.html#a026b55464c08b224d3f86f7a47b8ddfc',1,'xrpl::IntrusiveRefCounts']]],
   ['checkouttransaction_187',['checkoutTransaction',['../classxrpl_1_1SQLiteDatabaseImp.html#a26a3528ca5edae2929c2e21f06daf25e',1,'xrpl::SQLiteDatabaseImp']]],
   ['checkpass_188',['checkPass',['../classbeast_1_1SemanticVersion__test.html#a20a0a438bb97ac396669aeb809472d80',1,'beast::SemanticVersion_test']]],
