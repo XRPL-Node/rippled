@@ -232,9 +232,10 @@ jobs:
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
+          UNITTEST_ARGS: ${{ inputs.unittest_args }}
         run: |
           ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}" \
-            ${{ inputs.unittest_args }}
+            ${UNITTEST_ARGS}
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
