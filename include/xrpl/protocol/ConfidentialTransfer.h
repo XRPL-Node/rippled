@@ -47,6 +47,13 @@ getConvertContextHash(
     uint192 const& issuanceID,
     std::uint64_t amount);
 
+uint256
+getConvertBackContextHash(
+    AccountID const& account,
+    std::uint32_t sequence,
+    uint192 const& issuanceID,
+    std::uint64_t amount,
+    std::uint32_t version);
 /**
  * @brief Generates a new secp256k1 key pair.
  */
@@ -285,6 +292,39 @@ getEqualityProofs(Slice const& zkp);
 
 NotTEC
 checkEncryptedAmountFormat(STObject const& object);
+
+// Helper struct to bundle the ElGamal Public Key and the associated Ciphertext
+struct EncryptedAmountInfo
+{
+    Slice const publicKey;
+    Slice const encryptedAmount;
+};
+
+/**
+ * Verifies equality proofs for Holder, Issuer, and optionally Auditor.
+ */
+TER
+verifyEqualityProofs(
+    std::uint64_t amount,
+    std::vector<Buffer> const& zkps,
+    EncryptedAmountInfo const& holder,
+    EncryptedAmountInfo const& issuer,
+    std::optional<EncryptedAmountInfo> const& auditor,
+    uint256 const& contextHash);
+
+// returns the number of entries
+size_t inline getEqualityProofSize(bool const hasAuditor)
+{
+    // Be careful if we ever need to change the numbers below, it will be a
+    // breaking change!
+    return (hasAuditor ? 3 : 2);
+}
+
+// returns the total byte length of all the equality proofs combined
+size_t inline getEqualityProofLength(bool const hasAuditor)
+{
+    return getEqualityProofSize(hasAuditor) * ecEqualityProofLength;
+}
 
 }  // namespace ripple
 

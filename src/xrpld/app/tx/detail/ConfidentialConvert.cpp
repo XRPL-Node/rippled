@@ -31,9 +31,8 @@ ConfidentialConvert::preflight(PreflightContext const& ctx)
         ctx.tx[sfHolderElGamalPublicKey].length() != ecPubKeyLength)
         return temMALFORMED;
 
-    auto const expectedCount =
-        ctx.tx.isFieldPresent(sfAuditorEncryptedAmount) ? 3 : 2;
-    if (ctx.tx[sfZKProof].size() != expectedCount * ecEqualityProofLength)
+    if (ctx.tx[sfZKProof].size() !=
+        getEqualityProofLength(ctx.tx.isFieldPresent(sfAuditorEncryptedAmount)))
         return temMALFORMED;
 
     return tesSUCCESS;
@@ -61,9 +60,17 @@ ConfidentialConvert::preclaim(PreclaimContext const& ctx)
         return tecNO_PERMISSION;
 
     bool const hasAuditor = ctx.tx.isFieldPresent(sfAuditorEncryptedAmount);
+    bool const requiresAuditor =
+        sleIssuance->isFieldPresent(sfAuditorElGamalPublicKey);
 
-    // tx must include auditor ciphertext if the issuance has enabled auditing
-    if (sleIssuance->isFieldPresent(sfAuditorElGamalPublicKey) && !hasAuditor)
+    // tx must include auditor ciphertext if the issuance has enabled
+    // auditing
+    if (requiresAuditor && !hasAuditor)
+        return tecNO_PERMISSION;
+
+    // if auditing is not supported then user should not upload auditor
+    // ciphertext
+    if (!requiresAuditor && hasAuditor)
         return tecNO_PERMISSION;
 
     auto const sleMptoken = ctx.view.read(
@@ -108,44 +115,26 @@ ConfidentialConvert::preclaim(PreclaimContext const& ctx)
 
     std::vector<Buffer> const zkps = getEqualityProofs(ctx.tx[sfZKProof]);
 
-    auto const& amount = ctx.tx[sfMPTAmount];
+    // Prepare Auditor Info
+    std::optional<EncryptedAmountInfo> auditor;
+    if (hasAuditor)
+    {
+        auditor.emplace(
+            EncryptedAmountInfo{
+                (*sleIssuance)[sfAuditorElGamalPublicKey],
+                ctx.tx[sfAuditorEncryptedAmount]});
+    }
 
-    // we already checked proof size in preflight, still do sanity check here
-    // since we are going to access individual vector entries
-    auto const expectedCount = ctx.tx[sfZKProof].size() / ecEqualityProofLength;
-    if (zkps.size() != expectedCount)
-        return tecINTERNAL;  // LCOV_EXCL_LINE
-
-    // check equality proof
-    if (!isTesSuccess(verifyEqualityProof(
-            amount,
-            zkps[0],
-            holderPubKey,
-            ctx.tx[sfHolderEncryptedAmount],
-            contextHash)) ||
-        !isTesSuccess(verifyEqualityProof(
-            amount,
-            zkps[1],
+    return verifyEqualityProofs(
+        ctx.tx[sfMPTAmount],
+        zkps,
+        EncryptedAmountInfo{
+            holderPubKey, ctx.tx[sfHolderEncryptedAmount]},  // Holder
+        EncryptedAmountInfo{
             (*sleIssuance)[sfIssuerElGamalPublicKey],
-            ctx.tx[sfIssuerEncryptedAmount],
-            contextHash)))
-    {
-        return tecBAD_PROOF;
-    }
-
-    // Verify Auditor proof if present
-    if (hasAuditor &&
-        !isTesSuccess(verifyEqualityProof(
-            amount,
-            zkps[2],
-            (*sleIssuance)[sfAuditorElGamalPublicKey],
-            ctx.tx[sfAuditorEncryptedAmount],
-            contextHash)))
-    {
-        return tecBAD_PROOF;
-    }
-
-    return tesSUCCESS;
+            ctx.tx[sfIssuerEncryptedAmount]},  // Issuer
+        auditor,
+        contextHash);
 }
 
 TER

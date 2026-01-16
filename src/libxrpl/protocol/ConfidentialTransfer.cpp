@@ -53,6 +53,23 @@ getConvertContextHash(
     return s.getSHA512Half();
 }
 
+uint256
+getConvertBackContextHash(
+    AccountID const& account,
+    std::uint32_t sequence,
+    uint192 const& issuanceID,
+    std::uint64_t amount,
+    std::uint32_t version)
+{
+    Serializer s;
+    addCommonZKPFields(
+        s, ttCONFIDENTIAL_CONVERT_BACK, account, sequence, issuanceID, amount);
+
+    s.addInteger(version);
+
+    return s.getSHA512Half();
+}
+
 int
 secp256k1_elgamal_generate_keypair(
     secp256k1_context const* ctx,
@@ -1077,6 +1094,53 @@ checkEncryptedAmountFormat(STObject const& object)
 
     if (hasAuditor && !isValidCiphertext(object[sfAuditorEncryptedAmount]))
         return temBAD_CIPHERTEXT;
+
+    return tesSUCCESS;
+}
+
+TER
+verifyEqualityProofs(
+    std::uint64_t amount,
+    std::vector<Buffer> const& zkps,
+    EncryptedAmountInfo const& holder,
+    EncryptedAmountInfo const& issuer,
+    std::optional<EncryptedAmountInfo> const& auditor,
+    uint256 const& contextHash)
+{
+    // Sanity check: Ensure we have enough proofs
+    size_t const required = getEqualityProofSize(auditor.has_value());
+    if (zkps.size() != required)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // 1. Verify Holder Proof (Index 0)
+    if (!isTesSuccess(verifyEqualityProof(
+            amount,
+            zkps[0],
+            holder.publicKey,
+            holder.encryptedAmount,
+            contextHash)))
+        return tecBAD_PROOF;
+
+    // 2. Verify Issuer Proof (Index 1)
+    if (!isTesSuccess(verifyEqualityProof(
+            amount,
+            zkps[1],
+            issuer.publicKey,
+            issuer.encryptedAmount,
+            contextHash)))
+        return tecBAD_PROOF;
+
+    // 3. Verify Auditor Proof (Index 2) - if applicable
+    if (auditor)
+    {
+        if (!isTesSuccess(verifyEqualityProof(
+                amount,
+                zkps[2],
+                auditor->publicKey,
+                auditor->encryptedAmount,
+                contextHash)))
+            return tecBAD_PROOF;
+    }
 
     return tesSUCCESS;
 }
