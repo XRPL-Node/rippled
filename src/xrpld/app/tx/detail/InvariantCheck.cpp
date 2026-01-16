@@ -3408,8 +3408,8 @@ ValidVault::finalize(
                     auto const destinationDelta =  //
                         maybeAccDelta ? *maybeAccDelta : *maybeOtherAccDelta;
 
-                    // the scale of destinationDelta can be more corse, so we take the max
-                    // with minScale
+                    // the scale of destinationDelta can be more corse, so we
+                    // take the max with minScale
                     auto const localMinScale = std::max(
                         minScale, getNatScale(vaultAsset, destinationDelta));
                     auto const roundedDestinationDelta = roundToAsset(
@@ -3423,8 +3423,8 @@ ValidVault::finalize(
                         result = false;
                     }
 
-                    auto const localPseudoDeltaAssets =
-                        roundToAsset(vaultAsset, vaultPseudoDeltaAssets, localMinScale);
+                    auto const localPseudoDeltaAssets = roundToAsset(
+                        vaultAsset, vaultPseudoDeltaAssets, localMinScale);
                     if (localPseudoDeltaAssets * -1 != roundedDestinationDelta)
                     {
                         JLOG(j.fatal()) <<  //
