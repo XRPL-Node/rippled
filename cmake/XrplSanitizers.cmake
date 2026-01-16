@@ -151,13 +151,13 @@ if(is_gcc)
 elseif(is_clang)
     # Add ignorelist for Clang (GCC doesn't support this)
     # Use CMAKE_SOURCE_DIR to get the path to the ignorelist
-    set(IGNORELIST_PATH "${CMAKE_SOURCE_DIR}/sanitizers/suppressions/sanitizer-ignorelist.txt")
-    if(NOT EXISTS "${IGNORELIST_PATH}")
-        message(FATAL_ERROR "Sanitizer ignorelist not found: ${IGNORELIST_PATH}")
-    endif()
+    # set(IGNORELIST_PATH "${CMAKE_SOURCE_DIR}/sanitizers/suppressions/sanitizer-ignorelist.txt")
+    # if(NOT EXISTS "${IGNORELIST_PATH}")
+    #     message(FATAL_ERROR "Sanitizer ignorelist not found: ${IGNORELIST_PATH}")
+    # endif()
 
-    list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize-ignorelist=${IGNORELIST_PATH}")
-    message(STATUS "  Using sanitizer ignorelist: ${IGNORELIST_PATH}")
+    # list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize-ignorelist=${IGNORELIST_PATH}")
+    # message(STATUS "  Using sanitizer ignorelist: ${IGNORELIST_PATH}")
 
     # Join sanitizer flags with commas for -fsanitize option
     list(JOIN SANITIZER_TYPES "," SANITIZER_TYPES_STR)
