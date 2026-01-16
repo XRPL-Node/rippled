@@ -14,7 +14,7 @@ Corresponding suppression files are located in the `sanitizers/suppressions` dir
     - [AddressSanitizer (ASAN)](#addresssanitizer-asan)
     - [ThreadSanitizer (TSan)](#threadsanitizer-tsan)
     - [LeakSanitizer (LSan)](#leaksanitizer-lsan)
-    - [undefinedbehaviorSanitizer (UBSan)](#undefinedbehaviorsanitizer-ubsan)
+    - [UndefinedBehaviorSanitizer (UBSan)](#undefinedbehaviorsanitizer-ubsan)
   - [Suppression Files](#suppression-files)
     - [`asan.supp`](#asansupp)
     - [`lsan.supp`](#lsansupp)
@@ -89,7 +89,7 @@ cmake --build . --parallel 4
 **IMPORTANT**: ASAN with Boost produces many false positives. Use these options:
 
 ```bash
-export ASAN_OPTIONS="detect_container_overflow=0:suppressions=path/to/asan.supp:halt_on_error=0:log_path=asan.log"
+export ASAN_OPTIONS="print_stacktrace=1:detect_container_overflow=0:suppressions=path/to/asan.supp:halt_on_error=0:log_path=asan.log"
 export LSAN_OPTIONS="suppressions=path/to/lsan.supp:halt_on_error=0:log_path=lsan.log"
 
 # Run tests
@@ -100,7 +100,8 @@ export LSAN_OPTIONS="suppressions=path/to/lsan.supp:halt_on_error=0:log_path=lsa
 
 - Boost intrusive containers (used in `aged_unordered_container`) trigger false positives
 - Boost context switching (used in `Workers.cpp`) confuses ASAN's stack tracking
-- Since we usually don't build Boost(because we don't want to instrument Boost and detect issues in Boost code) with ASAN but use Boost containers in ASAN instrumented rippled code, it generates false positives. Building dependencies with ASAN instrumentation reduces false positives.
+- Since we usually don't build Boost (because we don't want to instrument Boost and detect issues in Boost code) with ASAN but use Boost containers in ASAN instrumented rippled code, it generates false positives.
+- Building dependencies with ASAN instrumentation reduces false positives. But we don't want to instrument dependencies like Boost with ASAN because it is slow (to compile as well as run tests) and not necessary.
 - See: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow
 - More such flags are detailed [here](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags)
 
@@ -125,7 +126,7 @@ export ASAN_OPTIONS="detect_leaks=0"
 
 More details [here](https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer).
 
-### undefinedbehaviorSanitizer (UBSan)
+### UndefinedBehaviorSanitizer (UBSan)
 
 ```bash
 export UBSAN_OPTIONS="suppressions=path/to/ubsan.supp:print_stacktrace=1:halt_on_error=0:log_path=ubsan.log"
