@@ -873,19 +873,31 @@ proveEquality(
     return tesSUCCESS;
 }
 
-CiphertextComponents
-encryptAmount(uint64_t const amt, Slice const& pubKeySlice)
+Buffer
+generateBlindingFactor()
+{
+    unsigned char blindingFactor[ecBlindingFactorLength];
+
+    // todo: might need to be updated using another RNG
+    if (RAND_bytes(blindingFactor, ecBlindingFactorLength) != 1)
+        Throw<std::runtime_error>("Failed to generate random number");
+
+    return Buffer(blindingFactor, ecBlindingFactorLength);
+}
+
+Buffer
+encryptAmount(
+    uint64_t const amt,
+    Slice const& pubKeySlice,
+    Slice const& blindingFactor)
 {
     Buffer buf(ecGamalEncryptedTotalLength);
 
     // Allocate ciphertext placeholders
     secp256k1_pubkey c1, c2;
 
-    // todo: might need to be updated using another RNG
-    // Prepare a random blinding factor
-    unsigned char blindingFactor[32];
-    if (RAND_bytes(blindingFactor, 32) != 1)
-        Throw<std::runtime_error>("Failed to generate random number");
+    if (blindingFactor.size() != 32)
+        Throw<std::runtime_error>("Random factor is not 32 bytes");
 
     secp256k1_pubkey pubKey;
 
@@ -893,7 +905,7 @@ encryptAmount(uint64_t const amt, Slice const& pubKeySlice)
 
     // Encrypt the amount
     if (!secp256k1_elgamal_encrypt(
-            secp256k1Context(), &c1, &c2, &pubKey, amt, blindingFactor))
+            secp256k1Context(), &c1, &c2, &pubKey, amt, blindingFactor.data()))
         Throw<std::runtime_error>("Failed to encrypt amount");
 
     // Serialize the ciphertext pair into the buffer
@@ -901,7 +913,7 @@ encryptAmount(uint64_t const amt, Slice const& pubKeySlice)
         Throw<std::runtime_error>(
             "Failed to serialize into 66 byte compressed format");
 
-    return {std::move(buf), Buffer(blindingFactor, 32)};
+    return buf;
 }
 
 Buffer
