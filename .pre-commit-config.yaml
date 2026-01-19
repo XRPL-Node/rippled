@@ -13,16 +13,10 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # frozen: v6.0.0
     hooks:
-      # https://github.com/pre-commit/pre-commit-hooks/issues/1229
-      # regarding ruamel.yaml version
       - id: trailing-whitespace
-        additional_dependencies: [ruamel.yaml<0.19]
       - id: end-of-file-fixer
-        additional_dependencies: [ruamel.yaml<0.19]
       - id: mixed-line-ending
-        additional_dependencies: [ruamel.yaml<0.19]
       - id: check-merge-conflict
-        additional_dependencies: [ruamel.yaml<0.19]
         args: [--assume-in-merge]
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
@@ -38,9 +32,24 @@ repos:
       - id: prettier
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.11.0
+    rev: 831207fd435b47aeffdf6af853097e64322b4d44 # frozen: v25.12.0
     hooks:
       - id: black
+
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: 1cfa010f078c354f3ffb8413616280cc28f5ba21 # frozen: v9.4.0
+    hooks:
+      - id: cspell # Spell check changed files
+        exclude: .config/cspell.config.yaml
+      - id: cspell # Spell check the commit message
+        name: check commit message spelling
+        args:
+          - --no-must-find-files
+          - --no-progress
+          - --no-summary
+          - --files
+          - .git/COMMIT_EDITMSG
+        stages: [commit-msg]
 
 exclude: |
   (?x)^(
