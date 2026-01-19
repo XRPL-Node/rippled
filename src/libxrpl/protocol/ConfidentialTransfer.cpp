@@ -70,6 +70,357 @@ getConvertBackContextHash(
     return s.getSHA512Half();
 }
 
+bool
+makeEcPair(Slice const& buffer, secp256k1_pubkey& out1, secp256k1_pubkey& out2)
+{
+    auto parsePubKey = [](Slice const& slice, secp256k1_pubkey& out) {
+        return secp256k1_ec_pubkey_parse(
+            secp256k1Context(),
+            &out,
+            reinterpret_cast<unsigned char const*>(slice.data()),
+            slice.length());
+    };
+
+    Slice s1{buffer.data(), ecGamalEncryptedLength};
+    Slice s2{buffer.data() + ecGamalEncryptedLength, ecGamalEncryptedLength};
+
+    int const ret1 = parsePubKey(s1, out1);
+    int const ret2 = parsePubKey(s2, out2);
+
+    return ret1 == 1 && ret2 == 1;
+}
+
+bool
+serializeEcPair(
+    secp256k1_pubkey const& in1,
+    secp256k1_pubkey const& in2,
+    Buffer& buffer)
+{
+    auto serializePubKey = [](secp256k1_pubkey const& pub, unsigned char* out) {
+        size_t outLen = ecGamalEncryptedLength;  // 33 bytes
+        int const ret = secp256k1_ec_pubkey_serialize(
+            secp256k1Context(), out, &outLen, &pub, SECP256K1_EC_COMPRESSED);
+        return ret == 1 && outLen == ecGamalEncryptedLength;
+    };
+
+    unsigned char* ptr = buffer.data();
+    bool const res1 = serializePubKey(in1, ptr);
+    bool const res2 = serializePubKey(in2, ptr + ecGamalEncryptedLength);
+
+    return res1 && res2;
+}
+
+bool
+isValidCiphertext(Slice const& buffer)
+{
+    // Local/temporary variables to pass to makeEcPair.
+    // Their contents will be discarded when the function returns.
+    secp256k1_pubkey key1;
+    secp256k1_pubkey key2;
+
+    // Call makeEcPair and return its result.
+    return makeEcPair(buffer, key1, key2);
+}
+
+TER
+homomorphicAdd(Slice const& a, Slice const& b, Buffer& out)
+{
+    if (a.length() != ecGamalEncryptedTotalLength ||
+        b.length() != ecGamalEncryptedTotalLength)
+        return tecINTERNAL;
+
+    secp256k1_pubkey aC1;
+    secp256k1_pubkey aC2;
+    secp256k1_pubkey bC1;
+    secp256k1_pubkey bC2;
+
+    if (!makeEcPair(a, aC1, aC2) || !makeEcPair(b, bC1, bC2))
+        return tecINTERNAL;
+
+    secp256k1_pubkey sumC1;
+    secp256k1_pubkey sumC2;
+
+    if (secp256k1_elgamal_add(
+            secp256k1Context(), &sumC1, &sumC2, &aC1, &aC2, &bC1, &bC2) != 1)
+        return tecINTERNAL;
+
+    if (!serializeEcPair(sumC1, sumC2, out))
+        return tecINTERNAL;
+
+    return tesSUCCESS;
+}
+
+TER
+homomorphicSubtract(Slice const& a, Slice const& b, Buffer& out)
+{
+    if (a.length() != ecGamalEncryptedTotalLength ||
+        b.length() != ecGamalEncryptedTotalLength)
+        return tecINTERNAL;
+
+    secp256k1_pubkey aC1;
+    secp256k1_pubkey aC2;
+    secp256k1_pubkey bC1;
+    secp256k1_pubkey bC2;
+
+    if (!makeEcPair(a, aC1, aC2) || !makeEcPair(b, bC1, bC2))
+        return tecINTERNAL;
+
+    secp256k1_pubkey diffC1;
+    secp256k1_pubkey diffC2;
+
+    if (secp256k1_elgamal_subtract(
+            secp256k1Context(), &diffC1, &diffC2, &aC1, &aC2, &bC1, &bC2) != 1)
+        return tecINTERNAL;
+
+    if (!serializeEcPair(diffC1, diffC2, out))
+        return tecINTERNAL;
+
+    return tesSUCCESS;
+}
+
+Buffer
+generateBlindingFactor()
+{
+    unsigned char blindingFactor[ecBlindingFactorLength];
+
+    // todo: might need to be updated using another RNG
+    if (RAND_bytes(blindingFactor, ecBlindingFactorLength) != 1)
+        Throw<std::runtime_error>("Failed to generate random number");
+
+    return Buffer(blindingFactor, ecBlindingFactorLength);
+}
+
+std::optional<Buffer>
+encryptAmount(
+    uint64_t const amt,
+    Slice const& pubKeySlice,
+    Slice const& blindingFactor)
+{
+    Buffer buf(ecGamalEncryptedTotalLength);
+
+    // Allocate ciphertext placeholders
+    secp256k1_pubkey c1, c2;
+    secp256k1_pubkey pubKey;
+
+    if (blindingFactor.size() != ecBlindingFactorLength)
+        return std::nullopt;
+
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    // Encrypt the amount
+    if (!secp256k1_elgamal_encrypt(
+            secp256k1Context(), &c1, &c2, &pubKey, amt, blindingFactor.data()))
+        return std::nullopt;
+
+    // Serialize the ciphertext pair into the buffer
+    if (!serializeEcPair(c1, c2, buf))
+        return std::nullopt;
+
+    return buf;
+}
+
+Buffer
+encryptCanonicalZeroAmount(
+    Slice const& pubKeySlice,
+    AccountID const& account,
+    MPTID const& mptId)
+{
+    Buffer buf(ecGamalEncryptedTotalLength);
+
+    // Allocate ciphertext placeholders
+    secp256k1_pubkey c1, c2;
+    secp256k1_pubkey pubKey;
+
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    // Encrypt the amount
+    if (!generate_canonical_encrypted_zero(
+            secp256k1Context(),
+            &c1,
+            &c2,
+            &pubKey,
+            account.data(),
+            mptId.data()))
+        Throw<std::runtime_error>("Failed to encrypt amount");
+
+    // Serialize the ciphertext pair into the buffer
+    if (!serializeEcPair(c1, c2, buf))
+        Throw<std::runtime_error>(
+            "Failed to serialize into 66 byte compressed format");
+
+    return buf;
+}
+
+TER
+verifySchnorrProof(
+    Slice const& pubKeySlice,
+    Slice const& proofSlice,
+    uint256 const& contextHash)
+{
+    // sanity check proof length
+    if (proofSlice.size() != ecSchnorrProofLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // sanity check public key length
+    if (pubKeySlice.size() != ecPubKeyLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    secp256k1_pubkey pubKey;
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    int result = secp256k1_mpt_pok_sk_verify(
+        secp256k1Context(), proofSlice.data(), &pubKey, contextHash.data());
+
+    if (result != 1)
+        return tecBAD_PROOF;
+
+    return tesSUCCESS;
+}
+
+TER
+verifyElGamalEncryption(
+    std::uint64_t const amount,
+    Slice const& blindingFactor,
+    Slice const& pubKeySlice,
+    Slice const& ciphertext)
+{
+    // sanity check blinding factor length
+    if (blindingFactor.size() != ecBlindingFactorLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // sanity check public key length
+    if (pubKeySlice.size() != ecPubKeyLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    secp256k1_pubkey pubKey;
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    secp256k1_pubkey c1, c2;
+    if (!makeEcPair(ciphertext, c1, c2))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    int result = secp256k1_elgamal_verify_encryption(
+        secp256k1Context(), &c1, &c2, &pubKey, amount, blindingFactor.data());
+
+    if (result != 1)
+    {
+        return tecBAD_PROOF;
+    }
+
+    return tesSUCCESS;
+}
+
+TER
+verifyRevealedAmount(
+    std::uint64_t const amount,
+    Slice const& blindingFactor,
+    EncryptedAmountInfo const& holder,
+    EncryptedAmountInfo const& issuer,
+    std::optional<EncryptedAmountInfo> const& auditor)
+{
+    if (auto const res = verifyElGamalEncryption(
+            amount, blindingFactor, holder.publicKey, holder.encryptedAmount);
+        !isTesSuccess(res))
+    {
+        return res;
+    }
+
+    if (auto const res = verifyElGamalEncryption(
+            amount, blindingFactor, issuer.publicKey, issuer.encryptedAmount);
+        !isTesSuccess(res))
+    {
+        return res;
+    }
+
+    if (auditor)
+    {
+        if (auto const res = verifyElGamalEncryption(
+                amount,
+                blindingFactor,
+                auditor->publicKey,
+                auditor->encryptedAmount);
+            !isTesSuccess(res))
+        {
+            return res;
+        }
+    }
+
+    return tesSUCCESS;
+}
+
+TER
+verifyClawbackEqualityProof(
+    uint64_t const amount,
+    Slice const& proof,
+    Slice const& pubKeySlice,
+    Slice const& ciphertext,
+    uint256 const& contextHash)
+{
+    secp256k1_pubkey c1, c2;
+    if (!makeEcPair(ciphertext, c1, c2))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    secp256k1_pubkey pubKey;
+    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
+
+    if (secp256k1_equality_plaintext_verify(
+            secp256k1Context(),
+            proof.data(),
+            &pubKey,
+            &c2,
+            &c1,
+            amount,
+            contextHash.data()) != 1)
+    {
+        return tecBAD_PROOF;
+    }
+
+    return tesSUCCESS;
+}
+
+std::vector<Buffer>
+getEqualityProofs(Slice const& zkp)
+{
+    if (zkp.size() % ecEqualityProofLength != 0)
+        return {};
+    auto const count = zkp.size() / ecEqualityProofLength;
+
+    std::vector<Buffer> zkps;
+    zkps.reserve(count);
+
+    for (size_t i = 0; i < count; ++i)
+        zkps.emplace_back(
+            zkp.data() + (i * ecEqualityProofLength), ecEqualityProofLength);
+
+    return zkps;
+}
+
+NotTEC
+checkEncryptedAmountFormat(STObject const& object)
+{
+    if (object[sfHolderEncryptedAmount].length() !=
+            ecGamalEncryptedTotalLength ||
+        object[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
+        return temBAD_CIPHERTEXT;
+
+    bool const hasAuditor = object.isFieldPresent(sfAuditorEncryptedAmount);
+    if (hasAuditor &&
+        object[sfAuditorEncryptedAmount].length() !=
+            ecGamalEncryptedTotalLength)
+        return temBAD_CIPHERTEXT;
+
+    if (!isValidCiphertext(object[sfHolderEncryptedAmount]) ||
+        !isValidCiphertext(object[sfIssuerEncryptedAmount]))
+        return temBAD_CIPHERTEXT;
+
+    if (hasAuditor && !isValidCiphertext(object[sfAuditorEncryptedAmount]))
+        return temBAD_CIPHERTEXT;
+
+    return tesSUCCESS;
+}
+
+// The following functions belong to the mpt-crypto library,
+// they will be finally removed and we will use conan2 to manage the dependency.
 int
 secp256k1_elgamal_generate_keypair(
     secp256k1_context const* ctx,
@@ -96,7 +447,6 @@ secp256k1_elgamal_generate_keypair(
 }
 
 // ... implementation of secp256k1_elgamal_encrypt ...
-
 int
 secp256k1_elgamal_encrypt(
     secp256k1_context const* ctx,
@@ -337,7 +687,6 @@ build_hash_input(
 }
 
 // The canonical encrypted zero
-
 int
 generate_canonical_encrypted_zero(
     secp256k1_context const* ctx,
@@ -724,437 +1073,177 @@ secp256k1_equality_plaintext_verify(
     return 1; /* Both equations passed */
 }
 
-bool
-makeEcPair(Slice const& buffer, secp256k1_pubkey& out1, secp256k1_pubkey& out2)
+void
+build_pok_challenge(
+    unsigned char* e,
+    secp256k1_context const* ctx,
+    secp256k1_pubkey const* pk,
+    secp256k1_pubkey const* T,
+    unsigned char const* context_id)
 {
-    auto parsePubKey = [](Slice const& slice, secp256k1_pubkey& out) {
-        return secp256k1_ec_pubkey_parse(
-            secp256k1Context(),
-            &out,
-            reinterpret_cast<unsigned char const*>(slice.data()),
-            slice.length());
-    };
+    SHA256_CTX sha;
+    unsigned char buf[33];
+    size_t len = 33;
 
-    Slice s1{buffer.data(), ecGamalEncryptedLength};
-    Slice s2{buffer.data() + ecGamalEncryptedLength, ecGamalEncryptedLength};
+    SHA256_Init(&sha);
+    // Domain Separator from LaTeX spec
+    SHA256_Update(&sha, "MPT_POK_SK_REGISTER", 19);
 
-    int const ret1 = parsePubKey(s1, out1);
-    int const ret2 = parsePubKey(s2, out2);
+    secp256k1_ec_pubkey_serialize(ctx, buf, &len, pk, SECP256K1_EC_COMPRESSED);
+    SHA256_Update(&sha, buf, 33);
 
-    return ret1 == 1 && ret2 == 1;
+    len = 33;
+    secp256k1_ec_pubkey_serialize(ctx, buf, &len, T, SECP256K1_EC_COMPRESSED);
+    SHA256_Update(&sha, buf, 33);
+
+    SHA256_Update(&sha, context_id, 32);
+    SHA256_Final(e, &sha);
 }
 
-bool
-serializeEcPair(
-    secp256k1_pubkey const& in1,
-    secp256k1_pubkey const& in2,
-    Buffer& buffer)
+int
+secp256k1_mpt_pok_sk_prove(
+    secp256k1_context const* ctx,
+    unsigned char* proof,
+    secp256k1_pubkey const* pk,
+    unsigned char const* sk,
+    unsigned char const* context_id)
 {
-    auto serializePubKey = [](secp256k1_pubkey const& pub, unsigned char* out) {
-        size_t outLen = ecGamalEncryptedLength;  // 33 bytes
-        int const ret = secp256k1_ec_pubkey_serialize(
-            secp256k1Context(), out, &outLen, &pub, SECP256K1_EC_COMPRESSED);
-        return ret == 1 && outLen == ecGamalEncryptedLength;
-    };
+    unsigned char k[32], e[32], s[32];
+    secp256k1_pubkey T;
 
-    unsigned char* ptr = buffer.data();
-    bool const res1 = serializePubKey(in1, ptr);
-    bool const res2 = serializePubKey(in2, ptr + ecGamalEncryptedLength);
-
-    return res1 && res2;
-}
-
-bool
-isValidCiphertext(Slice const& buffer)
-{
-    // Local/temporary variables to pass to makeEcPair.
-    // Their contents will be discarded when the function returns.
-    secp256k1_pubkey key1;
-    secp256k1_pubkey key2;
-
-    // Call makeEcPair and return its result.
-    return makeEcPair(buffer, key1, key2);
-}
-
-TER
-homomorphicAdd(Slice const& a, Slice const& b, Buffer& out)
-{
-    if (a.length() != ecGamalEncryptedTotalLength ||
-        b.length() != ecGamalEncryptedTotalLength)
-        return tecINTERNAL;
-
-    secp256k1_pubkey aC1;
-    secp256k1_pubkey aC2;
-    secp256k1_pubkey bC1;
-    secp256k1_pubkey bC2;
-
-    if (!makeEcPair(a, aC1, aC2) || !makeEcPair(b, bC1, bC2))
-        return tecINTERNAL;
-
-    secp256k1_pubkey sumC1;
-    secp256k1_pubkey sumC2;
-
-    if (secp256k1_elgamal_add(
-            secp256k1Context(), &sumC1, &sumC2, &aC1, &aC2, &bC1, &bC2) != 1)
-        return tecINTERNAL;
-
-    if (!serializeEcPair(sumC1, sumC2, out))
-        return tecINTERNAL;
-
-    return tesSUCCESS;
-}
-
-TER
-homomorphicSubtract(Slice const& a, Slice const& b, Buffer& out)
-{
-    if (a.length() != ecGamalEncryptedTotalLength ||
-        b.length() != ecGamalEncryptedTotalLength)
-        return tecINTERNAL;
-
-    secp256k1_pubkey aC1;
-    secp256k1_pubkey aC2;
-    secp256k1_pubkey bC1;
-    secp256k1_pubkey bC2;
-
-    if (!makeEcPair(a, aC1, aC2) || !makeEcPair(b, bC1, bC2))
-        return tecINTERNAL;
-
-    secp256k1_pubkey diffC1;
-    secp256k1_pubkey diffC2;
-
-    if (secp256k1_elgamal_subtract(
-            secp256k1Context(), &diffC1, &diffC2, &aC1, &aC2, &bC1, &bC2) != 1)
-        return tecINTERNAL;
-
-    if (!serializeEcPair(diffC1, diffC2, out))
-        return tecINTERNAL;
-
-    return tesSUCCESS;
-}
-
-TER
-proveEquality(
-    Slice const& proof,
-    Slice const& encAmt,  // encrypted amount
-    Slice const& pubkey,
-    uint64_t const amount,
-    uint256 const& txHash,  // Transaction context data
-    std::uint32_t const spendVersion)
-{
-    if (proof.length() != ecEqualityProofLength)
-        return tecINTERNAL;
-
-    secp256k1_pubkey c1;
-    secp256k1_pubkey c2;
-
-    if (!makeEcPair(encAmt, c1, c2))
-        return tecINTERNAL;
-
-    // todo: might need to change how its hashed
-    Serializer s;
-    s.addRaw(txHash.data(), txHash.bytes);
-    s.add32(spendVersion);
-    // auto const txContextId = s.getSHA512Half();
-
-    // todo: support equality
-    // if (secp256k1_equality_verify(
-    //         secp256k1Context(),
-    //         reinterpret_cast<unsigned char const*>(proof.data()),
-    //         proof.length(),  // Length of the proof byte array (98 bytes)
-    //         &c1,
-    //         &c2,
-    //         reinterpret_cast<unsigned char const*>(pubkey.data()),
-    //         amount,
-    //         txContextId.data(),  // Transaction context data
-    //         txContextId.bytes    // Length of context data
-    //         ) != 1)
-    //     return tecBAD_PROOF;
-
-    return tesSUCCESS;
-}
-
-Buffer
-generateBlindingFactor()
-{
-    unsigned char blindingFactor[ecBlindingFactorLength];
-
-    // todo: might need to be updated using another RNG
-    if (RAND_bytes(blindingFactor, ecBlindingFactorLength) != 1)
-        Throw<std::runtime_error>("Failed to generate random number");
-
-    return Buffer(blindingFactor, ecBlindingFactorLength);
-}
-
-Buffer
-encryptAmount(
-    uint64_t const amt,
-    Slice const& pubKeySlice,
-    Slice const& blindingFactor)
-{
-    Buffer buf(ecGamalEncryptedTotalLength);
-
-    // Allocate ciphertext placeholders
-    secp256k1_pubkey c1, c2;
-
-    if (blindingFactor.size() != 32)
-        Throw<std::runtime_error>("Random factor is not 32 bytes");
-
-    secp256k1_pubkey pubKey;
-
-    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
-
-    // Encrypt the amount
-    if (!secp256k1_elgamal_encrypt(
-            secp256k1Context(), &c1, &c2, &pubKey, amt, blindingFactor.data()))
-        Throw<std::runtime_error>("Failed to encrypt amount");
-
-    // Serialize the ciphertext pair into the buffer
-    if (!serializeEcPair(c1, c2, buf))
-        Throw<std::runtime_error>(
-            "Failed to serialize into 66 byte compressed format");
-
-    return buf;
-}
-
-Buffer
-encryptCanonicalZeroAmount(
-    Slice const& pubKeySlice,
-    AccountID const& account,
-    MPTID const& mptId)
-{
-    Buffer buf(ecGamalEncryptedTotalLength);
-
-    // Allocate ciphertext placeholders
-    secp256k1_pubkey c1, c2;
-    secp256k1_pubkey pubKey;
-
-    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
-
-    // Encrypt the amount
-    if (!generate_canonical_encrypted_zero(
-            secp256k1Context(),
-            &c1,
-            &c2,
-            &pubKey,
-            account.data(),
-            mptId.data()))
-        Throw<std::runtime_error>("Failed to encrypt amount");
-
-    // Serialize the ciphertext pair into the buffer
-    if (!serializeEcPair(c1, c2, buf))
-        Throw<std::runtime_error>(
-            "Failed to serialize into 66 byte compressed format");
-
-    return buf;
-}
-
-TER
-verifyConfidentialSendProof(
-    Slice const& proof,
-    Slice const& encSenderBalance,
-    Slice const& encSenderAmt,
-    Slice const& encDestAmt,
-    Slice const& encIssuerAmt,
-    Slice const& senderPubKey,
-    Slice const& destPubKey,
-    Slice const& issuerPubKey,
-    std::uint32_t const version,
-    uint256 const& txHash)
-{
-    // if (proof.length() != ecConfidentialSendProofLength)
-    //     return tecINTERNAL;
-
-    secp256k1_pubkey balC1, balC2;
-    if (!makeEcPair(encSenderBalance, balC1, balC2))
-        return tecINTERNAL;
-
-    secp256k1_pubkey senderC1, senderC2;
-    if (!makeEcPair(encSenderAmt, senderC1, senderC2))
-        return tecINTERNAL;
-
-    secp256k1_pubkey destC1, destC2;
-    if (!makeEcPair(encDestAmt, destC1, destC2))
-        return tecINTERNAL;
-
-    secp256k1_pubkey issuerC1, issuerC2;
-    if (!makeEcPair(encIssuerAmt, issuerC1, issuerC2))
-        return tecINTERNAL;
-
-    Serializer s;
-    s.addRaw(txHash.data(), txHash.bytes);
-    s.add32(version);
-    // auto const txContextId = s.getSHA512Half();
-
-    // todo: equality and range proof verification
-    // if (secp256k1_equal_range_verify(
-    //         secp256k1Context(),
-    //         reinterpret_cast<unsigned char const*>(proof.data()),
-    //         proof.length(),
-    //         txContextId.data(),
-    //         &balC1,
-    //         &balC2,
-    //         &senderC1,
-    //         &senderC2,
-    //         reinterpret_cast<unsigned char const*>(senderPubKey.data()),
-    //         &destC1,
-    //         &destC2,
-    //         reinterpret_cast<unsigned char const*>(destPubKey.data()),
-    //         &issuerC1,
-    //         &issuerC2,
-    //         reinterpret_cast<unsigned char const*>(issuerPubKey.data()),
-    //         txContextId.data(),
-    //         txContextId.bytes) != 1)
-    //     return tecBAD_PROOF;
-
-    return tesSUCCESS;
-}
-
-TER
-verifyEqualityProof(
-    uint64_t const amount,
-    Slice const& proof,
-    Slice const& pubKeySlice,
-    Slice const& ciphertext,
-    uint256 const& contextHash)
-{
-    secp256k1_pubkey c1, c2;
-    if (!makeEcPair(ciphertext, c1, c2))
-        return tecINTERNAL;  // LCOV_EXCL_LINE
-
-    secp256k1_pubkey pubKey;
-    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
-
-    if (secp256k1_equality_plaintext_verify(
-            secp256k1Context(),
-            proof.data(),
-            &c1,
-            &c2,
-            &pubKey,
-            amount,
-            contextHash.data()) != 1)
+    // 1. Sample k and T = kG
+    do
     {
-        return tecBAD_PROOF;
+        if (RAND_bytes(k, 32) != 1)
+            return 0;
+    } while (!secp256k1_ec_seckey_verify(ctx, k));
+
+    if (!secp256k1_ec_pubkey_create(ctx, &T, k))
+        return 0;
+
+    // 2. Challenge e
+    build_pok_challenge(e, ctx, pk, &T, context_id);
+
+    // 3. Response s = k + e*sk (mod n)
+    memcpy(s, sk, 32);
+    if (!secp256k1_ec_seckey_tweak_mul(ctx, s, e))
+        return 0;
+    if (!secp256k1_ec_seckey_tweak_add(ctx, s, k))
+        return 0;
+
+    // 4. Serialize Proof: T (33 bytes) || s (32 bytes)
+    size_t clen = 33;
+    secp256k1_ec_pubkey_serialize(
+        ctx, proof, &clen, &T, SECP256K1_EC_COMPRESSED);
+    memcpy(proof + 33, s, 32);
+
+    return 1;
+}
+
+int
+secp256k1_mpt_pok_sk_verify(
+    secp256k1_context const* ctx,
+    unsigned char const* proof,
+    secp256k1_pubkey const* pk,
+    unsigned char const* context_id)
+{
+    secp256k1_pubkey T, lhs, rhs, ePk;
+    unsigned char e[32], s[32];
+
+    // 1. Parse T and s
+    if (!secp256k1_ec_pubkey_parse(ctx, &T, proof, 33))
+        return 0;
+    memcpy(s, proof + 33, 32);
+
+    // 2. Challenge e
+    build_pok_challenge(e, ctx, pk, &T, context_id);
+
+    // 3. Verify sG = T + ePk
+    // LHS = s*G
+    if (!secp256k1_ec_pubkey_create(ctx, &lhs, s))
+        return 0;
+
+    // RHS = T + e*Pk
+    ePk = *pk;
+    if (!secp256k1_ec_pubkey_tweak_mul(ctx, &ePk, e))
+        return 0;
+
+    secp256k1_pubkey const* addends[2] = {&T, &ePk};
+    if (!secp256k1_ec_pubkey_combine(ctx, &rhs, addends, 2))
+        return 0;
+
+    // 4. Compare serialized points
+    unsigned char ser_lhs[33], ser_rhs[33];
+    size_t clen = 33;
+    secp256k1_ec_pubkey_serialize(
+        ctx, ser_lhs, &clen, &lhs, SECP256K1_EC_COMPRESSED);
+    clen = 33;
+    secp256k1_ec_pubkey_serialize(
+        ctx, ser_rhs, &clen, &rhs, SECP256K1_EC_COMPRESSED);
+
+    return memcmp(ser_lhs, ser_rhs, 33) == 0;
+}
+
+int
+secp256k1_elgamal_verify_encryption(
+    secp256k1_context const* ctx,
+    secp256k1_pubkey const* c1,
+    secp256k1_pubkey const* c2,
+    secp256k1_pubkey const* pubkey_Q,
+    uint64_t amount,
+    unsigned char const* blinding_factor)
+{
+    secp256k1_pubkey expected_c1, mG, s_shared, expected_c2;
+    unsigned char amount_scalar[32] = {0};
+    unsigned char ser1[33], ser2[33];
+    size_t len = 33;
+
+    if (secp256k1_ec_pubkey_create(ctx, &expected_c1, blinding_factor) != 1)
+    {
+        return 0;
     }
 
-    return tesSUCCESS;
-}
+    secp256k1_ec_pubkey_serialize(ctx, ser1, &len, c1, SECP256K1_EC_COMPRESSED);
+    len = 33;
+    secp256k1_ec_pubkey_serialize(
+        ctx, ser2, &len, &expected_c1, SECP256K1_EC_COMPRESSED);
+    if (memcmp(ser1, ser2, 33) != 0)
+        return 0;
 
-TER
-verifyClawbackEqualityProof(
-    uint64_t const amount,
-    Slice const& proof,
-    Slice const& pubKeySlice,
-    Slice const& ciphertext,
-    uint256 const& contextHash)
-{
-    secp256k1_pubkey c1, c2;
-    if (!makeEcPair(ciphertext, c1, c2))
-        return tecINTERNAL;  // LCOV_EXCL_LINE
+    // Calculate Shared Secret S = k * Q
+    s_shared = *pubkey_Q;
+    if (secp256k1_ec_pubkey_tweak_mul(ctx, &s_shared, blinding_factor) != 1)
+        return 0;
 
-    secp256k1_pubkey pubKey;
-    std::memcpy(pubKey.data, pubKeySlice.data(), ecPubKeyLength);
-
-    if (secp256k1_equality_plaintext_verify(
-            secp256k1Context(),
-            proof.data(),
-            &pubKey,
-            &c2,
-            &c1,
-            amount,
-            contextHash.data()) != 1)
+    // Compare C2
+    if (amount == 0)
     {
-        return tecBAD_PROOF;
+        expected_c2 = s_shared;
+    }
+    else
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            amount_scalar[31 - i] = (amount >> (i * 8)) & 0xFF;
+        }
+        if (secp256k1_ec_pubkey_create(ctx, &mG, amount_scalar) != 1)
+            return 0;
+
+        // Combine M + S
+        secp256k1_pubkey const* pts[2] = {&mG, &s_shared};
+        if (secp256k1_ec_pubkey_combine(ctx, &expected_c2, pts, 2) != 1)
+            return 0;
     }
 
-    return tesSUCCESS;
-}
+    len = 33;
+    secp256k1_ec_pubkey_serialize(ctx, ser1, &len, c2, SECP256K1_EC_COMPRESSED);
+    len = 33;
+    secp256k1_ec_pubkey_serialize(
+        ctx, ser2, &len, &expected_c2, SECP256K1_EC_COMPRESSED);
+    if (memcmp(ser1, ser2, 33) != 0)
+        return 0;
 
-std::vector<Buffer>
-getEqualityProofs(Slice const& zkp)
-{
-    if (zkp.size() % ecEqualityProofLength != 0)
-        return {};
-    auto const count = zkp.size() / ecEqualityProofLength;
-
-    std::vector<Buffer> zkps;
-    zkps.reserve(count);
-
-    for (size_t i = 0; i < count; ++i)
-        zkps.emplace_back(
-            zkp.data() + (i * ecEqualityProofLength), ecEqualityProofLength);
-
-    return zkps;
-}
-
-NotTEC
-checkEncryptedAmountFormat(STObject const& object)
-{
-    if (object[sfHolderEncryptedAmount].length() !=
-            ecGamalEncryptedTotalLength ||
-        object[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
-        return temBAD_CIPHERTEXT;
-
-    bool const hasAuditor = object.isFieldPresent(sfAuditorEncryptedAmount);
-    if (hasAuditor &&
-        object[sfAuditorEncryptedAmount].length() !=
-            ecGamalEncryptedTotalLength)
-        return temBAD_CIPHERTEXT;
-
-    if (!isValidCiphertext(object[sfHolderEncryptedAmount]) ||
-        !isValidCiphertext(object[sfIssuerEncryptedAmount]))
-        return temBAD_CIPHERTEXT;
-
-    if (hasAuditor && !isValidCiphertext(object[sfAuditorEncryptedAmount]))
-        return temBAD_CIPHERTEXT;
-
-    return tesSUCCESS;
-}
-
-TER
-verifyEqualityProofs(
-    std::uint64_t amount,
-    std::vector<Buffer> const& zkps,
-    EncryptedAmountInfo const& holder,
-    EncryptedAmountInfo const& issuer,
-    std::optional<EncryptedAmountInfo> const& auditor,
-    uint256 const& contextHash)
-{
-    // Sanity check: Ensure we have enough proofs
-    size_t const required = getEqualityProofSize(auditor.has_value());
-    if (zkps.size() != required)
-        return tecINTERNAL;  // LCOV_EXCL_LINE
-
-    // 1. Verify Holder Proof (Index 0)
-    if (!isTesSuccess(verifyEqualityProof(
-            amount,
-            zkps[0],
-            holder.publicKey,
-            holder.encryptedAmount,
-            contextHash)))
-        return tecBAD_PROOF;
-
-    // 2. Verify Issuer Proof (Index 1)
-    if (!isTesSuccess(verifyEqualityProof(
-            amount,
-            zkps[1],
-            issuer.publicKey,
-            issuer.encryptedAmount,
-            contextHash)))
-        return tecBAD_PROOF;
-
-    // 3. Verify Auditor Proof (Index 2) - if applicable
-    if (auditor)
-    {
-        if (!isTesSuccess(verifyEqualityProof(
-                amount,
-                zkps[2],
-                auditor->publicKey,
-                auditor->encryptedAmount,
-                contextHash)))
-            return tecBAD_PROOF;
-    }
-
-    return tesSUCCESS;
+    return 1;  // Success: Encryption is valid
 }
 
 }  // namespace ripple
