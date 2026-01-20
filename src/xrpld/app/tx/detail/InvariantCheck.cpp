@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <iostream>
 #include <iterator>
 #include <optional>
 
@@ -3255,8 +3256,9 @@ ValidVault::finalize(
                             "balance";
                         return false;
                     }
-                    auto const localMinScale = computeMinScale(
-                        vaultAsset, {minScale, *maybeAccDeltaAssets});
+                    auto const localMinScale = std::min(
+                        minScale,
+                        computeMinScale(vaultAsset, {*maybeAccDeltaAssets}));
 
                     auto const accountDeltaAssets = roundToAsset(
                         vaultAsset, *maybeAccDeltaAssets, localMinScale);
@@ -3420,8 +3422,9 @@ ValidVault::finalize(
 
                     // the scale of destinationDelta can be coarser than
                     // minScale, so we take that into account when rounding
-                    auto const localMinScale = computeMinScale(
-                        vaultAsset, {minScale, destinationDelta});
+                    auto const localMinScale = std::min(
+                        minScale,
+                        computeMinScale(vaultAsset, {destinationDelta}));
 
                     auto const roundedDestinationDelta = roundToAsset(
                         vaultAsset, destinationDelta, localMinScale);
