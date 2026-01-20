@@ -522,6 +522,8 @@ class TrustAndBalance_test : public beast::unit_test::suite
         auto const acctReserve = env.current()->fees().accountReserve(0);
         auto const incReserve = env.current()->fees().increment;
 
+        std::cout << "INC RESERVE: " << incReserve << std::endl;
+
         auto checkAliceUSD = [&](std::uint32_t expectedOwnerCount,
                                  bool expectedReserveSet) {
             BEAST_EXPECT(
@@ -565,7 +567,7 @@ class TrustAndBalance_test : public beast::unit_test::suite
         // Reduce alice's balance to 50 XRP + fee
         // Owner count is 0
         auto aliceBalance = env.balance(alice);
-        auto targetBalance = acctReserve + XRP(50) + fee;
+        auto targetBalance = acctReserve + incReserve + fee;
         if (aliceBalance > targetBalance)
         {
             auto excess = aliceBalance - targetBalance - fee;
@@ -575,7 +577,7 @@ class TrustAndBalance_test : public beast::unit_test::suite
         }
 
         aliceBalance = env.balance(alice);
-        BEAST_EXPECT(aliceBalance == acctReserve + XRP(50) + fee);
+        BEAST_EXPECT(aliceBalance == acctReserve + incReserve + fee);
 
         env(offer(market, XRP(100), USD(100)));
         env.close();
@@ -588,7 +590,10 @@ class TrustAndBalance_test : public beast::unit_test::suite
             env(offer(alice, USD(50), XRP(50)));
             env.close();
 
-            env.require(balance(alice, USD(0)), offers(alice, 1));
+            env.require(
+                balance(alice, acctReserve + incReserve),
+                balance(alice, USD(0)),
+                offers(alice, 1));
             checkAliceUSD(1, false);
         }
         else
