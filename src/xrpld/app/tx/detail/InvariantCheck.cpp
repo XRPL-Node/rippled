@@ -22,7 +22,11 @@
 #include <xrpl/protocol/Units.h>
 #include <xrpl/protocol/nftPageMask.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <initializer_list>
+#include <iterator>
 #include <optional>
 
 namespace xrpl {
@@ -3068,26 +3072,6 @@ ValidVault::finalize(
                                    : std::nullopt;
     };
 
-    // Helper to get the minimal scale of an STAmount by removing trailing
-    // zeros from its mantissa
-    auto const getNatScale = [](Asset const& asset,
-                                Number const& value) -> std::int32_t {
-        if (value == beast::zero || asset.integral())
-            return 0;
-
-        auto mantissa = std::abs(value.mantissa());
-        auto scale = value.exponent();
-
-        // Remove trailing zeros from mantissa, adjusting scale accordingly
-        while (mantissa % 10 == 0)
-        {
-            mantissa /= 10;
-            ++scale;
-        }
-
-        return scale;
-    };
-
     auto const vaultHoldsNoAssets = [&](Vault const& vault) {
         return vault.assetsAvailable == 0 && vault.assetsTotal == 0;
     };
@@ -3216,16 +3200,29 @@ ValidVault::finalize(
                     "xrpl::ValidVault::finalize : deposit updated a vault");
                 auto const& beforeVault = beforeVault_[0];
 
-                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
-
-                if (!vaultDeltaAssets)
+                auto const maybeVaultDeltaAssets =
+                    deltaAssets(afterVault.pseudoId);
+                if (!maybeVaultDeltaAssets)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must change vault balance";
                     return false;  // That's all we can do
                 }
 
-                if (*vaultDeltaAssets > tx[sfAmount])
+                // Get the coarsest scale to round calculations to
+                auto const minScale = computeMinScale(
+                    vaultAsset,
+                    {
+                        *maybeVaultDeltaAssets,
+                        afterVault.assetsTotal - beforeVault.assetsTotal,
+                        afterVault.assetsAvailable -
+                            beforeVault.assetsAvailable,
+                    });
+
+                auto const vaultDeltaAssets =
+                    roundToAsset(vaultAsset, *maybeVaultDeltaAssets, minScale);
+
+                if (vaultDeltaAssets > tx[sfAmount])
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must not change vault "
@@ -3233,7 +3230,7 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                if (*vaultDeltaAssets <= zero)
+                if (vaultDeltaAssets <= zero)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must increase vault balance";
@@ -3250,16 +3247,23 @@ ValidVault::finalize(
 
                 if (!issuerDeposit)
                 {
-                    auto const accountDeltaAssets = deltaAssetsTxAccount();
-                    if (!accountDeltaAssets)
+                    auto const maybeAccDeltaAssets = deltaAssetsTxAccount();
+                    if (!maybeAccDeltaAssets)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: deposit must change depositor "
                             "balance";
                         return false;
                     }
+                    auto const localMinScale = computeMinScale(
+                        vaultAsset, {minScale, *maybeAccDeltaAssets});
 
-                    if (*accountDeltaAssets >= zero)
+                    auto const accountDeltaAssets = roundToAsset(
+                        vaultAsset, *maybeAccDeltaAssets, localMinScale);
+                    auto const localVaultDeltaAssets = roundToAsset(
+                        vaultAsset, vaultDeltaAssets, localMinScale);
+
+                    if (accountDeltaAssets >= zero)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: deposit must decrease depositor "
@@ -3267,7 +3271,7 @@ ValidVault::finalize(
                         result = false;
                     }
 
-                    if (*accountDeltaAssets * -1 != *vaultDeltaAssets)
+                    if (localVaultDeltaAssets * -1 != accountDeltaAssets)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: deposit must change vault and "
@@ -3285,16 +3289,17 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                auto const accountDeltaShares = deltaShares(tx[sfAccount]);
-                if (!accountDeltaShares)
+                auto const maybeAccDeltaShares = deltaShares(tx[sfAccount]);
+                if (!maybeAccDeltaShares)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must change depositor "
                         "shares";
                     return false;  // That's all we can do
                 }
-
-                if (*accountDeltaShares <= zero)
+                // We don't need to round shares, they are integral MPT
+                auto const accountDeltaShares = *maybeAccDeltaShares;
+                if (accountDeltaShares <= zero)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must increase depositor "
@@ -3302,15 +3307,18 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
-                if (!vaultDeltaShares || *vaultDeltaShares == zero)
+                auto const maybeVaultDeltaShares =
+                    deltaShares(afterVault.pseudoId);
+                if (!maybeVaultDeltaShares || *maybeVaultDeltaShares == zero)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must change vault shares";
                     return false;  // That's all we can do
                 }
 
-                if (*vaultDeltaShares * -1 != *accountDeltaShares)
+                // We don't need to round shares, they are integral MPT
+                auto const vaultDeltaShares = *maybeVaultDeltaShares;
+                if (vaultDeltaShares * -1 != accountDeltaShares)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: deposit must change depositor and "
@@ -3318,15 +3326,22 @@ ValidVault::finalize(
                     result = false;
                 }
 
-                if (beforeVault.assetsTotal + *vaultDeltaAssets !=
-                    afterVault.assetsTotal)
+                auto const assetTotalDelta = roundToAsset(
+                    vaultAsset,
+                    afterVault.assetsTotal - beforeVault.assetsTotal,
+                    minScale);
+                if (assetTotalDelta != vaultDeltaAssets)
                 {
                     JLOG(j.fatal()) << "Invariant failed: deposit and assets "
                                        "outstanding must add up";
                     result = false;
                 }
-                if (beforeVault.assetsAvailable + *vaultDeltaAssets !=
-                    afterVault.assetsAvailable)
+
+                auto const assetAvailableDelta = roundToAsset(
+                    vaultAsset,
+                    afterVault.assetsAvailable - beforeVault.assetsAvailable,
+                    minScale);
+                if (assetAvailableDelta != vaultDeltaAssets)
                 {
                     JLOG(j.fatal()) << "Invariant failed: deposit and assets "
                                        "available must add up";
@@ -3355,16 +3370,11 @@ ValidVault::finalize(
                 }
 
                 // Get the most coarse scale to round calculations to
-                auto const minScale =  //
-                    std::max(
-                        {getNatScale(vaultAsset, *maybeVaultDeltaAssets),
-                         getNatScale(
-                             vaultAsset,
-                             afterVault.assetsTotal - beforeVault.assetsTotal),
-                         getNatScale(
-                             vaultAsset,
-                             afterVault.assetsAvailable -
-                                 beforeVault.assetsAvailable)});
+                auto const minScale = computeMinScale(
+                    vaultAsset,
+                    {*maybeVaultDeltaAssets,
+                     afterVault.assetsTotal - beforeVault.assetsTotal,
+                     afterVault.assetsAvailable - beforeVault.assetsAvailable});
 
                 auto const vaultPseudoDeltaAssets =
                     roundToAsset(vaultAsset, *maybeVaultDeltaAssets, minScale);
@@ -3408,10 +3418,11 @@ ValidVault::finalize(
                     auto const destinationDelta =  //
                         maybeAccDelta ? *maybeAccDelta : *maybeOtherAccDelta;
 
-                    // the scale of destinationDelta can be more corse, so we
-                    // take the max with minScale
-                    auto const localMinScale = std::max(
-                        minScale, getNatScale(vaultAsset, destinationDelta));
+                    // the scale of destinationDelta can be coarser than
+                    // minScale, so we take that into account when rounding
+                    auto const localMinScale = computeMinScale(
+                        vaultAsset, {minScale, destinationDelta});
+
                     auto const roundedDestinationDelta = roundToAsset(
                         vaultAsset, destinationDelta, localMinScale);
 
@@ -3433,7 +3444,7 @@ ValidVault::finalize(
                         result = false;
                     }
                 }
-                // We don't need to round here, as shares are always integral
+                // We don't need to round shares, they are integral MPT
                 auto const accountDeltaShares = deltaShares(tx[sfAccount]);
                 if (!accountDeltaShares)
                 {
@@ -3450,7 +3461,7 @@ ValidVault::finalize(
                         "shares";
                     result = false;
                 }
-                // We don't need to round here, as shares are always integral
+                // We don't need to round shares, they are integral MPT
                 auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
                 if (!vaultDeltaShares || *vaultDeltaShares == zero)
                 {
@@ -3469,10 +3480,10 @@ ValidVault::finalize(
 
                 auto const assetTotalDelta = roundToAsset(
                     vaultAsset,
-                    beforeVault.assetsTotal - afterVault.assetsTotal,
+                    afterVault.assetsTotal - beforeVault.assetsTotal,
                     minScale);
                 // Note, vaultBalance is negative (see check above)
-                if (assetTotalDelta != vaultPseudoDeltaAssets * -1)
+                if (assetTotalDelta != vaultPseudoDeltaAssets)
                 {
                     JLOG(j.fatal()) << "Invariant failed: withdrawal and "
                                        "assets outstanding must add up";
@@ -3481,10 +3492,10 @@ ValidVault::finalize(
 
                 auto const assetAvailableDelta = roundToAsset(
                     vaultAsset,
-                    beforeVault.assetsAvailable - afterVault.assetsAvailable,
+                    afterVault.assetsAvailable - beforeVault.assetsAvailable,
                     minScale);
 
-                if (assetAvailableDelta != vaultPseudoDeltaAssets * -1)
+                if (assetAvailableDelta != vaultPseudoDeltaAssets)
                 {
                     JLOG(j.fatal()) << "Invariant failed: withdrawal and "
                                        "assets available must add up";
@@ -3518,10 +3529,19 @@ ValidVault::finalize(
                     }
                 }
 
-                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
-                if (vaultDeltaAssets)
+                auto const maybeVaultDeltaAssets =
+                    deltaAssets(afterVault.pseudoId);
+                if (maybeVaultDeltaAssets)
                 {
-                    if (*vaultDeltaAssets >= zero)
+                    auto const minScale = computeMinScale(
+                        vaultAsset,
+                        {*maybeVaultDeltaAssets,
+                         afterVault.assetsTotal - beforeVault.assetsTotal,
+                         afterVault.assetsAvailable -
+                             beforeVault.assetsAvailable});
+                    auto const vaultDeltaAssets = roundToAsset(
+                        vaultAsset, *maybeVaultDeltaAssets, minScale);
+                    if (vaultDeltaAssets >= zero)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: clawback must decrease vault "
@@ -3529,8 +3549,11 @@ ValidVault::finalize(
                         result = false;
                     }
 
-                    if (beforeVault.assetsTotal + *vaultDeltaAssets !=
-                        afterVault.assetsTotal)
+                    auto const assetsTotalDelta = roundToAsset(
+                        vaultAsset,
+                        afterVault.assetsTotal - beforeVault.assetsTotal,
+                        minScale);
+                    if (assetsTotalDelta != vaultDeltaAssets)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: clawback and assets outstanding "
@@ -3538,8 +3561,12 @@ ValidVault::finalize(
                         result = false;
                     }
 
-                    if (beforeVault.assetsAvailable + *vaultDeltaAssets !=
-                        afterVault.assetsAvailable)
+                    auto const assetAvailableDelta = roundToAsset(
+                        vaultAsset,
+                        afterVault.assetsAvailable -
+                            beforeVault.assetsAvailable,
+                        minScale);
+                    if (assetAvailableDelta != vaultDeltaAssets)
                     {
                         JLOG(j.fatal()) <<  //
                             "Invariant failed: clawback and assets available "
@@ -3554,15 +3581,15 @@ ValidVault::finalize(
                     return false;  // That's all we can do
                 }
 
-                auto const accountDeltaShares = deltaShares(tx[sfHolder]);
-                if (!accountDeltaShares)
+                // We don't need to round shares, they are integral MPT
+                auto const maybeAccountDeltaShares = deltaShares(tx[sfHolder]);
+                if (!maybeAccountDeltaShares)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: clawback must change holder shares";
                     return false;  // That's all we can do
                 }
-
-                if (*accountDeltaShares >= zero)
+                if (*maybeAccountDeltaShares >= zero)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: clawback must decrease holder "
@@ -3570,6 +3597,7 @@ ValidVault::finalize(
                     result = false;
                 }
 
+                // We don't need to round shares, they are integral MPT
                 auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
                 if (!vaultDeltaShares || *vaultDeltaShares == zero)
                 {
@@ -3578,7 +3606,7 @@ ValidVault::finalize(
                     return false;  // That's all we can do
                 }
 
-                if (*vaultDeltaShares * -1 != *accountDeltaShares)
+                if (*vaultDeltaShares * -1 != *maybeAccountDeltaShares)
                 {
                     JLOG(j.fatal()) <<  //
                         "Invariant failed: clawback must change holder and "
@@ -3616,4 +3644,40 @@ ValidVault::finalize(
     return true;
 }
 
+[[nodiscard]] std::int32_t
+ValidVault::computeMinScale(
+    Asset const& asset,
+    std::initializer_list<Number const> numbers)
+{
+    if (numbers.size() == 0)
+        return 0;
+    // Helper to get the minimal scale of an STAmount by removing trailing
+    // zeros from its mantissa
+    auto const getNatScale = [](Asset const& asset,
+                                Number const& value) -> std::int32_t {
+        if (value == beast::zero || asset.integral())
+            return 0;
+
+        auto mantissa = std::abs(value.mantissa());
+        auto scale = value.exponent();
+
+        // Remove trailing zeros from mantissa, adjusting scale accordingly
+        while (mantissa % 10 == 0)
+        {
+            mantissa /= 10;
+            ++scale;
+        }
+
+        return scale;
+    };
+
+    std::vector<std::int32_t> natScales;
+    std::transform(
+        numbers.begin(),
+        numbers.end(),
+        std::back_inserter(natScales),
+        [&](Number const& n) { return getNatScale(asset, n); });
+
+    return *std::max_element(natScales.begin(), natScales.end());
+}
 }  // namespace xrpl
