@@ -15,12 +15,12 @@ TEST_CASE("zero")
 {
     Number const z{0, 0};
 
-    CHECK(z.mantissa() == 0);
-    CHECK(z.exponent() == Number{}.exponent());
+    CHECK_EQ(z.mantissa(), 0);
+    CHECK_EQ(z.exponent(), Number{}.exponent());
 
-    CHECK((z + z) == z);
-    CHECK((z - z) == z);
-    CHECK(z == -z);
+    CHECK_EQ((z + z), z);
+    CHECK_EQ((z - z), z);
+    CHECK_EQ(z, -z);
 }
 
 TEST_CASE("limits")
@@ -34,17 +34,17 @@ TEST_CASE("limits")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
     Number x{10'000'000'000'000'000, 32767};
-    CHECK((x == Number{1'000'000'000'000'000, 32768}));
+    CHECK_EQ(x, Number{1'000'000'000'000'000, 32768});
     Number z{1'000'000'000'000'000, -32769};
-    CHECK(z == Number{});
+    CHECK_EQ(z, Number{});
     Number y{1'000'000'000'000'001'500, 32000};
-    CHECK((y == Number{1'000'000'000'000'002, 32003}));
+    CHECK_EQ(y, Number{1'000'000'000'000'002, 32003});
     Number m{std::numeric_limits<std::int64_t>::min()};
-    CHECK((m == Number{-9'223'372'036'854'776, 3}));
+    CHECK_EQ(m, Number{-9'223'372'036'854'776, 3});
     Number M{std::numeric_limits<std::int64_t>::max()};
-    CHECK((M == Number{9'223'372'036'854'776, 3}));
+    CHECK_EQ(M, Number{9'223'372'036'854'776, 3});
     caught = false;
     try
     {
@@ -54,7 +54,7 @@ TEST_CASE("limits")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("add")
@@ -81,7 +81,7 @@ TEST_CASE("add")
          Number{1'000'000'000'000'000, -15},
          Number{9'999'999'999'999'990, -16}}};
     for (auto const& [x, y, z] : c)
-        CHECK(x + y == z);
+        CHECK_EQ(x + y, z);
     bool caught = false;
     try
     {
@@ -92,7 +92,7 @@ TEST_CASE("add")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("sub")
@@ -115,7 +115,7 @@ TEST_CASE("sub")
          Number{1'000'000'000'000'000, -15},
          Number{1'000'000'000'000'000, -30}}};
     for (auto const& [x, y, z] : c)
-        CHECK(x - y == z);
+        CHECK_EQ(x - y, z);
 }
 
 TEST_CASE("mul")
@@ -141,7 +141,7 @@ TEST_CASE("mul")
              Number{1000000000000000, -32768},
              Number{0}}};
         for (auto const& [x, y, z] : c)
-            CHECK(x * y == z);
+            CHECK_EQ(x * y, z);
     }
     Number::setround(Number::towards_zero);
     {
@@ -151,7 +151,7 @@ TEST_CASE("mul")
              Number{1414213562373095, -15},
              Number{1999999999999999, -15}}};
         for (auto const& [x, y, z] : c)
-            CHECK(x * y == z);
+            CHECK_EQ(x * y, z);
     }
     bool caught = false;
     try
@@ -163,7 +163,7 @@ TEST_CASE("mul")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("div")
@@ -185,7 +185,7 @@ TEST_CASE("div")
             {Number{2}, Number{3}, Number{6'666'666'666'666'667, -16}},
             {Number{-2}, Number{3}, Number{-6'666'666'666'666'667, -16}}};
         for (auto const& [x, y, z] : c)
-            CHECK(x / y == z);
+            CHECK_EQ(x / y, z);
     }
     bool caught = false;
     try
@@ -196,7 +196,7 @@ TEST_CASE("div")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("root")
@@ -213,7 +213,7 @@ TEST_CASE("root")
         {Number{0}, 5, Number{0}},
         {Number{5625, -4}, 2, Number{75, -2}}};
     for (auto const& [x, y, z] : c)
-        CHECK((root(x, y) == z));
+        CHECK_EQ(root(x, y), z);
     bool caught = false;
     try
     {
@@ -223,7 +223,7 @@ TEST_CASE("root")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
     caught = false;
     try
     {
@@ -233,7 +233,7 @@ TEST_CASE("root")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("power1")
@@ -247,7 +247,7 @@ TEST_CASE("power1")
         {Number{64}, 3, Number{262144}},
         {Number{-64}, 3, Number{-262144}}};
     for (auto const& [x, y, z] : c)
-        CHECK((power(x, y) == z));
+        CHECK_EQ(power(x, y), z);
 }
 
 TEST_CASE("power2")
@@ -261,7 +261,7 @@ TEST_CASE("power2")
         {Number{34}, 3, 3, Number{34}},
         {Number{4}, 3, 2, Number{8}}};
     for (auto const& [x, n, d, z] : c)
-        CHECK((power(x, n, d) == z));
+        CHECK_EQ(power(x, n, d), z);
     bool caught = false;
     try
     {
@@ -271,7 +271,7 @@ TEST_CASE("power2")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
     caught = false;
     try
     {
@@ -281,7 +281,7 @@ TEST_CASE("power2")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
     caught = false;
     try
     {
@@ -291,62 +291,62 @@ TEST_CASE("power2")
     {
         caught = true;
     }
-    CHECK(caught);
+    CHECK_UNARY(caught);
 }
 
 TEST_CASE("conversions")
 {
     IOUAmount x{5, 6};
     Number y = x;
-    CHECK((y == Number{5, 6}));
+    CHECK_EQ(y, Number{5, 6});
     IOUAmount z{y};
-    CHECK(x == z);
+    CHECK_EQ(x, z);
     XRPAmount xrp{500};
     STAmount st = xrp;
     Number n = st;
-    CHECK(XRPAmount{n} == xrp);
+    CHECK_EQ(XRPAmount{n}, xrp);
     IOUAmount x0{0, 0};
     Number y0 = x0;
-    CHECK((y0 == Number{0}));
+    CHECK_EQ(y0, Number{0});
     IOUAmount z0{y0};
-    CHECK(x0 == z0);
+    CHECK_EQ(x0, z0);
     XRPAmount xrp0{0};
     Number n0 = xrp0;
-    CHECK(n0 == Number{0});
+    CHECK_EQ(n0, Number{0});
     XRPAmount xrp1{n0};
-    CHECK(xrp1 == xrp0);
+    CHECK_EQ(xrp1, xrp0);
 }
 
 TEST_CASE("squelch")
 {
     Number limit{1, -6};
-    CHECK((squelch(Number{2, -6}, limit) == Number{2, -6}));
-    CHECK((squelch(Number{1, -6}, limit) == Number{1, -6}));
-    CHECK((squelch(Number{9, -7}, limit) == Number{0}));
-    CHECK((squelch(Number{-2, -6}, limit) == Number{-2, -6}));
-    CHECK((squelch(Number{-1, -6}, limit) == Number{-1, -6}));
-    CHECK((squelch(Number{-9, -7}, limit) == Number{0}));
+    CHECK_EQ(squelch(Number{2, -6}, limit), Number{2, -6});
+    CHECK_EQ(squelch(Number{1, -6}, limit), Number{1, -6});
+    CHECK_EQ(squelch(Number{9, -7}, limit), Number{0});
+    CHECK_EQ(squelch(Number{-2, -6}, limit), Number{-2, -6});
+    CHECK_EQ(squelch(Number{-1, -6}, limit), Number{-1, -6});
+    CHECK_EQ(squelch(Number{-9, -7}, limit), Number{0});
 }
 
 TEST_CASE("toString")
 {
-    CHECK(to_string(Number(-2, 0)) == "-2");
-    CHECK(to_string(Number(0, 0)) == "0");
-    CHECK(to_string(Number(2, 0)) == "2");
-    CHECK(to_string(Number(25, -3)) == "0.025");
-    CHECK(to_string(Number(-25, -3)) == "-0.025");
-    CHECK(to_string(Number(25, 1)) == "250");
-    CHECK(to_string(Number(-25, 1)) == "-250");
-    CHECK(to_string(Number(2, 20)) == "2000000000000000e5");
-    CHECK(to_string(Number(-2, -20)) == "-2000000000000000e-35");
+    CHECK_EQ(to_string(Number(-2, 0)), "-2");
+    CHECK_EQ(to_string(Number(0, 0)), "0");
+    CHECK_EQ(to_string(Number(2, 0)), "2");
+    CHECK_EQ(to_string(Number(25, -3)), "0.025");
+    CHECK_EQ(to_string(Number(-25, -3)), "-0.025");
+    CHECK_EQ(to_string(Number(25, 1)), "250");
+    CHECK_EQ(to_string(Number(-25, 1)), "-250");
+    CHECK_EQ(to_string(Number(2, 20)), "2000000000000000e5");
+    CHECK_EQ(to_string(Number(-2, -20)), "-2000000000000000e-35");
 }
 
 TEST_CASE("relationals")
 {
-    CHECK(!(Number{100} < Number{10}));
-    CHECK(Number{100} > Number{10});
-    CHECK(Number{100} >= Number{10});
-    CHECK(!(Number{100} <= Number{10}));
+    CHECK_FALSE(Number{100} < Number{10});
+    CHECK_GT(Number{100}, Number{10});
+    CHECK_GE(Number{100}, Number{10});
+    CHECK_FALSE(Number{100} <= Number{10});
 }
 
 TEST_CASE("stream")
@@ -354,18 +354,18 @@ TEST_CASE("stream")
     Number x{100};
     std::ostringstream os;
     os << x;
-    CHECK(os.str() == to_string(x));
+    CHECK_EQ(os.str(), to_string(x));
 }
 
 TEST_CASE("inc_dec")
 {
     Number x{100};
     Number y = +x;
-    CHECK(x == y);
-    CHECK(x++ == y);
-    CHECK(x == Number{101});
-    CHECK(x-- == Number{101});
-    CHECK(x == y);
+    CHECK_EQ(x, y);
+    CHECK_EQ(x++, y);
+    CHECK_EQ(x, Number{101});
+    CHECK_EQ(x--, Number{101});
+    CHECK_EQ(x, y);
 }
 
 TEST_CASE("toSTAmount")
@@ -375,42 +375,42 @@ TEST_CASE("toSTAmount")
     Number const n{7'518'783'80596, -5};
     saveNumberRoundMode const save{Number::setround(Number::to_nearest)};
     auto res2 = STAmount{issue, n.mantissa(), n.exponent()};
-    CHECK(res2 == STAmount{7518784});
+    CHECK_EQ(res2, STAmount{7518784});
 
     Number::setround(Number::towards_zero);
     res2 = STAmount{issue, n.mantissa(), n.exponent()};
-    CHECK(res2 == STAmount{7518783});
+    CHECK_EQ(res2, STAmount{7518783});
 
     Number::setround(Number::downward);
     res2 = STAmount{issue, n.mantissa(), n.exponent()};
-    CHECK(res2 == STAmount{7518783});
+    CHECK_EQ(res2, STAmount{7518783});
 
     Number::setround(Number::upward);
     res2 = STAmount{issue, n.mantissa(), n.exponent()};
-    CHECK(res2 == STAmount{7518784});
+    CHECK_EQ(res2, STAmount{7518784});
 }
 
 TEST_CASE("truncate")
 {
-    CHECK(Number(25, +1).truncate() == Number(250, 0));
-    CHECK(Number(25, 0).truncate() == Number(25, 0));
-    CHECK(Number(25, -1).truncate() == Number(2, 0));
-    CHECK(Number(25, -2).truncate() == Number(0, 0));
-    CHECK(Number(99, -2).truncate() == Number(0, 0));
+    CHECK_EQ(Number(25, +1).truncate(), Number(250, 0));
+    CHECK_EQ(Number(25, 0).truncate(), Number(25, 0));
+    CHECK_EQ(Number(25, -1).truncate(), Number(2, 0));
+    CHECK_EQ(Number(25, -2).truncate(), Number(0, 0));
+    CHECK_EQ(Number(99, -2).truncate(), Number(0, 0));
 
-    CHECK(Number(-25, +1).truncate() == Number(-250, 0));
-    CHECK(Number(-25, 0).truncate() == Number(-25, 0));
-    CHECK(Number(-25, -1).truncate() == Number(-2, 0));
-    CHECK(Number(-25, -2).truncate() == Number(0, 0));
-    CHECK(Number(-99, -2).truncate() == Number(0, 0));
+    CHECK_EQ(Number(-25, +1).truncate(), Number(-250, 0));
+    CHECK_EQ(Number(-25, 0).truncate(), Number(-25, 0));
+    CHECK_EQ(Number(-25, -1).truncate(), Number(-2, 0));
+    CHECK_EQ(Number(-25, -2).truncate(), Number(0, 0));
+    CHECK_EQ(Number(-99, -2).truncate(), Number(0, 0));
 
-    CHECK(Number(0, 0).truncate() == Number(0, 0));
-    CHECK(Number(0, 30000).truncate() == Number(0, 0));
-    CHECK(Number(0, -30000).truncate() == Number(0, 0));
-    CHECK(Number(100, -30000).truncate() == Number(0, 0));
-    CHECK(Number(100, -30000).truncate() == Number(0, 0));
-    CHECK(Number(-100, -30000).truncate() == Number(0, 0));
-    CHECK(Number(-100, -30000).truncate() == Number(0, 0));
+    CHECK_EQ(Number(0, 0).truncate(), Number(0, 0));
+    CHECK_EQ(Number(0, 30000).truncate(), Number(0, 0));
+    CHECK_EQ(Number(0, -30000).truncate(), Number(0, 0));
+    CHECK_EQ(Number(100, -30000).truncate(), Number(0, 0));
+    CHECK_EQ(Number(100, -30000).truncate(), Number(0, 0));
+    CHECK_EQ(Number(-100, -30000).truncate(), Number(0, 0));
+    CHECK_EQ(Number(-100, -30000).truncate(), Number(0, 0));
 }
 
 TEST_SUITE_END();

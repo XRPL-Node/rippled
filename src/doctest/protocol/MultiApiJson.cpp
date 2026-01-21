@@ -48,10 +48,10 @@ TEST_CASE("forApiVersions, forAllApiVersions")
     static_assert(
         std::is_same_v<decltype(subject.val), std::array<Json::Value, 3>>);
 
-    CHECK(subject.val.size() == 3);
-    CHECK(
-        (subject.val ==
-         std::array<Json::Value, 3>{jsonNull, jsonNull, jsonNull}));
+    CHECK_EQ(subject.val.size(), 3);
+    CHECK_EQ(
+        subject.val,
+        (std::array<Json::Value, 3>{jsonNull, jsonNull, jsonNull}));
 
     subject.val[0] = obj1;
     subject.val[1] = obj2;
@@ -73,15 +73,15 @@ TEST_CASE("forApiVersions, forAllApiVersions")
          ++i)
     {
         auto const index = i - RPC::apiMinimumSupportedVersion;
-        CHECK(index == s1.index(i));
-        CHECK(s1.valid(i));
+        CHECK_EQ(index, s1.index(i));
+        CHECK_UNARY(s1.valid(i));
         s1.val[index] = makeJson("value", primes[i]);
         productAllVersions *= primes[i];
     }
-    CHECK(!s1.valid(0));
-    CHECK(!s1.valid(RPC::apiMaximumValidVersion + 1));
-    CHECK(!s1.valid(std::numeric_limits<
-                    decltype(RPC::apiMaximumValidVersion.value)>::max()));
+    CHECK_FALSE(s1.valid(0));
+    CHECK_FALSE(s1.valid(RPC::apiMaximumValidVersion + 1));
+    CHECK_FALSE(s1.valid(std::numeric_limits<
+                         decltype(RPC::apiMaximumValidVersion.value)>::max()));
 
     int result = 1;
     static_assert(
@@ -91,25 +91,25 @@ TEST_CASE("forApiVersions, forAllApiVersions")
         RPC::apiMinimumSupportedVersion + 1>(
         std::as_const(s1).visit(),
         [](Json::Value const& json, unsigned int version, int* result) {
-            CHECK(version >= RPC::apiMinimumSupportedVersion);
-            CHECK(version <= RPC::apiMinimumSupportedVersion + 1);
+            CHECK_GE(version, RPC::apiMinimumSupportedVersion);
+            CHECK_LE(version, RPC::apiMinimumSupportedVersion + 1);
             if (json.isMember("value"))
             {
                 *result *= json["value"].asInt();
             }
         },
         &result);
-    CHECK(
-        result ==
+    CHECK_EQ(
+        result,
         primes[RPC::apiMinimumSupportedVersion] *
             primes[RPC::apiMinimumSupportedVersion + 1]);
 
     // Check all the values with mutable data
     forAllApiVersions(s1.visit(), [&s1](Json::Value& json, auto version) {
-        CHECK(s1.val[s1.index(version)] == json);
+        CHECK_EQ(s1.val[s1.index(version)], json);
         if (json.isMember("value"))
         {
-            CHECK(json["value"].asInt() == primes[version]);
+            CHECK_EQ(json["value"].asInt(), primes[version]);
         }
     });
 
@@ -117,8 +117,8 @@ TEST_CASE("forApiVersions, forAllApiVersions")
     forAllApiVersions(
         std::as_const(s1).visit(),
         [](Json::Value const& json, unsigned int version, int* result) {
-            CHECK(version >= RPC::apiMinimumSupportedVersion);
-            CHECK(version <= RPC::apiMaximumValidVersion);
+            CHECK_GE(version, RPC::apiMinimumSupportedVersion);
+            CHECK_LE(version, RPC::apiMaximumValidVersion);
             if (json.isMember("value"))
             {
                 *result *= json["value"].asInt();
@@ -126,7 +126,7 @@ TEST_CASE("forApiVersions, forAllApiVersions")
         },
         &result);
 
-    CHECK(result == productAllVersions);
+    CHECK_EQ(result, productAllVersions);
 
     // Several overloads we want to fail
     static_assert([](auto&& v) {
@@ -256,28 +256,28 @@ TEST_CASE("default copy construction / assignment")
 
     MultiApiJson<1, 3> x{subject};
 
-    CHECK(x.val.size() == subject.val.size());
-    CHECK(x.val[0] == subject.val[0]);
-    CHECK(x.val[1] == subject.val[1]);
-    CHECK(x.val[2] == subject.val[2]);
-    CHECK(x.val == subject.val);
-    CHECK(&x.val[0] != &subject.val[0]);
-    CHECK(&x.val[1] != &subject.val[1]);
-    CHECK(&x.val[2] != &subject.val[2]);
+    CHECK_EQ(x.val.size(), subject.val.size());
+    CHECK_EQ(x.val[0], subject.val[0]);
+    CHECK_EQ(x.val[1], subject.val[1]);
+    CHECK_EQ(x.val[2], subject.val[2]);
+    CHECK_EQ(x.val, subject.val);
+    CHECK_NE(&x.val[0], &subject.val[0]);
+    CHECK_NE(&x.val[1], &subject.val[1]);
+    CHECK_NE(&x.val[2], &subject.val[2]);
 
     MultiApiJson<1, 3> y;
-    CHECK((y.val == std::array<Json::Value, 3>{}));
+    CHECK_EQ(y.val, (std::array<Json::Value, 3>{}));
     y = subject;
-    CHECK(y.val == subject.val);
-    CHECK(&y.val[0] != &subject.val[0]);
-    CHECK(&y.val[1] != &subject.val[1]);
-    CHECK(&y.val[2] != &subject.val[2]);
+    CHECK_EQ(y.val, subject.val);
+    CHECK_NE(&y.val[0], &subject.val[0]);
+    CHECK_NE(&y.val[1], &subject.val[1]);
+    CHECK_NE(&y.val[2], &subject.val[2]);
 
     y = std::move(x);
-    CHECK(y.val == subject.val);
-    CHECK(&y.val[0] != &subject.val[0]);
-    CHECK(&y.val[1] != &subject.val[1]);
-    CHECK(&y.val[2] != &subject.val[2]);
+    CHECK_EQ(y.val, subject.val);
+    CHECK_NE(&y.val[0], &subject.val[0]);
+    CHECK_NE(&y.val[1], &subject.val[1]);
+    CHECK_NE(&y.val[2], &subject.val[2]);
 }
 
 TEST_CASE("set")
@@ -286,20 +286,20 @@ TEST_CASE("set")
 
     auto x = MultiApiJson<1, 2>{Json::objectValue};
     x.set("name1", 42);
-    CHECK(x.val[0].isMember("name1"));
-    CHECK(x.val[1].isMember("name1"));
-    CHECK(x.val[0]["name1"].isInt());
-    CHECK(x.val[1]["name1"].isInt());
-    CHECK(x.val[0]["name1"].asInt() == 42);
-    CHECK(x.val[1]["name1"].asInt() == 42);
+    CHECK_UNARY(x.val[0].isMember("name1"));
+    CHECK_UNARY(x.val[1].isMember("name1"));
+    CHECK_UNARY(x.val[0]["name1"].isInt());
+    CHECK_UNARY(x.val[1]["name1"].isInt());
+    CHECK_EQ(x.val[0]["name1"].asInt(), 42);
+    CHECK_EQ(x.val[1]["name1"].asInt(), 42);
 
     x.set("name2", "bar");
-    CHECK(x.val[0].isMember("name2"));
-    CHECK(x.val[1].isMember("name2"));
-    CHECK(x.val[0]["name2"].isString());
-    CHECK(x.val[1]["name2"].isString());
-    CHECK(x.val[0]["name2"].asString() == "bar");
-    CHECK(x.val[1]["name2"].asString() == "bar");
+    CHECK_UNARY(x.val[0].isMember("name2"));
+    CHECK_UNARY(x.val[1].isMember("name2"));
+    CHECK_UNARY(x.val[0]["name2"].isString());
+    CHECK_UNARY(x.val[1]["name2"].isString());
+    CHECK_EQ(x.val[0]["name2"].asString(), "bar");
+    CHECK_EQ(x.val[1]["name2"].asString(), "bar");
 
     // Tests of requires clause - these are expected to match
     static_assert([](auto&& v) {
@@ -333,15 +333,15 @@ TEST_CASE("isMember")
     subject.val[1] = obj2;
 
     // Well defined behaviour even if we have different types of members
-    CHECK(subject.isMember("foo") == decltype(subject)::none);
+    CHECK_EQ(subject.isMember("foo"), decltype(subject)::none);
 
     {
         // All variants have element "One", none have element "Two"
         MultiApiJson<1, 2> s1{};
         s1.val[0] = makeJson("One", 12);
         s1.val[1] = makeJson("One", 42);
-        CHECK(s1.isMember("One") == decltype(s1)::all);
-        CHECK(s1.isMember("Two") == decltype(s1)::none);
+        CHECK_EQ(s1.isMember("One"), decltype(s1)::all);
+        CHECK_EQ(s1.isMember("Two"), decltype(s1)::none);
     }
 
     {
@@ -349,8 +349,8 @@ TEST_CASE("isMember")
         MultiApiJson<1, 2> s2{};
         s2.val[0] = makeJson("One", 12);
         s2.val[1] = makeJson("Two", 42);
-        CHECK(s2.isMember("One") == decltype(s2)::some);
-        CHECK(s2.isMember("Two") == decltype(s2)::some);
+        CHECK_EQ(s2.isMember("One"), decltype(s2)::some);
+        CHECK_EQ(s2.isMember("Two"), decltype(s2)::some);
     }
 
     {
@@ -358,8 +358,8 @@ TEST_CASE("isMember")
         MultiApiJson<1, 3> s3{};
         s3.val[0] = makeJson("One", 12);
         s3.val[1] = makeJson("One", 42);
-        CHECK(s3.isMember("One") == decltype(s3)::some);
-        CHECK(s3.isMember("Two") == decltype(s3)::none);
+        CHECK_EQ(s3.isMember("One"), decltype(s3)::some);
+        CHECK_EQ(s3.isMember("Two"), decltype(s3)::none);
     }
 }
 
@@ -372,13 +372,13 @@ TEST_CASE("visitor")
     s1.val[1] = makeJson("value", 3);
     s1.val[2] = makeJson("value", 5);
 
-    CHECK(not s1.valid(0));
-    CHECK(s1.index(0) == 0);
+    CHECK_UNARY_FALSE(s1.valid(0));
+    CHECK_EQ(s1.index(0), 0);
 
-    CHECK(s1.valid(1));
-    CHECK(s1.index(1) == 0);
+    CHECK_UNARY(s1.valid(1));
+    CHECK_EQ(s1.index(1), 0);
 
-    CHECK(not s1.valid(4));
+    CHECK_UNARY_FALSE(s1.valid(4));
 
     // Test different overloads
     static_assert([](auto&& v) {
@@ -389,7 +389,7 @@ TEST_CASE("visitor")
                 [](Json::Value&, std::integral_constant<unsigned, 1>) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,
             std::integral_constant<unsigned, 1>{},
@@ -398,7 +398,8 @@ TEST_CASE("visitor")
                     return v["value"].asInt();
                 },
                 [](Json::Value const&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 2);
+                [](auto, auto) { return 0; }}),
+        2);
 
     static_assert([](auto&& v) {
         return requires {
@@ -406,14 +407,15 @@ TEST_CASE("visitor")
                 v, std::integral_constant<unsigned, 1>{}, [](Json::Value&) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,
             std::integral_constant<unsigned, 1>{},
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 2);
+                [](auto...) { return 0; }}),
+        2);
 
     static_assert([](auto&& v) {
         return requires {
@@ -423,7 +425,7 @@ TEST_CASE("visitor")
                 [](Json::Value const&, std::integral_constant<unsigned, 1>) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),
             std::integral_constant<unsigned, 2>{},
@@ -432,7 +434,8 @@ TEST_CASE("visitor")
                     return v["value"].asInt();
                 },
                 [](Json::Value&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires {
@@ -442,45 +445,48 @@ TEST_CASE("visitor")
                 [](Json::Value const&) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),
             std::integral_constant<unsigned, 2>{},
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires { v.visitor(v, 1, [](Json::Value&, unsigned) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,  //
             3u,
             Overload{
                 [](Json::Value& v, unsigned) { return v["value"].asInt(); },
                 [](Json::Value const&, unsigned) { return 0; },
-                [](auto, auto) { return 0; }}) == 5);
+                [](auto, auto) { return 0; }}),
+        5);
 
     static_assert([](auto&& v) {
         return requires { v.visitor(v, 1, [](Json::Value&) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,  //
             3,
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 5);
+                [](auto...) { return 0; }}),
+        5);
 
     static_assert([](auto&& v) {
         return requires {
             v.visitor(v, 1, [](Json::Value const&, unsigned) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),  //
             2u,
@@ -489,84 +495,92 @@ TEST_CASE("visitor")
                     return v["value"].asInt();
                 },
                 [](Json::Value const&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires { v.visitor(v, 1, [](Json::Value const&) {}); };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),  //
             2,
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
 
     // Test type conversions
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,
             std::integral_constant<unsigned, 1>{},  // to unsigned
-            [](Json::Value& v, unsigned) { return v["value"].asInt(); }) == 2);
-    CHECK(
+            [](Json::Value& v, unsigned) { return v["value"].asInt(); }),
+        2);
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),
             std::integral_constant<unsigned, 2>{},  // to unsigned
-            [](Json::Value const& v, unsigned) {
-                return v["value"].asInt();
-            }) == 3);
-    CHECK(
+            [](Json::Value const& v, unsigned) { return v["value"].asInt(); }),
+        3);
+    CHECK_EQ(
         s1.visitor(
             s1,  // to const
             std::integral_constant<unsigned, 3>{},
-            [](Json::Value const& v, auto) { return v["value"].asInt(); }) ==
+            [](Json::Value const& v, auto) { return v["value"].asInt(); }),
         5);
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,  // to const
             std::integral_constant<unsigned, 3>{},
-            [](Json::Value const& v) { return v["value"].asInt(); }) == 5);
-    CHECK(
+            [](Json::Value const& v) { return v["value"].asInt(); }),
+        5);
+    CHECK_EQ(
         s1.visitor(
             s1,
             3,  // to long
-            [](Json::Value& v, long) { return v["value"].asInt(); }) == 5);
-    CHECK(
+            [](Json::Value& v, long) { return v["value"].asInt(); }),
+        5);
+    CHECK_EQ(
         s1.visitor(
             std::as_const(s1),
             1,  // to long
-            [](Json::Value const& v, long) { return v["value"].asInt(); }) ==
+            [](Json::Value const& v, long) { return v["value"].asInt(); }),
         2);
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,  // to const
             2,
-            [](Json::Value const& v, auto) { return v["value"].asInt(); }) ==
+            [](Json::Value const& v, auto) { return v["value"].asInt(); }),
         3);
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,  // type deduction
             2,
-            [](auto& v, auto) { return v["value"].asInt(); }) == 3);
-    CHECK(
+            [](auto& v, auto) { return v["value"].asInt(); }),
+        3);
+    CHECK_EQ(
         s1.visitor(
             s1,  // to const, type deduction
             2,
-            [](auto const& v, auto) { return v["value"].asInt(); }) == 3);
-    CHECK(
+            [](auto const& v, auto) { return v["value"].asInt(); }),
+        3);
+    CHECK_EQ(
         s1.visitor(
             s1,  // type deduction
             2,
-            [](auto& v) { return v["value"].asInt(); }) == 3);
-    CHECK(
+            [](auto& v) { return v["value"].asInt(); }),
+        3);
+    CHECK_EQ(
         s1.visitor(
             s1,  // to const, type deduction
             2,
-            [](auto const& v) { return v["value"].asInt(); }) == 3);
+            [](auto const& v) { return v["value"].asInt(); }),
+        3);
 
     // Test passing of additional arguments
-    CHECK(
+    CHECK_EQ(
         s1.visitor(
             s1,
             std::integral_constant<unsigned, 2>{},
@@ -574,8 +588,9 @@ TEST_CASE("visitor")
                 return ver * a1 * a2 * v["value"].asInt();
             },
             5,
-            7) == 2 * 5 * 7 * 3);
-    CHECK(
+            7),
+        2 * 5 * 7 * 3);
+    CHECK_EQ(
         s1.visitor(
             s1,
             std::integral_constant<unsigned, 2>{},
@@ -583,7 +598,8 @@ TEST_CASE("visitor")
                 return ver * (1 * ... * args) * v["value"].asInt();
             },
             5,
-            7) == 2 * 5 * 7 * 3);
+            7),
+        2 * 5 * 7 * 3);
 
     // Several overloads we want to fail
     static_assert([](auto&& v) {
@@ -685,7 +701,7 @@ TEST_CASE("visit")
                 [](Json::Value&, std::integral_constant<unsigned, 1>) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit(
             std::integral_constant<unsigned, 1>{},
             Overload{
@@ -693,7 +709,8 @@ TEST_CASE("visit")
                     return v["value"].asInt();
                 },
                 [](Json::Value const&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 2);
+                [](auto, auto) { return 0; }}),
+        2);
     static_assert([](auto&& v) {
         return requires {
             v.visit()(
@@ -701,7 +718,7 @@ TEST_CASE("visit")
                 [](Json::Value&, std::integral_constant<unsigned, 1>) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit()(
             std::integral_constant<unsigned, 1>{},
             Overload{
@@ -709,33 +726,36 @@ TEST_CASE("visit")
                     return v["value"].asInt();
                 },
                 [](Json::Value const&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 2);
+                [](auto, auto) { return 0; }}),
+        2);
 
     static_assert([](auto&& v) {
         return requires {
             v.visit(std::integral_constant<unsigned, 1>{}, [](Json::Value&) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit(
             std::integral_constant<unsigned, 1>{},
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 2);
+                [](auto...) { return 0; }}),
+        2);
     static_assert([](auto&& v) {
         return requires {
             v.visit()(
                 std::integral_constant<unsigned, 1>{}, [](Json::Value&) {});
         };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit()(
             std::integral_constant<unsigned, 1>{},
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 2);
+                [](auto...) { return 0; }}),
+        2);
 
     static_assert([](auto&& v) {
         return requires {
@@ -744,7 +764,7 @@ TEST_CASE("visit")
                 [](Json::Value const&, std::integral_constant<unsigned, 1>) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit(
             std::integral_constant<unsigned, 2>{},
             Overload{
@@ -752,7 +772,8 @@ TEST_CASE("visit")
                     return v["value"].asInt();
                 },
                 [](Json::Value&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
     static_assert([](auto&& v) {
         return requires {
             v.visit()(
@@ -760,7 +781,7 @@ TEST_CASE("visit")
                 [](Json::Value const&, std::integral_constant<unsigned, 1>) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit()(
             std::integral_constant<unsigned, 2>{},
             Overload{
@@ -768,7 +789,8 @@ TEST_CASE("visit")
                     return v["value"].asInt();
                 },
                 [](Json::Value&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires {
@@ -777,13 +799,14 @@ TEST_CASE("visit")
                 [](Json::Value const&) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit(
             std::integral_constant<unsigned, 2>{},
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
     static_assert([](auto&& v) {
         return requires {
             v.visit()(
@@ -791,62 +814,67 @@ TEST_CASE("visit")
                 [](Json::Value const&) {});
         };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit()(
             std::integral_constant<unsigned, 2>{},
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires { v.visit(1, [](Json::Value&, unsigned) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit(
             3u,
             Overload{
                 [](Json::Value& v, unsigned) { return v["value"].asInt(); },
                 [](Json::Value const&, unsigned) { return 0; },
                 [](Json::Value&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 5);
+                [](auto, auto) { return 0; }}),
+        5);
     static_assert([](auto&& v) {
         return requires { v.visit()(1, [](Json::Value&, unsigned) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit()(
             3u,
             Overload{
                 [](Json::Value& v, unsigned) { return v["value"].asInt(); },
                 [](Json::Value const&, unsigned) { return 0; },
                 [](Json::Value&, auto) { return 0; },
-                [](auto, auto) { return 0; }}) == 5);
+                [](auto, auto) { return 0; }}),
+        5);
 
     static_assert([](auto&& v) {
         return requires { v.visit(1, [](Json::Value&) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit(
             3,
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 5);
+                [](auto...) { return 0; }}),
+        5);
     static_assert([](auto&& v) {
         return requires { v.visit()(1, [](Json::Value&) {}); };
     }(s1));
-    CHECK(
+    CHECK_EQ(
         s1.visit()(
             3,
             Overload{
                 [](Json::Value& v) { return v["value"].asInt(); },
                 [](Json::Value const&) { return 0; },
-                [](auto...) { return 0; }}) == 5);
+                [](auto...) { return 0; }}),
+        5);
 
     static_assert([](auto&& v) {
         return requires { v.visit(1, [](Json::Value const&, unsigned) {}); };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit(
             2u,
             Overload{
@@ -855,11 +883,12 @@ TEST_CASE("visit")
                 },
                 [](Json::Value const&, auto) { return 0; },
                 [](Json::Value&, unsigned) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
     static_assert([](auto&& v) {
         return requires { v.visit()(1, [](Json::Value const&, unsigned) {}); };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit()(
             2u,
             Overload{
@@ -868,28 +897,31 @@ TEST_CASE("visit")
                 },
                 [](Json::Value const&, auto) { return 0; },
                 [](Json::Value&, unsigned) { return 0; },
-                [](auto, auto) { return 0; }}) == 3);
+                [](auto, auto) { return 0; }}),
+        3);
 
     static_assert([](auto&& v) {
         return requires { v.visit(1, [](Json::Value const&) {}); };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit(
             2,
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
     static_assert([](auto&& v) {
         return requires { v.visit()(1, [](Json::Value const&) {}); };
     }(std::as_const(s1)));
-    CHECK(
+    CHECK_EQ(
         std::as_const(s1).visit()(
             2,
             Overload{
                 [](Json::Value const& v) { return v["value"].asInt(); },
                 [](Json::Value&) { return 0; },
-                [](auto...) { return 0; }}) == 3);
+                [](auto...) { return 0; }}),
+        3);
 
     // Rvalue MultivarJson visitor only binds to regular reference
     static_assert([](auto&& v) {

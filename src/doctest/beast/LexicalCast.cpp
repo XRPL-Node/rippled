@@ -25,9 +25,9 @@ testInteger(IntType in)
     std::string s;
     IntType out(in + 1);
 
-    CHECK(lexicalCastChecked(s, in));
-    CHECK(lexicalCastChecked(out, s));
-    CHECK(out == in);
+    CHECK_UNARY(lexicalCastChecked(s, in));
+    CHECK_UNARY(lexicalCastChecked(out, s));
+    CHECK_EQ(out, in);
 }
 
 template <class IntType>
@@ -83,7 +83,7 @@ testThrowConvert(std::string const& s, bool success)
         result = false;
     }
 
-    CHECK(result == success);
+    CHECK_EQ(result, success);
 }
 
 }  // namespace
@@ -239,12 +239,12 @@ TEST_CASE("entire range")
 
         auto result = lexicalCast(j, empty);
 
-        CHECK(result == actual);
+        CHECK_EQ(result, actual);
 
         if (result == actual)
         {
             auto number = lexicalCast<std::int16_t>(result);
-            CHECK(number == j);
+            CHECK_EQ(number, j);
         }
 
         i++;

@@ -13,11 +13,11 @@ TEST_CASE("signum")
         XRPAmount const x(i);
 
         if (i < 0)
-            CHECK(x.signum() < 0);
+            CHECK_LT(x.signum(), 0);
         else if (i > 0)
-            CHECK(x.signum() > 0);
+            CHECK_GT(x.signum(), 0);
         else
-            CHECK(x.signum() == 0);
+            CHECK_EQ(x.signum(), 0);
     }
 }
 
@@ -29,19 +29,19 @@ TEST_CASE("beast::Zero Comparisons")
     {
         XRPAmount const x(i);
 
-        CHECK((i == 0) == (x == zero));
-        CHECK((i != 0) == (x != zero));
-        CHECK((i < 0) == (x < zero));
-        CHECK((i > 0) == (x > zero));
-        CHECK((i <= 0) == (x <= zero));
-        CHECK((i >= 0) == (x >= zero));
+        CHECK_EQ((i == 0), (x == zero));
+        CHECK_EQ((i != 0), (x != zero));
+        CHECK_EQ((i < 0), (x < zero));
+        CHECK_EQ((i > 0), (x > zero));
+        CHECK_EQ((i <= 0), (x <= zero));
+        CHECK_EQ((i >= 0), (x >= zero));
 
-        CHECK((0 == i) == (zero == x));
-        CHECK((0 != i) == (zero != x));
-        CHECK((0 < i) == (zero < x));
-        CHECK((0 > i) == (zero > x));
-        CHECK((0 <= i) == (zero <= x));
-        CHECK((0 >= i) == (zero >= x));
+        CHECK_EQ((0 == i), (zero == x));
+        CHECK_EQ((0 != i), (zero != x));
+        CHECK_EQ((0 < i), (zero < x));
+        CHECK_EQ((0 > i), (zero > x));
+        CHECK_EQ((0 <= i), (zero <= x));
+        CHECK_EQ((0 >= i), (zero >= x));
     }
 }
 
@@ -55,12 +55,12 @@ TEST_CASE("XRP Comparisons")
         {
             XRPAmount const y(j);
 
-            CHECK((i == j) == (x == y));
-            CHECK((i != j) == (x != y));
-            CHECK((i < j) == (x < y));
-            CHECK((i > j) == (x > y));
-            CHECK((i <= j) == (x <= y));
-            CHECK((i >= j) == (x >= y));
+            CHECK_EQ((i == j), (x == y));
+            CHECK_EQ((i != j), (x != y));
+            CHECK_EQ((i < j), (x < y));
+            CHECK_EQ((i > j), (x > y));
+            CHECK_EQ((i <= j), (x <= y));
+            CHECK_EQ((i >= j), (x >= y));
         }
     }
 }
@@ -75,10 +75,10 @@ TEST_CASE("Addition & Subtraction")
         {
             XRPAmount const y(j);
 
-            CHECK(XRPAmount(i + j) == (x + y));
-            CHECK(XRPAmount(i - j) == (x - y));
+            CHECK_EQ(XRPAmount(i + j), (x + y));
+            CHECK_EQ(XRPAmount(i - j), (x - y));
 
-            CHECK((x + y) == (y + x));  // addition is commutative
+            CHECK_EQ((x + y), (y + x));  // addition is commutative
         }
     }
 }
@@ -86,19 +86,19 @@ TEST_CASE("Addition & Subtraction")
 TEST_CASE("decimalXRP")
 {
     // Tautology
-    CHECK(DROPS_PER_XRP.decimalXRP() == 1);
+    CHECK_EQ(DROPS_PER_XRP.decimalXRP(), 1);
 
     XRPAmount test{1};
-    CHECK(test.decimalXRP() == 0.000001);
+    CHECK_EQ(test.decimalXRP(), 0.000001);
 
     test = -test;
-    CHECK(test.decimalXRP() == -0.000001);
+    CHECK_EQ(test.decimalXRP(), -0.000001);
 
     test = 100'000'000;
-    CHECK(test.decimalXRP() == 100);
+    CHECK_EQ(test.decimalXRP(), 100);
 
     test = -test;
-    CHECK(test.decimalXRP() == -100);
+    CHECK_EQ(test.decimalXRP(), -100);
 }
 
 TEST_CASE("functions")
@@ -110,77 +110,77 @@ TEST_CASE("functions")
     XRPAmount defaulted;
     (void)defaulted;
     XRPAmount test{0};
-    CHECK(test.drops() == 0);
+    CHECK_EQ(test.drops(), 0);
 
     test = make(beast::zero);
-    CHECK(test.drops() == 0);
+    CHECK_EQ(test.drops(), 0);
 
     test = beast::zero;
-    CHECK(test.drops() == 0);
+    CHECK_EQ(test.drops(), 0);
 
     test = make(100);
-    CHECK(test.drops() == 100);
+    CHECK_EQ(test.drops(), 100);
 
     test = make(100u);
-    CHECK(test.drops() == 100);
+    CHECK_EQ(test.drops(), 100);
 
     XRPAmount const targetSame{200u};
     test = make(targetSame);
-    CHECK(test.drops() == 200);
-    CHECK(test == targetSame);
-    CHECK(test < XRPAmount{1000});
-    CHECK(test > XRPAmount{100});
+    CHECK_EQ(test.drops(), 200);
+    CHECK_EQ(test, targetSame);
+    CHECK_LT(test, XRPAmount{1000});
+    CHECK_GT(test, XRPAmount{100});
 
     test = std::int64_t(200);
-    CHECK(test.drops() == 200);
+    CHECK_EQ(test.drops(), 200);
     test = std::uint32_t(300);
-    CHECK(test.drops() == 300);
+    CHECK_EQ(test.drops(), 300);
 
     test = targetSame;
-    CHECK(test.drops() == 200);
+    CHECK_EQ(test.drops(), 200);
     auto testOther = test.dropsAs<std::uint32_t>();
-    CHECK(testOther);
-    CHECK(*testOther == 200);
+    CHECK_UNARY(testOther);
+    CHECK_EQ(*testOther, 200);
     test = std::numeric_limits<std::uint64_t>::max();
     testOther = test.dropsAs<std::uint32_t>();
-    CHECK(!testOther);
+    CHECK_FALSE(testOther);
     test = -1;
     testOther = test.dropsAs<std::uint32_t>();
-    CHECK(!testOther);
+    CHECK_FALSE(testOther);
 
     test = targetSame * 2;
-    CHECK(test.drops() == 400);
+    CHECK_EQ(test.drops(), 400);
     test = 3 * targetSame;
-    CHECK(test.drops() == 600);
+    CHECK_EQ(test.drops(), 600);
     test = 20;
-    CHECK(test.drops() == 20);
+    CHECK_EQ(test.drops(), 20);
 
     test += targetSame;
-    CHECK(test.drops() == 220);
+    CHECK_EQ(test.drops(), 220);
 
     test -= targetSame;
-    CHECK(test.drops() == 20);
+    CHECK_EQ(test.drops(), 20);
 
     test *= 5;
-    CHECK(test.drops() == 100);
+    CHECK_EQ(test.drops(), 100);
     test = 50;
-    CHECK(test.drops() == 50);
+    CHECK_EQ(test.drops(), 50);
     test -= 39;
-    CHECK(test.drops() == 11);
+    CHECK_EQ(test.drops(), 11);
 
     // legal with signed
     test = -test;
-    CHECK(test.drops() == -11);
-    CHECK(test.signum() == -1);
-    CHECK(to_string(test) == "-11");
+    CHECK_EQ(test.drops(), -11);
+    CHECK_EQ(test.signum(), -1);
+    CHECK_EQ(to_string(test), "-11");
 
-    CHECK(test);
+    CHECK_UNARY(test);
     test = 0;
-    CHECK(!test);
-    CHECK(test.signum() == 0);
+    CHECK_FALSE(test);
+    CHECK_EQ(test.signum(), 0);
     test = targetSame;
-    CHECK(test.signum() == 1);
-    CHECK(to_string(test) == "200");
+    CHECK_EQ(test.signum(), 1);
+    CHECK_EQ(to_string(test), "200");
 }
 
 TEST_CASE("mulRatio")
@@ -193,48 +193,49 @@ TEST_CASE("mulRatio")
         // multiply by a number that would overflow then divide by the same
         // number, and check we didn't lose any value
         XRPAmount big(maxXRP);
-        CHECK(big == mulRatio(big, maxUInt32, maxUInt32, true));
+        CHECK_EQ(big, mulRatio(big, maxUInt32, maxUInt32, true));
         // rounding mode shouldn't matter as the result is exact
-        CHECK(big == mulRatio(big, maxUInt32, maxUInt32, false));
+        CHECK_EQ(big, mulRatio(big, maxUInt32, maxUInt32, false));
 
         // multiply and divide by values that would overflow if done
         // naively, and check that it gives the correct answer
         big -= 0xf;  // Subtract a little so it's divisable by 4
-        CHECK(mulRatio(big, 3, 4, false).value() == (big.value() / 4) * 3);
-        CHECK(mulRatio(big, 3, 4, true).value() == (big.value() / 4) * 3);
-        CHECK((big.value() * 3) / 4 != (big.value() / 4) * 3);
+        CHECK_EQ(mulRatio(big, 3, 4, false).value(), (big.value() / 4) * 3);
+        CHECK_EQ(mulRatio(big, 3, 4, true).value(), (big.value() / 4) * 3);
+        CHECK_NE((big.value() * 3) / 4, (big.value() / 4) * 3);
     }
 
     {
         // Similar test as above, but for negative values
         XRPAmount big(minXRP);
-        CHECK(big == mulRatio(big, maxUInt32, maxUInt32, true));
+        CHECK_EQ(big, mulRatio(big, maxUInt32, maxUInt32, true));
         // rounding mode shouldn't matter as the result is exact
-        CHECK(big == mulRatio(big, maxUInt32, maxUInt32, false));
+        CHECK_EQ(big, mulRatio(big, maxUInt32, maxUInt32, false));
 
         // multiply and divide by values that would overflow if done
         // naively, and check that it gives the correct answer
-        CHECK(mulRatio(big, 3, 4, false).value() == (big.value() / 4) * 3);
-        CHECK(mulRatio(big, 3, 4, true).value() == (big.value() / 4) * 3);
-        CHECK((big.value() * 3) / 4 != (big.value() / 4) * 3);
+        CHECK_EQ(mulRatio(big, 3, 4, false).value(), (big.value() / 4) * 3);
+        CHECK_EQ(mulRatio(big, 3, 4, true).value(), (big.value() / 4) * 3);
+        CHECK_NE((big.value() * 3) / 4, (big.value() / 4) * 3);
     }
 
     {
         // small amounts
         XRPAmount tiny(1);
         // Round up should give the smallest allowable number
-        CHECK(tiny == mulRatio(tiny, 1, maxUInt32, true));
+        CHECK_EQ(tiny, mulRatio(tiny, 1, maxUInt32, true));
         // rounding down should be zero
-        CHECK(beast::zero == mulRatio(tiny, 1, maxUInt32, false));
-        CHECK(beast::zero == mulRatio(tiny, maxUInt32 - 1, maxUInt32, false));
+        CHECK_EQ(beast::zero, mulRatio(tiny, 1, maxUInt32, false));
+        CHECK_EQ(beast::zero, mulRatio(tiny, maxUInt32 - 1, maxUInt32, false));
 
         // tiny negative numbers
         XRPAmount tinyNeg(-1);
         // Round up should give zero
-        CHECK(beast::zero == mulRatio(tinyNeg, 1, maxUInt32, true));
-        CHECK(beast::zero == mulRatio(tinyNeg, maxUInt32 - 1, maxUInt32, true));
+        CHECK_EQ(beast::zero, mulRatio(tinyNeg, 1, maxUInt32, true));
+        CHECK_EQ(
+            beast::zero, mulRatio(tinyNeg, maxUInt32 - 1, maxUInt32, true));
         // rounding down should be tiny
-        CHECK(tinyNeg == mulRatio(tinyNeg, maxUInt32 - 1, maxUInt32, false));
+        CHECK_EQ(tinyNeg, mulRatio(tinyNeg, maxUInt32 - 1, maxUInt32, false));
     }
 
     {  // rounding
@@ -242,14 +243,14 @@ TEST_CASE("mulRatio")
             XRPAmount one(1);
             auto const rup = mulRatio(one, maxUInt32 - 1, maxUInt32, true);
             auto const rdown = mulRatio(one, maxUInt32 - 1, maxUInt32, false);
-            CHECK(rup.drops() - rdown.drops() == 1);
+            CHECK_EQ(rup.drops() - rdown.drops(), 1);
         }
 
         {
             XRPAmount big(maxXRP);
             auto const rup = mulRatio(big, maxUInt32 - 1, maxUInt32, true);
             auto const rdown = mulRatio(big, maxUInt32 - 1, maxUInt32, false);
-            CHECK(rup.drops() - rdown.drops() == 1);
+            CHECK_EQ(rup.drops() - rdown.drops(), 1);
         }
 
         {
@@ -257,7 +258,7 @@ TEST_CASE("mulRatio")
             auto const rup = mulRatio(negOne, maxUInt32 - 1, maxUInt32, true);
             auto const rdown =
                 mulRatio(negOne, maxUInt32 - 1, maxUInt32, false);
-            CHECK(rup.drops() - rdown.drops() == 1);
+            CHECK_EQ(rup.drops() - rdown.drops(), 1);
         }
     }
 
@@ -276,7 +277,7 @@ TEST_CASE("mulRatio")
     {
         // underflow
         XRPAmount bigNegative(minXRP + 10);
-        CHECK(mulRatio(bigNegative, 2, 1, true) == minXRP);
+        CHECK_EQ(mulRatio(bigNegative, 2, 1, true), minXRP);
     }
 }
 

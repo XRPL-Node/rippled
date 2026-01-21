@@ -156,7 +156,7 @@ TEST_CASE("Base58: secp256k1")
         TokenType::NodePublic,
         "n94a1u4jAz288pZLtw6yFWVbi89YamiC6JBXPVUj5zmExe5fTVg9");
     CHECK(pk2);
-    CHECK(pk1 == *pk2);
+    CHECK_EQ(pk1, *pk2);
 
     // Try converting short, long and malformed data
     CHECK_FALSE(parseBase58<PublicKey>(TokenType::NodePublic, ""));
@@ -174,7 +174,7 @@ TEST_CASE("Base58: ed25519")
         TokenType::NodePublic,
         "nHUeeJCSY2dM71oxM8Cgjouf5ekTuev2mwDpc374aLMxzDLXNmjf");
     CHECK(pk2);
-    CHECK(pk1 == *pk2);
+    CHECK_EQ(pk1, *pk2);
 }
 
 TEST_CASE("Miscellaneous operations")
@@ -185,8 +185,8 @@ TEST_CASE("Miscellaneous operations")
             KeyType::secp256k1, generateSeed("masterpassphrase")));
 
     PublicKey pk2(pk1);
-    CHECK(pk1 == pk2);
-    CHECK(pk2 == pk1);
+    CHECK_EQ(pk1, pk2);
+    CHECK_EQ(pk2, pk1);
 
     PublicKey pk3 = derivePublicKey(
         KeyType::secp256k1,
@@ -194,8 +194,8 @@ TEST_CASE("Miscellaneous operations")
             KeyType::secp256k1, generateSeed("arbitraryPassPhrase")));
     // Testing the copy assignment operation of PublicKey class
     pk3 = pk2;
-    CHECK(pk3 == pk2);
-    CHECK(pk1 == pk3);
+    CHECK_EQ(pk3, pk2);
+    CHECK_EQ(pk1, pk3);
 }
 
 TEST_SUITE_END();

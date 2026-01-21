@@ -11,15 +11,15 @@ void
 testUnHexSuccess(std::string const& strIn, std::string const& strExpected)
 {
     auto rv = strUnHex(strIn);
-    CHECK(rv);
-    CHECK(makeSlice(*rv) == makeSlice(strExpected));
+    CHECK_UNARY(rv);
+    CHECK_EQ(makeSlice(*rv), makeSlice(strExpected));
 }
 
 void
 testUnHexFailure(std::string const& strIn)
 {
     auto rv = strUnHex(strIn);
-    CHECK(!rv);
+    CHECK_FALSE(rv);
 }
 }  // namespace
 
@@ -46,239 +46,240 @@ TEST_CASE("parseUrl")
     // Expected passes.
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain.empty());
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path.empty());
+        CHECK_UNARY(parseUrl(pUrl, "scheme://"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_UNARY(pUrl.domain.empty());
+        CHECK_FALSE(pUrl.port);
+        CHECK_UNARY(pUrl.path.empty());
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme:///"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain.empty());
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/");
+        CHECK_UNARY(parseUrl(pUrl, "scheme:///"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_UNARY(pUrl.domain.empty());
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "lower://domain"));
-        CHECK(pUrl.scheme == "lower");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path.empty());
+        CHECK_UNARY(parseUrl(pUrl, "lower://domain"));
+        CHECK_EQ(pUrl.scheme, "lower");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_UNARY(pUrl.path.empty());
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "UPPER://domain:234/"));
-        CHECK(pUrl.scheme == "upper");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(*pUrl.port == 234);
-        CHECK(pUrl.path == "/");
+        CHECK_UNARY(parseUrl(pUrl, "UPPER://domain:234/"));
+        CHECK_EQ(pUrl.scheme, "upper");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_EQ(*pUrl.port, 234);
+        CHECK_EQ(pUrl.path, "/");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "Mixed://domain/path"));
-        CHECK(pUrl.scheme == "mixed");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/path");
+        CHECK_UNARY(parseUrl(pUrl, "Mixed://domain/path"));
+        CHECK_EQ(pUrl.scheme, "mixed");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/path");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://[::1]:123/path"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "::1");
-        CHECK(*pUrl.port == 123);
-        CHECK(pUrl.path == "/path");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://[::1]:123/path"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "::1");
+        CHECK_EQ(*pUrl.port, 123);
+        CHECK_EQ(pUrl.path, "/path");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://user:pass@domain:123/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username == "user");
-        CHECK(pUrl.password == "pass");
-        CHECK(pUrl.domain == "domain");
-        CHECK(*pUrl.port == 123);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://user:pass@domain:123/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_EQ(pUrl.username, "user");
+        CHECK_EQ(pUrl.password, "pass");
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_EQ(*pUrl.port, 123);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://user@domain:123/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username == "user");
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(*pUrl.port == 123);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://user@domain:123/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_EQ(pUrl.username, "user");
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_EQ(*pUrl.port, 123);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://:pass@domain:123/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password == "pass");
-        CHECK(pUrl.domain == "domain");
-        CHECK(*pUrl.port == 123);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://:pass@domain:123/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_EQ(pUrl.password, "pass");
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_EQ(*pUrl.port, 123);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://domain:123/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(*pUrl.port == 123);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://domain:123/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_EQ(*pUrl.port, 123);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://user:pass@domain/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username == "user");
-        CHECK(pUrl.password == "pass");
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://user:pass@domain/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_EQ(pUrl.username, "user");
+        CHECK_EQ(pUrl.password, "pass");
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://user@domain/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username == "user");
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://user@domain/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_EQ(pUrl.username, "user");
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://:pass@domain/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password == "pass");
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://:pass@domain/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_EQ(pUrl.password, "pass");
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://domain/abc:321"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/abc:321");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://domain/abc:321"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/abc:321");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme:///path/to/file"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain.empty());
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/path/to/file");
+        CHECK_UNARY(parseUrl(pUrl, "scheme:///path/to/file"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_UNARY(pUrl.domain.empty());
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/path/to/file");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://user:pass@domain/path/with/an@sign"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username == "user");
-        CHECK(pUrl.password == "pass");
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/path/with/an@sign");
+        CHECK_UNARY(
+            parseUrl(pUrl, "scheme://user:pass@domain/path/with/an@sign"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_EQ(pUrl.username, "user");
+        CHECK_EQ(pUrl.password, "pass");
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/path/with/an@sign");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://domain/path/with/an@sign"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "domain");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/path/with/an@sign");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://domain/path/with/an@sign"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "domain");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/path/with/an@sign");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "scheme://:999/"));
-        CHECK(pUrl.scheme == "scheme");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == ":999");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/");
+        CHECK_UNARY(parseUrl(pUrl, "scheme://:999/"));
+        CHECK_EQ(pUrl.scheme, "scheme");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, ":999");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/");
     }
 
     {
         parsedURL pUrl;
-        CHECK(parseUrl(pUrl, "http://::1:1234/validators"));
-        CHECK(pUrl.scheme == "http");
-        CHECK(pUrl.username.empty());
-        CHECK(pUrl.password.empty());
-        CHECK(pUrl.domain == "::0.1.18.52");
-        CHECK(!pUrl.port);
-        CHECK(pUrl.path == "/validators");
+        CHECK_UNARY(parseUrl(pUrl, "http://::1:1234/validators"));
+        CHECK_EQ(pUrl.scheme, "http");
+        CHECK_UNARY(pUrl.username.empty());
+        CHECK_UNARY(pUrl.password.empty());
+        CHECK_EQ(pUrl.domain, "::0.1.18.52");
+        CHECK_FALSE(pUrl.port);
+        CHECK_EQ(pUrl.path, "/validators");
     }
 
     // Expected fails.
     {
         parsedURL pUrl;
-        CHECK(!parseUrl(pUrl, ""));
-        CHECK(!parseUrl(pUrl, "nonsense"));
-        CHECK(!parseUrl(pUrl, "://"));
-        CHECK(!parseUrl(pUrl, ":///"));
-        CHECK(!parseUrl(pUrl, "scheme://user:pass@domain:65536/abc:321"));
-        CHECK(!parseUrl(pUrl, "UPPER://domain:23498765/"));
-        CHECK(!parseUrl(pUrl, "UPPER://domain:0/"));
-        CHECK(!parseUrl(pUrl, "UPPER://domain:+7/"));
-        CHECK(!parseUrl(pUrl, "UPPER://domain:-7234/"));
-        CHECK(!parseUrl(pUrl, "UPPER://domain:@#$56!/"));
+        CHECK_FALSE(parseUrl(pUrl, ""));
+        CHECK_FALSE(parseUrl(pUrl, "nonsense"));
+        CHECK_FALSE(parseUrl(pUrl, "://"));
+        CHECK_FALSE(parseUrl(pUrl, ":///"));
+        CHECK_FALSE(parseUrl(pUrl, "scheme://user:pass@domain:65536/abc:321"));
+        CHECK_FALSE(parseUrl(pUrl, "UPPER://domain:23498765/"));
+        CHECK_FALSE(parseUrl(pUrl, "UPPER://domain:0/"));
+        CHECK_FALSE(parseUrl(pUrl, "UPPER://domain:+7/"));
+        CHECK_FALSE(parseUrl(pUrl, "UPPER://domain:-7234/"));
+        CHECK_FALSE(parseUrl(pUrl, "UPPER://domain:@#$56!/"));
     }
 
     {
         std::string strUrl("s://" + std::string(8192, ':'));
         parsedURL pUrl;
-        CHECK(!parseUrl(pUrl, strUrl));
+        CHECK_FALSE(parseUrl(pUrl, strUrl));
     }
 }
 
 TEST_CASE("toString")
 {
     auto result = to_string("hello");
-    CHECK(result == "hello");
+    CHECK_EQ(result, "hello");
 }
 
 TEST_SUITE_END();

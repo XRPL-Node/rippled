@@ -18,11 +18,11 @@ TEST_CASE("non-error const construction")
     auto const expected = []() -> Expected<std::string, TER> {
         return "Valid value";
     }();
-    CHECK(expected);
-    CHECK(expected.has_value());
-    CHECK(expected.value() == "Valid value");
-    CHECK(*expected == "Valid value");
-    CHECK(expected->at(0) == 'V');
+    CHECK_UNARY(expected);
+    CHECK_UNARY(expected.has_value());
+    CHECK_EQ(expected.value(), "Valid value");
+    CHECK_EQ(*expected, "Valid value");
+    CHECK_EQ(expected->at(0), 'V');
 
     bool throwOccurred = false;
     try
@@ -32,10 +32,10 @@ TEST_CASE("non-error const construction")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("non-error non-const construction")
@@ -43,13 +43,13 @@ TEST_CASE("non-error non-const construction")
     auto expected = []() -> Expected<std::string, TER> {
         return "Valid value";
     }();
-    CHECK(expected);
-    CHECK(expected.has_value());
-    CHECK(expected.value() == "Valid value");
-    CHECK(*expected == "Valid value");
-    CHECK(expected->at(0) == 'V');
+    CHECK_UNARY(expected);
+    CHECK_UNARY(expected.has_value());
+    CHECK_EQ(expected.value(), "Valid value");
+    CHECK_EQ(*expected, "Valid value");
+    CHECK_EQ(expected->at(0), 'V');
     std::string mv = std::move(*expected);
-    CHECK(mv == "Valid value");
+    CHECK_EQ(mv, "Valid value");
 
     bool throwOccurred = false;
     try
@@ -59,10 +59,10 @@ TEST_CASE("non-error non-const construction")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("non-error overlapping type construction")
@@ -70,10 +70,10 @@ TEST_CASE("non-error overlapping type construction")
     auto expected = []() -> Expected<std::uint32_t, std::uint16_t> {
         return 1;
     }();
-    CHECK(expected);
-    CHECK(expected.has_value());
-    CHECK(expected.value() == 1);
-    CHECK(*expected == 1);
+    CHECK_UNARY(expected);
+    CHECK_UNARY(expected.has_value());
+    CHECK_EQ(expected.value(), 1);
+    CHECK_EQ(*expected, 1);
 
     bool throwOccurred = false;
     try
@@ -83,10 +83,10 @@ TEST_CASE("non-error overlapping type construction")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("error construction from rvalue")
@@ -94,9 +94,9 @@ TEST_CASE("error construction from rvalue")
     auto const expected = []() -> Expected<std::string, TER> {
         return Unexpected(telLOCAL_ERROR);
     }();
-    CHECK(!expected);
-    CHECK(!expected.has_value());
-    CHECK(expected.error() == telLOCAL_ERROR);
+    CHECK_FALSE(expected);
+    CHECK_FALSE(expected.has_value());
+    CHECK_EQ(expected.error(), telLOCAL_ERROR);
 
     bool throwOccurred = false;
     try
@@ -106,10 +106,10 @@ TEST_CASE("error construction from rvalue")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("error construction from lvalue")
@@ -118,9 +118,9 @@ TEST_CASE("error construction from lvalue")
     auto expected = [&err]() -> Expected<std::string, TER> {
         return Unexpected(err);
     }();
-    CHECK(!expected);
-    CHECK(!expected.has_value());
-    CHECK(expected.error() == telLOCAL_ERROR);
+    CHECK_FALSE(expected);
+    CHECK_FALSE(expected.has_value());
+    CHECK_EQ(expected.error(), telLOCAL_ERROR);
 
     bool throwOccurred = false;
     try
@@ -130,10 +130,10 @@ TEST_CASE("error construction from lvalue")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("error construction from const char*")
@@ -141,9 +141,9 @@ TEST_CASE("error construction from const char*")
     auto const expected = []() -> Expected<int, char const*> {
         return Unexpected("Not what is expected!");
     }();
-    CHECK(!expected);
-    CHECK(!expected.has_value());
-    CHECK(expected.error() == std::string("Not what is expected!"));
+    CHECK_FALSE(expected);
+    CHECK_FALSE(expected.has_value());
+    CHECK_EQ(expected.error(), std::string("Not what is expected!"));
 }
 
 TEST_CASE("error construction of string from const char*")
@@ -151,17 +151,17 @@ TEST_CASE("error construction of string from const char*")
     auto expected = []() -> Expected<int, std::string> {
         return Unexpected("Not what is expected!");
     }();
-    CHECK(!expected);
-    CHECK(!expected.has_value());
-    CHECK(expected.error() == "Not what is expected!");
+    CHECK_FALSE(expected);
+    CHECK_FALSE(expected.has_value());
+    CHECK_EQ(expected.error(), "Not what is expected!");
     std::string const s(std::move(expected.error()));
-    CHECK(s == "Not what is expected!");
+    CHECK_EQ(s, "Not what is expected!");
 }
 
 TEST_CASE("non-error const construction of Expected<void, T>")
 {
     auto const expected = []() -> Expected<void, std::string> { return {}; }();
-    CHECK(expected);
+    CHECK_UNARY(expected);
     bool throwOccurred = false;
     try
     {
@@ -170,16 +170,16 @@ TEST_CASE("non-error const construction of Expected<void, T>")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("non-error non-const construction of Expected<void, T>")
 {
     auto expected = []() -> Expected<void, std::string> { return {}; }();
-    CHECK(expected);
+    CHECK_UNARY(expected);
     bool throwOccurred = false;
     try
     {
@@ -188,10 +188,10 @@ TEST_CASE("non-error non-const construction of Expected<void, T>")
     }
     catch (std::runtime_error const& e)
     {
-        CHECK(e.what() == std::string("bad expected access"));
+        CHECK_EQ(e.what(), std::string("bad expected access"));
         throwOccurred = true;
     }
-    CHECK(throwOccurred);
+    CHECK_UNARY(throwOccurred);
 }
 
 TEST_CASE("error const construction of Expected<void, T>")
@@ -199,8 +199,8 @@ TEST_CASE("error const construction of Expected<void, T>")
     auto const expected = []() -> Expected<void, std::string> {
         return Unexpected("Not what is expected!");
     }();
-    CHECK(!expected);
-    CHECK(expected.error() == "Not what is expected!");
+    CHECK_FALSE(expected);
+    CHECK_EQ(expected.error(), "Not what is expected!");
 }
 
 TEST_CASE("error non-const construction of Expected<void, T>")
@@ -208,10 +208,10 @@ TEST_CASE("error non-const construction of Expected<void, T>")
     auto expected = []() -> Expected<void, std::string> {
         return Unexpected("Not what is expected!");
     }();
-    CHECK(!expected);
-    CHECK(expected.error() == "Not what is expected!");
+    CHECK_FALSE(expected);
+    CHECK_EQ(expected.error(), "Not what is expected!");
     std::string const s(std::move(expected.error()));
-    CHECK(s == "Not what is expected!");
+    CHECK_EQ(s, "Not what is expected!");
 }
 
 #if BOOST_VERSION >= 107500
@@ -220,8 +220,8 @@ TEST_CASE("boost::json::value construction")
     auto expected = []() -> Expected<boost::json::value, std::string> {
         return boost::json::object{{"oops", "me array now"}};
     }();
-    CHECK(expected);
-    CHECK(!expected.value().is_array());
+    CHECK_UNARY(expected);
+    CHECK_FALSE(expected.value().is_array());
 }
 #endif  // BOOST_VERSION
 

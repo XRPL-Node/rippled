@@ -41,23 +41,23 @@ testUnsigned()
     Unsigned const u2(2);
     Unsigned const u3(3);
 
-    CHECK(u1 != u2);
-    CHECK(u1 < u2);
-    CHECK(u1 <= u2);
-    CHECK(u2 <= u2);
-    CHECK(u2 == u2);
-    CHECK(u2 >= u2);
-    CHECK(u3 >= u2);
-    CHECK(u3 > u2);
+    CHECK_NE(u1, u2);
+    CHECK_LT(u1, u2);
+    CHECK_LE(u1, u2);
+    CHECK_LE(u2, u2);
+    CHECK_EQ(u2, u2);
+    CHECK_GE(u2, u2);
+    CHECK_GE(u3, u2);
+    CHECK_GT(u3, u2);
 
     std::hash<Unsigned> hash;
 
-    CHECK(hash(u1) == hash(u1));
-    CHECK(hash(u2) == hash(u2));
-    CHECK(hash(u3) == hash(u3));
-    CHECK(hash(u1) != hash(u2));
-    CHECK(hash(u1) != hash(u3));
-    CHECK(hash(u2) != hash(u3));
+    CHECK_EQ(hash(u1), hash(u1));
+    CHECK_EQ(hash(u2), hash(u2));
+    CHECK_EQ(hash(u3), hash(u3));
+    CHECK_NE(hash(u1), hash(u2));
+    CHECK_NE(hash(u1), hash(u3));
+    CHECK_NE(hash(u2), hash(u3));
 }
 
 // Comparison, hash tests for Issue
@@ -72,42 +72,42 @@ testIssue()
     Currency const c3(3);
     AccountID const i3(3);
 
-    CHECK(IssueType(c1, i1) != IssueType(c2, i1));
-    CHECK(IssueType(c1, i1) < IssueType(c2, i1));
-    CHECK(IssueType(c1, i1) <= IssueType(c2, i1));
-    CHECK(IssueType(c2, i1) <= IssueType(c2, i1));
-    CHECK(IssueType(c2, i1) == IssueType(c2, i1));
-    CHECK(IssueType(c2, i1) >= IssueType(c2, i1));
-    CHECK(IssueType(c3, i1) >= IssueType(c2, i1));
-    CHECK(IssueType(c3, i1) > IssueType(c2, i1));
-    CHECK(IssueType(c1, i1) != IssueType(c1, i2));
-    CHECK(IssueType(c1, i1) < IssueType(c1, i2));
-    CHECK(IssueType(c1, i1) <= IssueType(c1, i2));
-    CHECK(IssueType(c1, i2) <= IssueType(c1, i2));
-    CHECK(IssueType(c1, i2) == IssueType(c1, i2));
-    CHECK(IssueType(c1, i2) >= IssueType(c1, i2));
-    CHECK(IssueType(c1, i3) >= IssueType(c1, i2));
-    CHECK(IssueType(c1, i3) > IssueType(c1, i2));
+    CHECK_NE(IssueType(c1, i1), IssueType(c2, i1));
+    CHECK_LT(IssueType(c1, i1), IssueType(c2, i1));
+    CHECK_LE(IssueType(c1, i1), IssueType(c2, i1));
+    CHECK_LE(IssueType(c2, i1), IssueType(c2, i1));
+    CHECK_EQ(IssueType(c2, i1), IssueType(c2, i1));
+    CHECK_GE(IssueType(c2, i1), IssueType(c2, i1));
+    CHECK_GE(IssueType(c3, i1), IssueType(c2, i1));
+    CHECK_GT(IssueType(c3, i1), IssueType(c2, i1));
+    CHECK_NE(IssueType(c1, i1), IssueType(c1, i2));
+    CHECK_LT(IssueType(c1, i1), IssueType(c1, i2));
+    CHECK_LE(IssueType(c1, i1), IssueType(c1, i2));
+    CHECK_LE(IssueType(c1, i2), IssueType(c1, i2));
+    CHECK_EQ(IssueType(c1, i2), IssueType(c1, i2));
+    CHECK_GE(IssueType(c1, i2), IssueType(c1, i2));
+    CHECK_GE(IssueType(c1, i3), IssueType(c1, i2));
+    CHECK_GT(IssueType(c1, i3), IssueType(c1, i2));
 
     std::hash<IssueType> hash;
 
-    CHECK(hash(IssueType(c1, i1)) == hash(IssueType(c1, i1)));
-    CHECK(hash(IssueType(c1, i2)) == hash(IssueType(c1, i2)));
-    CHECK(hash(IssueType(c1, i3)) == hash(IssueType(c1, i3)));
-    CHECK(hash(IssueType(c2, i1)) == hash(IssueType(c2, i1)));
-    CHECK(hash(IssueType(c2, i2)) == hash(IssueType(c2, i2)));
-    CHECK(hash(IssueType(c2, i3)) == hash(IssueType(c2, i3)));
-    CHECK(hash(IssueType(c3, i1)) == hash(IssueType(c3, i1)));
-    CHECK(hash(IssueType(c3, i2)) == hash(IssueType(c3, i2)));
-    CHECK(hash(IssueType(c3, i3)) == hash(IssueType(c3, i3)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c1, i2)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c1, i3)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c2, i1)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c2, i2)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c2, i3)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c3, i1)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c3, i2)));
-    CHECK(hash(IssueType(c1, i1)) != hash(IssueType(c3, i3)));
+    CHECK_EQ(hash(IssueType(c1, i1)), hash(IssueType(c1, i1)));
+    CHECK_EQ(hash(IssueType(c1, i2)), hash(IssueType(c1, i2)));
+    CHECK_EQ(hash(IssueType(c1, i3)), hash(IssueType(c1, i3)));
+    CHECK_EQ(hash(IssueType(c2, i1)), hash(IssueType(c2, i1)));
+    CHECK_EQ(hash(IssueType(c2, i2)), hash(IssueType(c2, i2)));
+    CHECK_EQ(hash(IssueType(c2, i3)), hash(IssueType(c2, i3)));
+    CHECK_EQ(hash(IssueType(c3, i1)), hash(IssueType(c3, i1)));
+    CHECK_EQ(hash(IssueType(c3, i2)), hash(IssueType(c3, i2)));
+    CHECK_EQ(hash(IssueType(c3, i3)), hash(IssueType(c3, i3)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c1, i2)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c1, i3)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c2, i1)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c2, i2)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c2, i3)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c3, i1)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c3, i2)));
+    CHECK_NE(hash(IssueType(c1, i1)), hash(IssueType(c3, i3)));
 }
 
 template <class Set>

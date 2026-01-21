@@ -86,9 +86,9 @@ shouldParseEPV4(
     auto const result = Endpoint::from_string_checked(s);
     REQUIRE(result);
     REQUIRE(result->address().is_v4());
-    REQUIRE(result->address().to_v4() == AddressV4{value});
-    CHECK(result->port() == p);
-    CHECK(to_string(*result) == (normal.empty() ? s : normal));
+    REQUIRE_EQ(result->address().to_v4(), AddressV4{value});
+    CHECK_EQ(result->port(), p);
+    CHECK_EQ(to_string(*result), (normal.empty() ? s : normal));
 }
 
 void
@@ -101,9 +101,9 @@ shouldParseEPV6(
     auto result = Endpoint::from_string_checked(s);
     REQUIRE(result);
     REQUIRE(result->address().is_v6());
-    REQUIRE(result->address().to_v6() == AddressV6{value});
-    CHECK(result->port() == p);
-    CHECK(to_string(*result) == (normal.empty() ? s : normal));
+    REQUIRE_EQ(result->address().to_v6(), AddressV6{value});
+    CHECK_EQ(result->port(), p);
+    CHECK_EQ(to_string(*result), (normal.empty() ? s : normal));
 }
 
 void
@@ -151,23 +151,23 @@ shouldFail(std::string const& text)
 
 TEST_CASE("AddressV4")
 {
-    CHECK(AddressV4{}.to_uint() == 0);
-    CHECK(is_unspecified(AddressV4{}));
-    CHECK(AddressV4{0x01020304}.to_uint() == 0x01020304);
+    CHECK_EQ(AddressV4{}.to_uint(), 0);
+    CHECK_UNARY(is_unspecified(AddressV4{}));
+    CHECK_EQ(AddressV4{0x01020304}.to_uint(), 0x01020304);
 
     {
         AddressV4::bytes_type d = {{1, 2, 3, 4}};
-        CHECK(AddressV4{d}.to_uint() == 0x01020304);
+        CHECK_EQ(AddressV4{d}.to_uint(), 0x01020304);
         CHECK_FALSE(is_unspecified(AddressV4{d}));
     }
 
     AddressV4 const v1{1};
-    CHECK(AddressV4{v1}.to_uint() == 1);
+    CHECK_EQ(AddressV4{v1}.to_uint(), 1);
 
     {
         AddressV4 v;
         v = v1;
-        CHECK(v.to_uint() == v1.to_uint());
+        CHECK_EQ(v.to_uint(), v1.to_uint());
     }
 
     {
@@ -178,10 +178,10 @@ TEST_CASE("AddressV4")
         d[2] = 3;
         d[3] = 4;
         v = AddressV4{d};
-        CHECK(v.to_uint() == 0x01020304);
+        CHECK_EQ(v.to_uint(), 0x01020304);
     }
 
-    CHECK(AddressV4(0x01020304).to_string() == "1.2.3.4");
+    CHECK_EQ(AddressV4(0x01020304).to_string(), "1.2.3.4");
 
     shouldParseAddrV4("1.2.3.4", 0x01020304);
     shouldParseAddrV4("255.255.255.255", 0xffffffff);
@@ -213,20 +213,20 @@ TEST_CASE("AddressV4::Bytes")
 {
     AddressV4::bytes_type d1 = {{10, 0, 0, 1}};
     AddressV4 v4{d1};
-    CHECK(v4.to_bytes()[0] == 10);
-    CHECK(v4.to_bytes()[1] == 0);
-    CHECK(v4.to_bytes()[2] == 0);
-    CHECK(v4.to_bytes()[3] == 1);
+    CHECK_EQ(v4.to_bytes()[0], 10);
+    CHECK_EQ(v4.to_bytes()[1], 0);
+    CHECK_EQ(v4.to_bytes()[2], 0);
+    CHECK_EQ(v4.to_bytes()[3], 1);
 
-    CHECK((~((0xff) << 16)) == 0xff00ffff);
+    CHECK_EQ((~((0xff) << 16)), 0xff00ffff);
 
     auto d2 = v4.to_bytes();
     d2[1] = 10;
     v4 = AddressV4{d2};
-    CHECK(v4.to_bytes()[0] == 10);
-    CHECK(v4.to_bytes()[1] == 10);
-    CHECK(v4.to_bytes()[2] == 0);
-    CHECK(v4.to_bytes()[3] == 1);
+    CHECK_EQ(v4.to_bytes()[0], 10);
+    CHECK_EQ(v4.to_bytes()[1], 10);
+    CHECK_EQ(v4.to_bytes()[2], 0);
+    CHECK_EQ(v4.to_bytes()[3], 1);
 }
 
 TEST_CASE("Address")
@@ -234,9 +234,9 @@ TEST_CASE("Address")
     boost::system::error_code ec;
     Address result{boost::asio::ip::make_address("1.2.3.4", ec)};
     AddressV4::bytes_type d = {{1, 2, 3, 4}};
-    CHECK(!ec);
-    CHECK(result.is_v4());
-    CHECK(result.to_v4() == AddressV4{d});
+    CHECK_FALSE(ec);
+    CHECK_UNARY(result.is_v4());
+    CHECK_EQ(result.to_v4(), AddressV4{d});
 }
 
 TEST_CASE("Endpoint")
@@ -271,113 +271,114 @@ TEST_CASE("Endpoint")
 
     AddressV4::bytes_type d = {{127, 0, 0, 1}};
     ep = Endpoint(AddressV4{d}, 80);
-    CHECK(!is_unspecified(ep));
-    CHECK(!is_public(ep));
-    CHECK(is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(is_loopback(ep));
-    CHECK(to_string(ep) == "127.0.0.1:80");
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_FALSE(is_public(ep));
+    CHECK_UNARY(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_UNARY(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "127.0.0.1:80");
     // same address as v4 mapped in ipv6
     ep = Endpoint(
         boost::asio::ip::make_address_v6(
             boost::asio::ip::v4_mapped, AddressV4{d}),
         80);
-    CHECK(!is_unspecified(ep));
-    CHECK(!is_public(ep));
-    CHECK(is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));  // mapped loopback is not a loopback
-    CHECK(to_string(ep) == "[::ffff:127.0.0.1]:80");
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_FALSE(is_public(ep));
+    CHECK_UNARY(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));  // mapped loopback is not a loopback
+    CHECK_EQ(to_string(ep), "[::ffff:127.0.0.1]:80");
 
     d = {{10, 0, 0, 1}};
     ep = Endpoint(AddressV4{d});
-    CHECK(get_class(ep.to_v4()) == 'A');
-    CHECK(!is_unspecified(ep));
-    CHECK(!is_public(ep));
-    CHECK(is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));
-    CHECK(to_string(ep) == "10.0.0.1");
+    CHECK_EQ(get_class(ep.to_v4()), 'A');
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_FALSE(is_public(ep));
+    CHECK_UNARY(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "10.0.0.1");
     // same address as v4 mapped in ipv6
     ep = Endpoint(boost::asio::ip::make_address_v6(
         boost::asio::ip::v4_mapped, AddressV4{d}));
-    CHECK(
+    CHECK_EQ(
         get_class(boost::asio::ip::make_address_v4(
-            boost::asio::ip::v4_mapped, ep.to_v6())) == 'A');
-    CHECK(!is_unspecified(ep));
-    CHECK(!is_public(ep));
-    CHECK(is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));
-    CHECK(to_string(ep) == "::ffff:10.0.0.1");
+            boost::asio::ip::v4_mapped, ep.to_v6())),
+        'A');
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_FALSE(is_public(ep));
+    CHECK_UNARY(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "::ffff:10.0.0.1");
 
     d = {{166, 78, 151, 147}};
     ep = Endpoint(AddressV4{d});
-    CHECK(!is_unspecified(ep));
-    CHECK(is_public(ep));
-    CHECK(!is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));
-    CHECK(to_string(ep) == "166.78.151.147");
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_UNARY(is_public(ep));
+    CHECK_FALSE(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "166.78.151.147");
     // same address as v4 mapped in ipv6
     ep = Endpoint(boost::asio::ip::make_address_v6(
         boost::asio::ip::v4_mapped, AddressV4{d}));
-    CHECK(!is_unspecified(ep));
-    CHECK(is_public(ep));
-    CHECK(!is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));
-    CHECK(to_string(ep) == "::ffff:166.78.151.147");
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_UNARY(is_public(ep));
+    CHECK_FALSE(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "::ffff:166.78.151.147");
 
     // a private IPv6
     AddressV6::bytes_type d2 = {
         {253, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
     ep = Endpoint(AddressV6{d2});
-    CHECK(!is_unspecified(ep));
-    CHECK(!is_public(ep));
-    CHECK(is_private(ep));
-    CHECK(!is_multicast(ep));
-    CHECK(!is_loopback(ep));
-    CHECK(to_string(ep) == "fd00::1");
+    CHECK_FALSE(is_unspecified(ep));
+    CHECK_FALSE(is_public(ep));
+    CHECK_UNARY(is_private(ep));
+    CHECK_FALSE(is_multicast(ep));
+    CHECK_FALSE(is_loopback(ep));
+    CHECK_EQ(to_string(ep), "fd00::1");
 
     {
         ep = Endpoint::from_string("192.0.2.112");
-        CHECK(!is_unspecified(ep));
-        CHECK(ep == Endpoint::from_string("192.0.2.112"));
+        CHECK_FALSE(is_unspecified(ep));
+        CHECK_EQ(ep, Endpoint::from_string("192.0.2.112"));
 
         auto const ep1 = Endpoint::from_string("192.0.2.112:2016");
-        CHECK(!is_unspecified(ep1));
-        CHECK(ep.address() == ep1.address());
-        CHECK(ep1.port() == 2016);
+        CHECK_FALSE(is_unspecified(ep1));
+        CHECK_EQ(ep.address(), ep1.address());
+        CHECK_EQ(ep1.port(), 2016);
 
         auto const ep2 = Endpoint::from_string("192.0.2.112:2016");
-        CHECK(!is_unspecified(ep2));
-        CHECK(ep.address() == ep2.address());
-        CHECK(ep2.port() == 2016);
-        CHECK(ep1 == ep2);
+        CHECK_FALSE(is_unspecified(ep2));
+        CHECK_EQ(ep.address(), ep2.address());
+        CHECK_EQ(ep2.port(), 2016);
+        CHECK_EQ(ep1, ep2);
 
         auto const ep3 = Endpoint::from_string("192.0.2.112 2016");
-        CHECK(!is_unspecified(ep3));
-        CHECK(ep.address() == ep3.address());
-        CHECK(ep3.port() == 2016);
-        CHECK(ep2 == ep3);
+        CHECK_FALSE(is_unspecified(ep3));
+        CHECK_EQ(ep.address(), ep3.address());
+        CHECK_EQ(ep3.port(), 2016);
+        CHECK_EQ(ep2, ep3);
 
         auto const ep4 = Endpoint::from_string("192.0.2.112     2016");
-        CHECK(!is_unspecified(ep4));
-        CHECK(ep.address() == ep4.address());
-        CHECK(ep4.port() == 2016);
-        CHECK(ep3 == ep4);
+        CHECK_FALSE(is_unspecified(ep4));
+        CHECK_EQ(ep.address(), ep4.address());
+        CHECK_EQ(ep4.port(), 2016);
+        CHECK_EQ(ep3, ep4);
 
-        CHECK(to_string(ep1) == to_string(ep2));
-        CHECK(to_string(ep1) == to_string(ep3));
-        CHECK(to_string(ep1) == to_string(ep4));
+        CHECK_EQ(to_string(ep1), to_string(ep2));
+        CHECK_EQ(to_string(ep1), to_string(ep3));
+        CHECK_EQ(to_string(ep1), to_string(ep4));
     }
 
     {
         ep = Endpoint::from_string("[::]:2017");
-        CHECK(is_unspecified(ep));
-        CHECK(ep.port() == 2017);
-        CHECK(ep.address() == AddressV6{});
+        CHECK_UNARY(is_unspecified(ep));
+        CHECK_EQ(ep.port(), 2017);
+        CHECK_EQ(ep.address(), AddressV6{});
     }
 
     // Failures:

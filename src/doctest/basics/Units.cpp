@@ -9,8 +9,8 @@ TEST_SUITE_BEGIN("Units");
 
 TEST_CASE("Initial XRP")
 {
-    CHECK(INITIAL_XRP.drops() == 100'000'000'000'000'000);
-    CHECK(INITIAL_XRP == XRPAmount{100'000'000'000'000'000});
+    CHECK_EQ(INITIAL_XRP.drops(), 100'000'000'000'000'000);
+    CHECK_EQ(INITIAL_XRP, XRPAmount{100'000'000'000'000'000});
 }
 
 TEST_CASE("Types")
@@ -20,14 +20,14 @@ TEST_CASE("Types")
     SUBCASE("XRPAmount with uint32 FeeLevel")
     {
         XRPAmount x{100};
-        CHECK(x.drops() == 100);
+        CHECK_EQ(x.drops(), 100);
         CHECK((std::is_same_v<decltype(x)::unit_type, unit::dropTag>));
         auto y = 4u * x;
-        CHECK(y.value() == 400);
+        CHECK_EQ(y.value(), 400);
         CHECK((std::is_same_v<decltype(y)::unit_type, unit::dropTag>));
 
         auto z = 4 * y;
-        CHECK(z.value() == 1600);
+        CHECK_EQ(z.value(), 1600);
         CHECK((std::is_same_v<decltype(z)::unit_type, unit::dropTag>));
 
         FeeLevel32 f{10};
@@ -35,8 +35,8 @@ TEST_CASE("Types")
 
         auto drops = mulDiv(baseFee, x, f);
 
-        CHECK(drops);
-        CHECK(drops.value() == 1000);
+        CHECK_UNARY(drops);
+        CHECK_EQ(drops.value(), 1000);
         CHECK((std::is_same_v<
                std::remove_reference_t<decltype(*drops)>::unit_type,
                unit::dropTag>));
@@ -49,10 +49,10 @@ TEST_CASE("Types")
     SUBCASE("XRPAmount with uint64 FeeLevel")
     {
         XRPAmount x{100};
-        CHECK(x.value() == 100);
+        CHECK_EQ(x.value(), 100);
         CHECK((std::is_same_v<decltype(x)::unit_type, unit::dropTag>));
         auto y = 4u * x;
-        CHECK(y.value() == 400);
+        CHECK_EQ(y.value(), 400);
         CHECK((std::is_same_v<decltype(y)::unit_type, unit::dropTag>));
 
         FeeLevel64 f{10};
@@ -60,8 +60,8 @@ TEST_CASE("Types")
 
         auto drops = mulDiv(baseFee, x, f);
 
-        CHECK(drops);
-        CHECK(drops.value() == 1000);
+        CHECK_UNARY(drops);
+        CHECK_EQ(drops.value(), 1000);
         CHECK((std::is_same_v<
                std::remove_reference_t<decltype(*drops)>::unit_type,
                unit::dropTag>));
@@ -73,11 +73,11 @@ TEST_CASE("Types")
     SUBCASE("FeeLevel64 operations")
     {
         FeeLevel64 x{1024};
-        CHECK(x.value() == 1024);
+        CHECK_EQ(x.value(), 1024);
         CHECK((std::is_same_v<decltype(x)::unit_type, unit::feelevelTag>));
         std::uint64_t m = 4;
         auto y = m * x;
-        CHECK(y.value() == 4096);
+        CHECK_EQ(y.value(), 4096);
         CHECK((std::is_same_v<decltype(y)::unit_type, unit::feelevelTag>));
 
         XRPAmount basefee{10};
@@ -85,8 +85,8 @@ TEST_CASE("Types")
 
         auto drops = mulDiv(x, basefee, referencefee);
 
-        CHECK(drops);
-        CHECK(drops.value() == 40);
+        CHECK_UNARY(drops);
+        CHECK_EQ(drops.value(), 40);
         CHECK((std::is_same_v<
                std::remove_reference_t<decltype(*drops)>::unit_type,
                unit::dropTag>));
@@ -104,64 +104,64 @@ TEST_CASE("Json")
     {
         FeeLevel32 x{std::numeric_limits<std::uint32_t>::max()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::uintValue);
-        CHECK(y == Json::Value{x.fee()});
+        CHECK_EQ(y.type(), Json::uintValue);
+        CHECK_EQ(y, Json::Value{x.fee()});
     }
 
     SUBCASE("FeeLevel32 min")
     {
         FeeLevel32 x{std::numeric_limits<std::uint32_t>::min()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::uintValue);
-        CHECK(y == Json::Value{x.fee()});
+        CHECK_EQ(y.type(), Json::uintValue);
+        CHECK_EQ(y, Json::Value{x.fee()});
     }
 
     SUBCASE("FeeLevel64 max")
     {
         FeeLevel64 x{std::numeric_limits<std::uint64_t>::max()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::uintValue);
-        CHECK(y == Json::Value{std::numeric_limits<std::uint32_t>::max()});
+        CHECK_EQ(y.type(), Json::uintValue);
+        CHECK_EQ(y, Json::Value{std::numeric_limits<std::uint32_t>::max()});
     }
 
     SUBCASE("FeeLevel64 min")
     {
         FeeLevel64 x{std::numeric_limits<std::uint64_t>::min()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::uintValue);
-        CHECK(y == Json::Value{0});
+        CHECK_EQ(y.type(), Json::uintValue);
+        CHECK_EQ(y, Json::Value{0});
     }
 
     SUBCASE("FeeLevelDouble max")
     {
         FeeLevelDouble x{std::numeric_limits<double>::max()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::realValue);
-        CHECK(y == Json::Value{std::numeric_limits<double>::max()});
+        CHECK_EQ(y.type(), Json::realValue);
+        CHECK_EQ(y, Json::Value{std::numeric_limits<double>::max()});
     }
 
     SUBCASE("FeeLevelDouble min")
     {
         FeeLevelDouble x{std::numeric_limits<double>::min()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::realValue);
-        CHECK(y == Json::Value{std::numeric_limits<double>::min()});
+        CHECK_EQ(y.type(), Json::realValue);
+        CHECK_EQ(y, Json::Value{std::numeric_limits<double>::min()});
     }
 
     SUBCASE("XRPAmount max")
     {
         XRPAmount x{std::numeric_limits<std::int64_t>::max()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::intValue);
-        CHECK(y == Json::Value{std::numeric_limits<std::int32_t>::max()});
+        CHECK_EQ(y.type(), Json::intValue);
+        CHECK_EQ(y, Json::Value{std::numeric_limits<std::int32_t>::max()});
     }
 
     SUBCASE("XRPAmount min")
     {
         XRPAmount x{std::numeric_limits<std::int64_t>::min()};
         auto y = x.jsonClipped();
-        CHECK(y.type() == Json::intValue);
-        CHECK(y == Json::Value{std::numeric_limits<std::int32_t>::min()});
+        CHECK_EQ(y.type(), Json::intValue);
+        CHECK_EQ(y, Json::Value{std::numeric_limits<std::int32_t>::min()});
     }
 }
 
@@ -176,75 +176,75 @@ TEST_CASE("Functions")
 
         [[maybe_unused]] FeeLevel64 defaulted;
         FeeLevel64 test{0};
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = explicitmake(beast::zero);
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = beast::zero;
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = explicitmake(100u);
-        CHECK(test.fee() == 100);
+        CHECK_EQ(test.fee(), 100);
 
         FeeLevel64 const targetSame{200u};
         FeeLevel32 const targetOther{300u};
         test = make(targetSame);
-        CHECK(test.fee() == 200);
-        CHECK(test == targetSame);
-        CHECK(test < FeeLevel64{1000});
-        CHECK(test > FeeLevel64{100});
+        CHECK_EQ(test.fee(), 200);
+        CHECK_EQ(test, targetSame);
+        CHECK_LT(test, FeeLevel64{1000});
+        CHECK_GT(test, FeeLevel64{100});
         test = make(targetOther);
-        CHECK(test.fee() == 300);
-        CHECK(test == targetOther);
+        CHECK_EQ(test.fee(), 300);
+        CHECK_EQ(test, targetOther);
 
         test = std::uint64_t(200);
-        CHECK(test.fee() == 200);
+        CHECK_EQ(test.fee(), 200);
         test = std::uint32_t(300);
-        CHECK(test.fee() == 300);
+        CHECK_EQ(test.fee(), 300);
 
         test = targetSame;
-        CHECK(test.fee() == 200);
+        CHECK_EQ(test.fee(), 200);
         test = targetOther.fee();
-        CHECK(test.fee() == 300);
-        CHECK(test == targetOther);
+        CHECK_EQ(test.fee(), 300);
+        CHECK_EQ(test, targetOther);
 
         test = targetSame * 2;
-        CHECK(test.fee() == 400);
+        CHECK_EQ(test.fee(), 400);
         test = 3 * targetSame;
-        CHECK(test.fee() == 600);
+        CHECK_EQ(test.fee(), 600);
         test = targetSame / 10;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test += targetSame;
-        CHECK(test.fee() == 220);
+        CHECK_EQ(test.fee(), 220);
 
         test -= targetSame;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test++;
-        CHECK(test.fee() == 21);
+        CHECK_EQ(test.fee(), 21);
         ++test;
-        CHECK(test.fee() == 22);
+        CHECK_EQ(test.fee(), 22);
         test--;
-        CHECK(test.fee() == 21);
+        CHECK_EQ(test.fee(), 21);
         --test;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test *= 5;
-        CHECK(test.fee() == 100);
+        CHECK_EQ(test.fee(), 100);
         test /= 2;
-        CHECK(test.fee() == 50);
+        CHECK_EQ(test.fee(), 50);
         test %= 13;
-        CHECK(test.fee() == 11);
+        CHECK_EQ(test.fee(), 11);
 
-        CHECK(test);
+        CHECK_UNARY(test);
         test = 0;
-        CHECK(!test);
-        CHECK(test.signum() == 0);
+        CHECK_FALSE(test);
+        CHECK_EQ(test.signum(), 0);
         test = targetSame;
-        CHECK(test.signum() == 1);
-        CHECK(to_string(test) == "200");
+        CHECK_EQ(test.signum(), 1);
+        CHECK_EQ(to_string(test), "200");
     }
 
     SUBCASE("FeeLevelDouble functions")
@@ -256,76 +256,76 @@ TEST_CASE("Functions")
 
         [[maybe_unused]] FeeLevelDouble defaulted;
         FeeLevelDouble test{0};
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = explicitmake(beast::zero);
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = beast::zero;
-        CHECK(test.fee() == 0);
+        CHECK_EQ(test.fee(), 0);
 
         test = explicitmake(100.0);
-        CHECK(test.fee() == 100);
+        CHECK_EQ(test.fee(), 100);
 
         FeeLevelDouble const targetSame{200.0};
         FeeLevel64 const targetOther{300};
         test = make(targetSame);
-        CHECK(test.fee() == 200);
-        CHECK(test == targetSame);
-        CHECK(test < FeeLevelDouble{1000.0});
-        CHECK(test > FeeLevelDouble{100.0});
+        CHECK_EQ(test.fee(), 200);
+        CHECK_EQ(test, targetSame);
+        CHECK_LT(test, FeeLevelDouble{1000.0});
+        CHECK_GT(test, FeeLevelDouble{100.0});
         test = targetOther.fee();
-        CHECK(test.fee() == 300);
-        CHECK(test == targetOther);
+        CHECK_EQ(test.fee(), 300);
+        CHECK_EQ(test, targetOther);
 
         test = 200.0;
-        CHECK(test.fee() == 200);
+        CHECK_EQ(test.fee(), 200);
         test = std::uint64_t(300);
-        CHECK(test.fee() == 300);
+        CHECK_EQ(test.fee(), 300);
 
         test = targetSame;
-        CHECK(test.fee() == 200);
+        CHECK_EQ(test.fee(), 200);
 
         test = targetSame * 2;
-        CHECK(test.fee() == 400);
+        CHECK_EQ(test.fee(), 400);
         test = 3 * targetSame;
-        CHECK(test.fee() == 600);
+        CHECK_EQ(test.fee(), 600);
         test = targetSame / 10;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test += targetSame;
-        CHECK(test.fee() == 220);
+        CHECK_EQ(test.fee(), 220);
 
         test -= targetSame;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test++;
-        CHECK(test.fee() == 21);
+        CHECK_EQ(test.fee(), 21);
         ++test;
-        CHECK(test.fee() == 22);
+        CHECK_EQ(test.fee(), 22);
         test--;
-        CHECK(test.fee() == 21);
+        CHECK_EQ(test.fee(), 21);
         --test;
-        CHECK(test.fee() == 20);
+        CHECK_EQ(test.fee(), 20);
 
         test *= 5;
-        CHECK(test.fee() == 100);
+        CHECK_EQ(test.fee(), 100);
         test /= 2;
-        CHECK(test.fee() == 50);
+        CHECK_EQ(test.fee(), 50);
 
         // legal with signed
         test = -test;
-        CHECK(test.fee() == -50);
-        CHECK(test.signum() == -1);
-        CHECK(to_string(test) == "-50.000000");
+        CHECK_EQ(test.fee(), -50);
+        CHECK_EQ(test.signum(), -1);
+        CHECK_EQ(to_string(test), "-50.000000");
 
-        CHECK(test);
+        CHECK_UNARY(test);
         test = 0;
-        CHECK(!test);
-        CHECK(test.signum() == 0);
+        CHECK_FALSE(test);
+        CHECK_EQ(test.signum(), 0);
         test = targetSame;
-        CHECK(test.signum() == 1);
-        CHECK(to_string(test) == "200.000000");
+        CHECK_EQ(test.signum(), 1);
+        CHECK_EQ(to_string(test), "200.000000");
     }
 }
 

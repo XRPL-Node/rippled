@@ -413,8 +413,8 @@ checkMapContents(Container& c, Values const& v)
 {
     if (v.empty())
     {
-        CHECK(c.empty());
-        CHECK(c.size() == 0);
+        CHECK_UNARY(c.empty());
+        CHECK_EQ(c.size(), 0);
         return;
     }
 
@@ -424,11 +424,11 @@ checkMapContents(Container& c, Values const& v)
         for (auto const& e : v)
             c.at(e.first);
         for (auto const& e : v)
-            CHECK(c.operator[](e.first) == e.second);
+            CHECK_EQ(c.operator[](e.first), e.second);
     }
     catch (std::out_of_range const&)
     {
-        CHECK(false);  // FAIL: caught exception
+        CHECK_UNARY(false);  // FAIL: caught exception
     }
 }
 
@@ -464,14 +464,10 @@ checkUnorderedContentsRefRef(C&& c, Values const& v)
                 [iter](typename Values::value_type const& e) {
                     return Traits::extract(*iter) == Traits::extract(e);
                 }));
-            bool found = (match != v.end());
-            CHECK(found);
-            bool keysEqual =
-                key_eq(Traits::extract(*iter), Traits::extract(*match));
-            CHECK(keysEqual);
-            bool hashesEqual =
-                (hash(Traits::extract(*iter)) == hash(Traits::extract(*match)));
-            CHECK(hashesEqual);
+            CHECK_NE(match, v.end());
+            CHECK(key_eq(Traits::extract(*iter), Traits::extract(*match)));
+            CHECK_EQ(
+                hash(Traits::extract(*iter)), hash(Traits::extract(*match)));
         }
     }
 }
@@ -490,21 +486,25 @@ checkContentsRefRef(C&& c, Values const& v)
     using Cont = typename std::remove_reference<C>::type;
     using size_type = typename Cont::size_type;
 
-    CHECK(c.size() == v.size());
-    CHECK(size_type(std::distance(c.begin(), c.end())) == v.size());
-    CHECK(size_type(std::distance(c.cbegin(), c.cend())) == v.size());
-    CHECK(
-        size_type(std::distance(
-            c.chronological.begin(), c.chronological.end())) == v.size());
-    CHECK(
-        size_type(std::distance(
-            c.chronological.cbegin(), c.chronological.cend())) == v.size());
-    CHECK(
-        size_type(std::distance(
-            c.chronological.rbegin(), c.chronological.rend())) == v.size());
-    CHECK(
-        size_type(std::distance(
-            c.chronological.crbegin(), c.chronological.crend())) == v.size());
+    CHECK_EQ(c.size(), v.size());
+    CHECK_EQ(size_type(std::distance(c.begin(), c.end())), v.size());
+    CHECK_EQ(size_type(std::distance(c.cbegin(), c.cend())), v.size());
+    CHECK_EQ(
+        size_type(
+            std::distance(c.chronological.begin(), c.chronological.end())),
+        v.size());
+    CHECK_EQ(
+        size_type(
+            std::distance(c.chronological.cbegin(), c.chronological.cend())),
+        v.size());
+    CHECK_EQ(
+        size_type(
+            std::distance(c.chronological.rbegin(), c.chronological.rend())),
+        v.size());
+    CHECK_EQ(
+        size_type(
+            std::distance(c.chronological.crbegin(), c.chronological.crend())),
+        v.size());
 
     checkUnorderedContentsRefRef(c, v);
 }
@@ -760,51 +760,39 @@ testIterator()
         auto const v(Traits::values());
         Cont c(v.cbegin(), v.cend(), clock);
         Cont const& cc(c);
-        CHECK(!c.empty());
-        CHECK(c.size() == v.size());
+        CHECK_FALSE(c.empty());
+        CHECK_EQ(c.size(), v.size());
 
         {
             auto i = c.begin();
-            bool eq1 = (i == c.begin());
-            CHECK(eq1);
-            bool ne1 = (i != c.end());
-            CHECK(ne1);
+            CHECK_EQ(i, c.begin());
+            CHECK_NE(i, c.end());
             ++i;
-            bool ne2 = (i != c.begin());
-            CHECK(ne2);
+            CHECK_NE(i, c.begin());
         }
 
         {
             auto i = cc.begin();
-            bool eq1 = (i == cc.begin());
-            CHECK(eq1);
-            bool ne1 = (i != cc.end());
-            CHECK(ne1);
+            CHECK_EQ(i, cc.begin());
+            CHECK_NE(i, cc.end());
             ++i;
-            bool ne2 = (i != cc.begin());
-            CHECK(ne2);
+            CHECK_NE(i, cc.begin());
         }
 
         {
             auto i = c.cbegin();
-            bool eq1 = (i == c.cbegin());
-            CHECK(eq1);
-            bool ne1 = (i != c.cend());
-            CHECK(ne1);
+            CHECK_EQ(i, c.cbegin());
+            CHECK_NE(i, c.cend());
             ++i;
-            bool ne2 = (i != c.cbegin());
-            CHECK(ne2);
+            CHECK_NE(i, c.cbegin());
         }
 
         {
             auto i = cc.cbegin();
-            bool eq1 = (i == cc.cbegin());
-            CHECK(eq1);
-            bool ne1 = (i != cc.cend());
-            CHECK(ne1);
+            CHECK_EQ(i, cc.cbegin());
+            CHECK_NE(i, cc.cend());
             ++i;
-            bool ne2 = (i != cc.cbegin());
-            CHECK(ne2);
+            CHECK_NE(i, cc.cbegin());
         }
     }
 }
@@ -826,46 +814,34 @@ testReverseIterator()
 
         {
             auto i = c.rbegin();
-            bool eq1 = (i == c.rbegin());
-            CHECK(eq1);
-            bool ne1 = (i != c.rend());
-            CHECK(ne1);
+            CHECK_EQ(i, c.rbegin());
+            CHECK_NE(i, c.rend());
             ++i;
-            bool ne2 = (i != c.rbegin());
-            CHECK(ne2);
+            CHECK_NE(i, c.rbegin());
         }
 
         {
             auto i = cc.rbegin();
-            bool eq1 = (i == cc.rbegin());
-            CHECK(eq1);
-            bool ne1 = (i != cc.rend());
-            CHECK(ne1);
+            CHECK_EQ(i, cc.rbegin());
+            CHECK_NE(i, cc.rend());
             ++i;
-            bool ne2 = (i != cc.rbegin());
-            CHECK(ne2);
+            CHECK_NE(i, cc.rbegin());
         }
 
         {
             auto i = c.crbegin();
-            bool eq1 = (i == c.crbegin());
-            CHECK(eq1);
-            bool ne1 = (i != c.crend());
-            CHECK(ne1);
+            CHECK_EQ(i, c.crbegin());
+            CHECK_NE(i, c.crend());
             ++i;
-            bool ne2 = (i != c.crbegin());
-            CHECK(ne2);
+            CHECK_NE(i, c.crbegin());
         }
 
         {
             auto i = cc.crbegin();
-            bool eq1 = (i == cc.crbegin());
-            CHECK(eq1);
-            bool ne1 = (i != cc.crend());
-            CHECK(ne1);
+            CHECK_EQ(i, cc.crbegin());
+            CHECK_NE(i, cc.crend());
             ++i;
-            bool ne2 = (i != cc.crbegin());
-            CHECK(ne2);
+            CHECK_NE(i, cc.crbegin());
         }
     }
 }
@@ -888,8 +864,7 @@ checkInsertCopy(Container& c, Values const& v)
         auto result = c.insert(e);
         if constexpr (Container::is_multi::value)
         {
-            bool isValid = (result != c.end());
-            CHECK(isValid);
+            CHECK_NE(result, c.end());
         }
         else
         {
@@ -907,8 +882,7 @@ checkInsertMove(Container& c, Values const& v)
         auto result = c.insert(std::move(e));
         if constexpr (Container::is_multi::value)
         {
-            bool isValid = (result != c.end());
-            CHECK(isValid);
+            CHECK_NE(result, c.end());
         }
         else
         {
@@ -930,13 +904,11 @@ checkInsertHintCopy(Container& c, Values const& v)
                           decltype(result),
                           std::pair<typename Container::iterator, bool>>)
         {
-            bool isValid = (result.first != c.end());
-            CHECK(isValid);
+            CHECK_NE(result.first, c.end());
         }
         else
         {
-            bool isValid = (result != c.end());
-            CHECK(isValid);
+            CHECK_NE(result, c.end());
         }
     }
 }
@@ -954,13 +926,11 @@ checkInsertHintMove(Container& c, Values const& v)
                           decltype(result),
                           std::pair<typename Container::iterator, bool>>)
         {
-            bool isValid = (result.first != c.end());
-            CHECK(isValid);
+            CHECK_NE(result.first, c.end());
         }
         else
         {
-            bool isValid = (result != c.end());
-            CHECK(isValid);
+            CHECK_NE(result, c.end());
         }
     }
 }
@@ -1023,27 +993,20 @@ testChronological()
         Cont const& cc(c);
 
         // Check chronological iterators
-        CHECK(!c.empty());
-        bool ne1 = (c.chronological.begin() != c.chronological.end());
-        CHECK(ne1);
-        bool ne2 = (cc.chronological.begin() != cc.chronological.end());
-        CHECK(ne2);
-        bool ne3 = (c.chronological.cbegin() != c.chronological.cend());
-        CHECK(ne3);
-        bool ne4 = (c.chronological.rbegin() != c.chronological.rend());
-        CHECK(ne4);
-        bool ne5 = (cc.chronological.rbegin() != cc.chronological.rend());
-        CHECK(ne5);
-        bool ne6 = (c.chronological.crbegin() != c.chronological.crend());
-        CHECK(ne6);
+        CHECK_FALSE(c.empty());
+        CHECK_NE(c.chronological.begin(), c.chronological.end());
+        CHECK_NE(cc.chronological.begin(), cc.chronological.end());
+        CHECK_NE(c.chronological.cbegin(), c.chronological.cend());
+        CHECK_NE(c.chronological.rbegin(), c.chronological.rend());
+        CHECK_NE(cc.chronological.rbegin(), cc.chronological.rend());
+        CHECK_NE(c.chronological.crbegin(), c.chronological.crend());
 
         // Check touch updates
         auto const before = c.clock().now();
         clock.advance(std::chrono::seconds(1));
         auto iter = c.begin();
         c.touch(iter);
-        bool isAfter = (iter.when() > before);
-        CHECK(isAfter);
+        CHECK_GT(iter.when(), before);
     }
 }
 

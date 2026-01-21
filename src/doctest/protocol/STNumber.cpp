@@ -18,14 +18,14 @@ void
 testCombo(Number number)
 {
     STNumber const before{sfNumber, number};
-    CHECK(number == before);
+    CHECK_EQ(number, before);
     Serializer s;
     before.add(s);
-    CHECK(s.size() == 12);
+    CHECK_EQ(s.size(), 12);
     SerialIter sit(s.slice());
     STNumber const after{sit, sfNumber};
-    CHECK(after.isEquivalent(before));
-    CHECK(number == after);
+    CHECK_UNARY(after.isEquivalent(before));
+    CHECK_EQ(number, after);
 }
 
 }  // namespace
@@ -35,10 +35,10 @@ TEST_CASE("STNumber default constructor")
     static_assert(!std::is_convertible_v<STNumber*, Number*>);
 
     STNumber const stnum{sfNumber};
-    CHECK(stnum.getSType() == STI_NUMBER);
-    CHECK(stnum.getText() == "0");
-    CHECK(stnum.isDefault() == true);
-    CHECK(stnum.value() == Number{0});
+    CHECK_EQ(stnum.getSType(), STI_NUMBER);
+    CHECK_EQ(stnum.getText(), "0");
+    CHECK_UNARY(stnum.isDefault());
+    CHECK_EQ(stnum.value(), Number{0});
 }
 
 TEST_CASE("STNumber mantissa serialization")
@@ -68,73 +68,72 @@ TEST_CASE("STNumber multiplication with STAmount")
     auto const iouValue = strikePrice.iou();
     IOUAmount totalValue{iouValue * factor};
     STAmount const totalAmount{totalValue, strikePrice.issue()};
-    CHECK(totalAmount == Number{10'000});
+    CHECK_EQ(totalAmount, Number{10'000});
 }
 
 TEST_CASE("numberFromJson integer values")
 {
-    CHECK(numberFromJson(sfNumber, Json::Value(42)) == STNumber(sfNumber, 42));
-    CHECK(
-        numberFromJson(sfNumber, Json::Value(-42)) == STNumber(sfNumber, -42));
-    CHECK(numberFromJson(sfNumber, Json::UInt(42)) == STNumber(sfNumber, 42));
+    CHECK_EQ(numberFromJson(sfNumber, Json::Value(42)), STNumber(sfNumber, 42));
+    CHECK_EQ(
+        numberFromJson(sfNumber, Json::Value(-42)), STNumber(sfNumber, -42));
+    CHECK_EQ(numberFromJson(sfNumber, Json::UInt(42)), STNumber(sfNumber, 42));
 }
 
 TEST_CASE("numberFromJson string values")
 {
-    CHECK(numberFromJson(sfNumber, "-123") == STNumber(sfNumber, -123));
-    CHECK(numberFromJson(sfNumber, "123") == STNumber(sfNumber, 123));
-    CHECK(numberFromJson(sfNumber, "-123") == STNumber(sfNumber, -123));
+    CHECK_EQ(numberFromJson(sfNumber, "-123"), STNumber(sfNumber, -123));
+    CHECK_EQ(numberFromJson(sfNumber, "123"), STNumber(sfNumber, 123));
+    CHECK_EQ(numberFromJson(sfNumber, "-123"), STNumber(sfNumber, -123));
 
-    CHECK(
-        numberFromJson(sfNumber, "3.14") ==
-        STNumber(sfNumber, Number(314, -2)));
-    CHECK(
-        numberFromJson(sfNumber, "-3.14") ==
+    CHECK_EQ(
+        numberFromJson(sfNumber, "3.14"), STNumber(sfNumber, Number(314, -2)));
+    CHECK_EQ(
+        numberFromJson(sfNumber, "-3.14"),
         STNumber(sfNumber, -Number(314, -2)));
-    CHECK(numberFromJson(sfNumber, "3.14e2") == STNumber(sfNumber, 314));
-    CHECK(numberFromJson(sfNumber, "-3.14e2") == STNumber(sfNumber, -314));
+    CHECK_EQ(numberFromJson(sfNumber, "3.14e2"), STNumber(sfNumber, 314));
+    CHECK_EQ(numberFromJson(sfNumber, "-3.14e2"), STNumber(sfNumber, -314));
 
-    CHECK(numberFromJson(sfNumber, "1000e-2") == STNumber(sfNumber, 10));
-    CHECK(numberFromJson(sfNumber, "-1000e-2") == STNumber(sfNumber, -10));
+    CHECK_EQ(numberFromJson(sfNumber, "1000e-2"), STNumber(sfNumber, 10));
+    CHECK_EQ(numberFromJson(sfNumber, "-1000e-2"), STNumber(sfNumber, -10));
 }
 
 TEST_CASE("numberFromJson zero values")
 {
-    CHECK(numberFromJson(sfNumber, "0") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "0.0") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "0.000") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0.0") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0.000") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "0e6") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "0.0e6") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "0.000e6") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0e6") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0.0e6") == STNumber(sfNumber, 0));
-    CHECK(numberFromJson(sfNumber, "-0.000e6") == STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0.0"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0.000"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0.0"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0.000"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0e6"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0.0e6"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "0.000e6"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0e6"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0.0e6"), STNumber(sfNumber, 0));
+    CHECK_EQ(numberFromJson(sfNumber, "-0.000e6"), STNumber(sfNumber, 0));
 }
 
 TEST_CASE("numberFromJson int limits")
 {
     constexpr auto imin = std::numeric_limits<int>::min();
-    CHECK(
-        numberFromJson(sfNumber, imin) == STNumber(sfNumber, Number(imin, 0)));
-    CHECK(
-        numberFromJson(sfNumber, std::to_string(imin)) ==
+    CHECK_EQ(
+        numberFromJson(sfNumber, imin), STNumber(sfNumber, Number(imin, 0)));
+    CHECK_EQ(
+        numberFromJson(sfNumber, std::to_string(imin)),
         STNumber(sfNumber, Number(imin, 0)));
 
     constexpr auto imax = std::numeric_limits<int>::max();
-    CHECK(
-        numberFromJson(sfNumber, imax) == STNumber(sfNumber, Number(imax, 0)));
-    CHECK(
-        numberFromJson(sfNumber, std::to_string(imax)) ==
+    CHECK_EQ(
+        numberFromJson(sfNumber, imax), STNumber(sfNumber, Number(imax, 0)));
+    CHECK_EQ(
+        numberFromJson(sfNumber, std::to_string(imax)),
         STNumber(sfNumber, Number(imax, 0)));
 
     constexpr auto umax = std::numeric_limits<unsigned int>::max();
-    CHECK(
-        numberFromJson(sfNumber, umax) == STNumber(sfNumber, Number(umax, 0)));
-    CHECK(
-        numberFromJson(sfNumber, std::to_string(umax)) ==
+    CHECK_EQ(
+        numberFromJson(sfNumber, umax), STNumber(sfNumber, Number(umax, 0)));
+    CHECK_EQ(
+        numberFromJson(sfNumber, std::to_string(umax)),
         STNumber(sfNumber, Number(umax, 0)));
 }
 

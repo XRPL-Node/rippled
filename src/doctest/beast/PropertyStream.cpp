@@ -16,8 +16,8 @@ test_peel_name(
     std::string const& expected_remainder)
 {
     std::string const peeled_name = Source::peel_name(&s);
-    CHECK(peeled_name == expected);
-    CHECK(s == expected_remainder);
+    CHECK_EQ(peeled_name, expected);
+    CHECK_EQ(s, expected_remainder);
 }
 
 void
@@ -27,8 +27,8 @@ test_peel_leading_slash(
     bool should_be_found)
 {
     bool const found(Source::peel_leading_slash(&s));
-    CHECK(found == should_be_found);
-    CHECK(s == expected);
+    CHECK_EQ(found, should_be_found);
+    CHECK_EQ(s, expected);
 }
 
 void
@@ -38,37 +38,37 @@ test_peel_trailing_slashstar(
     bool should_be_found)
 {
     bool const found(Source::peel_trailing_slashstar(&s));
-    CHECK(found == should_be_found);
-    CHECK(s == expected_remainder);
+    CHECK_EQ(found, should_be_found);
+    CHECK_EQ(s, expected_remainder);
 }
 
 void
 test_find_one(Source& root, Source* expected, std::string const& name)
 {
     Source* source(root.find_one(name));
-    CHECK(source == expected);
+    CHECK_EQ(source, expected);
 }
 
 void
 test_find_path(Source& root, std::string const& path, Source* expected)
 {
     Source* source(root.find_path(path));
-    CHECK(source == expected);
+    CHECK_EQ(source, expected);
 }
 
 void
 test_find_one_deep(Source& root, std::string const& name, Source* expected)
 {
     Source* source(root.find_one_deep(name));
-    CHECK(source == expected);
+    CHECK_EQ(source, expected);
 }
 
 void
 test_find(Source& root, std::string path, Source* expected, bool expected_star)
 {
     auto const result(root.find(path));
-    CHECK(result.first == expected);
-    CHECK(result.second == expected_star);
+    CHECK_EQ(result.first, expected);
+    CHECK_EQ(result.second, expected_star);
 }
 
 }  // namespace

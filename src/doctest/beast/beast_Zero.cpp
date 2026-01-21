@@ -54,23 +54,23 @@ struct IntegerWrapper
 void
 test_lhs_zero(IntegerWrapper x)
 {
-    CHECK((x >= zero) == (x.signum() >= 0));
-    CHECK((x > zero) == (x.signum() > 0));
-    CHECK((x == zero) == (x.signum() == 0));
-    CHECK((x != zero) == (x.signum() != 0));
-    CHECK((x < zero) == (x.signum() < 0));
-    CHECK((x <= zero) == (x.signum() <= 0));
+    CHECK_EQ((x >= zero), (x.signum() >= 0));
+    CHECK_EQ((x > zero), (x.signum() > 0));
+    CHECK_EQ((x == zero), (x.signum() == 0));
+    CHECK_EQ((x != zero), (x.signum() != 0));
+    CHECK_EQ((x < zero), (x.signum() < 0));
+    CHECK_EQ((x <= zero), (x.signum() <= 0));
 }
 
 void
 test_rhs_zero(IntegerWrapper x)
 {
-    CHECK((zero >= x) == (0 >= x.signum()));
-    CHECK((zero > x) == (0 > x.signum()));
-    CHECK((zero == x) == (0 == x.signum()));
-    CHECK((zero != x) == (0 != x.signum()));
-    CHECK((zero < x) == (0 < x.signum()));
-    CHECK((zero <= x) == (0 <= x.signum()));
+    CHECK_EQ((zero >= x), (0 >= x.signum()));
+    CHECK_EQ((zero > x), (0 > x.signum()));
+    CHECK_EQ((zero == x), (0 == x.signum()));
+    CHECK_EQ((zero != x), (0 != x.signum()));
+    CHECK_EQ((zero < x), (0 < x.signum()));
+    CHECK_EQ((zero <= x), (0 <= x.signum()));
 }
 
 }  // namespace
@@ -91,8 +91,8 @@ TEST_CASE("rhs zero")
 
 TEST_CASE("ADL")
 {
-    CHECK(adl_tester{} == zero);
-    CHECK(inner_adl_test::adl_tester2{} == zero);
+    CHECK_EQ(adl_tester{}, zero);
+    CHECK_EQ(inner_adl_test::adl_tester2{}, zero);
 }
 
 TEST_SUITE_END();

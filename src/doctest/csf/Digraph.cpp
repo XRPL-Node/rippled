@@ -15,21 +15,21 @@ TEST_CASE("Digraph basic operations")
     using Graph = Digraph<char, std::string>;
     Graph graph;
 
-    CHECK(!graph.connected('a', 'b'));
-    CHECK(!graph.edge('a', 'b'));
-    CHECK(!graph.disconnect('a', 'b'));
+    CHECK_FALSE(graph.connected('a', 'b'));
+    CHECK_FALSE(graph.edge('a', 'b'));
+    CHECK_FALSE(graph.disconnect('a', 'b'));
 
-    CHECK(graph.connect('a', 'b', "foobar"));
-    CHECK(graph.connected('a', 'b'));
-    CHECK(*graph.edge('a', 'b') == "foobar");
+    CHECK_UNARY(graph.connect('a', 'b', "foobar"));
+    CHECK_UNARY(graph.connected('a', 'b'));
+    CHECK_EQ(*graph.edge('a', 'b'), "foobar");
 
-    CHECK(!graph.connect('a', 'b', "repeat"));
-    CHECK(graph.disconnect('a', 'b'));
-    CHECK(graph.connect('a', 'b', "repeat"));
-    CHECK(graph.connected('a', 'b'));
-    CHECK(*graph.edge('a', 'b') == "repeat");
+    CHECK_FALSE(graph.connect('a', 'b', "repeat"));
+    CHECK_UNARY(graph.disconnect('a', 'b'));
+    CHECK_UNARY(graph.connect('a', 'b', "repeat"));
+    CHECK_UNARY(graph.connected('a', 'b'));
+    CHECK_EQ(*graph.edge('a', 'b'), "repeat");
 
-    CHECK(graph.connect('a', 'c', "tree"));
+    CHECK_UNARY(graph.connect('a', 'c', "tree"));
 
     {
         std::vector<std::tuple<char, char, std::string>> edges;
@@ -42,22 +42,22 @@ TEST_CASE("Digraph basic operations")
         std::vector<std::tuple<char, char, std::string>> expected;
         expected.emplace_back('a', 'b', "repeat");
         expected.emplace_back('a', 'c', "tree");
-        CHECK(edges == expected);
-        CHECK(graph.outDegree('a') == expected.size());
+        CHECK_EQ(edges, expected);
+        CHECK_EQ(graph.outDegree('a'), expected.size());
     }
 
-    CHECK(graph.outEdges('r').size() == 0);
-    CHECK(graph.outDegree('r') == 0);
-    CHECK(graph.outDegree('c') == 0);
+    CHECK_EQ(graph.outEdges('r').size(), 0);
+    CHECK_EQ(graph.outDegree('r'), 0);
+    CHECK_EQ(graph.outDegree('c'), 0);
 
     // only 'a' has out edges
-    CHECK(graph.outVertices().size() == 1);
+    CHECK_EQ(graph.outVertices().size(), 1);
     std::vector<char> expected = {'b', 'c'};
 
-    CHECK((graph.outVertices('a') == expected));
-    CHECK(graph.outVertices('b').size() == 0);
-    CHECK(graph.outVertices('c').size() == 0);
-    CHECK(graph.outVertices('r').size() == 0);
+    CHECK_EQ(graph.outVertices('a'), expected);
+    CHECK_EQ(graph.outVertices('b').size(), 0);
+    CHECK_EQ(graph.outVertices('c').size(), 0);
+    CHECK_EQ(graph.outVertices('r').size(), 0);
 
     std::stringstream ss;
     graph.saveDot(ss, [](char v) { return v; });
@@ -66,7 +66,7 @@ TEST_CASE("Digraph basic operations")
         "a -> b;\n"
         "a -> c;\n"
         "}\n";
-    CHECK(ss.str() == expectedDot);
+    CHECK_EQ(ss.str(), expectedDot);
 }
 
 TEST_SUITE_END();

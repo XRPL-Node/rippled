@@ -34,12 +34,12 @@ TEST_CASE("encode, decode")
     {
         std::array<std::uint8_t, varint_traits<std::size_t>::max> vi;
         auto const n0 = write_varint(vi.data(), v);
-        CHECK(n0 > 0);
-        CHECK(n0 == size_varint(v));
+        CHECK_GT(n0, 0);
+        CHECK_EQ(n0, size_varint(v));
         std::size_t v1;
         auto const n1 = read_varint(vi.data(), n0, v1);
-        CHECK(n1 == n0);
-        CHECK(v == v1);
+        CHECK_EQ(n1, n0);
+        CHECK_EQ(v, v1);
     }
 }
 

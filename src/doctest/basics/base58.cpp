@@ -180,8 +180,8 @@ TEST_CASE("b58_multiprecision")
         auto const mod = b58_fast::detail::inplace_bigint_div_rem(
             std::span<uint64_t>(bigInt.data(), bigInt.size()), d);
         auto const foundDiv = multiprecision_utils::toBoostMP(bigInt);
-        CHECK(refMod.convert_to<std::uint64_t>() == mod);
-        CHECK(foundDiv == refDiv);
+        CHECK_EQ(refMod.convert_to<std::uint64_t>(), mod);
+        CHECK_EQ(foundDiv, refDiv);
     }
     for (int i = 0; i < iters; ++i)
     {
@@ -199,9 +199,9 @@ TEST_CASE("b58_multiprecision")
 
         auto const result = b58_fast::detail::inplace_bigint_add(
             std::span<uint64_t>(bigInt.data(), bigInt.size()), d);
-        CHECK(result == TokenCodecErrc::success);
+        CHECK_EQ(result, TokenCodecErrc::success);
         auto const foundAdd = multiprecision_utils::toBoostMP(bigInt);
-        CHECK(refAdd == foundAdd);
+        CHECK_EQ(refAdd, foundAdd);
     }
     for (int i = 0; i < iters; ++i)
     {
@@ -217,9 +217,9 @@ TEST_CASE("b58_multiprecision")
 
         auto const result = b58_fast::detail::inplace_bigint_add(
             std::span<uint64_t>(bigInt.data(), bigInt.size()), d);
-        CHECK(result == TokenCodecErrc::overflowAdd);
+        CHECK_EQ(result, TokenCodecErrc::overflowAdd);
         auto const foundAdd = multiprecision_utils::toBoostMP(bigInt);
-        CHECK(refAdd != foundAdd);
+        CHECK_NE(refAdd, foundAdd);
     }
     for (int i = 0; i < iters; ++i)
     {
@@ -235,9 +235,9 @@ TEST_CASE("b58_multiprecision")
 
         auto const result = b58_fast::detail::inplace_bigint_mul(
             std::span<uint64_t>(bigInt.data(), bigInt.size()), d);
-        CHECK(result == TokenCodecErrc::success);
+        CHECK_EQ(result, TokenCodecErrc::success);
         auto const foundMul = multiprecision_utils::toBoostMP(bigInt);
-        CHECK(refMul == foundMul);
+        CHECK_EQ(refMul, foundMul);
     }
     for (int i = 0; i < iters; ++i)
     {
@@ -252,9 +252,9 @@ TEST_CASE("b58_multiprecision")
 
         auto const result = b58_fast::detail::inplace_bigint_mul(
             std::span<uint64_t>(bigInt.data(), bigInt.size()), d);
-        CHECK(result == TokenCodecErrc::inputTooLarge);
+        CHECK_EQ(result, TokenCodecErrc::inputTooLarge);
         auto const foundMul = multiprecision_utils::toBoostMP(bigInt);
-        CHECK(refMul != foundMul);
+        CHECK_NE(refMul, foundMul);
     }
 }
 
@@ -292,12 +292,11 @@ TEST_CASE("fast_matches_ref")
                 std::copy(s.begin(), s.end(), b58Result[i].begin());
             }
         }
-        REQUIRE(b58Result[0].size() == b58Result[1].size());
-        CHECK(
+        REQUIRE_EQ(b58Result[0].size(), b58Result[1].size());
+        CHECK_EQ(
             memcmp(
-                b58Result[0].data(),
-                b58Result[1].data(),
-                b58Result[0].size()) == 0);
+                b58Result[0].data(), b58Result[1].data(), b58Result[0].size()),
+            0);
 
         for (int i = 0; i < 2; ++i)
         {
@@ -323,12 +322,13 @@ TEST_CASE("fast_matches_ref")
             }
         }
 
-        REQUIRE(b256Result[0].size() == b256Result[1].size());
-        CHECK(
+        REQUIRE_EQ(b256Result[0].size(), b256Result[1].size());
+        CHECK_EQ(
             memcmp(
                 b256Result[0].data(),
                 b256Result[1].data(),
-                b256Result[0].size()) == 0);
+                b256Result[0].size()),
+            0);
     };
 
     auto testTokenEncode = [&](xrpl::TokenType const tokType,
@@ -358,12 +358,11 @@ TEST_CASE("fast_matches_ref")
                 std::copy(s.begin(), s.end(), b58Result[i].begin());
             }
         }
-        REQUIRE(b58Result[0].size() == b58Result[1].size());
-        CHECK(
+        REQUIRE_EQ(b58Result[0].size(), b58Result[1].size());
+        CHECK_EQ(
             memcmp(
-                b58Result[0].data(),
-                b58Result[1].data(),
-                b58Result[0].size()) == 0);
+                b58Result[0].data(), b58Result[1].data(), b58Result[0].size()),
+            0);
 
         for (int i = 0; i < 2; ++i)
         {
@@ -390,12 +389,13 @@ TEST_CASE("fast_matches_ref")
             }
         }
 
-        REQUIRE(b256Result[0].size() == b256Result[1].size());
-        CHECK(
+        REQUIRE_EQ(b256Result[0].size(), b256Result[1].size());
+        CHECK_EQ(
             memcmp(
                 b256Result[0].data(),
                 b256Result[1].data(),
-                b256Result[0].size()) == 0);
+                b256Result[0].size()),
+            0);
     };
 
     auto testIt = [&](xrpl::TokenType const tokType,

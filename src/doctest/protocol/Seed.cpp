@@ -47,7 +47,7 @@ TEST_CASE("construction")
         {
             beast::rngfill(src, sizeof(src), default_prng());
             Seed const seed({src, sizeof(src)});
-            CHECK(memcmp(seed.data(), src, sizeof(src)) == 0);
+            CHECK_EQ(memcmp(seed.data(), src, sizeof(src)), 0);
         }
     }
 
@@ -58,7 +58,7 @@ TEST_CASE("construction")
             uint128 src;
             beast::rngfill(src.data(), src.size(), default_prng());
             Seed const seed(src);
-            CHECK(memcmp(seed.data(), src.data(), src.size()) == 0);
+            CHECK_EQ(memcmp(seed.data(), src.data(), src.size()), 0);
         }
     }
 }
@@ -126,7 +126,7 @@ TEST_CASE("Node keypair generation & signing (secp256k1)")
         "7E59C17D50F5959C7B158FEC95C8F815BF653DC8");
 
     auto sig = sign(publicKey, secretKey, makeSlice(message1));
-    CHECK(sig.size() != 0);
+    CHECK_NE(sig.size(), 0);
     CHECK(verify(publicKey, makeSlice(message1), sig));
 
     // Correct public key but wrong message
@@ -172,8 +172,8 @@ TEST_CASE("Node keypair generation & signing (ed25519)")
         "AA066C988C712815CC37AF71472B7CBBBD4E2A0A");
 
     auto sig = sign(publicKey, secretKey, makeSlice(message1));
-    CHECK(sig.size() != 0);
-    CHECK(verify(publicKey, makeSlice(message1), sig));
+    CHECK_NE(sig.size(), 0);
+    CHECK_UNARY(verify(publicKey, makeSlice(message1), sig));
 
     // Correct public key but wrong message
     CHECK_FALSE(verify(publicKey, makeSlice(message2), sig));
@@ -205,7 +205,7 @@ TEST_CASE("Account keypair generation & signing (secp256k1)")
     auto const [pk, sk] =
         generateKeyPair(KeyType::secp256k1, generateSeed("masterpassphrase"));
 
-    CHECK(toBase58(calcAccountID(pk)) == "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh");
+    CHECK_EQ(toBase58(calcAccountID(pk)), "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh");
     CHECK(
         toBase58(TokenType::AccountPublic, pk) ==
         "aBQG8RQAzjs1eTKFEAQXr2gS4utcDiEC9wmi7pfUPTi27VCahwgw");
@@ -214,8 +214,8 @@ TEST_CASE("Account keypair generation & signing (secp256k1)")
         "p9JfM6HHi64m6mvB6v5k7G2b1cXzGmYiCNJf6GHPKvFTWdeRVjh");
 
     auto sig = sign(pk, sk, makeSlice(message1));
-    CHECK(sig.size() != 0);
-    CHECK(verify(pk, makeSlice(message1), sig));
+    CHECK_NE(sig.size(), 0);
+    CHECK_UNARY(verify(pk, makeSlice(message1), sig));
 
     // Correct public key but wrong message
     CHECK_FALSE(verify(pk, makeSlice(message2), sig));
@@ -245,7 +245,8 @@ TEST_CASE("Account keypair generation & signing (ed25519)")
     auto const [pk, sk] =
         generateKeyPair(KeyType::ed25519, generateSeed("masterpassphrase"));
 
-    CHECK(to_string(calcAccountID(pk)) == "rGWrZyQqhTp9Xu7G5Pkayo7bXjH4k4QYpf");
+    CHECK_EQ(
+        to_string(calcAccountID(pk)), "rGWrZyQqhTp9Xu7G5Pkayo7bXjH4k4QYpf");
     CHECK(
         toBase58(TokenType::AccountPublic, pk) ==
         "aKGheSBjmCsKJVuLNKRAKpZXT6wpk2FCuEZAXJupXgdAxX5THCqR");
@@ -254,8 +255,8 @@ TEST_CASE("Account keypair generation & signing (ed25519)")
         "pwDQjwEhbUBmPuEjFpEG75bFhv2obkCB7NxQsfFxM7xGHBMVPu9");
 
     auto sig = sign(pk, sk, makeSlice(message1));
-    CHECK(sig.size() != 0);
-    CHECK(verify(pk, makeSlice(message1), sig));
+    CHECK_NE(sig.size(), 0);
+    CHECK_UNARY(verify(pk, makeSlice(message1), sig));
 
     // Correct public key but wrong message
     CHECK_FALSE(verify(pk, makeSlice(message2), sig));

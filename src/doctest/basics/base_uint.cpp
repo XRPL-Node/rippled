@@ -59,20 +59,20 @@ TEST_CASE("comparisons 64-bit")
     for (auto const& arg : test_args)
     {
         xrpl::base_uint<64> const u{arg.first}, v{arg.second};
-        CHECK(u < v);
-        CHECK(u <= v);
-        CHECK(u != v);
-        CHECK(!(u == v));
-        CHECK(!(u > v));
-        CHECK(!(u >= v));
-        CHECK(!(v < u));
-        CHECK(!(v <= u));
-        CHECK(v != u);
-        CHECK(!(v == u));
-        CHECK(v > u);
-        CHECK(v >= u);
-        CHECK(u == u);
-        CHECK(v == v);
+        CHECK_LT(u, v);
+        CHECK_LE(u, v);
+        CHECK_NE(u, v);
+        CHECK_FALSE(u == v);
+        CHECK_FALSE(u > v);
+        CHECK_FALSE(u >= v);
+        CHECK_FALSE(v < u);
+        CHECK_FALSE(v <= u);
+        CHECK_NE(v, u);
+        CHECK_FALSE(v == u);
+        CHECK_GT(v, u);
+        CHECK_GE(v, u);
+        CHECK_EQ(u, u);
+        CHECK_EQ(v, v);
     }
 }
 
@@ -92,20 +92,20 @@ TEST_CASE("comparisons 96-bit")
     for (auto const& arg : test_args)
     {
         xrpl::base_uint<96> const u{arg.first}, v{arg.second};
-        CHECK(u < v);
-        CHECK(u <= v);
-        CHECK(u != v);
-        CHECK(!(u == v));
-        CHECK(!(u > v));
-        CHECK(!(u >= v));
-        CHECK(!(v < u));
-        CHECK(!(v <= u));
-        CHECK(v != u);
-        CHECK(!(v == u));
-        CHECK(v > u);
-        CHECK(v >= u);
-        CHECK(u == u);
-        CHECK(v == v);
+        CHECK_LT(u, v);
+        CHECK_LE(u, v);
+        CHECK_NE(u, v);
+        CHECK_FALSE(u == v);
+        CHECK_FALSE(u > v);
+        CHECK_FALSE(u >= v);
+        CHECK_FALSE(v < u);
+        CHECK_FALSE(v <= u);
+        CHECK_NE(v, u);
+        CHECK_FALSE(v == u);
+        CHECK_GT(v, u);
+        CHECK_GE(v, u);
+        CHECK_EQ(u, u);
+        CHECK_EQ(v, v);
     }
 }
 
@@ -118,22 +118,22 @@ TEST_CASE("general purpose tests")
     std::unordered_set<test96, hardened_hash<>> uset;
 
     Blob raw{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-    CHECK(test96::bytes == raw.size());
+    CHECK_EQ(test96::bytes, raw.size());
 
     test96 u{raw};
     uset.insert(u);
-    CHECK(raw.size() == u.size());
-    CHECK(to_string(u) == "0102030405060708090A0B0C");
-    CHECK(to_short_string(u) == "01020304...");
-    CHECK(*u.data() == 1);
-    CHECK(u.signum() == 1);
-    CHECK(!!u);
-    CHECK(!u.isZero());
-    CHECK(u.isNonZero());
+    CHECK_EQ(raw.size(), u.size());
+    CHECK_EQ(to_string(u), "0102030405060708090A0B0C");
+    CHECK_EQ(to_short_string(u), "01020304...");
+    CHECK_EQ(*u.data(), 1);
+    CHECK_EQ(u.signum(), 1);
+    CHECK_UNARY(!!u);
+    CHECK_FALSE(u.isZero());
+    CHECK_UNARY(u.isNonZero());
     unsigned char t = 0;
     for (auto& d : u)
     {
-        CHECK(d == ++t);
+        CHECK_EQ(d, ++t);
     }
 
     // Test hash_append by "hashing" with a no-op hasher (h)
@@ -142,56 +142,56 @@ TEST_CASE("general purpose tests")
     nonhash<96> h;
     hash_append(h, u);
     test96 w{std::vector<std::uint8_t>(h.data_.begin(), h.data_.end())};
-    CHECK(w == u);
+    CHECK_EQ(w, u);
 
     test96 v{~u};
     uset.insert(v);
-    CHECK(to_string(v) == "FEFDFCFBFAF9F8F7F6F5F4F3");
-    CHECK(to_short_string(v) == "FEFDFCFB...");
-    CHECK(*v.data() == 0xfe);
-    CHECK(v.signum() == 1);
-    CHECK(!!v);
-    CHECK(!v.isZero());
-    CHECK(v.isNonZero());
+    CHECK_EQ(to_string(v), "FEFDFCFBFAF9F8F7F6F5F4F3");
+    CHECK_EQ(to_short_string(v), "FEFDFCFB...");
+    CHECK_EQ(*v.data(), 0xfe);
+    CHECK_EQ(v.signum(), 1);
+    CHECK_UNARY(!!v);
+    CHECK_FALSE(v.isZero());
+    CHECK_UNARY(v.isNonZero());
     t = 0xff;
     for (auto& d : v)
     {
-        CHECK(d == --t);
+        CHECK_EQ(d, --t);
     }
 
-    CHECK(u < v);
-    CHECK(v > u);
+    CHECK_LT(u, v);
+    CHECK_GT(v, u);
 
     v = u;
-    CHECK(v == u);
+    CHECK_EQ(v, u);
 
     test96 z{beast::zero};
     uset.insert(z);
-    CHECK(to_string(z) == "000000000000000000000000");
-    CHECK(to_short_string(z) == "00000000...");
-    CHECK(*z.data() == 0);
-    CHECK(*z.begin() == 0);
-    CHECK(*std::prev(z.end(), 1) == 0);
-    CHECK(z.signum() == 0);
-    CHECK(!z);
-    CHECK(z.isZero());
-    CHECK(!z.isNonZero());
+    CHECK_EQ(to_string(z), "000000000000000000000000");
+    CHECK_EQ(to_short_string(z), "00000000...");
+    CHECK_EQ(*z.data(), 0);
+    CHECK_EQ(*z.begin(), 0);
+    CHECK_EQ(*std::prev(z.end(), 1), 0);
+    CHECK_EQ(z.signum(), 0);
+    CHECK_UNARY(!z);  // base_uint doesn't have explicit bool conversion
+    CHECK_UNARY(z.isZero());
+    CHECK_UNARY(!z.isNonZero());
     for (auto& d : z)
     {
-        CHECK(d == 0);
+        CHECK_EQ(d, 0);
     }
 
     test96 n{z};
     n++;
-    CHECK(n == test96(1));
+    CHECK_EQ(n, test96(1));
     n--;
-    CHECK(n == beast::zero);
-    CHECK(n == z);
+    CHECK_EQ(n, beast::zero);
+    CHECK_EQ(n, z);
     n--;
-    CHECK(to_string(n) == "FFFFFFFFFFFFFFFFFFFFFFFF");
-    CHECK(to_short_string(n) == "FFFFFFFF...");
+    CHECK_EQ(to_string(n), "FFFFFFFFFFFFFFFFFFFFFFFF");
+    CHECK_EQ(to_short_string(n), "FFFFFFFF...");
     n = beast::zero;
-    CHECK(n == z);
+    CHECK_EQ(n, z);
 
     test96 zp1{z};
     zp1++;
@@ -199,22 +199,22 @@ TEST_CASE("general purpose tests")
     zm1--;
     test96 x{zm1 ^ zp1};
     uset.insert(x);
-    CHECK(to_string(x) == "FFFFFFFFFFFFFFFFFFFFFFFE");
-    CHECK(to_short_string(x) == "FFFFFFFF...");
+    CHECK_EQ(to_string(x), "FFFFFFFFFFFFFFFFFFFFFFFE");
+    CHECK_EQ(to_short_string(x), "FFFFFFFF...");
 
-    CHECK(uset.size() == 4);
+    CHECK_EQ(uset.size(), 4);
 
     test96 tmp;
-    CHECK(tmp.parseHex(to_string(u)));
-    CHECK(tmp == u);
+    CHECK_UNARY(tmp.parseHex(to_string(u)));
+    CHECK_EQ(tmp, u);
     tmp = z;
 
     // fails with extra char
-    CHECK(!tmp.parseHex("A" + to_string(u)));
+    CHECK_FALSE(tmp.parseHex("A" + to_string(u)));
     tmp = z;
 
     // fails with extra char at end
-    CHECK(!tmp.parseHex(to_string(u) + "A"));
+    CHECK_FALSE(tmp.parseHex(to_string(u) + "A"));
 
     // fails with a non-hex character at some point in the string:
     tmp = z;
@@ -223,7 +223,7 @@ TEST_CASE("general purpose tests")
     {
         std::string x = to_string(z);
         x[i] = ('G' + (i % 10));
-        CHECK(!tmp.parseHex(x));
+        CHECK_FALSE(tmp.parseHex(x));
     }
 
     // Walking 1s:
@@ -232,8 +232,8 @@ TEST_CASE("general purpose tests")
         std::string s1 = "000000000000000000000000";
         s1[i] = '1';
 
-        CHECK(tmp.parseHex(s1));
-        CHECK(to_string(tmp) == s1);
+        CHECK_UNARY(tmp.parseHex(s1));
+        CHECK_EQ(to_string(tmp), s1);
     }
 
     // Walking 0s:
@@ -242,8 +242,8 @@ TEST_CASE("general purpose tests")
         std::string s1 = "111111111111111111111111";
         s1[i] = '0';
 
-        CHECK(tmp.parseHex(s1));
-        CHECK(to_string(tmp) == s1);
+        CHECK_UNARY(tmp.parseHex(s1));
+        CHECK_EQ(to_string(tmp), s1);
     }
 }
 
@@ -269,10 +269,10 @@ TEST_CASE("constexpr constructors")
         }
         catch (std::invalid_argument const& e)
         {
-            CHECK(e.what() == std::string("invalid length for hex string"));
+            CHECK_EQ(e.what(), std::string("invalid length for hex string"));
             caught = true;
         }
-        CHECK(caught);
+        CHECK_UNARY(caught);
     }
     {
         // Invalid character in string.
@@ -287,10 +287,10 @@ TEST_CASE("constexpr constructors")
         }
         catch (std::range_error const& e)
         {
-            CHECK(e.what() == std::string("invalid hex character"));
+            CHECK_EQ(e.what(), std::string("invalid hex character"));
             caught = true;
         }
-        CHECK(caught);
+        CHECK_UNARY(caught);
     }
 
     // Verify that constexpr base_uints interpret a string the same
@@ -315,8 +315,8 @@ TEST_CASE("constexpr constructors")
     for (StrBaseUint const& t : testCases)
     {
         test96 t96;
-        CHECK(t96.parseHex(t.str));
-        CHECK(t96 == t.tst);
+        CHECK_UNARY(t96.parseHex(t.str));
+        CHECK_EQ(t96, t.tst);
     }
 }
 

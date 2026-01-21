@@ -64,20 +64,20 @@ TEST_CASE("secp256k1: canonicality")
 
     {
         auto const canonicality = ecdsaCanonicality(makeSlice(sig));
-        CHECK(canonicality);
-        CHECK(*canonicality == ECDSACanonicality::fullyCanonical);
+        CHECK_UNARY(canonicality);
+        CHECK_EQ(*canonicality, ECDSACanonicality::fullyCanonical);
     }
 
     {
         auto const canonicality = ecdsaCanonicality(makeSlice(non));
-        CHECK(canonicality);
-        CHECK(*canonicality != ECDSACanonicality::fullyCanonical);
+        CHECK_UNARY(canonicality);
+        CHECK_NE(*canonicality, ECDSACanonicality::fullyCanonical);
     }
 
-    CHECK(verifyDigest(pk, digest, makeSlice(sig), false));
-    CHECK(verifyDigest(pk, digest, makeSlice(sig), true));
-    CHECK(verifyDigest(pk, digest, makeSlice(non), false));
-    CHECK(!verifyDigest(pk, digest, makeSlice(non), true));
+    CHECK_UNARY(verifyDigest(pk, digest, makeSlice(sig), false));
+    CHECK_UNARY(verifyDigest(pk, digest, makeSlice(sig), true));
+    CHECK_UNARY(verifyDigest(pk, digest, makeSlice(non), false));
+    CHECK_FALSE(verifyDigest(pk, digest, makeSlice(non), true));
 }
 
 TEST_CASE("secp256k1: digest signing & verification")
@@ -86,8 +86,8 @@ TEST_CASE("secp256k1: digest signing & verification")
     {
         auto const [pk, sk] = randomKeyPair(KeyType::secp256k1);
 
-        CHECK(pk == derivePublicKey(KeyType::secp256k1, sk));
-        CHECK(*publicKeyType(pk) == KeyType::secp256k1);
+        CHECK_EQ(pk, derivePublicKey(KeyType::secp256k1, sk));
+        CHECK_EQ(*publicKeyType(pk), KeyType::secp256k1);
 
         for (std::size_t j = 0; j < 32; j++)
         {
@@ -96,21 +96,21 @@ TEST_CASE("secp256k1: digest signing & verification")
 
             auto sig = signDigest(pk, sk, digest);
 
-            CHECK(sig.size() != 0);
-            CHECK(verifyDigest(pk, digest, sig, true));
+            CHECK_NE(sig.size(), 0);
+            CHECK_UNARY(verifyDigest(pk, digest, sig, true));
 
             // Wrong digest:
-            CHECK(!verifyDigest(pk, ~digest, sig, true));
+            CHECK_FALSE(verifyDigest(pk, ~digest, sig, true));
 
             // Slightly change the signature:
             if (auto ptr = sig.data())
                 ptr[j % sig.size()]++;
 
             // Wrong signature:
-            CHECK(!verifyDigest(pk, digest, sig, true));
+            CHECK_FALSE(verifyDigest(pk, digest, sig, true));
 
             // Wrong digest and signature:
-            CHECK(!verifyDigest(pk, ~digest, sig, true));
+            CHECK_FALSE(verifyDigest(pk, ~digest, sig, true));
         }
     }
 }
@@ -122,8 +122,8 @@ testSigning(KeyType type)
     {
         auto const [pk, sk] = randomKeyPair(type);
 
-        CHECK(pk == derivePublicKey(type, sk));
-        CHECK(*publicKeyType(pk) == type);
+        CHECK_EQ(pk, derivePublicKey(type, sk));
+        CHECK_EQ(*publicKeyType(pk), type);
 
         for (std::size_t j = 0; j < 32; j++)
         {
@@ -132,8 +132,8 @@ testSigning(KeyType type)
 
             auto sig = sign(pk, sk, makeSlice(data));
 
-            CHECK(sig.size() != 0);
-            CHECK(verify(pk, makeSlice(data), sig));
+            CHECK_NE(sig.size(), 0);
+            CHECK_UNARY(verify(pk, makeSlice(data), sig));
 
             // Construct wrong data:
             auto badData = data;
@@ -144,17 +144,17 @@ testSigning(KeyType type)
                 std::max_element(badData.begin(), badData.end()));
 
             // Wrong data: should fail
-            CHECK(!verify(pk, makeSlice(badData), sig));
+            CHECK_FALSE(verify(pk, makeSlice(badData), sig));
 
             // Slightly change the signature:
             if (auto ptr = sig.data())
                 ptr[j % sig.size()]++;
 
             // Wrong signature: should fail
-            CHECK(!verify(pk, makeSlice(data), sig));
+            CHECK_FALSE(verify(pk, makeSlice(data), sig));
 
             // Wrong data and signature: should fail
-            CHECK(!verify(pk, makeSlice(badData), sig));
+            CHECK_FALSE(verify(pk, makeSlice(badData), sig));
         }
     }
 }
@@ -191,13 +191,13 @@ TEST_CASE("secp256k1: key derivation")
     for (auto const& v : secp256k1TestVectors)
     {
         auto const id = parseBase58<AccountID>(v.addr);
-        CHECK(id);
+        CHECK_UNARY(id);
 
         auto kp = generateKeyPair(KeyType::secp256k1, Seed{makeSlice(v.seed)});
 
-        CHECK(kp.first == PublicKey{makeSlice(v.pubkey)});
-        CHECK(kp.second == SecretKey{makeSlice(v.seckey)});
-        CHECK(calcAccountID(kp.first) == *id);
+        CHECK_EQ(kp.first, PublicKey{makeSlice(v.pubkey)});
+        CHECK_EQ(kp.second, SecretKey{makeSlice(v.seckey)});
+        CHECK_EQ(calcAccountID(kp.first), *id);
     }
 }
 
@@ -223,13 +223,13 @@ TEST_CASE("ed25519: key derivation")
     for (auto const& v : ed25519TestVectors)
     {
         auto const id = parseBase58<AccountID>(v.addr);
-        CHECK(id);
+        CHECK_UNARY(id);
 
         auto kp = generateKeyPair(KeyType::ed25519, Seed{makeSlice(v.seed)});
 
-        CHECK(kp.first == PublicKey{makeSlice(v.pubkey)});
-        CHECK(kp.second == SecretKey{makeSlice(v.seckey)});
-        CHECK(calcAccountID(kp.first) == *id);
+        CHECK_EQ(kp.first, PublicKey{makeSlice(v.pubkey)});
+        CHECK_EQ(kp.second, SecretKey{makeSlice(v.seckey)});
+        CHECK_EQ(calcAccountID(kp.first), *id);
     }
 }
 
@@ -238,18 +238,18 @@ TEST_CASE("secp256k1: cross-type key mismatch")
     auto const [pk1, sk1] = randomKeyPair(KeyType::secp256k1);
     auto const [pk2, sk2] = randomKeyPair(KeyType::secp256k1);
 
-    CHECK(pk1 != pk2);
-    CHECK(sk1 != sk2);
+    CHECK_NE(pk1, pk2);
+    CHECK_NE(sk1, sk2);
 
     auto const [pk3, sk3] = randomKeyPair(KeyType::ed25519);
     auto const [pk4, sk4] = randomKeyPair(KeyType::ed25519);
 
-    CHECK(pk3 != pk4);
-    CHECK(sk3 != sk4);
+    CHECK_NE(pk3, pk4);
+    CHECK_NE(sk3, sk4);
 
     // Cross-type comparisons
-    CHECK(pk1 != pk3);
-    CHECK(pk2 != pk4);
+    CHECK_NE(pk1, pk3);
+    CHECK_NE(pk2, pk4);
 }
 
 TEST_SUITE_END();

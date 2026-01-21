@@ -62,8 +62,8 @@ TEST_CASE("Thread names are preserved")
     tB.join();
 
     // Both threads should still have the expected name when they exit.
-    CHECK(stateA == 2);
-    CHECK(stateB == 2);
+    CHECK_EQ(stateA, 2);
+    CHECK_EQ(stateB, 2);
 }
 
 TEST_SUITE_END();

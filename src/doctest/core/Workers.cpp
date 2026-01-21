@@ -101,7 +101,7 @@ testThreads(int const tc1, int const tc2, int const tc3)
     std::unique_ptr<perf::PerfLog> perfLog = std::make_unique<PerfLogTest>();
 
     Workers w(cb, perfLog.get(), "Test", tc1);
-    CHECK(w.getNumberOfThreads() == tc1);
+    CHECK_EQ(w.getNumberOfThreads(), tc1);
 
     auto testForThreadCount = [&cb, &w](int const threadCount) {
         // Prepare the callback.
@@ -109,7 +109,7 @@ testThreads(int const tc1, int const tc2, int const tc3)
 
         // Execute the test.
         w.setNumberOfThreads(threadCount);
-        CHECK(w.getNumberOfThreads() == threadCount);
+        CHECK_EQ(w.getNumberOfThreads(), threadCount);
 
         for (int i = 0; i < threadCount; ++i)
             w.addTask();
@@ -119,8 +119,8 @@ testThreads(int const tc1, int const tc2, int const tc3)
         std::unique_lock<std::mutex> lk{cb.mut};
         bool const signaled =
             cb.cv.wait_for(lk, 10s, [&cb] { return cb.count == 0; });
-        CHECK(signaled);
-        CHECK(cb.count == 0);
+        CHECK_UNARY(signaled);
+        CHECK_EQ(cb.count, 0);
     };
     testForThreadCount(tc1);
     testForThreadCount(tc2);
@@ -128,7 +128,7 @@ testThreads(int const tc1, int const tc2, int const tc3)
     w.stop();
 
     // We had better finished all our work!
-    CHECK(cb.count == 0);
+    CHECK_EQ(cb.count, 0);
 }
 
 }  // namespace

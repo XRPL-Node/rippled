@@ -20,13 +20,13 @@ TEST_CASE("transResultInfo")
 
         std::string token, text;
         auto good = transResultInfo(t, token, text);
-        CHECK((inRange || !good));
-        CHECK(transToken(t) == (good ? token : "-"));
-        CHECK(transHuman(t) == (good ? text : "-"));
+        CHECK_UNARY((inRange || !good));
+        CHECK_EQ(transToken(t), (good ? token : "-"));
+        CHECK_EQ(transHuman(t), (good ? text : "-"));
 
         auto code = transCode(token);
-        CHECK(good == !!code);
-        CHECK((!code || *code == t));
+        CHECK_EQ(good, !!code);
+        CHECK_UNARY((!code || *code == t));
     }
 }
 
@@ -87,12 +87,12 @@ TEST_CASE("comparison")
 {
     // Test comparison operators on TER types
     auto checkComparable = [](auto lhs, auto rhs) {
-        CHECK((lhs == rhs) == (TERtoInt(lhs) == TERtoInt(rhs)));
-        CHECK((lhs != rhs) == (TERtoInt(lhs) != TERtoInt(rhs)));
-        CHECK((lhs < rhs) == (TERtoInt(lhs) < TERtoInt(rhs)));
-        CHECK((lhs <= rhs) == (TERtoInt(lhs) <= TERtoInt(rhs)));
-        CHECK((lhs > rhs) == (TERtoInt(lhs) > TERtoInt(rhs)));
-        CHECK((lhs >= rhs) == (TERtoInt(lhs) >= TERtoInt(rhs)));
+        CHECK_EQ((lhs == rhs), (TERtoInt(lhs) == TERtoInt(rhs)));
+        CHECK_EQ((lhs != rhs), (TERtoInt(lhs) != TERtoInt(rhs)));
+        CHECK_EQ((lhs < rhs), (TERtoInt(lhs) < TERtoInt(rhs)));
+        CHECK_EQ((lhs <= rhs), (TERtoInt(lhs) <= TERtoInt(rhs)));
+        CHECK_EQ((lhs > rhs), (TERtoInt(lhs) > TERtoInt(rhs)));
+        CHECK_EQ((lhs >= rhs), (TERtoInt(lhs) >= TERtoInt(rhs)));
     };
 
     // Test various TER type comparisons

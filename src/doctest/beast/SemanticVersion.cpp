@@ -17,8 +17,8 @@ checkPass(std::string const& input, bool shouldPass = true)
 
     if (shouldPass)
     {
-        CHECK(v.parse(input));
-        CHECK(v.print() == input);
+        CHECK_UNARY(v.parse(input));
+        CHECK_EQ(v.print(), input);
     }
     else
     {
@@ -140,14 +140,14 @@ checkValues(
 {
     SemanticVersion v;
 
-    CHECK(v.parse(input));
+    CHECK_UNARY(v.parse(input));
 
-    CHECK(v.majorVersion == majorVersion);
-    CHECK(v.minorVersion == minorVersion);
-    CHECK(v.patchVersion == patchVersion);
+    CHECK_EQ(v.majorVersion, majorVersion);
+    CHECK_EQ(v.minorVersion, minorVersion);
+    CHECK_EQ(v.patchVersion, patchVersion);
 
-    CHECK(v.preReleaseIdentifiers == preReleaseIdentifiers);
-    CHECK(v.metaData == metaData);
+    CHECK_EQ(v.preReleaseIdentifiers, preReleaseIdentifiers);
+    CHECK_EQ(v.metaData, metaData);
 }
 
 // makes sure the left version is less than the right
@@ -157,18 +157,18 @@ checkLessInternal(std::string const& lhs, std::string const& rhs)
     SemanticVersion left;
     SemanticVersion right;
 
-    CHECK(left.parse(lhs));
-    CHECK(right.parse(rhs));
+    CHECK_UNARY(left.parse(lhs));
+    CHECK_UNARY(right.parse(rhs));
 
-    CHECK(compare(left, left) == 0);
-    CHECK(compare(right, right) == 0);
-    CHECK(compare(left, right) < 0);
-    CHECK(compare(right, left) > 0);
+    CHECK_EQ(compare(left, left), 0);
+    CHECK_EQ(compare(right, right), 0);
+    CHECK_LT(compare(left, right), 0);
+    CHECK_GT(compare(right, left), 0);
 
-    CHECK(left < right);
-    CHECK(right > left);
-    CHECK(left == left);
-    CHECK(right == right);
+    CHECK_LT(left, right);
+    CHECK_GT(right, left);
+    CHECK_EQ(left, left);
+    CHECK_EQ(right, right);
 }
 
 void

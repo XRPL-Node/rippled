@@ -24,50 +24,50 @@ TEST_CASE("KeyCache operations")
     {
         Cache c("test", LedgerIndex(1), 2s, clock, j);
 
-        CHECK(c.size() == 0);
-        CHECK(c.insert("one"));
-        CHECK(!c.insert("one"));
-        CHECK(c.size() == 1);
-        CHECK(c.touch_if_exists("one"));
+        CHECK_EQ(c.size(), 0);
+        CHECK_UNARY(c.insert("one"));
+        CHECK_FALSE(c.insert("one"));
+        CHECK_EQ(c.size(), 1);
+        CHECK_UNARY(c.touch_if_exists("one"));
         ++clock;
         c.sweep();
-        CHECK(c.size() == 1);
+        CHECK_EQ(c.size(), 1);
         ++clock;
         c.sweep();
-        CHECK(c.size() == 0);
-        CHECK(!c.touch_if_exists("one"));
+        CHECK_EQ(c.size(), 0);
+        CHECK_FALSE(c.touch_if_exists("one"));
     }
 
     SUBCASE("Insert two items, have one expire")
     {
         Cache c("test", LedgerIndex(2), 2s, clock, j);
 
-        CHECK(c.insert("one"));
-        CHECK(c.size() == 1);
-        CHECK(c.insert("two"));
-        CHECK(c.size() == 2);
+        CHECK_UNARY(c.insert("one"));
+        CHECK_EQ(c.size(), 1);
+        CHECK_UNARY(c.insert("two"));
+        CHECK_EQ(c.size(), 2);
         ++clock;
         c.sweep();
-        CHECK(c.size() == 2);
-        CHECK(c.touch_if_exists("two"));
+        CHECK_EQ(c.size(), 2);
+        CHECK_UNARY(c.touch_if_exists("two"));
         ++clock;
         c.sweep();
-        CHECK(c.size() == 1);
+        CHECK_EQ(c.size(), 1);
     }
 
     SUBCASE("Insert three items (1 over limit), sweep")
     {
         Cache c("test", LedgerIndex(2), 3s, clock, j);
 
-        CHECK(c.insert("one"));
+        CHECK_UNARY(c.insert("one"));
         ++clock;
-        CHECK(c.insert("two"));
+        CHECK_UNARY(c.insert("two"));
         ++clock;
-        CHECK(c.insert("three"));
+        CHECK_UNARY(c.insert("three"));
         ++clock;
-        CHECK(c.size() == 3);
+        CHECK_EQ(c.size(), 3);
         c.sweep();
-        CHECK(c.size() < 3);
+        CHECK_LT(c.size(), 3);
     }
 }
 

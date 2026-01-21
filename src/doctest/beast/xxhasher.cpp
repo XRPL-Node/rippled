@@ -84,7 +84,8 @@ TEST_CASE("Big object with small and big updates without seed")
     hasher(bigObject.data(), bigObject.size());
     hasher(objectToHash.data(), objectToHash.size());
 
-    CHECK(static_cast<xxhasher::result_type>(hasher) == 1865045178324729219ULL);
+    CHECK_EQ(
+        static_cast<xxhasher::result_type>(hasher), 1865045178324729219ULL);
 }
 
 TEST_CASE("Big object with small and big updates with seed")
@@ -146,7 +147,7 @@ TEST_CASE("Operator result type doesn't change the internal state")
         auto xxhashResult1 = static_cast<xxhasher::result_type>(hasher);
         auto xxhashResult2 = static_cast<xxhasher::result_type>(hasher);
 
-        CHECK(xxhashResult1 == xxhashResult2);
+        CHECK_EQ(xxhashResult1, xxhashResult2);
     }
     SUBCASE("big object")
     {
@@ -161,7 +162,7 @@ TEST_CASE("Operator result type doesn't change the internal state")
         auto xxhashResult1 = hasher.operator xxhasher::result_type();
         auto xxhashResult2 = hasher.operator xxhasher::result_type();
 
-        CHECK(xxhashResult1 == xxhashResult2);
+        CHECK_EQ(xxhashResult1, xxhashResult2);
     }
 }
 

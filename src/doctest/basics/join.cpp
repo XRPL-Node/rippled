@@ -20,9 +20,9 @@ TEST_CASE("CollectionAndDelimiter")
         // the << operator returns the stream correctly.
         ss << "(" << collectionanddelimiter << ")";
         auto const str = ss.str();
-        CHECK(str.substr(1, str.length() - 2) == expected);
-        CHECK(str.front() == '(');
-        CHECK(str.back() == ')');
+        CHECK_EQ(str.substr(1, str.length() - 2), expected);
+        CHECK_EQ(str.front(), '(');
+        CHECK_EQ(str.back(), ')');
     };
 
     // C++ array
