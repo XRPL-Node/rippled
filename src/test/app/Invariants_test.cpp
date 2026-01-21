@@ -4,6 +4,7 @@
 
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/app/tx/detail/ApplyContext.h>
+#include <xrpld/app/tx/detail/InvariantCheck.h>
 
 #include <xrpl/beast/unit_test/suite.h>
 #include <xrpl/beast/utility/Journal.h>
@@ -19,8 +20,6 @@
 #include <xrpl/protocol/XRPAmount.h>
 
 #include <boost/algorithm/string/predicate.hpp>
-
-#include "xrpld/app/tx/detail/InvariantCheck.h"
 
 #include <initializer_list>
 #include <string>
@@ -3924,7 +3923,11 @@ class Invariants_test : public beast::unit_test::suite
                 .expectedMinScale = -2,
                 .values = {Number{1, -2}, Number{5, -3}, Number{3, -2}},
             },
-        };
+            {
+                .name = "Equal scales",
+                .expectedMinScale = -1,
+                .values = {Number{1, -1}, Number{5, -1}, Number{1, -1}},
+            }};
 
         for (auto const& tc : testCases)
         {
