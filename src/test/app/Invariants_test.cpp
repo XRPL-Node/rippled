@@ -4,7 +4,6 @@
 
 #include <xrpld/app/tx/apply.h>
 #include <xrpld/app/tx/detail/ApplyContext.h>
-#include <xrpld/app/tx/detail/InvariantCheck.h>
 
 #include <xrpl/beast/unit_test/suite.h>
 #include <xrpl/beast/utility/Journal.h>
@@ -3892,57 +3891,6 @@ class Invariants_test : public beast::unit_test::suite
             precloseMpt);
     }
 
-    void
-    testVaultComputeMinScale()
-    {
-        using namespace jtx;
-
-        Account const issuer{"issuer"};
-        PrettyAsset const vaultAsset = issuer["IOU"];
-
-        struct TestCase
-        {
-            std::string name;
-            std::int32_t expectedMinScale;
-            std::initializer_list<Number const> values;
-        };
-
-        auto const testCases = std::vector<TestCase>{
-            {
-                .name = "No values",
-                .expectedMinScale = 0,
-                .values = {},
-            },
-            {
-                .name = "Mixed integer and Number values",
-                .expectedMinScale = 0,
-                .values = {1, -1, Number{10, -1}},
-            },
-            {
-                .name = "Mixed scales",
-                .expectedMinScale = -2,
-                .values = {Number{1, -2}, Number{5, -3}, Number{3, -2}},
-            },
-            {
-                .name = "Equal scales",
-                .expectedMinScale = -1,
-                .values = {Number{1, -1}, Number{5, -1}, Number{1, -1}},
-            }};
-
-        for (auto const& tc : testCases)
-        {
-            testcase("vault computeMinScale: " + tc.name);
-
-            auto const actualScale =
-                ValidVault::computeMinScale(vaultAsset, tc.values);
-
-            BEAST_EXPECTS(
-                actualScale == tc.expectedMinScale,
-                "expected: " + std::to_string(tc.expectedMinScale) +
-                    ", actual: " + std::to_string(actualScale));
-        }
-    }
-
 public:
     void
     run() override
@@ -3966,7 +3914,6 @@ public:
         testValidPseudoAccounts();
         testValidLoanBroker();
         testVault();
-        testVaultComputeMinScale();
     }
 };
 

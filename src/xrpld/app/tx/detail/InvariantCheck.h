@@ -9,7 +9,6 @@
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/TER.h>
 
-#include <cstdint>
 #include <tuple>
 #include <unordered_set>
 
@@ -900,12 +899,6 @@ public:
         XRPAmount const,
         ReadView const&,
         beast::Journal const&);
-
-    // Compute the coarsest scale required to represent all numbers
-    [[nodiscard]] static std::int32_t
-    computeMinScale(
-        Asset const& asset,
-        std::initializer_list<Number const> numbers);
 };
 
 // additional invariant checks can be declared above and then added to this
