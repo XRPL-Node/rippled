@@ -395,10 +395,12 @@ inline STAmount::STAmount(IOUAmount const& amount, Issue const& issue)
     , mOffset(amount.exponent())
     , mIsNegative(amount < beast::zero)
 {
+    // Negate in unsigned domain to avoid undefined behavior when
+    // mantissa == INT64_MIN
     if (mIsNegative)
-        mValue = unsafe_cast<std::uint64_t>(-amount.mantissa());
+        mValue = -static_cast<std::uint64_t>(amount.mantissa());
     else
-        mValue = unsafe_cast<std::uint64_t>(amount.mantissa());
+        mValue = static_cast<std::uint64_t>(amount.mantissa());
 
     canonicalize();
 }
@@ -406,10 +408,12 @@ inline STAmount::STAmount(IOUAmount const& amount, Issue const& issue)
 inline STAmount::STAmount(MPTAmount const& amount, MPTIssue const& mptIssue)
     : mAsset(mptIssue), mOffset(0), mIsNegative(amount < beast::zero)
 {
+    // Negate in unsigned domain to avoid undefined behavior when
+    // value == INT64_MIN
     if (mIsNegative)
-        mValue = unsafe_cast<std::uint64_t>(-amount.value());
+        mValue = -static_cast<std::uint64_t>(amount.value());
     else
-        mValue = unsafe_cast<std::uint64_t>(amount.value());
+        mValue = static_cast<std::uint64_t>(amount.value());
 
     canonicalize();
 }

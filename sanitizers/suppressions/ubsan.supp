@@ -128,18 +128,8 @@ unsigned-integer-overflow:__chrono/duration.h
 # Intentional overflows and wraparound arithmetic in rippled code
 # These are by design and mathematically correct for their use cases
 
-# STAmount uses intentional negation of INT64_MIN and overflow in arithmetic
-signed-integer-overflow:src/libxrpl/protocol/STAmount.cpp
-unsigned-integer-overflow:src/libxrpl/protocol/STAmount.cpp
-
 # base_uint.h: Increment/decrement operators intentionally wrap around
 unsigned-integer-overflow:xrpl/basics/base_uint.h
-
-# Test files with intentional overflows to test edge cases
-signed-integer-overflow:src/test/basics/XRPAmount_test.cpp
-signed-integer-overflow:src/test/beast/LexicalCast_test.cpp
-unsigned-integer-overflow:src/test/basics/XRPAmount_test.cpp
-unsigned-integer-overflow:src/test/beast/LexicalCast_test.cpp
 
 # Safe loop patterns that trigger UBSAN (e.g., while(len-- && ...))
 # These are mathematically sound patterns where underflow is handled correctly
@@ -181,7 +171,6 @@ undefined:src/libxrpl/json/json_value.cpp
 undefined:src/libxrpl/ledger/ApplyView.cpp
 undefined:src/libxrpl/ledger/View.cpp
 undefined:src/libxrpl/protocol/Permissions.cpp
-undefined:src/libxrpl/protocol/STAmount.cpp
 undefined:src/libxrpl/protocol/STPathSet.cpp
 undefined:src/libxrpl/protocol/tokens.cpp
 undefined:src/libxrpl/shamap/SHAMap.cpp
@@ -190,8 +179,6 @@ undefined:src/test/app/Invariants_test.cpp
 undefined:src/test/app/NFToken_test.cpp
 undefined:src/test/app/Offer_test.cpp
 undefined:src/test/app/Path_test.cpp
-undefined:src/test/basics/XRPAmount_test.cpp
-undefined:src/test/beast/LexicalCast_test.cpp
 undefined:src/test/jtx/impl/acctdelete.cpp
 undefined:src/test/ledger/SkipList_test.cpp
 undefined:src/test/rpc/Subscribe_test.cpp

@@ -64,16 +64,17 @@ getInt64Value(STAmount const& amount, bool valid, char const* error)
     XRPL_ASSERT(
         amount.exponent() == 0, "xrpl::getInt64Value : exponent is zero");
 
-    auto ret = static_cast<std::int64_t>(amount.mantissa());
-
     XRPL_ASSERT(
-        static_cast<std::uint64_t>(ret) == amount.mantissa(),
+        amount.mantissa() <= static_cast<std::uint64_t>(
+                                 std::numeric_limits<std::int64_t>::max()),
         "xrpl::getInt64Value : mantissa must roundtrip");
 
+    // Negate in unsigned domain then cast to signed to avoid undefined
+    // behavior when mantissa would represent INT64_MIN as signed
     if (amount.negative())
-        ret = -ret;
+        return static_cast<std::int64_t>(-amount.mantissa());
 
-    return ret;
+    return static_cast<std::int64_t>(amount.mantissa());
 }
 
 static std::int64_t
@@ -231,10 +232,12 @@ STAmount::STAmount(std::uint64_t mantissa, bool negative)
 STAmount::STAmount(XRPAmount const& amount)
     : mAsset(xrpIssue()), mOffset(0), mIsNegative(amount < beast::zero)
 {
+    // Negate in unsigned domain to avoid undefined behavior when
+    // amount.drops() == INT64_MIN
     if (mIsNegative)
-        mValue = unsafe_cast<std::uint64_t>(-amount.drops());
+        mValue = -static_cast<std::uint64_t>(amount.drops());
     else
-        mValue = unsafe_cast<std::uint64_t>(amount.drops());
+        mValue = static_cast<std::uint64_t>(amount.drops());
 
     canonicalize();
 }
@@ -269,11 +272,12 @@ STAmount::xrp() const
         Throw<std::logic_error>(
             "Cannot return non-native STAmount as XRPAmount");
 
-    auto drops = static_cast<XRPAmount::value_type>(mValue);
     XRPL_ASSERT(mOffset == 0, "xrpl::STAmount::xrp : amount is canonical");
 
-    if (mIsNegative)
-        drops = -drops;
+    // Cast to unsigned, negate if needed, then cast to signed to avoid
+    // undefined behavior when mValue would represent INT64_MIN as signed
+    auto drops = mIsNegative ? static_cast<XRPAmount::value_type>(-mValue)
+                             : static_cast<XRPAmount::value_type>(mValue);
 
     return XRPAmount{drops};
 }
@@ -284,11 +288,12 @@ STAmount::iou() const
     if (integral())
         Throw<std::logic_error>("Cannot return non-IOU STAmount as IOUAmount");
 
-    auto mantissa = static_cast<std::int64_t>(mValue);
     auto exponent = mOffset;
 
-    if (mIsNegative)
-        mantissa = -mantissa;
+    // Negate in unsigned domain then cast to signed to avoid undefined
+    // behavior when mValue would represent INT64_MIN as signed
+    auto mantissa = mIsNegative ? static_cast<std::int64_t>(-mValue)
+                                : static_cast<std::int64_t>(mValue);
 
     return {mantissa, exponent};
 }
@@ -299,11 +304,12 @@ STAmount::mpt() const
     if (!holds<MPTIssue>())
         Throw<std::logic_error>("Cannot return STAmount as MPTAmount");
 
-    auto value = static_cast<MPTAmount::value_type>(mValue);
     XRPL_ASSERT(mOffset == 0, "xrpl::STAmount::mpt : amount is canonical");
 
-    if (mIsNegative)
-        value = -value;
+    // Negate in unsigned domain then cast to signed to avoid undefined
+    // behavior when mValue would represent INT64_MIN as signed
+    auto value = mIsNegative ? static_cast<MPTAmount::value_type>(-mValue)
+                             : static_cast<MPTAmount::value_type>(mValue);
 
     return MPTAmount{value};
 }
@@ -384,9 +390,22 @@ operator+(STAmount const& v1, STAmount const& v2)
     }
 
     if (v1.native())
-        return {v1.getFName(), getSNValue(v1) + getSNValue(v2)};
+    {
+        // Perform addition in unsigned domain to avoid signed overflow UB,
+        // then cast back to signed for the STAmount constructor
+        auto const sum = static_cast<std::int64_t>(
+            static_cast<std::uint64_t>(getSNValue(v1)) +
+            static_cast<std::uint64_t>(getSNValue(v2)));
+        return {v1.getFName(), sum};
+    }
     if (v1.holds<MPTIssue>())
-        return {v1.mAsset, v1.mpt().value() + v2.mpt().value()};
+    {
+        // Perform addition in unsigned domain to avoid signed overflow UB
+        auto const sum = static_cast<MPTAmount::value_type>(
+            static_cast<std::uint64_t>(v1.mpt().value()) +
+            static_cast<std::uint64_t>(v2.mpt().value()));
+        return {v1.mAsset, sum};
+    }
 
     if (getSTNumberSwitchover())
     {
@@ -399,11 +418,13 @@ operator+(STAmount const& v1, STAmount const& v2)
     std::int64_t vv1 = static_cast<std::int64_t>(v1.mantissa());
     std::int64_t vv2 = static_cast<std::int64_t>(v2.mantissa());
 
+    // Negate in unsigned domain then cast back to signed to avoid UB
+    // when vv1 or vv2 would represent INT64_MIN
     if (v1.negative())
-        vv1 = -vv1;
+        vv1 = static_cast<std::int64_t>(-static_cast<std::uint64_t>(vv1));
 
     if (v2.negative())
-        vv2 = -vv2;
+        vv2 = static_cast<std::int64_t>(-static_cast<std::uint64_t>(vv2));
 
     while (ov1 < ov2)
     {
@@ -433,8 +454,9 @@ operator+(STAmount const& v1, STAmount const& v2)
             ov1,
             false};
 
+    // Negate in unsigned domain to avoid potential UB
     return STAmount{
-        v1.getFName(), v1.asset(), static_cast<std::uint64_t>(-fv), ov1, true};
+        v1.getFName(), v1.asset(), -static_cast<std::uint64_t>(fv), ov1, true};
 }
 
 STAmount
@@ -973,7 +995,9 @@ STAmount::set(std::int64_t v)
     if (v < 0)
     {
         mIsNegative = true;
-        mValue = static_cast<std::uint64_t>(-v);
+        // Cast to unsigned before negating to avoid undefined behavior
+        // when v == INT64_MIN (negating INT64_MIN in signed is UB)
+        mValue = -static_cast<std::uint64_t>(v);
     }
     else
     {

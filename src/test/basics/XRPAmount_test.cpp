@@ -223,7 +223,13 @@ public:
                 mulRatio(big, 3, 4, false).value() == (big.value() / 4) * 3);
             BEAST_EXPECT(
                 mulRatio(big, 3, 4, true).value() == (big.value() / 4) * 3);
-            BEAST_EXPECT((big.value() * 3) / 4 != (big.value() / 4) * 3);
+            // Cast to unsigned to avoid signed overflow UB while still
+            // demonstrating the naive approach gives wrong results
+            BEAST_EXPECT(
+                static_cast<std::int64_t>(
+                    static_cast<std::uint64_t>(big.value()) * 3) /
+                    4 !=
+                (big.value() / 4) * 3);
         }
 
         {
@@ -239,7 +245,13 @@ public:
                 mulRatio(big, 3, 4, false).value() == (big.value() / 4) * 3);
             BEAST_EXPECT(
                 mulRatio(big, 3, 4, true).value() == (big.value() / 4) * 3);
-            BEAST_EXPECT((big.value() * 3) / 4 != (big.value() / 4) * 3);
+            // Cast to unsigned to avoid signed overflow UB while still
+            // demonstrating the naive approach gives wrong results
+            BEAST_EXPECT(
+                static_cast<std::int64_t>(
+                    static_cast<std::uint64_t>(big.value()) * 3) /
+                    4 !=
+                (big.value() / 4) * 3);
         }
 
         {

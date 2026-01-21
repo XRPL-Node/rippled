@@ -89,14 +89,14 @@ setCurrentThreadNameImpl(std::string_view name)
 
     pthread_setname_np(pthread_self(), boundedName);
 
-#ifdef TRUNCATED_THREAD_NAME_LOGS
-    if (name.size() > maxThreadNameLength)
-    {
-        std::cerr << "WARNING: Thread name \"" << name << "\" (length "
-                  << name.size() << ") exceeds maximum of "
-                  << maxThreadNameLength << " characters on Linux.\n";
-    }
-#endif
+    // #ifdef TRUNCATED_THREAD_NAME_LOGS
+    //     if (name.size() > maxThreadNameLength)
+    //     {
+    //         std::cerr << "WARNING: Thread name \"" << name << "\" (length "
+    //                   << name.size() << ") exceeds maximum of "
+    //                   << maxThreadNameLength << " characters on Linux.\n";
+    //     }
+    // #endif
 }
 
 }  // namespace beast::detail
