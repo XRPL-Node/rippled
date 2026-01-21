@@ -442,167 +442,181 @@ class TrustAndBalance_test : public beast::unit_test::suite
     void
     testOwnerCountOnBalanceChange(FeatureBitset features)
     {
-        testcase("Owner Count on Balance Change");
+        testcase("Reserve Edge Cases at Boundary");
         using namespace test::jtx;
 
         Env env{*this, features};
         Account gw{"gateway"};
-        Account alice{"alice"};
         Account market{"market"};
-        bool const aliceHigh = alice.id() > gw.id();
-
-        auto const USD = gw["USD"];
-
-        auto checkAlice = [&](std::uint32_t expectedOwnerCount,
-                              bool expectedReserveSet) {
-            BEAST_EXPECT(
-                env.le(alice)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
-            auto const line =
-                env.le(keylet::line(alice, gw, to_currency("USD")));
-            BEAST_EXPECT(
-                line->isFlag(aliceHigh ? lsfHighReserve : lsfLowReserve) ==
-                expectedReserveSet);
-        };
-
-        env.fund(XRP(10000), gw, alice, market);
-        env.close();
-
-        env(trust(alice, USD(1000)));
-        env(trust(market, USD(1000)));
-        env.close();
-        checkAlice(1, true);
-
-        env(pay(gw, alice, USD(100)));
-        env(pay(gw, market, USD(1000)));
-        env.close();
-        checkAlice(1, true);
-
-        env(fclear(gw, asfDefaultRipple));
-        env.close();
-
-        // alice clears trustline limit, triggering default ripple state check
-        env(trust(alice, USD(0)));
-        env.close();
-        checkAlice(1, true);
-
-        // alice clears the balance causing decrement in owners count
-        env(pay(alice, gw, USD(100)));
-        env.close();
-        checkAlice(0, false);
-
-        env(offer(market, XRP(100), USD(100)));
-        env.close();
-
-        // alice acquires balance via offer crossing (direct payment would fail
-        // because limit is 0). Balance 0 -> positive triggers increment logic
-        env(offer(alice, USD(50), XRP(50)));
-        env.close();
-
-        BEAST_EXPECT(env.balance(alice, USD) == USD(50));
-        if (features[fixTrustLineOwnerCount])
-            checkAlice(1, true);
-        else
-            checkAlice(0, false);
-    }
-
-    void
-    testInsufficientReserveOnOwnerCountChange(FeatureBitset features)
-    {
-        testcase("Insufficient Reserve on Owner Count Change");
-        using namespace test::jtx;
-
-        Env env{*this, features};
-        Account gw{"gateway"};
-        Account alice{"alice"};
-        Account market{"market"};
-        bool const aliceHigh = alice.id() > gw.id();
 
         auto const USD = gw["USD"];
         auto const fee = env.current()->fees().base;
         auto const acctReserve = env.current()->fees().accountReserve(0);
         auto const incReserve = env.current()->fees().increment;
 
-        std::cout << "INC RESERVE: " << incReserve << std::endl;
+        env.fund(XRP(10000), gw, market);
+        env.close();
 
-        auto checkAliceUSD = [&](std::uint32_t expectedOwnerCount,
-                                 bool expectedReserveSet) {
+        auto checkAccountUSD = [&](Account const& acc,
+                                   bool const accHigh,
+                                   std::uint32_t expectedOwnerCount,
+                                   bool expectedReserveSet,
+                                   STAmount expectedUsdBalance) {
             BEAST_EXPECT(
-                env.le(alice)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
-            auto const line =
-                env.le(keylet::line(alice, gw, to_currency("USD")));
+                env.le(acc)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
+            auto const line = env.le(keylet::line(acc, gw, to_currency("USD")));
             BEAST_EXPECT(
-                line->isFlag(aliceHigh ? lsfHighReserve : lsfLowReserve) ==
-                expectedReserveSet);
+                line &&
+                line->isFlag(accHigh ? lsfHighReserve : lsfLowReserve) ==
+                    expectedReserveSet);
+            BEAST_EXPECT(env.balance(acc, USD) == expectedUsdBalance);
         };
 
-        env.fund(XRP(10000), gw, market);
-        // Fund alice with enough for reserve + increment + 50 XRP + fees
-        // alice performs 6 transactions: 2x trust, 2x pay, 1x pay excess, 1x
-        // offer
-        env.fund(acctReserve + incReserve + XRP(50) + fee * 6, alice);
-        env.close();
-
-        // Create trust lines - alice needs owner count >= 2 for reserve check
-        env(trust(alice, USD(1000)));
-        env(trust(market, USD(1000)));
-        env.close();
-        checkAliceUSD(1, true);
-
-        env(pay(gw, alice, USD(100)));
-        env(pay(gw, market, USD(1000)));
-        env.close();
-
-        env(fclear(gw, asfDefaultRipple));
-        env.close();
-
-        env(trust(alice, USD(0)));
-        env.close();
-        checkAliceUSD(1, true);
-
-        // alice clears the USD balance causing decrement in owners count
-        env(pay(alice, gw, USD(100)));
-        env.close();
-        checkAliceUSD(0, false);
-
-        // Reduce alice's balance to 50 XRP + fee
-        // Owner count is 0
-        auto aliceBalance = env.balance(alice);
-        auto targetBalance = acctReserve + incReserve + fee;
-        if (aliceBalance > targetBalance)
-        {
-            auto excess = aliceBalance - targetBalance - fee;
-            if (excess > drops(0))
-                env(pay(alice, gw, excess));
+        // Setup: fund account, create trust line with balance, clear default
+        // ripple, set limit to 0, clear balance. Results in owner count 0 with
+        // reserve flag cleared.
+        auto setupAccount = [&](Account const& acc,
+                                bool const accHigh,
+                                STAmount const& fundAmount) {
+            env.fund(fundAmount, acc);
             env.close();
+
+            env(fset(gw, asfDefaultRipple));
+            env.close();
+
+            env(trust(acc, USD(1000)));
+            env.close();
+            env(pay(gw, acc, USD(1000)));
+            env.close();
+            checkAccountUSD(acc, accHigh, 1, true, USD(1000));
+
+            env(fclear(gw, asfDefaultRipple));
+            env.close();
+
+            env(trust(acc, USD(0)));
+            env.close();
+
+            env(pay(acc, gw, USD(1000)));
+            env.close();
+            checkAccountUSD(acc, accHigh, 0, false, USD(0));
+        };
+
+        // Alice receives USD via offer crossing, there's enough balance to
+        // cover everything (reserves, offer, fees etc.)
+        {
+            Account alice{"alice"};
+            bool const aliceHigh = alice.id() > gw.id();
+
+            setupAccount(
+                alice, aliceHigh, acctReserve + incReserve + fee * 4 + XRP(25));
+
+            // Making a limit order to match against later
+            env(offer(gw, XRP(100), USD(100)));
+            env.close();
+
+            // Alice creates offer to buy USD - it should cross fully
+            // immediately. Both cases should succeed because there is enough
+            // balance to cover the reserve requirements and the offer, but
+            // owner counter only increments in the fixed case.
+            if (features[fixTrustLineOwnerCount])
+            {
+                env(offer(alice, USD(25), XRP(25)));
+                env.close();
+
+                // Offer crosses, alice gets USD, owner count becomes 1, reserve
+                // flag set
+                env.require(offers(alice, 0));
+                checkAccountUSD(alice, aliceHigh, 1, true, USD(25));
+            }
+            else
+            {
+                env(offer(alice, USD(25), XRP(25)));
+                env.close();
+
+                // Offer crosses, alice gets USD, owner count stays 0, reserve
+                // flag not set
+                env.require(offers(alice, 0));
+                checkAccountUSD(alice, aliceHigh, 0, false, USD(25));
+            }
         }
 
-        aliceBalance = env.balance(alice);
-        BEAST_EXPECT(aliceBalance == acctReserve + incReserve + fee);
-
-        env(offer(market, XRP(100), USD(100)));
-        env.close();
-
-        // alice's offer would cross, causing USD balance 0 ->
-        // positive. With fix: owner count increment requires reserve, so fails.
-        // Without fix: no owner count change, so succeeds.
-        if (features[fixTrustLineOwnerCount])
+        // Bob receives USD via offer crossing, there's only 10 XRP available
+        // for the offer to cross, so the unconsummed part of the offer would be
+        // staying in the book and add another entry to the owner count.
         {
-            env(offer(alice, USD(50), XRP(50)));
+            Account bob{"bob"};
+            bool const bobHigh = bob.id() > gw.id();
+
+            setupAccount(
+                bob, bobHigh, acctReserve + incReserve + fee * 4 + XRP(10));
+
+            // Making a limit order to match against later
+            env(offer(gw, XRP(100), USD(100)));
             env.close();
 
-            env.require(
-                balance(alice, acctReserve + incReserve),
-                balance(alice, USD(0)),
-                offers(alice, 1));
-            checkAliceUSD(1, false);
+            // Bob creates offer to buy USD - it should cross immediately, but
+            // Bob only has 10 USD available so the offer is not supposed to be
+            // consumed completely.
+            if (features[fixTrustLineOwnerCount])
+            {
+                env(offer(bob, USD(25), XRP(25)));
+                env.close();
+
+                // Offer crosses, bob gets 10 USD. It only consumes 10 USD, but
+                // there's no more remaining unreserved XRPs available, so the
+                // remaining quantity is unfunded. It does not land into the
+                // book. The owner count is incremented and the reserve flag is
+                // set.
+                env.require(offers(bob, 0));
+                checkAccountUSD(bob, bobHigh, 1, true, USD(10));
+            }
+            else
+            {
+                env(offer(bob, USD(25), XRP(25)));
+                env.close();
+
+                // Offer crosses, bob gets 25 USD. The owner count is not
+                // incremented and the reserve flag is not set.
+                env.require(offers(bob, 0));
+                checkAccountUSD(bob, bobHigh, 0, false, USD(25));
+            }
         }
-        else
+
+        // Carol creates offer to buy USD - but they only have enough XRPs for
+        // reserves and transaction fees.
         {
-            env(offer(alice, USD(50), XRP(50)));
+            Account carol{"carol"};
+            bool const carolHigh = carol.id() > gw.id();
+
+            setupAccount(carol, carolHigh, acctReserve + incReserve + fee * 4);
+
+            // Making a limit order to match against later
+            env(offer(gw, XRP(100), USD(100)));
             env.close();
 
-            env.require(balance(alice, USD(50)), offers(alice, 0));
-            checkAliceUSD(0, false);
+            // Carol creates offer to buy USD - but there should be no
+            // unreserved XRPs available to fund the offer.
+            if (features[fixTrustLineOwnerCount])
+            {
+                env(offer(carol, USD(25), XRP(25)));
+                env.close();
+
+                // This is weird. The offer is unfunded, but it still ends up
+                // in the book. Carol does not get owner count due to the
+                // trustline state (it does not change), but due to the offer.
+                env.require(offers(carol, 1));
+                checkAccountUSD(carol, carolHigh, 1, false, USD(0));
+            }
+            else
+            {
+                env(offer(carol, USD(25), XRP(25)));
+                env.close();
+
+                // Offer crosses, bob gets 25 USD. The owner count is not
+                // incremented and the reserve flag is not set.
+                env.require(offers(carol, 0));
+                checkAccountUSD(carol, carolHigh, 0, false, USD(25));
+            }
         }
     }
 
@@ -625,8 +639,7 @@ public:
             // testIndirectMultiPath(true, features);
             // testIndirectMultiPath(false, features);
             // testInvoiceID(features);
-            // testOwnerCountOnBalanceChange(features);
-            testInsufficientReserveOnOwnerCountChange(features);
+            testOwnerCountOnBalanceChange(features);
         };
 
         using namespace test::jtx;
