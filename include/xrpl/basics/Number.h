@@ -213,9 +213,9 @@ class Number
     using rep = std::int64_t;
     using internalrep = MantissaRange::rep;
 
-    bool negative_{false};
     internalrep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
+    bool negative_{false};
 
 public:
     // The range for the exponent when normalized
