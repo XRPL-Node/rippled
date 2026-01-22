@@ -187,7 +187,6 @@ struct MPTConvert
     std::optional<Buffer> issuerEncryptedAmt = std::nullopt;
     std::optional<Buffer> auditorEncryptedAmt = std::nullopt;
 
-    // not an txn param, only used for autofilling
     std::optional<Buffer> blindingFactor = std::nullopt;
     std::optional<std::uint32_t> ownerCount = std::nullopt;
     std::optional<std::uint32_t> holderCount = std::nullopt;
@@ -231,12 +230,12 @@ struct MPTConvertBack
     std::optional<Account> account = std::nullopt;
     std::optional<MPTID> id = std::nullopt;
     std::optional<std::uint64_t> amt = std::nullopt;
-    std::optional<std::string> proof = std::nullopt;
+    std::optional<Buffer> proof = std::nullopt;
     std::optional<Buffer> holderEncryptedAmt = std::nullopt;
     std::optional<Buffer> issuerEncryptedAmt = std::nullopt;
     std::optional<Buffer> auditorEncryptedAmt = std::nullopt;
-    // not an txn param, only used for autofilling
     std::optional<Buffer> blindingFactor = std::nullopt;
+    std::optional<Buffer> pedersenCommitment = std::nullopt;
     std::optional<std::uint32_t> ownerCount = std::nullopt;
     std::optional<std::uint32_t> holderCount = std::nullopt;
     std::optional<std::uint32_t> flags = std::nullopt;
@@ -254,6 +253,18 @@ struct MPTConfidentialClawback
     std::optional<std::uint32_t> holderCount = std::nullopt;
     std::optional<std::uint32_t> flags = std::nullopt;
     std::optional<TER> err = std::nullopt;
+};
+
+/**
+ * @brief Stores the parameterss that are exclusively used to generate a
+ * pedersen linkage proof
+ */
+struct PedersenProofParams
+{
+    Buffer const pedersenCommitment;
+    uint64_t const amt;  // either spending balance or value to be transferred
+    Buffer const encryptedAmt;
+    Buffer const blindingFactor;
 };
 
 class MPTTester
@@ -454,20 +465,33 @@ public:
         uint256 const& txHash) const;
 
     Buffer
-    getSchnorrProof(Account const& account, uint256 const& ctxHash) const;
+    getSchnorrProof(Account const& account, uint256 const& contextHash) const;
 
     Buffer
     getConvertBackProof(
         Account const& holder,
-        std::uint64_t amount,
-        uint256 const& ctxHash,
+        std::uint64_t const amount,
+        uint256 const& contextHash,
         Buffer const& holderCiphertext,
         Buffer const& issuerCiphertext,
         std::optional<Buffer> const& auditorCiphertext,
-        Buffer const& blindingFactor) const;
+        Buffer const& blindingFactor,
+        PedersenProofParams const& pcParams) const;
 
     std::uint32_t
     getMPTokenVersion(Account const account) const;
+
+    Buffer
+    generatePedersenLinkageProof(
+        Account const& account,
+        uint256 const& contextHash,
+        Buffer const& pubKey,
+        PedersenProofParams const& params) const;
+
+    Buffer
+    getPedersenCommitment(
+        std::uint64_t const amount,
+        Buffer const& pedersenBlindingFactor);
 
 private:
     using SLEP = SLE::const_pointer;
