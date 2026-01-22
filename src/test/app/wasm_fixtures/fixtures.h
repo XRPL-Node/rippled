@@ -55,6 +55,10 @@ extern std::string const proposalBulkMemoryHex;
 extern std::string const proposalRefTypesHex;
 extern std::string const proposalTailCallHex;
 extern std::string const proposalExtendedConstHex;
+extern std::string const proposalMultiMemoryHex;
+extern std::string const proposalCustomPageSizesHex;
+extern std::string const proposalMemory64Hex;
+extern std::string const proposalWideArithmeticHex;
 
 extern std::string const trapDivideBy0Hex;
 extern std::string const trapIntOverflowHex;
@@ -80,5 +84,6 @@ extern std::string const infiniteLoopWasmHex;
 extern std::string const startLoopHex;
 
 extern std::string const badAllocHex;
+extern std::string const badAlignHex;
 
 extern std::string const updateDataWasmHex;
