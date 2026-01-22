@@ -105,7 +105,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>          ledgerHash,</div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>          LedgerReplayParameters::SUB_TASK_TIMEOUT,</div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>          {<a class="code hl_enumvalue" href="namespacexrpl.html#a8cb315a10bb9d6ac744e47a352ba6c81aa675e643c8b1adb6bc7e7bd4f7f7d105">jtREPLAY_TASK</a>,</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>           <span class="stringliteral">&quot;LedgerReplayDelta&quot;</span>,</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>           <span class="stringliteral">&quot;LedReplDelta&quot;</span>,</div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>           <a class="code hl_variable" href="namespacexrpl_1_1LedgerReplayParameters.html#ad18be8c31188c35fc5f25e47cf284afd">LedgerReplayParameters::MAX_QUEUED_TASKS</a>},</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>          app.journal(<span class="stringliteral">&quot;LedgerReplayDelta&quot;</span>))</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    , inboundLedgers_(inboundLedgers)</div>
@@ -327,7 +327,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    }</div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    <a class="code hl_variable" href="classxrpl_1_1TimeoutCounter.html#a52ae281c2e5a665d089896399de9b8e5">app_</a>.<a class="code hl_function" href="classxrpl_1_1Application.html#ac8b2a648c24bde7e5d8ea76dda582107">getJobQueue</a>().<a class="code hl_function" href="classxrpl_1_1JobQueue.html#a529243d96c2e8f1e66aad0b6e7111518">addJob</a>(</div>
 <div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>        <a class="code hl_enumvalue" href="namespacexrpl.html#a8cb315a10bb9d6ac744e47a352ba6c81aa675e643c8b1adb6bc7e7bd4f7f7d105">jtREPLAY_TASK</a>,</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        <span class="stringliteral">&quot;onLedgerBuilt&quot;</span>,</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        <span class="stringliteral">&quot;OnLedBuilt&quot;</span>,</div>
 <div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>        [=, ledger = this-&gt;<a class="code hl_variable" href="classxrpl_1_1LedgerDeltaAcquire.html#a4592bd86b5b7a583e656538f6609c7bd">fullLedger_</a>, &amp;app = this-&gt;<a class="code hl_variable" href="classxrpl_1_1TimeoutCounter.html#a52ae281c2e5a665d089896399de9b8e5">app_</a>]() {</div>
 <div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>            <span class="keywordflow">for</span> (<span class="keyword">auto</span> reason : reasons)</div>
 <div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>            {</div>
