@@ -3,11 +3,12 @@
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/beast/insight/Collector.h>
-#include <xrpl/core/Job.h>
 #include <xrpl/core/JobTypeInfo.h>
 #include <xrpl/core/LoadMonitor.h>
 
 namespace xrpl {
+
+enum JobType : int;
 
 struct JobTypeData
 {
