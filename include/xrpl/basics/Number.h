@@ -524,7 +524,7 @@ inline constexpr Number::Number(
     internalrep mantissa,
     int exponent,
     unchecked) noexcept
-    : negative_(negative), mantissa_{mantissa}, exponent_{exponent}
+    : mantissa_{mantissa}, exponent_{exponent}, negative_(negative)
 {
 }
 
