@@ -3,7 +3,6 @@
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/protocol/TER.h>
-#include <xrpl/protocol/TxFormats.h>
 
 #include <optional>
 #include <string>
@@ -12,6 +11,7 @@
 namespace xrpl {
 
 class Rules;
+enum TxType : std::uint16_t;
 /**
  * We have both transaction type permissions and granular type permissions.
  * Since we will reuse the TransactionFormats to parse the Transaction

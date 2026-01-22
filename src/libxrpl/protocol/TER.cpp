@@ -1,3 +1,4 @@
+#include <xrpl/json/json_value.h>
 #include <xrpl/protocol/TER.h>
 
 #include <boost/range/adaptor/transformed.hpp>

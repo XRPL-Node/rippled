@@ -1,9 +1,6 @@
 #ifndef XRPL_CORE_PERFLOG_H
 #define XRPL_CORE_PERFLOG_H
 
-#include <xrpl/basics/BasicConfig.h>
-#include <xrpl/json/json_value.h>
-
 #include <boost/filesystem.hpp>
 
 #include <chrono>
@@ -12,9 +9,15 @@
 #include <memory>
 #include <string>
 
+namespace Json {
+class Value;
+}
+
 namespace beast {
 class Journal;
 }
+
+class Section;
 
 namespace xrpl {
 

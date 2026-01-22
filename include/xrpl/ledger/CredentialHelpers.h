@@ -7,11 +7,11 @@
 #include <xrpl/ledger/ApplyView.h>
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/AccountID.h>
-#include <xrpl/protocol/STArray.h>
 #include <xrpl/protocol/TER.h>
 
 namespace xrpl {
 
+class STArray;
 class STTx;
 
 namespace credentials {
