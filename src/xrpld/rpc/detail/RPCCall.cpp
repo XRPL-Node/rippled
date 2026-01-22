@@ -24,6 +24,7 @@
 
 #include <array>
 #include <iostream>
+#include <limits>
 #include <unordered_map>
 
 namespace xrpl {
@@ -136,7 +137,11 @@ private:
     static std::optional<std::int32_t>
     jvParseInt(Json::Value const& param)
     {
-        if (param.isUInt() || param.isInt())
+        if (param.isInt())
+            return param.asInt();
+
+        if (param.isUInt() &&
+            param.asUInt() <= std::numeric_limits<std::int32_t>::max())
             return param.asInt();
 
         if (param.isString())
