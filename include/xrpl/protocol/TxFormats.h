@@ -38,13 +38,16 @@ enum TxType : std::uint16_t
 {
 
 #pragma push_macro("TRANSACTION")
+#pragma push_macro("TRANSACTION_INCLUDE")
 #undef TRANSACTION
+#undef TRANSACTION_INCLUDE
 
 #define TRANSACTION(tag, value, ...) tag = value,
 
 #include <xrpl/protocol/detail/transactions.macro>
 
 #undef TRANSACTION
+#pragma pop_macro("TRANSACTION_INCLUDE")
 #pragma pop_macro("TRANSACTION")
 
     /** This transaction type is deprecated; it is retained for historical purposes. */

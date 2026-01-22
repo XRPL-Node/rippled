@@ -2,12 +2,13 @@
 #define XRPL_PROTOCOL_NFTSYNTHETICSERIALIZER_H_INCLUDED
 
 #include <xrpl/json/json_forwards.h>
-#include <xrpl/protocol/STTx.h>
-#include <xrpl/protocol/TxMeta.h>
 
 #include <memory>
 
 namespace xrpl {
+
+class STTx;
+class TxMeta;
 
 namespace RPC {
 

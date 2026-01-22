@@ -1,5 +1,7 @@
 #include <xrpl/beast/core/CurrentThreadName.h>
 #include <xrpl/core/Job.h>
+#include <xrpl/core/LoadEvent.h>
+#include <xrpl/core/LoadMonitor.h>
 
 namespace xrpl {
 

@@ -2,6 +2,8 @@
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/misc/NegativeUNLVote.h>
 
+#include <xrpl/protocol/STTx.h>
+#include <xrpl/protocol/TxFormats.h>
 #include <xrpl/shamap/SHAMapItem.h>
 
 namespace xrpl {

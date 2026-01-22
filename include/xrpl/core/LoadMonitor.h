@@ -3,12 +3,13 @@
 
 #include <xrpl/basics/UptimeClock.h>
 #include <xrpl/beast/utility/Journal.h>
-#include <xrpl/core/LoadEvent.h>
 
 #include <chrono>
 #include <mutex>
 
 namespace xrpl {
+
+class LoadEvent;
 
 // Monitors load levels and response times
 

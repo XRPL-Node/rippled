@@ -1,5 +1,6 @@
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/ledger/PaymentSandbox.h>
+#include <xrpl/ledger/RawView.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/SField.h>
 

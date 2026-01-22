@@ -1,5 +1,6 @@
 #include <xrpl/basics/contract.h>
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/core/PerfLog.h>
 
 #include <mutex>

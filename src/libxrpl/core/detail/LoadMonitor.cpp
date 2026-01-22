@@ -1,5 +1,6 @@
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/UptimeClock.h>
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/core/LoadMonitor.h>
 
 namespace xrpl {

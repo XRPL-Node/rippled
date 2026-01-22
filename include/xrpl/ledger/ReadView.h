@@ -12,13 +12,16 @@
 #include <xrpl/protocol/Rules.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/STLedgerEntry.h>
-#include <xrpl/protocol/STTx.h>
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <unordered_set>
 
 namespace xrpl {
+
+class STTx;
+class STObject;
 
 //------------------------------------------------------------------------------
 

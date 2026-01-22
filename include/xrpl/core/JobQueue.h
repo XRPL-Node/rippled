@@ -5,6 +5,7 @@
 #include <xrpl/core/ClosureCounter.h>
 #include <xrpl/core/JobTypeData.h>
 #include <xrpl/core/JobTypes.h>
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/core/detail/Workers.h>
 #include <xrpl/json/json_value.h>
 

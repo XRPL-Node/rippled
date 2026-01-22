@@ -1,7 +1,7 @@
 #ifndef XRPL_PROTOCOL_PERMISSION_H_INCLUDED
 #define XRPL_PROTOCOL_PERMISSION_H_INCLUDED
 
-#include <xrpl/protocol/Rules.h>
+#include <xrpl/basics/base_uint.h>
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFormats.h>
 
@@ -10,6 +10,8 @@
 #include <unordered_map>
 
 namespace xrpl {
+
+class Rules;
 /**
  * We have both transaction type permissions and granular type permissions.
  * Since we will reuse the TransactionFormats to parse the Transaction

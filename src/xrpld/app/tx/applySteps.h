@@ -3,6 +3,7 @@
 
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/ledger/ApplyViewImpl.h>
+#include <xrpl/protocol/SeqProxy.h>
 
 namespace xrpl {
 

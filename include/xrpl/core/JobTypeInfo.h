@@ -1,9 +1,12 @@
 #ifndef XRPL_CORE_JOBTYPEINFO_H_INCLUDED
 #define XRPL_CORE_JOBTYPEINFO_H_INCLUDED
 
-#include <xrpl/core/Job.h>
+#include <chrono>
+#include <string>
 
 namespace xrpl {
+
+enum JobType : int;
 
 /** Holds all the 'static' information about a job, which does not change */
 class JobTypeInfo

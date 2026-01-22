@@ -1,5 +1,6 @@
 #include <xrpl/basics/contract.h>
 #include <xrpl/ledger/OpenView.h>
+#include <xrpl/protocol/STTx.h>
 
 namespace xrpl {
 

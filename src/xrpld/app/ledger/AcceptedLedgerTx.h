@@ -4,6 +4,8 @@
 #include <xrpld/app/ledger/Ledger.h>
 
 #include <xrpl/protocol/AccountID.h>
+#include <xrpl/protocol/STTx.h>
+#include <xrpl/protocol/TxFormats.h>
 
 #include <boost/container/flat_set.hpp>
 

@@ -5,8 +5,6 @@
 #include <xrpl/json/json_value.h>
 
 #include <optional>
-#include <ostream>
-#include <string>
 #include <unordered_map>
 
 namespace xrpl {

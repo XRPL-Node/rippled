@@ -3,14 +3,15 @@
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/json/json_forwards.h>
-#include <xrpl/protocol/STTx.h>
-#include <xrpl/protocol/TxMeta.h>
 
 #include <memory>
 #include <optional>
 #include <vector>
 
 namespace xrpl {
+
+class STTx;
+class TxMeta;
 
 /**
    Add a `nftoken_ids` field to the `meta` output parameter.

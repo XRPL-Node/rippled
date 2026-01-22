@@ -5,7 +5,6 @@
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/Serializer.h>
 
-#include <ostream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>

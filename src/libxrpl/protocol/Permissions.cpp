@@ -1,6 +1,7 @@
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Permissions.h>
+#include <xrpl/protocol/Rules.h>
 #include <xrpl/protocol/jss.h>
 
 namespace xrpl {

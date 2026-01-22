@@ -6,7 +6,9 @@
 
 #include <xrpl/protocol/Feature.h>
 #include <xrpl/protocol/Protocol.h>
+#include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/STValidation.h>
+#include <xrpl/protocol/TxFormats.h>
 
 #include <optional>
 

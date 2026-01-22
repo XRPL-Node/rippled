@@ -1,6 +1,7 @@
 #include <xrpld/app/misc/PermissionedDEXHelpers.h>
 
 #include <xrpl/ledger/CredentialHelpers.h>
+#include <xrpl/protocol/STBlob.h>
 
 namespace xrpl {
 namespace permissioned_dex {

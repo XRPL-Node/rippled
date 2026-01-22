@@ -2,7 +2,6 @@
 #define XRPL_CORE_PERFLOG_H
 
 #include <xrpl/basics/BasicConfig.h>
-#include <xrpl/core/JobTypes.h>
 #include <xrpl/json/json_value.h>
 
 #include <boost/filesystem.hpp>
@@ -18,6 +17,8 @@ class Journal;
 }
 
 namespace xrpl {
+
+enum JobType : int;
 class Application;
 namespace perf {
 

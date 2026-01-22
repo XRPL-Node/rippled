@@ -3,7 +3,11 @@
 #include <xrpld/overlay/detail/PeerImp.h>
 #include <xrpld/overlay/detail/ProtocolVersion.h>
 
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/json/json_reader.h>
+
+#include <boost/beast/core/tcp_stream.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 
 #include <sstream>
 

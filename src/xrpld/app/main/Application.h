@@ -1,9 +1,6 @@
 #ifndef XRPL_APP_MAIN_APPLICATION_H_INCLUDED
 #define XRPL_APP_MAIN_APPLICATION_H_INCLUDED
 
-#include <xrpld/core/Config.h>
-#include <xrpld/overlay/PeerReservationTable.h>
-
 #include <xrpl/basics/TaggedCache.h>
 #include <xrpl/beast/utility/PropertyStream.h>
 #include <xrpl/protocol/Protocol.h>
@@ -15,6 +12,10 @@
 #include <mutex>
 
 namespace xrpl {
+
+// Forward declarations
+class Config;
+class PeerReservationTable;
 
 namespace unl {
 class Manager;

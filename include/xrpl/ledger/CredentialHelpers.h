@@ -8,10 +8,12 @@
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/AccountID.h>
 #include <xrpl/protocol/STArray.h>
-#include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/TER.h>
 
 namespace xrpl {
+
+class STTx;
+
 namespace credentials {
 
 // These function will be used by the code that use DepositPreauth / Credentials

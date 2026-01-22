@@ -23,6 +23,7 @@
 #include <xrpl/protocol/SecretKey.h>
 #include <xrpl/protocol/digest.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/shamap/SHAMap.h>
 
 #include <utility>
 #include <vector>

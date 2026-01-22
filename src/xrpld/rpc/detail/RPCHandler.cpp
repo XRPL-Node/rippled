@@ -13,6 +13,7 @@
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/core/JobQueue.h>
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/json/to_string.h>
 #include <xrpl/protocol/ErrorCodes.h>

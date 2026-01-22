@@ -1,3 +1,4 @@
+#include <xrpld/overlay/PeerReservationTable.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/handlers/Handlers.h>
 

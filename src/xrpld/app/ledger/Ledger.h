@@ -9,6 +9,7 @@
 #include <xrpl/ledger/CachedView.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Indexes.h>
+#include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/STLedgerEntry.h>
 #include <xrpl/protocol/Serializer.h>
 #include <xrpl/protocol/TxMeta.h>
@@ -16,6 +17,7 @@
 
 namespace xrpl {
 
+// Forward declarations
 class Application;
 class Job;
 class TransactionMaster;

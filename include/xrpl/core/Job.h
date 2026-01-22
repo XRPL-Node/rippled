@@ -3,16 +3,19 @@
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/core/ClosureCounter.h>
-#include <xrpl/core/LoadMonitor.h>
 
 #include <functional>
+#include <memory>
 
 namespace xrpl {
+
+class LoadEvent;
+class LoadMonitor;
 
 // Note that this queue should only be used for CPU-bound jobs
 // It is primarily intended for signature checking
 
-enum JobType {
+enum JobType : int {
     // Special type indicating an invalid job - will go away soon.
     jtINVALID = -1,
 

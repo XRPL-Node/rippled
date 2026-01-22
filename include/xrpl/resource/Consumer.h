@@ -2,11 +2,13 @@
 #define XRPL_RESOURCE_CONSUMER_H_INCLUDED
 
 #include <xrpl/basics/Log.h>
-#include <xrpl/protocol/PublicKey.h>
 #include <xrpl/resource/Charge.h>
 #include <xrpl/resource/Disposition.h>
 
 namespace xrpl {
+
+class PublicKey;
+
 namespace Resource {
 
 struct Entry;

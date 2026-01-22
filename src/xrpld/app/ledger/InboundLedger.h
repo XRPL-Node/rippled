@@ -7,6 +7,8 @@
 #include <xrpld/overlay/PeerSet.h>
 
 #include <xrpl/basics/CountedObject.h>
+#include <xrpl/shamap/SHAMapAddNode.h>
+#include <xrpl/shamap/SHAMapSyncFilter.h>
 
 #include <mutex>
 #include <set>

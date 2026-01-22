@@ -1,7 +1,6 @@
 #ifndef XRPL_LEDGER_PAYMENTSANDBOX_H_INCLUDED
 #define XRPL_LEDGER_PAYMENTSANDBOX_H_INCLUDED
 
-#include <xrpl/ledger/RawView.h>
 #include <xrpl/ledger/Sandbox.h>
 #include <xrpl/ledger/detail/ApplyViewBase.h>
 #include <xrpl/protocol/AccountID.h>
@@ -9,6 +8,9 @@
 #include <map>
 
 namespace xrpl {
+
+// Forward declarations
+class RawView;
 
 namespace detail {
 
