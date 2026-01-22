@@ -1,6 +1,9 @@
 #ifndef XRPL_CORE_PERFLOG_H
 #define XRPL_CORE_PERFLOG_H
 
+#include <xrpl/beast/utility/Journal.h>
+#include <xrpl/core/JobTypes.h>
+
 #include <boost/filesystem.hpp>
 
 #include <chrono>
@@ -13,15 +16,10 @@ namespace Json {
 class Value;
 }
 
-namespace beast {
-class Journal;
-}
-
 class Section;
 
 namespace xrpl {
 
-enum JobType : int;
 class Application;
 namespace perf {
 
