@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2022 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpld/app/paths/Flow.h>
 #include <xrpld/app/tx/detail/SignerEntries.h>
 #include <xrpld/app/tx/detail/Transactor.h>
@@ -46,7 +27,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace ripple {
+namespace xrpl {
 
 /*
    Bridges connect two independent ledgers: a "locking chain" and an "issuing
@@ -225,8 +206,8 @@ claimHelper(
         {
             // LCOV_EXCL_START
             UNREACHABLE(
-                "ripple::claimHelper : invalid inputs");  // should have already
-                                                          // been checked
+                "xrpl::claimHelper : invalid inputs");  // should have already
+                                                        // been checked
             continue;
             // LCOV_EXCL_STOP
         }
@@ -343,7 +324,7 @@ onNewAttestations(
     return {std::move(r.value()), changed};
 };
 
-// Check if there is a quorurm of attestations for the given amount and
+// Check if there is a quorum of attestations for the given amount and
 // chain. If so return the reward accounts, if not return the tec code (most
 // likely tecXCHAIN_CLAIM_NO_QUORUM)
 Expected<std::vector<AccountID>, TER>
@@ -442,7 +423,7 @@ transferHelper(
     if (amt.native())
     {
         auto const sleSrc = psb.peek(keylet::account(src));
-        XRPL_ASSERT(sleSrc, "ripple::transferHelper : non-null source account");
+        XRPL_ASSERT(sleSrc, "xrpl::transferHelper : non-null source account");
         if (!sleSrc)
             return tecINTERNAL;  // LCOV_EXCL_LINE
 
@@ -453,7 +434,7 @@ transferHelper(
             auto const availableBalance = [&]() -> STAmount {
                 STAmount const curBal = (*sleSrc)[sfBalance];
                 // Checking that account == src and postFeeBalance == curBal is
-                // not strictly nessisary, but helps protect against future
+                // not strictly necessary, but helps protect against future
                 // changes
                 if (!submittingAccountInfo ||
                     submittingAccountInfo->account != src ||
@@ -483,12 +464,9 @@ transferHelper(
             }
 
             // Create the account.
-            std::uint32_t const seqno{
-                psb.rules().enabled(featureDeletableAccounts) ? psb.seq() : 1};
-
             sleDst = std::make_shared<SLE>(dstK);
             sleDst->setAccountID(sfAccount, dst);
-            sleDst->setFieldU32(sfSequence, seqno);
+            sleDst->setFieldU32(sfSequence, psb.seq());
 
             psb.insert(sleDst);
         }
@@ -644,7 +622,7 @@ finalizeClaimHelper(
         // If distributing the reward pool fails, the mainFunds transfer should
         // be rolled back
         //
-        // If the claimid is removed, the rewards should be distributed
+        // If the claim ID is removed, the rewards should be distributed
         // even if the mainFunds fails.
         //
         // If OnTransferFail::removeClaim, the claim should be removed even if
@@ -1212,7 +1190,7 @@ toClaim(STTx const& tx)
 
 template <class TAttestation>
 NotTEC
-attestationpreflight(PreflightContext const& ctx)
+attestationPreflight(PreflightContext const& ctx)
 {
     if (!publicKeyType(ctx.tx[sfPublicKey]))
         return temMALFORMED;
@@ -2098,7 +2076,7 @@ XChainCreateClaimID::doApply()
 NotTEC
 XChainAddClaimAttestation::preflight(PreflightContext const& ctx)
 {
-    return attestationpreflight<Attestations::AttestationClaim>(ctx);
+    return attestationPreflight<Attestations::AttestationClaim>(ctx);
 }
 
 TER
@@ -2118,7 +2096,7 @@ XChainAddClaimAttestation::doApply()
 NotTEC
 XChainAddAccountCreateAttestation::preflight(PreflightContext const& ctx)
 {
-    return attestationpreflight<Attestations::AttestationCreateAccount>(ctx);
+    return attestationPreflight<Attestations::AttestationCreateAccount>(ctx);
 }
 
 TER
@@ -2260,4 +2238,4 @@ XChainCreateAccountCommit::doApply()
     return tesSUCCESS;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

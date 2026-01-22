@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2024 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpl/basics/Log.h>
 #include <xrpl/net/HTTPClient.h>
 
@@ -26,13 +7,13 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 
-#include <doctest/doctest.h>
+#include <gtest/gtest.h>
 
 #include <atomic>
 #include <map>
 #include <thread>
 
-using namespace ripple;
+using namespace xrpl;
 
 namespace {
 
@@ -236,7 +217,7 @@ runHTTPTest(
 
 }  // anonymous namespace
 
-TEST_CASE("HTTPClient case insensitive Content-Length")
+TEST(HTTPClient, case_insensitive_content_length)
 {
     // Test different cases of Content-Length header
     std::vector<std::string> header_cases = {
@@ -268,14 +249,14 @@ TEST_CASE("HTTPClient case insensitive Content-Length")
             result_error);
 
         // Verify results
-        CHECK(test_completed);
-        CHECK(!result_error);
-        CHECK(result_status == 200);
-        CHECK(result_data == test_body);
+        EXPECT_TRUE(test_completed);
+        EXPECT_FALSE(result_error);
+        EXPECT_EQ(result_status, 200);
+        EXPECT_EQ(result_data, test_body);
     }
 }
 
-TEST_CASE("HTTPClient basic HTTP request")
+TEST(HTTPClient, basic_http_request)
 {
     TestHTTPServer server;
     std::string test_body = "Test response body";
@@ -290,13 +271,13 @@ TEST_CASE("HTTPClient basic HTTP request")
     bool test_completed = runHTTPTest(
         server, "/basic", completed, result_status, result_data, result_error);
 
-    CHECK(test_completed);
-    CHECK(!result_error);
-    CHECK(result_status == 200);
-    CHECK(result_data == test_body);
+    EXPECT_TRUE(test_completed);
+    EXPECT_FALSE(result_error);
+    EXPECT_EQ(result_status, 200);
+    EXPECT_EQ(result_data, test_body);
 }
 
-TEST_CASE("HTTPClient empty response")
+TEST(HTTPClient, empty_response)
 {
     TestHTTPServer server;
     server.setResponseBody("");  // Empty body
@@ -310,13 +291,13 @@ TEST_CASE("HTTPClient empty response")
     bool test_completed = runHTTPTest(
         server, "/empty", completed, result_status, result_data, result_error);
 
-    CHECK(test_completed);
-    CHECK(!result_error);
-    CHECK(result_status == 200);
-    CHECK(result_data.empty());
+    EXPECT_TRUE(test_completed);
+    EXPECT_FALSE(result_error);
+    EXPECT_EQ(result_status, 200);
+    EXPECT_TRUE(result_data.empty());
 }
 
-TEST_CASE("HTTPClient different status codes")
+TEST(HTTPClient, different_status_codes)
 {
     std::vector<unsigned int> status_codes = {200, 404, 500};
 
@@ -339,8 +320,8 @@ TEST_CASE("HTTPClient different status codes")
             result_data,
             result_error);
 
-        CHECK(test_completed);
-        CHECK(!result_error);
-        CHECK(result_status == static_cast<int>(status));
+        EXPECT_TRUE(test_completed);
+        EXPECT_FALSE(result_error);
+        EXPECT_EQ(result_status, static_cast<int>(status));
     }
 }

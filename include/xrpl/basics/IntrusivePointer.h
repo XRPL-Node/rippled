@@ -1,31 +1,12 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2023 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_BASICS_INTRUSIVEPOINTER_H_INCLUDED
-#define RIPPLE_BASICS_INTRUSIVEPOINTER_H_INCLUDED
+#ifndef XRPL_BASICS_INTRUSIVEPOINTER_H_INCLUDED
+#define XRPL_BASICS_INTRUSIVEPOINTER_H_INCLUDED
 
 #include <concepts>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
 
-namespace ripple {
+namespace xrpl {
 
 //------------------------------------------------------------------------------
 
@@ -77,7 +58,7 @@ concept CAdoptTag = std::is_same_v<T, SharedIntrusiveAdoptIncrementStrongTag> ||
     When the strong pointer count goes to zero, the "partialDestructor" is
     called. This can be used to destroy as much of the object as possible while
     still retaining the reference counts. For example, for SHAMapInnerNodes the
-    children may be reset in that function. Note that std::shared_poiner WILL
+    children may be reset in that function. Note that std::shared_pointer WILL
     run the destructor when the strong count reaches zero, but may not free the
     memory used by the object until the weak count reaches zero. In rippled, we
     typically allocate shared pointers with the `make_shared` function. When
@@ -511,5 +492,5 @@ dynamic_pointer_cast(TT const& v)
     return SharedPtr<T>(DynamicCastTagSharedIntrusive{}, v);
 }
 }  // namespace intr_ptr
-}  // namespace ripple
+}  // namespace xrpl
 #endif

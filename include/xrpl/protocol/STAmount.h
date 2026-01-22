@@ -1,24 +1,5 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
-#ifndef RIPPLE_PROTOCOL_STAMOUNT_H_INCLUDED
-#define RIPPLE_PROTOCOL_STAMOUNT_H_INCLUDED
+#ifndef XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
+#define XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/LocalValue.h>
@@ -34,7 +15,7 @@
 #include <xrpl/protocol/XRPAmount.h>
 #include <xrpl/protocol/json_get_or_throw.h>
 
-namespace ripple {
+namespace xrpl {
 
 // Internal form:
 // 1: If amount is zero, then value is zero and offset is -100
@@ -66,16 +47,18 @@ public:
     static int const cMaxOffset = 80;
 
     // Maximum native value supported by the code
-    static std::uint64_t const cMinValue = 1000000000000000ull;
-    static std::uint64_t const cMaxValue = 9999999999999999ull;
-    static std::uint64_t const cMaxNative = 9000000000000000000ull;
+    constexpr static std::uint64_t cMinValue = 1'000'000'000'000'000ull;
+    static_assert(isPowerOfTen(cMinValue));
+    constexpr static std::uint64_t cMaxValue = cMinValue * 10 - 1;
+    static_assert(cMaxValue == 9'999'999'999'999'999ull);
+    constexpr static std::uint64_t cMaxNative = 9'000'000'000'000'000'000ull;
 
     // Max native value on network.
-    static std::uint64_t const cMaxNativeN = 100000000000000000ull;
-    static std::uint64_t const cIssuedCurrency = 0x8000000000000000ull;
-    static std::uint64_t const cPositive = 0x4000000000000000ull;
-    static std::uint64_t const cMPToken = 0x2000000000000000ull;
-    static std::uint64_t const cValueMask = ~(cPositive | cMPToken);
+    constexpr static std::uint64_t cMaxNativeN = 100'000'000'000'000'000ull;
+    constexpr static std::uint64_t cIssuedCurrency = 0x8'000'000'000'000'000ull;
+    constexpr static std::uint64_t cPositive = 0x4'000'000'000'000'000ull;
+    constexpr static std::uint64_t cMPToken = 0x2'000'000'000'000'000ull;
+    constexpr static std::uint64_t cValueMask = ~(cPositive | cMPToken);
 
     static std::uint64_t const uRateOne;
 
@@ -155,7 +138,7 @@ public:
 
     template <AssetType A>
     STAmount(A const& asset, Number const& number)
-        : STAmount(asset, number.mantissa(), number.exponent())
+        : STAmount(fromNumber(asset, number))
     {
     }
 
@@ -173,6 +156,9 @@ public:
 
     int
     exponent() const noexcept;
+
+    bool
+    integral() const noexcept;
 
     bool
     native() const noexcept;
@@ -296,6 +282,10 @@ public:
     mpt() const;
 
 private:
+    template <AssetType A>
+    static STAmount
+    fromNumber(A const& asset, Number const& number);
+
     static std::unique_ptr<STAmount>
     construct(SerialIter&, SField const& name);
 
@@ -359,10 +349,19 @@ STAmount::STAmount(
     , mIsNegative(negative)
 {
     // mValue is uint64, but needs to fit in the range of int64
-    XRPL_ASSERT(
-        mValue <= std::numeric_limits<std::int64_t>::max(),
-        "ripple::STAmount::STAmount(SField, A, std::uint64_t, int, bool) : "
-        "maximum mantissa input");
+    if (Number::getMantissaScale() == MantissaRange::small)
+    {
+        XRPL_ASSERT(
+            mValue <= std::numeric_limits<std::int64_t>::max(),
+            "xrpl::STAmount::STAmount(SField, A, std::uint64_t, int, bool) : "
+            "maximum mantissa input");
+    }
+    else
+    {
+        if (integral() && mValue > std::numeric_limits<std::int64_t>::max())
+            throw std::overflow_error(
+                "STAmount mantissa is too large " + std::to_string(mantissa));
+    }
     canonicalize();
 }
 
@@ -452,6 +451,12 @@ inline int
 STAmount::exponent() const noexcept
 {
     return mOffset;
+}
+
+inline bool
+STAmount::integral() const noexcept
+{
+    return mAsset.integral();
 }
 
 inline bool
@@ -550,14 +555,23 @@ STAmount::operator=(XRPAmount const& amount)
     return *this;
 }
 
-inline STAmount&
-STAmount::operator=(Number const& number)
+template <AssetType A>
+inline STAmount
+STAmount::fromNumber(A const& a, Number const& number)
 {
-    mIsNegative = number.mantissa() < 0;
-    mValue = mIsNegative ? -number.mantissa() : number.mantissa();
-    mOffset = number.exponent();
-    canonicalize();
-    return *this;
+    bool const negative = number.mantissa() < 0;
+    Number const working{negative ? -number : number};
+    Asset asset{a};
+    if (asset.integral())
+    {
+        std::uint64_t const intValue = static_cast<std::int64_t>(working);
+        return STAmount{asset, intValue, 0, negative};
+    }
+
+    auto const [mantissa, exponent] =
+        working.normalizeToRange(cMinValue, cMaxValue);
+
+    return STAmount{asset, mantissa, exponent, negative};
 }
 
 inline void
@@ -572,7 +586,7 @@ STAmount::clear()
 {
     // The -100 is used to allow 0 to sort less than a small positive values
     // which have a negative exponent.
-    mOffset = native() ? 0 : -100;
+    mOffset = integral() ? 0 : -100;
     mValue = 0;
     mIsNegative = false;
 }
@@ -695,6 +709,68 @@ divRoundStrict(
 std::uint64_t
 getRate(STAmount const& offerOut, STAmount const& offerIn);
 
+/** Round an arbitrary precision Amount to the precision of an STAmount that has
+ * a given exponent.
+ *
+ * This is used to ensure that calculations involving IOU amounts do not collect
+ * dust beyond the precision of the reference value.
+ *
+ * @param value The value to be rounded
+ * @param scale An exponent value to establish the precision limit of
+ *     `value`. Should be larger than `value.exponent()`.
+ * @param rounding Optional Number rounding mode
+ *
+ */
+[[nodiscard]] STAmount
+roundToScale(
+    STAmount const& value,
+    std::int32_t scale,
+    Number::rounding_mode rounding = Number::getround());
+
+/** Round an arbitrary precision Number IN PLACE to the precision of a given
+ * Asset.
+ *
+ * This is used to ensure that calculations do not collect dust for IOUs, or
+ * fractional amounts for the integral types XRP and MPT.
+ *
+ * @param asset The relevant asset
+ * @param value The lvalue to be rounded
+ */
+template <AssetType A>
+void
+roundToAsset(A const& asset, Number& value)
+{
+    value = STAmount{asset, value};
+}
+
+/** Round an arbitrary precision Number to the precision of a given Asset.
+ *
+ * This is used to ensure that calculations do not collect dust beyond specified
+ * scale for IOUs, or fractional amounts for the integral types XRP and MPT.
+ *
+ * @param asset The relevant asset
+ * @param value The value to be rounded
+ * @param scale Only relevant to IOU assets. An exponent value to establish the
+ *      precision limit of `value`. Should be larger than `value.exponent()`.
+ * @param rounding Optional Number rounding mode
+ */
+template <AssetType A>
+[[nodiscard]] Number
+roundToAsset(
+    A const& asset,
+    Number const& value,
+    std::int32_t scale,
+    Number::rounding_mode rounding = Number::getround())
+{
+    NumberRoundModeGuard mg(rounding);
+    STAmount const ret{asset, value};
+    if (ret.integral())
+        return ret;
+    // Note that the ctor will round integral types (XRP, MPT) via canonicalize,
+    // so no extra work is needed for those.
+    return roundToScale(ret, scale);
+}
+
 //------------------------------------------------------------------------------
 
 inline bool
@@ -709,46 +785,15 @@ canAdd(STAmount const& amt1, STAmount const& amt2);
 bool
 canSubtract(STAmount const& amt1, STAmount const& amt2);
 
-// Since `canonicalize` does not have access to a ledger, this is needed to put
-// the low-level routine stAmountCanonicalize on an amendment switch. Only
-// transactions need to use this switchover. Outside of a transaction it's safe
-// to unconditionally use the new behavior.
-
-bool
-getSTAmountCanonicalizeSwitchover();
-
-void
-setSTAmountCanonicalizeSwitchover(bool v);
-
-/** RAII class to set and restore the STAmount canonicalize switchover.
- */
-
-class STAmountSO
-{
-public:
-    explicit STAmountSO(bool v) : saved_(getSTAmountCanonicalizeSwitchover())
-    {
-        setSTAmountCanonicalizeSwitchover(v);
-    }
-
-    ~STAmountSO()
-    {
-        setSTAmountCanonicalizeSwitchover(saved_);
-    }
-
-private:
-    bool saved_;
-};
-
-}  // namespace ripple
+}  // namespace xrpl
 
 //------------------------------------------------------------------------------
 namespace Json {
 template <>
-inline ripple::STAmount
-getOrThrow(Json::Value const& v, ripple::SField const& field)
+inline xrpl::STAmount
+getOrThrow(Json::Value const& v, xrpl::SField const& field)
 {
-    using namespace ripple;
+    using namespace xrpl;
     Json::StaticString const& key = field.getJsonName();
     if (!v.isMember(key))
         Throw<JsonMissingKeyError>(key);

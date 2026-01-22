@@ -1,4 +1,7 @@
-find_package(Boost 1.82 REQUIRED
+include(CompilationEnv)
+include(XrplSanitizers)
+
+find_package(Boost REQUIRED
   COMPONENTS
     chrono
     container
@@ -12,10 +15,10 @@ find_package(Boost 1.82 REQUIRED
     thread
 )
 
-add_library(ripple_boost INTERFACE)
-add_library(Ripple::boost ALIAS ripple_boost)
+add_library(xrpl_boost INTERFACE)
+add_library(Xrpl::boost ALIAS xrpl_boost)
 
-target_link_libraries(ripple_boost
+target_link_libraries(xrpl_boost
   INTERFACE
     Boost::headers
     Boost::chrono
@@ -30,9 +33,9 @@ target_link_libraries(ripple_boost
     Boost::system
     Boost::thread)
 if(Boost_COMPILER)
-  target_link_libraries(ripple_boost INTERFACE Boost::disable_autolinking)
+  target_link_libraries(xrpl_boost INTERFACE Boost::disable_autolinking)
 endif()
-if(san AND is_clang)
+if(SANITIZERS_ENABLED AND is_clang)
   # TODO: gcc does not support -fsanitize-blacklist...can we do something else
   # for gcc ?
   if(NOT Boost_INCLUDE_DIRS AND TARGET Boost::headers)

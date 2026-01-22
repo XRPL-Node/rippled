@@ -1,22 +1,3 @@
-//------------------------------------------------------------------------------
-/*
-    This file is part of rippled: https://github.com/ripple/rippled
-    Copyright (c) 2012, 2013 Ripple Labs Inc.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose  with  or without fee is hereby granted, provided that the above
-    copyright notice and this permission notice appear in all copies.
-
-    THE  SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-    WITH  REGARD  TO  THIS  SOFTWARE  INCLUDING  ALL  IMPLIED  WARRANTIES  OF
-    MERCHANTABILITY  AND  FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-    ANY  SPECIAL ,  DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-    WHATSOEVER  RESULTING  FROM  LOSS  OF USE, DATA OR PROFITS, WHETHER IN AN
-    ACTION  OF  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-*/
-//==============================================================================
-
 #include <xrpl/basics/Buffer.h>
 #include <xrpl/basics/Slice.h>
 #include <xrpl/basics/base_uint.h>
@@ -36,7 +17,6 @@
 #include <boost/utility/string_view.hpp>
 
 #include <ed25519.h>
-#include <secp256k1.h>
 
 #include <algorithm>
 #include <array>
@@ -46,7 +26,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace ripple {
+namespace xrpl {
 
 SecretKey::~SecretKey()
 {
@@ -97,7 +77,7 @@ deriveDeterministicRootKey(Seed const& seed)
     std::array<std::uint8_t, 20> buf;
     std::copy(seed.begin(), seed.end(), buf.begin());
 
-    // The odds that this loop executes more than once are neglible
+    // The odds that this loop executes more than once are negligible
     // but *just* in case someone managed to generate a key that required
     // more iterations loop a few times.
     for (std::uint32_t seq = 0; seq != 128; ++seq)
@@ -157,7 +137,7 @@ private:
         std::copy(generator_.begin(), generator_.end(), buf.begin());
         copy_uint32(buf.data() + 33, seq);
 
-        // The odds that this loop executes more than once are neglible
+        // The odds that this loop executes more than once are negligible
         // but we impose a maximum limit just in case.
         for (std::uint32_t subseq = 0; subseq != 128; ++subseq)
         {
@@ -401,4 +381,4 @@ parseBase58(TokenType type, std::string const& s)
     return SecretKey(makeSlice(result));
 }
 
-}  // namespace ripple
+}  // namespace xrpl
