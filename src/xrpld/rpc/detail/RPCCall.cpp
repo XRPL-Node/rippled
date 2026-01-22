@@ -16,7 +16,6 @@
 #include <xrpl/protocol/PublicKey.h>
 #include <xrpl/protocol/RPCErr.h>
 #include <xrpl/protocol/SystemParameters.h>
-#include <xrpl/protocol/UintTypes.h>
 #include <xrpl/protocol/jss.h>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -300,6 +299,8 @@ private:
             std::int32_t ledgerMin, ledgerMax;
             if (auto const ledgerMinOpt = jvParseInt(jvParams[1u]))
             {
+                // A value of -1 instructs the server to use the most recent
+                // validated ledger version available
                 ledgerMin = *ledgerMinOpt;
             }
             else
@@ -329,7 +330,7 @@ private:
 
             if (iParams >= 4)
             {
-                if (auto const limit = jvParseInt(jvParams[3u]))
+                if (auto const limit = jvParseUInt(jvParams[3u]))
                     jvRequest[jss::limit] = *limit;
                 else
                     return RPC::invalid_field_error(jss::limit);
@@ -390,10 +391,9 @@ private:
 
         if (jvParams.size() >= 5)
         {
-            if (auto const limit = jvParseInt(jvParams[4u]))
+            if (auto const limit = jvParseUInt(jvParams[4u]))
             {
-                if (limit >= 0)
-                    jvRequest[jss::limit] = *limit;
+                jvRequest[jss::limit] = *limit;
             }
             else
                 return RPC::invalid_field_error(jss::limit);
@@ -450,8 +450,7 @@ private:
             std::size_t colon = ip.find_last_of(":");
             jvRequest[jss::ip] = std::string{ip, 0, colon};
 
-            std::uint32_t port;
-            if (beast::lexicalCastChecked(port, std::string{ip, colon + 1}))
+            if (auto const port = jvParseUInt(std::string{ip, colon + 1}))
                 jvRequest[jss::port] = port;
             else
                 return RPC::invalid_field_error(jss::port);
