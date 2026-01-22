@@ -451,7 +451,7 @@ private:
             jvRequest[jss::ip] = std::string{ip, 0, colon};
 
             if (auto const port = jvParseUInt(std::string{ip, colon + 1}))
-                jvRequest[jss::port] = port;
+                jvRequest[jss::port] = *port;
             else
                 return RPC::invalid_field_error(jss::port);
 
