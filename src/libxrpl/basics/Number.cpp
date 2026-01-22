@@ -28,7 +28,7 @@ namespace xrpl {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
 thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
-    largeRange;
+    smallRange;
 
 Number::rounding_mode
 Number::getround()
@@ -51,9 +51,10 @@ Number::getMantissaScale()
 void
 Number::setMantissaScale(MantissaRange::mantissa_scale scale)
 {
-    if (scale != MantissaRange::small && scale != MantissaRange::large)
-        LogicError("Unknown mantissa scale");
-    range_ = scale == MantissaRange::small ? smallRange : largeRange;
+    // if (scale != MantissaRange::small && scale != MantissaRange::large)
+    //    LogicError("Unknown mantissa scale");
+    range_ =
+        smallRange;  // scale == MantissaRange::small ? smallRange : largeRange;
 }
 
 // Guard
