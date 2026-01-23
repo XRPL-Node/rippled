@@ -7,6 +7,7 @@
 # - stack-use-after-return errors
 # - stack-use-after-scope errors
 # - stack-buffer-overflow errors in seemingly unrelated code (e.g., std::chrono::steady_clock::now())
+# - stack-buffer-underflow errors in seemingly unrelated code (e.g., xxhasher::retrieveHash(), clock_gettime)
 #
 # These are suppressed via:
 # 1. Runtime option: detect_stack_use_after_return=0 (in ASAN_OPTIONS in CI workflow)

@@ -27,3 +27,8 @@ src:core/JobQueue.cpp
 src:libxrpl/beast/utility/beast_Journal.cpp
 src:test/beast/beast_PropertyStream_test.cpp
 src:src/test/app/Invariants_test.cpp
+
+# Boost coroutines cause false positive stack-buffer-underflow in xxhasher
+# This is a known ASAN limitation with stackful coroutines
+# See: https://github.com/google/sanitizers/issues/189
+src:beast/hash/xxhasher.h

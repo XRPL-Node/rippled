@@ -198,17 +198,17 @@ Value::Value(ValueType type) : type_(type), allocated_(0)
     }
 }
 
-Value::Value(Int value) : type_(intValue)
+Value::Value(Int value) : type_(intValue), allocated_(0)
 {
     value_.int_ = value;
 }
 
-Value::Value(UInt value) : type_(uintValue)
+Value::Value(UInt value) : type_(uintValue), allocated_(0)
 {
     value_.uint_ = value;
 }
 
-Value::Value(double value) : type_(realValue)
+Value::Value(double value) : type_(realValue), allocated_(0)
 {
     value_.real_ = value;
 }
@@ -236,7 +236,7 @@ Value::Value(StaticString const& value) : type_(stringValue), allocated_(false)
     value_.string_ = const_cast<char*>(value.c_str());
 }
 
-Value::Value(bool value) : type_(booleanValue)
+Value::Value(bool value) : type_(booleanValue), allocated_(0)
 {
     value_.bool_ = value;
 }
