@@ -733,8 +733,12 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
             "Number is non-negative for unsigned range.");
     Number::normalize(negative, mantissa, exponent, minMantissa, maxMantissa);
 
-    auto const sign = negative ? -1 : 1;
-    return std::make_pair(static_cast<T>(sign * mantissa), exponent);
+    // Cast mantissa to signed type first to avoid unsigned integer overflow
+    // when multiplying by negative sign
+    T signedMantissa = static_cast<T>(mantissa);
+    if (negative)
+        signedMantissa = -signedMantissa;
+    return std::make_pair(signedMantissa, exponent);
 }
 
 inline constexpr Number

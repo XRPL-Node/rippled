@@ -71,7 +71,7 @@ make_name(std::string const& object, std::string const& field)
     if (field.empty())
         return object;
 
-    return object + "." + field;
+    return {object + "." + field};
 }
 
 static inline Json::Value

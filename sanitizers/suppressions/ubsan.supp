@@ -129,7 +129,6 @@ unsigned-integer-overflow:string_view
 # runtime error: unsigned integer overflow: 0 - 1 cannot be represented in type 'std::size_t' (aka 'unsigned long')
 unsigned-integer-overflow:src/libxrpl/basics/base64.cpp
 unsigned-integer-overflow:src/libxrpl/basics/Number.cpp
-unsigned-integer-overflow:src/libxrpl/basics/Number.h
 unsigned-integer-overflow:src/libxrpl/crypto/RFC1751.cpp
 unsigned-integer-overflow:rc/libxrpl/json/json_value.cpp
 unsigned-integer-overflow:src/libxrpl/ledger/ApplyView.cpp

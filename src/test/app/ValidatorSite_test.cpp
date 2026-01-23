@@ -156,7 +156,7 @@ private:
         std::vector<std::string> emptyCfgKeys;
         struct publisher
         {
-            publisher(FetchListConfig const& c) : cfg{c}
+            publisher(FetchListConfig const& c) : cfg{c}, isRetry{false}
             {
             }
             std::shared_ptr<TrustedPublisherServer> server;
