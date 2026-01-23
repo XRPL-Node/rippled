@@ -253,7 +253,7 @@ missing_field_error(Json::StaticString name)
 inline std::string
 object_field_message(std::string const& name)
 {
-    return "Invalid field '" + name + "', not object.";
+    return {"Invalid field '" + name + "', not object."};
 }
 
 inline Json::Value
@@ -271,7 +271,7 @@ object_field_error(Json::StaticString name)
 inline std::string
 invalid_field_message(std::string const& name)
 {
-    return "Invalid field '" + name + "'.";
+    return {"Invalid field '" + name + "'."};
 }
 
 inline std::string
@@ -295,7 +295,7 @@ invalid_field_error(Json::StaticString name)
 inline std::string
 expected_field_message(std::string const& name, std::string const& type)
 {
-    return "Invalid field '" + name + "', not " + type + ".";
+    return {"Invalid field '" + name + "', not " + type + "."};
 }
 
 inline std::string

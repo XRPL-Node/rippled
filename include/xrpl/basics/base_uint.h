@@ -366,6 +366,7 @@ public:
     base_uint&
     operator&=(base_uint const& b)
     {
+        XRPL_ASSERT(WIDTH == b.WIDTH, "input size mismatch");
         for (int i = 0; i < WIDTH; i++)
             data_[i] &= b.data_[i];
 
