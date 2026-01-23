@@ -261,7 +261,7 @@ Number::Guard::doRoundUp(
         ++mantissa;
         // Ensure mantissa after incrementing fits within both the
         // min/maxMantissa range and is a valid "rep".
-        if (mantissa > maxMantissa || mantissa > maxRep)
+        if (mantissa > maxMantissa)
         {
             mantissa /= 10;
             ++exponent;
@@ -300,7 +300,7 @@ Number::Guard::doRound(rep& drops, std::string_view location)
     auto r = round();
     if (r == 1 || (r == 0 && (drops & 1) == 1))
     {
-        if (drops >= maxRep)
+        if (drops >= maxMantissa())
         {
             static_assert(sizeof(internalrep) == sizeof(rep));
             // This should be impossible, because it's impossible to represent
@@ -342,12 +342,36 @@ Number::externalToInternal(rep mantissa)
     return static_cast<internalrep>(-temp);
 }
 
+template <class Rep>
+std::tuple<bool, Rep, int>
+Number::toInternal() const
+{
+    auto exponent = exponent_;
+    Rep mantissa = mantissa_;
+    bool const negative = negative_;
+
+    auto const referenceMin = Number::range_.get().referenceMin;
+
+    if (mantissa != 0 && mantissa < referenceMin)
+    {
+        // Ensure the mantissa has the correct number of digits
+        mantissa *= 10;
+        --exponent;
+    }
+    XRPL_ASSERT_PARTS(
+        mantissa >= referenceMin && mantissa < referenceMin * 10,
+        "ripple::Number::toInternal()",
+        "Number is within reference range and has 'log' digits");
+
+    return {negative, mantissa, exponent};
+}
+
 constexpr Number
 Number::oneSmall()
 {
     return Number{
         false,
-        Number::smallRange.min,
+        Number::smallRange.referenceMin,
         -Number::smallRange.log,
         Number::unchecked{}};
 };
@@ -359,7 +383,7 @@ Number::oneLarge()
 {
     return Number{
         false,
-        Number::largeRange.min,
+        Number::largeRange.referenceMin,
         -Number::largeRange.log,
         Number::unchecked{}};
 };
@@ -388,18 +412,18 @@ doNormalize(
 {
     auto constexpr minExponent = Number::minExponent;
     auto constexpr maxExponent = Number::maxExponent;
-    auto constexpr maxRep = Number::maxRep;
 
     using Guard = Number::Guard;
 
     constexpr Number zero = Number{};
-    if (mantissa_ == 0)
+    if (mantissa_ == 0 || (mantissa_ < minMantissa && exponent_ <= minExponent))
     {
         mantissa_ = zero.mantissa_;
         exponent_ = zero.exponent_;
         negative = zero.negative_;
         return;
     }
+
     auto m = mantissa_;
     while ((m < minMantissa) && (exponent_ > minExponent))
     {
@@ -417,7 +441,7 @@ doNormalize(
         m /= 10;
         ++exponent_;
     }
-    if ((exponent_ < minExponent) || (m < minMantissa))
+    if ((exponent_ < minExponent) || (m == 0))
     {
         mantissa_ = zero.mantissa_;
         exponent_ = zero.exponent_;
@@ -425,33 +449,8 @@ doNormalize(
         return;
     }
 
-    // When using the largeRange, "m" needs fit within an int64, even if
-    // the final mantissa_ is going to end up larger to fit within the
-    // MantissaRange. Cut it down here so that the rounding will be done while
-    // it's smaller.
-    //
-    // Example: 9,900,000,000,000,123,456 > 9,223,372,036,854,775,807,
-    //      so "m" will be modified to 990,000,000,000,012,345. Then that value
-    //      will be rounded to 990,000,000,000,012,345 or
-    //      990,000,000,000,012,346, depending on the rounding mode. Finally,
-    //      mantissa_ will be "m*10" so it fits within the range, and end up as
-    //      9,900,000,000,000,123,450 or 9,900,000,000,000,123,460.
-    // mantissa() will return mantissa_ / 10, and exponent() will return
-    // exponent_ + 1.
-    if (m > maxRep)
-    {
-        if (exponent_ >= maxExponent)
-            throw std::overflow_error("Number::normalize 1.5");
-        g.push(m % 10);
-        m /= 10;
-        ++exponent_;
-    }
-    // Before modification, m should be within the min/max range. After
-    // modification, it must be less than maxRep. In other words, the original
-    // value should have been no more than maxRep * 10.
-    // (maxRep * 10 > maxMantissa)
     XRPL_ASSERT_PARTS(
-        m <= maxRep,
+        m <= maxMantissa,
         "xrpl::doNormalize",
         "intermediate mantissa fits in int64");
     mantissa_ = m;
@@ -463,10 +462,11 @@ doNormalize(
         minMantissa,
         maxMantissa,
         "Number::normalize 2");
-    // XRPL_ASSERT_PARTS(
-    //     mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
-    //     "xrpl::doNormalize",
-    //     "final mantissa fits in range");
+
+    XRPL_ASSERT_PARTS(
+        mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
+        "xrpl::doNormalize",
+        "final mantissa fits in range");
 }
 
 template <>
@@ -561,13 +561,10 @@ Number::operator+=(Number const& y)
 
     // Need to use uint128_t, because large mantissas can overflow when added
     // together.
-    bool xn = negative_;
-    uint128_t xm = mantissa_;
-    auto xe = exponent_;
+    auto [xn, xm, xe] = toInternal<uint128_t>();
 
-    bool yn = y.negative_;
-    uint128_t ym = y.mantissa_;
-    auto ye = y.exponent_;
+    auto [yn, ym, ye] = y.toInternal<uint128_t>();
+
     Guard g;
     if (xe < ye)
     {
@@ -599,7 +596,7 @@ Number::operator+=(Number const& y)
     if (xn == yn)
     {
         xm += ym;
-        if (xm > maxMantissa || xm > maxRep)
+        if (xm > maxMantissa)
         {
             g.push(xm % 10);
             xm /= 10;
@@ -620,7 +617,7 @@ Number::operator+=(Number const& y)
             xe = ye;
             xn = yn;
         }
-        while (xm < minMantissa && xm * 10 <= maxRep)
+        while (xm < minMantissa)
         {
             xm *= 10;
             xm -= g.pop();
@@ -702,7 +699,7 @@ Number::operator*=(Number const& y)
     auto const& minMantissa = range.min;
     auto const& maxMantissa = range.max;
 
-    while (zm > maxMantissa || zm > maxRep)
+    while (zm > maxMantissa)
     {
         // The following is optimization for:
         // g.push(static_cast<unsigned>(zm % 10));
@@ -844,7 +841,7 @@ Number::operator rep() const
         }
         for (; offset > 0; --offset)
         {
-            if (drops > maxRep / 10)
+            if (drops > largeRange.max / 10)
                 throw std::overflow_error("Number::operator rep() overflow");
             drops *= 10;
         }
@@ -879,9 +876,8 @@ to_string(Number const& amount)
     if (amount == zero)
         return "0";
 
-    auto exponent = amount.exponent_;
-    auto mantissa = amount.mantissa_;
-    bool const negative = amount.negative_;
+    // The mantissa must have a set number of decimal places for this to work
+    auto [negative, mantissa, exponent] = amount.toInternal();
 
     // Use scientific notation for exponents that are too small or too large
     auto const rangeLog = Number::mantissaLog();

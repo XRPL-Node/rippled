@@ -17,18 +17,37 @@ class Number;
 std::string
 to_string(Number const& amount);
 
+/** Returns a rough estimate of log10(value).
+ *
+ * The return value is a pair (log, rem), where log is the estimated log10,
+ * and rem is value divided by 10^log. If rem is 1, then value is an exact
+ * power of ten, and log is the exact log10(value).
+ *
+ * This function only works for positive values.
+ */
+template <typename T>
+constexpr std::pair<int, T>
+logTenEstimate(T value)
+{
+    int log = 0;
+    T remainder = value;
+    while (value >= 10)
+    {
+        if (value % 10 == 0)
+            remainder = remainder / 10;
+        value /= 10;
+        ++log;
+    }
+    return {log, remainder};
+}
+
 template <typename T>
 constexpr std::optional<int>
 logTen(T value)
 {
-    int log = 0;
-    while (value >= 10 && value % 10 == 0)
-    {
-        value /= 10;
-        ++log;
-    }
-    if (value == 1)
-        return log;
+    auto const est = logTenEstimate(value);
+    if (est.second == 1)
+        return est.first;
     return std::nullopt;
 }
 
@@ -42,12 +61,10 @@ isPowerOfTen(T value)
 /** MantissaRange defines a range for the mantissa of a normalized Number.
  *
  * The mantissa is in the range [min, max], where
- * * min is a power of 10, and
- * * max = min * 10 - 1.
  *
  * The mantissa_scale enum indicates whether the range is "small" or "large".
  * This intentionally restricts the number of MantissaRanges that can be
- * instantiated to two: one for each scale.
+ * used to two: one for each scale.
  *
  * The "small" scale is based on the behavior of STAmount for IOUs. It has a min
  * value of 10^15, and a max value of 10^16-1. This was sufficient for
@@ -61,8 +78,8 @@ isPowerOfTen(T value)
  * "large" scale.
  *
  * The "large" scale is intended to represent all values that can be represented
- * by an STAmount - IOUs, XRP, and MPTs. It has a min value of 10^18, and a max
- * value of 10^19-1.
+ * by an STAmount - IOUs, XRP, and MPTs. It has a min value of 2^63/10+1
+ * (truncated), and a max value of 2^63-1.
  *
  * Note that if the mentioned amendments are eventually retired, this class
  * should be left in place, but the "small" scale option should be removed. This
@@ -74,34 +91,80 @@ struct MantissaRange
     enum mantissa_scale { small, large };
 
     explicit constexpr MantissaRange(mantissa_scale scale_)
-        : min(getMin(scale_))
-        , max(min * 10 - 1)
-        , log(logTen(min).value_or(-1))
+        : max(getMax(scale_))
+        , min(computeMin(max))
+        , referenceMin(getReferenceMin(scale_, min))
+        , log(computeLog(min))
         , scale(scale_)
     {
+        // Since this is constexpr, if any of these throw, it won't compile
+        if (min * 10 <= max)
+            throw std::out_of_range("min * 10 <= max");
+        if (max / 10 >= min)
+            throw std::out_of_range("max / 10 >= min");
+        if ((min - 1) * 10 > max)
+            throw std::out_of_range("(min - 1) * 10 > max");
+        // This is a little hacky
+        if ((max + 10) / 10 < min)
+            throw std::out_of_range("(max + 10) / 10 < min");
     }
 
-    rep min;
     rep max;
+    rep min;
+    // This is not a great name. Used to determine if mantissas are in range,
+    // but have fewer digits than max
+    rep referenceMin;
     int log;
     mantissa_scale scale;
 
 private:
     static constexpr rep
-    getMin(mantissa_scale scale_)
+    getMax(mantissa_scale scale)
     {
-        switch (scale_)
+        switch (scale)
         {
             case small:
-                return 1'000'000'000'000'000ULL;
+                return 9'999'999'999'999'999ULL;
             case large:
-                return 1'000'000'000'000'000'000ULL;
+                return std::numeric_limits<std::int64_t>::max();
             default:
                 // Since this can never be called outside a non-constexpr
                 // context, this throw assures that the build fails if an
                 // invalid scale is used.
                 throw std::runtime_error("Unknown mantissa scale");
         }
+    }
+
+    static constexpr rep
+    computeMin(rep max)
+    {
+        auto min = max + 1;
+        auto const r = min % 10;
+        min /= 10;
+        if (r != 0)
+            ++min;
+        return min;
+    }
+
+    static constexpr rep
+    getReferenceMin(mantissa_scale scale, rep min)
+    {
+        switch (scale)
+        {
+            case large:
+                return 1'000'000'000'000'000'000ULL;
+            default:
+                if (isPowerOfTen(min))
+                    return min;
+                throw std::runtime_error("Unknown/bad mantissa scale");
+        }
+    }
+
+    static constexpr rep
+    computeLog(rep min)
+    {
+        auto const estimate = logTenEstimate(min);
+        return estimate.first + (estimate.second == 1 ? 0 : 1);
     }
 };
 
@@ -137,9 +200,7 @@ concept Integral64 =
  *   1. Normalization can be disabled by using the "unchecked" ctor tag. This
  *      should only be used at specific conversion points, some constexpr
  *      values, and in unit tests.
- *   2. The max of the "large" range, 10^19-1, is the largest 10^X-1 value that
- *      fits in an unsigned 64-bit number. (10^19-1 < 2^64-1 and
- *      10^20-1 > 2^64-1). This avoids under- and overflows.
+ *   2. The max of the "large" range, 2^63-1, TODO: explain the large range.
  *
  * ---- External Interface ----
  *
@@ -153,7 +214,7 @@ concept Integral64 =
  *
  * Note:
  *   1. 2^63-1 is between 10^18 and 10^19-1, which are the limits of the "large"
- *      mantissa range.
+ *      mantissa range. TODO: update this explanation.
  *   2. The functions mantissa() and exponent() return the external view of the
  *      Number value, specifically using a signed 63-bit mantissa. This may
  *      require altering the internal representation to fit into that range
@@ -213,6 +274,7 @@ class Number
     using rep = std::int64_t;
     using internalrep = MantissaRange::rep;
 
+    // TODO: Get rid of negative_ and convert mantissa back to rep
     bool negative_{false};
     internalrep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
@@ -222,9 +284,11 @@ public:
     constexpr static int minExponent = -32768;
     constexpr static int maxExponent = 32768;
 
+#if MAXREP
     constexpr static internalrep maxRep = std::numeric_limits<rep>::max();
     static_assert(maxRep == 9'223'372'036'854'775'807);
     static_assert(-maxRep == std::numeric_limits<rep>::min() + 1);
+#endif
 
     // May need to make unchecked private
     struct unchecked
@@ -457,16 +521,31 @@ private:
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.min == 1'000'000'000'000'000LL);
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
+    static_assert(smallRange.referenceMin == smallRange.min);
     static_assert(smallRange.log == 15);
+#if MAXREP
     static_assert(smallRange.min < maxRep);
     static_assert(smallRange.max < maxRep);
+#endif
     constexpr static MantissaRange largeRange{MantissaRange::large};
-    static_assert(isPowerOfTen(largeRange.min));
-    static_assert(largeRange.min == 1'000'000'000'000'000'000ULL);
-    static_assert(largeRange.max == internalrep(9'999'999'999'999'999'999ULL));
+    static_assert(!isPowerOfTen(largeRange.min));
+    static_assert(largeRange.min == 922'337'203'685'477'581ULL);
+    static_assert(largeRange.max == internalrep(9'223'372'036'854'775'807ULL));
+    static_assert(largeRange.max == std::numeric_limits<rep>::max());
+    static_assert(largeRange.referenceMin == 1'000'000'000'000'000'000ULL);
     static_assert(largeRange.log == 18);
+    // There are 2 values that will not fit in largeRange without some extra
+    // work
+    // * 9223372036854775808
+    // * 9223372036854775809
+    // They both end up < min, but with a leftover. If they round up, everything
+    // will be fine. If they don't, well need to bring them up into range.
+    // Guard::bringIntoRange handles this situation.
+
+#if MAXREP
     static_assert(largeRange.min < maxRep);
     static_assert(largeRange.max > maxRep);
+#endif
 
     // The range for the mantissa when normalized.
     // Use reference_wrapper to avoid making copies, and prevent accidentally
@@ -516,7 +595,16 @@ private:
     static internalrep
     externalToInternal(rep mantissa);
 
+    // Safely convert Number to the internal rep where the mantissa always has
+    // the same number of digits
+    template <class Rep = internalrep>
+    std::tuple<bool, Rep, int>
+    toInternal() const;
+
     class Guard;
+
+public:
+    constexpr static internalrep largestMantissa = largeRange.max;
 };
 
 inline constexpr Number::Number(
@@ -570,17 +658,8 @@ inline Number::Number(rep mantissa) : Number{mantissa, 0}
 inline constexpr Number::rep
 Number::mantissa() const noexcept
 {
-    auto m = mantissa_;
-    if (m > maxRep)
-    {
-        XRPL_ASSERT_PARTS(
-            !isnormal() || (m % 10 == 0 && m / 10 <= maxRep),
-            "xrpl::Number::mantissa",
-            "large normalized mantissa has no remainder");
-        m /= 10;
-    }
     auto const sign = negative_ ? -1 : 1;
-    return sign * static_cast<Number::rep>(m);
+    return sign * static_cast<Number::rep>(mantissa_);
 }
 
 /** Returns the exponent of the external view of the Number.
@@ -591,16 +670,7 @@ Number::mantissa() const noexcept
 inline constexpr int
 Number::exponent() const noexcept
 {
-    auto e = exponent_;
-    if (mantissa_ > maxRep)
-    {
-        XRPL_ASSERT_PARTS(
-            !isnormal() || (mantissa_ % 10 == 0 && mantissa_ / 10 <= maxRep),
-            "xrpl::Number::exponent",
-            "large normalized mantissa has no remainder");
-        ++e;
-    }
-    return e;
+    return exponent_;
 }
 
 inline constexpr Number
@@ -696,15 +766,13 @@ Number::min() noexcept
 inline Number
 Number::max() noexcept
 {
-    return Number{
-        false, std::min(range_.get().max, maxRep), maxExponent, unchecked{}};
+    return Number{false, range_.get().max, maxExponent, unchecked{}};
 }
 
 inline Number
 Number::lowest() noexcept
 {
-    return Number{
-        true, std::min(range_.get().max, maxRep), maxExponent, unchecked{}};
+    return Number{true, range_.get().max, maxExponent, unchecked{}};
 }
 
 inline bool
@@ -713,9 +781,8 @@ Number::isnormal() const noexcept
     MantissaRange const& range = range_;
     auto const abs_m = mantissa_;
     return *this == Number{} ||
-        (range.min <= abs_m && abs_m <= range.max &&
-         (abs_m <= maxRep || abs_m % 10 == 0) && minExponent <= exponent_ &&
-         exponent_ <= maxExponent);
+        (range.min <= abs_m && abs_m <= range.max &&  //
+         minExponent <= exponent_ && exponent_ <= maxExponent);
 }
 
 template <Integral64 T>
