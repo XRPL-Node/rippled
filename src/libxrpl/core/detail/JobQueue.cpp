@@ -9,7 +9,7 @@ namespace xrpl {
 bool
 JobQueue::Coro::shouldStop() const
 {
-    return jq_.queueState_ != QueueState::Accepting || exiting_;
+    return jq_.queueState_ != QueueState::Accepting;
 }
 
 JobQueue::JobQueue(
@@ -295,28 +295,6 @@ JobQueue::stop()
     {
         XRPL_ASSERT(
             false, "Incorrect queueState, should be accepting but not!");
-    }
-    std::map<void*, std::weak_ptr<Coro>> suspendedCoros;
-    {
-        std::unique_lock lock(m_mutex);
-        suspendedCoros = std::move(m_suspendedCoros);
-    }
-    if (!suspendedCoros.empty())
-    {
-        // We should resume the suspended coroutines so that the coroutines
-        // get a chance to exit cleanly.
-        for (auto& [_, coro] : suspendedCoros)
-        {
-            if (auto coroPtr = coro.lock())
-            {
-                // We don't allow any new jobs from outside when we are
-                // stopping, but we should allow new jobs from inside the class.
-                addJobNoStatusCheck(
-                    coroPtr->type_, coroPtr->name_, [coroPtr]() {
-                        coroPtr->resume();
-                    });
-            }
-        }
     }
 
     using namespace std::chrono_literals;

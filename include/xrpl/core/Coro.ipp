@@ -3,6 +3,8 @@
 
 #include <xrpl/basics/ByteUtilities.h>
 
+#include <mutex>
+
 namespace xrpl {
 
 template <class F>
@@ -19,6 +21,22 @@ JobQueue::Coro::Coro(
           [this, fn = std::forward<F>(f)](
               boost::coroutines::asymmetric_coroutine<void>::push_type&
                   do_yield) {
+              struct ScopeExit
+              {
+                  std::atomic<CoroState>& state;
+
+                  ScopeExit(std::atomic<CoroState>& s) : state(s)
+                  {
+                  }
+
+                  ~ScopeExit()
+                  {
+                      state = CoroState::Finished;
+                      state.notify_all();
+                  }
+              };
+
+              ScopeExit _{state_};
               yield_ = &do_yield;
               yield();
               // self makes Coro alive until this function returns
@@ -28,8 +46,6 @@ JobQueue::Coro::Coro(
                   self = shared_from_this();
                   fn(self);
               }
-              state_ = CoroState::Finished;
-              cv_.notify_all();
           },
           boost::coroutines::attributes(megabytes(1)))
 {
@@ -40,16 +56,6 @@ inline JobQueue::Coro::~Coro()
     XRPL_ASSERT(
         state_ != CoroState::Running,
         "xrpl::JobQueue::Coro::~Coro : is not running");
-    exiting_ = true;
-    // Resume the coroutine so that it has a chance to clean things up
-    if (state_ == CoroState::Suspended)
-    {
-        resume();
-    }
-
-    XRPL_ASSERT(
-        state_ == CoroState::Finished,
-        "xrpl::JobQueue::Coro::~Coro : is finished");
 }
 
 inline bool
@@ -61,10 +67,9 @@ JobQueue::Coro::yield()
             return false;
 
         state_ = CoroState::Suspended;
-        cv_.notify_all();
+        state_.notify_all();
 
         ++jq_.nSuspend_;
-        jq_.m_suspendedCoros[this] = weak_from_this();
         jq_.cv_.notify_all();
     }
     (*yield_)();
@@ -96,7 +101,6 @@ JobQueue::Coro::post()
         return true;
     }
 
-    cv_.notify_all();
     return false;
 }
 
@@ -108,17 +112,16 @@ JobQueue::Coro::resume()
     {
         return;
     }
-    cv_.notify_all();
+    state_.notify_all();
 
     {
         std::lock_guard lock(jq_.m_mutex);
-        jq_.m_suspendedCoros.erase(this);
         --jq_.nSuspend_;
         jq_.cv_.notify_all();
     }
+
     auto saved = detail::getLocalValues().release();
     detail::getLocalValues().reset(&lvs_);
-    std::lock_guard lock(mutex_);
     XRPL_ASSERT(
         static_cast<bool>(coro_), "xrpl::JobQueue::Coro::resume : is runnable");
     coro_();
@@ -140,8 +143,7 @@ JobQueue::Coro::runnable() const
 inline void
 JobQueue::Coro::join()
 {
-    std::unique_lock<std::mutex> lk(mutex_run_);
-    cv_.wait(lk, [this]() { return state_ != CoroState::Running; });
+    state_.wait(CoroState::Running);
 }
 
 }  // namespace xrpl
