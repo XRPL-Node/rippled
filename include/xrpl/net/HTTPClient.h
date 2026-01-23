@@ -31,6 +31,9 @@ public:
         beast::Journal j);
 
     static void
+    cleanupSSLContext();
+
+    static void
     get(bool bSSL,
         boost::asio::io_context& io_context,
         std::deque<std::string> deqSites,

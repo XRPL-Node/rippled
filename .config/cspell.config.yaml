@@ -89,6 +89,7 @@ words:
   - endmacro
   - exceptioned
   - Falco
+  - fcontext
   - finalizers
   - firewalled
   - fmtdur
@@ -213,6 +214,7 @@ words:
   - soci
   - socidb
   - sslws
+  - stackful
   - statsd
   - STATSDCOLLECTOR
   - stissue

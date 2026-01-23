@@ -140,6 +140,7 @@ unsigned-integer-overflow:src/libxrpl/protocol/tokens.cpp
 unsigned-integer-overflow:src/libxrpl/shamap/SHAMap.cpp
 unsigned-integer-overflow:src/test/app/Batch_test.cpp
 unsigned-integer-overflow:src/test/app/Invariants_test.cpp
+unsigned-integer-overflow:src/test/app/Loan_test.cpp
 unsigned-integer-overflow:src/test/app/NFToken_test.cpp
 unsigned-integer-overflow:src/test/app/Offer_test.cpp
 unsigned-integer-overflow:src/test/app/Path_test.cpp

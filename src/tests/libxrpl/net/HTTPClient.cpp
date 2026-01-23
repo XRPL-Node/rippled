@@ -254,6 +254,9 @@ TEST(HTTPClient, case_insensitive_content_length)
         EXPECT_EQ(result_status, 200);
         EXPECT_EQ(result_data, test_body);
     }
+
+    // Clean up SSL context to prevent memory leaks
+    HTTPClient::cleanupSSLContext();
 }
 
 TEST(HTTPClient, basic_http_request)
@@ -324,4 +327,7 @@ TEST(HTTPClient, different_status_codes)
         EXPECT_FALSE(result_error);
         EXPECT_EQ(result_status, static_cast<int>(status));
     }
+
+    // Clean up SSL context to prevent memory leaks
+    HTTPClient::cleanupSSLContext();
 }
