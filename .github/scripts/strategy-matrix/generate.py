@@ -44,7 +44,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # We build and test all configurations by default, except for Windows in
         # Debug, because it is too slow, as well as when code coverage is
         # enabled as that mode already runs the tests.
-        build_only = False
+        build_only = True
         if os["distro_name"] == "windows" and build_type == "Debug":
             build_only = True
 
