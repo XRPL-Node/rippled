@@ -1,3 +1,4 @@
+#include <test/app/BaseInvariants_test.cpp>
 #include <test/jtx.h>
 #include <test/jtx/AMM.h>
 #include <test/jtx/Env.h>
@@ -23,8 +24,9 @@
 namespace xrpl {
 namespace test {
 
-class Invariants_test : public beast::unit_test::suite
+class Invariants_test : public BaseInvariants_test
 {
+public:
     // The optional Preclose function is used to process additional transactions
     // on the ledger after creating two accounts, but before closing it, and
     // before the Precheck function. These should only be valid functions, and
@@ -125,6 +127,7 @@ class Invariants_test : public beast::unit_test::suite
         }
     }
 
+private:
     void
     testXRPNotCreated()
     {
@@ -1912,10 +1915,6 @@ class Invariants_test : public beast::unit_test::suite
 
         using namespace jtx;
 
-        enum class Asset { XRP, IOU, MPT };
-        auto const assetTypes =
-            std::to_array({Asset::XRP, Asset::IOU, Asset::MPT});
-
         for (auto const assetType : assetTypes)
         {
             // Initialize with a placeholder value because there's no default
@@ -3294,29 +3293,30 @@ class Invariants_test : public beast::unit_test::suite
             [&](Account const& A1, Account const& A2, ApplyContext& ac) {
                 auto const keylet = keylet::vault(A1.id(), ac.view().seq());
 
-                // Move 10 drops to A4 to enforce total XRP balance
-                auto sleA4 = ac.view().peek(keylet::account(A4.id()));
-                if (!sleA4)
-                    return false;
-                (*sleA4)[sfBalance] = *(*sleA4)[sfBalance] + 10;
-                ac.view().update(sleA4);
+                // // Move 10 drops to A4 to enforce total XRP balance
+                // auto sleA4 = ac.view().peek(keylet::account(A4.id()));
+                // if (!sleA4)
+                //     return false;
+                // (*sleA4)[sfBalance] = *(*sleA4)[sfBalance] + 10;
+                // ac.view().update(sleA4);
 
                 return adjust(
                     ac.view(),
                     keylet,
-                    args(A3.id(), -10, [&](Adjustments& sample) {
-                        sample.accountAssets->amount = -100;
+                    args(A1.id(), -10, [&](Adjustments& sample) {
+                        // sample.accountAssets->amount = -10;
                     }));
             },
-            XRPAmount{100},
+            XRPAmount{},
             STTx{
                 ttVAULT_DEPOSIT,
                 [&](STObject& tx) {
-                    tx[sfFee] = XRPAmount(100);
-                    tx[sfAccount] = A3.id();
+                    // tx[sfFee] = XRPAmount(100);
+                    // tx[sfAccount] = A3.id();
                 }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
-            precloseXrp);
+            precloseXrp,
+            TxAccount::A2);
 
         doInvariantCheck(
             {"deposit must increase vault balance",
