@@ -63,14 +63,18 @@ JobQueue::Coro::yield()
 {
     {
         std::lock_guard lock(jq_.m_mutex);
-        if (shouldStop())
-            return false;
-
-        state_ = CoroState::Suspended;
-        state_.notify_all();
 
         ++jq_.nSuspend_;
         jq_.cv_.notify_all();
+        jq_.m_suspendedCoros[this] = weak_from_this();
+    }
+
+    boost::coroutines::asymmetric_coroutine<void>::pull_type coro;
+    boost::coroutines::asymmetric_coroutine<void>::push_type* push;
+    {
+        std::lock_guard lock(m_);
+        state_ = CoroState::Suspended;
+        cv_.notify_all();
     }
     (*yield_)();
 
@@ -116,6 +120,7 @@ JobQueue::Coro::resume()
 
     {
         std::lock_guard lock(jq_.m_mutex);
+        jq_.m_suspendedCoros.erase(this);
         --jq_.nSuspend_;
         jq_.cv_.notify_all();
     }
@@ -144,6 +149,22 @@ inline void
 JobQueue::Coro::join()
 {
     state_.wait(CoroState::Running);
+}
+
+inline void
+JobQueue::Coro::cancel()
+{
+    auto suspended = CoroState::Suspended;
+    if (!state_.compare_exchange_strong(suspended, CoroState::Running))
+    {
+        return;
+    }
+
+    coro_ = {};
+
+    XRPL_ASSERT(
+        state_ == CoroState::Finished,
+        "ripple::JobQueue::Coro::cancel : should have finished");
 }
 
 }  // namespace xrpl

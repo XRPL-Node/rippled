@@ -52,7 +52,10 @@ public:
         JobQueue& jq_;
         JobType type_;
         std::string name_;
-        std::atomic<CoroState> state_ = CoroState::None;
+        CoroState state_ = CoroState::None;
+        std::condition_variable cv_;
+        std::mutex m_;
+
         boost::coroutines::asymmetric_coroutine<void>::pull_type coro_;
         boost::coroutines::asymmetric_coroutine<void>::push_type* yield_;
 
@@ -124,9 +127,8 @@ public:
         void
         join();
 
-        /** Returns true if the coroutine should stop executing */
-        [[nodiscard]] bool
-        shouldStop() const;
+        void
+        cancel();
     };
 
     using JobFunction = std::function<void()>;
@@ -247,6 +249,8 @@ private:
 
     // The number of suspended coroutines
     int nSuspend_ = 0;
+
+    std::map<void*, std::weak_ptr<Coro>> m_suspendedCoros;
 
     Workers m_workers;
 
