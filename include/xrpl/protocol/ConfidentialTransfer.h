@@ -16,6 +16,22 @@
 #include <secp256k1.h>
 
 namespace ripple {
+// Helper struct to bundle the ElGamal Public Key and the associated Ciphertext
+struct ConfidentialRecipient
+{
+    Slice const publicKey;
+    Slice const encryptedAmount;
+};
+
+inline void
+incrementConfidentialVersion(STObject& mptoken)
+{
+    // Retrieve current version and increment.
+    // Unsigned integer overflow is defined behavior in C++ (wraps to 0),
+    // which is acceptable here.
+    mptoken[sfConfidentialBalanceVersion] =
+        mptoken[~sfConfidentialBalanceVersion].value_or(0u) + 1u;
+}
 
 void
 addCommonZKPFields(
@@ -23,8 +39,15 @@ addCommonZKPFields(
     std::uint16_t txType,
     AccountID const& account,
     std::uint32_t sequence,
+    uint192 const& issuanceID);
+
+uint256
+getSendContextHash(
+    AccountID const& account,
+    std::uint32_t sequence,
     uint192 const& issuanceID,
-    std::uint64_t amount);
+    AccountID const& destination,
+    std::uint32_t version);
 
 uint256
 getClawbackContextHash(
@@ -101,6 +124,33 @@ verifyElGamalEncryption(
     Slice const& pubKeySlice,
     Slice const& ciphertext);
 
+NotTEC
+checkEncryptedAmountFormat(STObject const& object);
+
+TER
+verifyRevealedAmount(
+    std::uint64_t const amount,
+    Slice const& blindingFactor,
+    ConfidentialRecipient const& holder,
+    ConfidentialRecipient const& issuer,
+    std::optional<ConfidentialRecipient> const& auditor);
+
+constexpr std::size_t
+getConfidentialRecipientCount(bool hasAuditor)
+{
+    return hasAuditor ? 4 : 3;
+}
+
+std::size_t
+getMultiCiphertextEqualityProofSize(std::size_t nRecipients);
+
+TER
+verifyMultiCiphertextEqualityProof(
+    Slice const& proof,
+    std::vector<ConfidentialRecipient> const& recipients,
+    std::size_t const nRecipients,
+    uint256 const& contextHash);
+
 TER
 verifyClawbackEqualityProof(
     uint64_t const amount,
@@ -108,24 +158,6 @@ verifyClawbackEqualityProof(
     Slice const& pubKeySlice,
     Slice const& ciphertext,
     uint256 const& contextHash);
-
-NotTEC
-checkEncryptedAmountFormat(STObject const& object);
-
-// Helper struct to bundle the ElGamal Public Key and the associated Ciphertext
-struct EncryptedAmountInfo
-{
-    Slice const publicKey;
-    Slice const encryptedAmount;
-};
-
-TER
-verifyRevealedAmount(
-    std::uint64_t const amount,
-    Slice const& blindingFactor,
-    EncryptedAmountInfo const& holder,
-    EncryptedAmountInfo const& issuer,
-    std::optional<EncryptedAmountInfo> const& auditor);
 
 // generates a 32 byte randomness factor to be used in encryption and proofs
 Buffer
@@ -392,6 +424,46 @@ secp256k1_mpt_pedersen_commit(
     uint64_t amount,
     unsigned char const* blinding_factor_rho /* 32 bytes */
 );
+
+// Multi-proof for same plaintexts
+void
+build_hash_input(
+    unsigned char* hash_out,  // Output: 32-byte hash
+    size_t n,
+    secp256k1_pubkey const* R,
+    secp256k1_pubkey const* S,
+    secp256k1_pubkey const* Pk,
+    secp256k1_pubkey const* T_m,
+    secp256k1_pubkey const* T_rG,
+    secp256k1_pubkey const* T_rP,
+    unsigned char const* tx_id);
+
+size_t
+secp256k1_mpt_prove_same_plaintext_multi_size(size_t n);
+
+int
+secp256k1_mpt_prove_same_plaintext_multi(
+    secp256k1_context const* ctx,
+    unsigned char* proof_out,
+    size_t* proof_len,
+    uint64_t amount_m,
+    size_t n,
+    secp256k1_pubkey const* R,
+    secp256k1_pubkey const* S,
+    secp256k1_pubkey const* Pk,
+    unsigned char const* r_array,
+    unsigned char const* tx_id);
+
+int
+secp256k1_mpt_verify_same_plaintext_multi(
+    secp256k1_context const* ctx,
+    unsigned char const* proof,
+    size_t proof_len,
+    size_t n,
+    secp256k1_pubkey const* R,
+    secp256k1_pubkey const* S,
+    secp256k1_pubkey const* Pk,
+    unsigned char const* tx_id);
 }  // namespace ripple
 
 #endif
