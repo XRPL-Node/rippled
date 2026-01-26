@@ -26,3 +26,4 @@ interceptor_name:memcpy
 interceptor_name:__bzero
 interceptor_name:__asan_memset
 interceptor_name:__asan_memcpy
+fun:assert
