@@ -574,8 +574,8 @@ private:
     friend void
     doNormalize(
         bool& negative,
-        T& mantissa_,
-        int& exponent_,
+        T& mantissa,
+        int& exponent,
         MantissaRange::rep const& minMantissa,
         MantissaRange::rep const& maxMantissa);
 
