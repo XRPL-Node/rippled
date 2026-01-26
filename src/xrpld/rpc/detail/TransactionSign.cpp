@@ -844,7 +844,8 @@ getTxFee(Application const& app, Config const& config, Json::Value tx)
         }
     }
 
-    STParsedJSONObject parsed(std::string(jss::tx_json), tx);
+    auto static const tx_json_name = std::string(jss::tx_json);
+    STParsedJSONObject parsed(tx_json_name, tx);
     if (!parsed.object.has_value())
     {
         return config.FEES.reference_fee;

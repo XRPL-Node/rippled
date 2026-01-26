@@ -1,6 +1,7 @@
 #ifndef XRPL_BASICS_CONTRACT_H_INCLUDED
 #define XRPL_BASICS_CONTRACT_H_INCLUDED
 
+#include <xrpl/basics/sanitizers.h>
 #include <xrpl/beast/type_name.h>
 
 #include <exception>
@@ -25,7 +26,7 @@ LogThrow(std::string const& title);
     control to the next matching exception handler, if any.
     Otherwise, std::terminate will be called.
 */
-[[noreturn]] inline void
+[[noreturn]] inline void XRPL_NO_SANITIZE_ADDRESS
 Rethrow()
 {
     LogThrow("Re-throwing exception");
@@ -33,7 +34,7 @@ Rethrow()
 }
 
 template <class E, class... Args>
-[[noreturn]] inline void
+[[noreturn]] inline void XRPL_NO_SANITIZE_ADDRESS
 Throw(Args&&... args)
 {
     static_assert(

@@ -102,6 +102,7 @@ words:
   - gpgcheck
   - gpgkey
   - hotwallet
+  - hwaddress
   - ifndef
   - inequation
   - insuf
