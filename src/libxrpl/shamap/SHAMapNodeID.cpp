@@ -77,7 +77,8 @@ SHAMapNodeID::getChildNodeID(unsigned int m) const
         Throw<std::logic_error>(
             "Request for child node ID of " + to_string(*this));
 
-    if (id_ != (id_ & depthMask(depth_)))
+    auto const idAtDepth = id_ & depthMask(depth_);
+    if (id_ != idAtDepth)
         Throw<std::logic_error>("Incorrect mask for " + to_string(*this));
 
     SHAMapNodeID node{depth_ + 1, id_};
