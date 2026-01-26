@@ -399,13 +399,12 @@ Number::one()
 }
 
 // Use the member names in this static function for now so the diff is cleaner
-// TODO: Rename the function parameters to get rid of the "_" suffix
 template <class T>
 void
 doNormalize(
     bool& negative,
-    T& mantissa_,
-    int& exponent_,
+    T& mantissa,
+    int& exponent,
     MantissaRange::rep const& minMantissa,
     MantissaRange::rep const& maxMantissa)
 {
@@ -415,35 +414,35 @@ doNormalize(
     using Guard = Number::Guard;
 
     constexpr Number zero = Number{};
-    if (mantissa_ == 0 || (mantissa_ < minMantissa && exponent_ <= minExponent))
+    if (mantissa == 0 || (mantissa < minMantissa && exponent <= minExponent))
     {
-        mantissa_ = zero.mantissa_;
-        exponent_ = zero.exponent_;
+        mantissa = zero.mantissa_;
+        exponent = zero.exponent_;
         negative = zero.negative_;
         return;
     }
 
-    auto m = mantissa_;
-    while ((m < minMantissa) && (exponent_ > minExponent))
+    auto m = mantissa;
+    while ((m < minMantissa) && (exponent > minExponent))
     {
         m *= 10;
-        --exponent_;
+        --exponent;
     }
     Guard g;
     if (negative)
         g.set_negative();
     while (m > maxMantissa)
     {
-        if (exponent_ >= maxExponent)
+        if (exponent >= maxExponent)
             throw std::overflow_error("Number::normalize 1");
         g.push(m % 10);
         m /= 10;
-        ++exponent_;
+        ++exponent;
     }
-    if ((exponent_ < minExponent) || (m == 0))
+    if ((exponent < minExponent) || (m == 0))
     {
-        mantissa_ = zero.mantissa_;
-        exponent_ = zero.exponent_;
+        mantissa = zero.mantissa_;
+        exponent = zero.exponent_;
         negative = zero.negative_;
         return;
     }
@@ -452,20 +451,24 @@ doNormalize(
         m <= maxMantissa,
         "xrpl::doNormalize",
         "intermediate mantissa fits in int64");
-    mantissa_ = m;
+    mantissa = m;
 
     g.doRoundUp(
         negative,
-        mantissa_,
-        exponent_,
+        mantissa,
+        exponent,
         minMantissa,
         maxMantissa,
         "Number::normalize 2");
 
     XRPL_ASSERT_PARTS(
-        mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
+        mantissa >= minMantissa && mantissa <= maxMantissa,
         "xrpl::doNormalize",
         "final mantissa fits in range");
+    XRPL_ASSERT_PARTS(
+        exponent >= minExponent && exponent <= maxExponent,
+        "xrpl::doNormalize",
+        "final exponent fits in range");
 }
 
 template <>
