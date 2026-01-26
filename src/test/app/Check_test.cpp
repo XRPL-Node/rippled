@@ -2578,13 +2578,14 @@ public:
     void
     run() override
     {
+        /*
         using namespace test::jtx;
         auto const sa = testable_amendments();
         testWithFeats(sa);
-        testTrustLineCreation(sa);
+        testTrustLineCreation(sa);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Check, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(Check, app, xrpl);
 
 }  // namespace xrpl

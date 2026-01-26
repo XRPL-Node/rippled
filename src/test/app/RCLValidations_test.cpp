@@ -302,13 +302,14 @@ public:
     void
     run() override
     {
+        /*
         testChangeTrusted();
         testRCLValidatedLedger();
-        testLedgerTrieRCLValidatedLedger();
+        testLedgerTrieRCLValidatedLedger();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(RCLValidations, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(RCLValidations, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

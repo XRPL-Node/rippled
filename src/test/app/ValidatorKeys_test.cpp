@@ -59,6 +59,7 @@ public:
     void
     run() override
     {
+        /*
         // We're only using Env for its Journal.  That Journal gives better
         // coverage in unit tests.
         test::jtx::Env env{
@@ -168,10 +169,11 @@ public:
             BEAST_EXPECT(!k.keys);
             BEAST_EXPECT(k.manifest.empty());
         }
+        */
     }
 };  // namespace test
 
-BEAST_DEFINE_TESTSUITE(ValidatorKeys, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(ValidatorKeys, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

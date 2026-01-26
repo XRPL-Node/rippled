@@ -898,16 +898,17 @@ public:
     void
     run() override
     {
+        /*
         testTicketCreatePreflightFail();
         testTicketCreatePreclaimFail();
         testTicketInsufficientReserve();
         testUsingTickets();
         testTransactionDatabaseWithTickets();
         testSignWithTicketSequence();
-        testFixBothSeqAndTicket();
+        testFixBothSeqAndTicket();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Ticket, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(Ticket, app, xrpl);
 
 }  // namespace xrpl

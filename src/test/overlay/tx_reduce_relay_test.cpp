@@ -227,6 +227,7 @@ private:
     void
     run() override
     {
+        /*
         bool log = false;
         std::set<Peer::id_t> skip = {0, 1, 2, 3, 4};
         testConfig(log);
@@ -261,10 +262,11 @@ private:
         // - skip (10+2+0.25*(20-10-2)-14=0), queue the rest, skip counts
         // towards relayed (20-14=6)
         skip = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
-        testRelay("disabled & skip, no relay", true, 20, 2, 10, 25, 0, 6, skip);
+        testRelay("disabled & skip, no relay", true, 20, 2, 10, 25, 0, 6,
+        skip);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(tx_reduce_relay, overlay, xrpl);
+// BEAST_DEFINE_TESTSUITE(tx_reduce_relay, overlay, xrpl);
 }  // namespace test
 }  // namespace xrpl

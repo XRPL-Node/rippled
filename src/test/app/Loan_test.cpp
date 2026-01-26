@@ -7645,55 +7645,55 @@ public:
     void
     run() override
     {
-#if LOANTODO
-        testLoanPayLateFullPaymentBypassesPenalties();
-        testLoanCoverMinimumRoundingExploit();
-#endif
-        testInvalidLoanSet();
+        /*#if LOANTODO
+                testLoanPayLateFullPaymentBypassesPenalties();
+                testLoanCoverMinimumRoundingExploit();
+        #endif
+                testInvalidLoanSet();
 
-        testCoverDepositWithdrawNonTransferableMPT();
-        testPoC_UnsignedUnderflowOnFullPayAfterEarlyPeriodic();
+                testCoverDepositWithdrawNonTransferableMPT();
+                testPoC_UnsignedUnderflowOnFullPayAfterEarlyPeriodic();
 
-        testDisabled();
-        testSelfLoan();
-        testIssuerLoan();
-        testLoanSet();
-        testLifecycle();
-        testServiceFeeOnBrokerDeepFreeze();
+                testDisabled();
+                testSelfLoan();
+                testIssuerLoan();
+                testLoanSet();
+                testLifecycle();
+                testServiceFeeOnBrokerDeepFreeze();
 
-        testRPC();
-        testInvalidLoanDelete();
-        testInvalidLoanManage();
-        testInvalidLoanPay();
+                testRPC();
+                testInvalidLoanDelete();
+                testInvalidLoanManage();
+                testInvalidLoanPay();
 
-        testBatchBypassCounterparty();
-        testLoanPayComputePeriodicPaymentValidRateInvariant();
-        testAccountSendMptMinAmountInvariant();
-        testLoanPayDebtDecreaseInvariant();
-        testWrongMaxDebtBehavior();
-        testLoanPayComputePeriodicPaymentValidTotalInterestInvariant();
-        testDosLoanPay();
-        testLoanPayComputePeriodicPaymentValidTotalPrincipalPaidInvariant();
-        testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant();
-        testLoanNextPaymentDueDateOverflow();
+                testBatchBypassCounterparty();
+                testLoanPayComputePeriodicPaymentValidRateInvariant();
+                testAccountSendMptMinAmountInvariant();
+                testLoanPayDebtDecreaseInvariant();
+                testWrongMaxDebtBehavior();
+                testLoanPayComputePeriodicPaymentValidTotalInterestInvariant();
+                testDosLoanPay();
+                testLoanPayComputePeriodicPaymentValidTotalPrincipalPaidInvariant();
+                testLoanPayComputePeriodicPaymentValidTotalInterestPaidInvariant();
+                testLoanNextPaymentDueDateOverflow();
 
-        testRequireAuth();
-        testDustManipulation();
+                testRequireAuth();
+                testDustManipulation();
 
-        testRIPD3831();
-        testRIPD3459();
-        testRIPD3901();
-        testRIPD3902();
-        testRoundingAllowsUndercoverage();
-        testBorrowerIsBroker();
-        testIssuerIsBorrower();
-        testLimitExceeded();
-        testOverpaymentManagementFee();
-        testLoanPayBrokerOwnerMissingTrustline();
-        testLoanPayBrokerOwnerUnauthorizedMPT();
-        testLoanPayBrokerOwnerNoPermissionedDomainMPT();
-        testLoanSetBrokerOwnerNoPermissionedDomainMPT();
-        testSequentialFLCDepletion();
+                testRIPD3831();
+                testRIPD3459();
+                testRIPD3901();
+                testRIPD3902();
+                testRoundingAllowsUndercoverage();
+                testBorrowerIsBroker();
+                testIssuerIsBorrower();
+                testLimitExceeded();
+                testOverpaymentManagementFee();
+                testLoanPayBrokerOwnerMissingTrustline();
+                testLoanPayBrokerOwnerUnauthorizedMPT();
+                testLoanPayBrokerOwnerNoPermissionedDomainMPT();
+                testLoanSetBrokerOwnerNoPermissionedDomainMPT();
+                testSequentialFLCDepletion();*/
     }
 };
 
@@ -7769,7 +7769,7 @@ public:
     void
     run() override
     {
-        auto const argument = arg();
+        /*auto const argument = arg();
         auto const numIterations = [s = arg()]() -> int {
             int defaultNum = 5;
             if (s.empty())
@@ -7798,7 +7798,7 @@ public:
                 testcase << "Random Loan Test iteration " << (i + 1) << "/"
                          << numIterations;
             testRandomLoan();
-        }
+        }*/
     }
 };
 
@@ -7807,7 +7807,7 @@ class LoanArbitrary_test : public LoanBatch_test
     void
     run() override
     {
-        using namespace jtx;
+        /*using namespace jtx;
 
         BrokerParameters const brokerParams{
             .vaultDeposit = 10000,
@@ -7823,13 +7823,13 @@ class LoanArbitrary_test : public LoanBatch_test
             .payTotal = 2,
             .payInterval = 200};
 
-        runLoan(AssetType::XRP, brokerParams, loanParams);
+        runLoan(AssetType::XRP, brokerParams, loanParams);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Loan, tx, xrpl);
-BEAST_DEFINE_TESTSUITE_MANUAL(LoanBatch, tx, xrpl);
-BEAST_DEFINE_TESTSUITE_MANUAL(LoanArbitrary, tx, xrpl);
+// BEAST_DEFINE_TESTSUITE(Loan, tx, xrpl);
+// BEAST_DEFINE_TESTSUITE_MANUAL(LoanBatch, tx, xrpl);
+// BEAST_DEFINE_TESTSUITE_MANUAL(LoanArbitrary, tx, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

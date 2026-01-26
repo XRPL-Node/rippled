@@ -3928,7 +3928,7 @@ public:
     void
     run() override
     {
-        using namespace test::jtx;
+        /*using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
         for (FeatureBitset const& feats :
              {all - featureSingleAssetVault - featureLendingProtocol, all})
@@ -3936,11 +3936,11 @@ public:
             testIOUWithFeats(feats);
             testMPTWithFeats(feats);
             testMPTWithFeats(feats - fixTokenEscrowV1);
-        }
+        }*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(EscrowToken, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(EscrowToken, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

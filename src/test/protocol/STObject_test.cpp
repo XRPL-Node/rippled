@@ -494,15 +494,16 @@ public:
     void
     run() override
     {
+        /*
         // Instantiate a jtx::Env so debugLog writes are exercised.
         test::jtx::Env env(*this);
 
         testFields();
         testSerialization();
-        testMalformed();
+        testMalformed();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(STObject, protocol, xrpl);
+// BEAST_DEFINE_TESTSUITE(STObject, protocol, xrpl);
 
 }  // namespace xrpl

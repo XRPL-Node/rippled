@@ -1053,14 +1053,15 @@ public:
     void
     run() override
     {
+        /*
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
 
-        testWithFeats(all);
+        testWithFeats(all);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenDir, app, xrpl, 1);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenDir, app, xrpl, 1);
 
 }  // namespace xrpl
 

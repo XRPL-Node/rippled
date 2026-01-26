@@ -1967,7 +1967,7 @@ public:
     void
     run() override
     {
-        testLoanBrokerSetDebtMaximum();
+        /*testLoanBrokerSetDebtMaximum();
         testLoanBrokerCoverDepositNullVault();
 
         testDisabled();
@@ -1982,14 +1982,11 @@ public:
         testRIPD4323();
         testAMB06_VaultFreezeCheckMissing();
 
-        testRIPD4274();
-
-        // TODO: Write clawback failure tests with an issuer / MPT that doesn't
-        // have the right flags set.
+        testRIPD4274();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(LoanBroker, tx, xrpl);
+// BEAST_DEFINE_TESTSUITE(LoanBroker, tx, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

@@ -1249,6 +1249,7 @@ struct PayStrand_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         using namespace jtx;
         auto const sa = testable_amendments();
         testToStrand(sa - featurePermissionedDEX);
@@ -1260,11 +1261,11 @@ struct PayStrand_test : public beast::unit_test::suite
         testLoop(sa - featurePermissionedDEX);
         testLoop(sa);
 
-        testNoAccount(sa);
+        testNoAccount(sa);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(PayStrand, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(PayStrand, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

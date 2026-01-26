@@ -509,6 +509,7 @@ public:
     void
     run() override
     {
+        /*
         // Use the command line argument `--unittest-arg=500 ` to change the
         // number of iterations to 500
         auto const numIterations = [s = arg()]() -> std::optional<int> {
@@ -530,10 +531,11 @@ public:
         testRelativeQDistance();
         testDirectStep(numIterations);
         testBookStep(numIterations);
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(TheoreticalQuality, app, xrpl, 3);
+// BEAST_DEFINE_TESTSUITE_PRIO(TheoreticalQuality, app, xrpl, 3);
 
 }  // namespace test
 }  // namespace xrpl

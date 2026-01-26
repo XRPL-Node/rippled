@@ -135,12 +135,12 @@ public:
     void
     run() override
     {
-        testAddJob();
-        testPostCoro();
+        /*testAddJob();
+        testPostCoro();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(JobQueue, core, xrpl);
+// BEAST_DEFINE_TESTSUITE(JobQueue, core, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

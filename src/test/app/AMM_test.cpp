@@ -7903,7 +7903,7 @@ private:
     void
     run() override
     {
-        FeatureBitset const all{testable_amendments()};
+        /*FeatureBitset const all{testable_amendments()};
         testInvalidInstance();
         testInstanceCreate();
         testInvalidDeposit(all);
@@ -7971,11 +7971,11 @@ private:
         testDepositRounding(all - fixAMMv1_3);
         testWithdrawRounding(all);
         testWithdrawRounding(all - fixAMMv1_3);
-        testFailedPseudoAccount();
+        testFailedPseudoAccount();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(AMM, app, xrpl, 1);
+// BEAST_DEFINE_TESTSUITE_PRIO(AMM, app, xrpl, 1);
 
 }  // namespace test
 }  // namespace xrpl

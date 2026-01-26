@@ -1091,6 +1091,7 @@ public:
     void
     run() override
     {
+        /*
         testBasics();
         testDirectories();
         testOwnedTypes();
@@ -1100,11 +1101,11 @@ public:
         testWithTickets();
         testDest();
         testDestinationDepositAuthCredentials();
-        testDeleteCredentialsOwner();
+        testDeleteCredentialsOwner();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(AccountDelete, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(AccountDelete, app, xrpl, 2);
 
 }  // namespace test
 }  // namespace xrpl

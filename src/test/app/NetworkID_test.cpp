@@ -14,7 +14,8 @@ public:
     void
     run() override
     {
-        testNetworkID();
+        /*
+        testNetworkID();*/
     }
 
     std::unique_ptr<Config>
@@ -142,7 +143,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(NetworkID, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(NetworkID, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

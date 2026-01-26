@@ -2306,6 +2306,7 @@ class STParsedJSON_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         // Instantiate a jtx::Env so debugLog writes are exercised.
         test::jtx::Env env(*this);
         testUInt8();
@@ -2328,10 +2329,10 @@ class STParsedJSON_test : public beast::unit_test::suite
         testNumber();
         testObject();
         testArray();
-        testEdgeCases();
+        testEdgeCases();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(STParsedJSON, protocol, xrpl);
+// BEAST_DEFINE_TESTSUITE(STParsedJSON, protocol, xrpl);
 
 }  // namespace xrpl

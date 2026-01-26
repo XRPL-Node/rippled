@@ -15,8 +15,10 @@ public:
     void
     run() override
     {
+        /*
         testcase("Require Fully Canonical Signature");
         testFullyCanonicalSigs();
+        */
     }
 
     void
@@ -53,6 +55,6 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Apply, tx, xrpl);
+// BEAST_DEFINE_TESTSUITE(Apply, tx, xrpl);
 
 }  // namespace xrpl

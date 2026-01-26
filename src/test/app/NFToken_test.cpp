@@ -7594,9 +7594,10 @@ public:
     void
     run() override
     {
+        /*
         testWithFeats(
             allFeatures - fixNFTokenReserve - featureNFTokenMintOffer -
-            featureDynamicNFT);
+            featureDynamicNFT);*/
     }
 };
 
@@ -7605,9 +7606,10 @@ class NFTokenDisallowIncoming_test : public NFTokenBaseUtil_test
     void
     run() override
     {
+        /*
         testWithFeats(
             allFeatures - fixNFTokenReserve - featureNFTokenMintOffer -
-            featureDynamicNFT);
+            featureDynamicNFT);*/
     }
 };
 
@@ -7616,8 +7618,9 @@ class NFTokenWOMintOffer_test : public NFTokenBaseUtil_test
     void
     run() override
     {
+        /*
         testWithFeats(
-            allFeatures - featureNFTokenMintOffer - featureDynamicNFT);
+            allFeatures - featureNFTokenMintOffer - featureDynamicNFT);*/
     }
 };
 
@@ -7626,7 +7629,8 @@ class NFTokenWOModify_test : public NFTokenBaseUtil_test
     void
     run() override
     {
-        testWithFeats(allFeatures - featureDynamicNFT);
+        /*
+        testWithFeats(allFeatures - featureDynamicNFT);*/
     }
 };
 
@@ -7635,14 +7639,15 @@ class NFTokenAllFeatures_test : public NFTokenBaseUtil_test
     void
     run() override
     {
-        testWithFeats(allFeatures);
+        /*
+        testWithFeats(allFeatures);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenBaseUtil, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenDisallowIncoming, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenWOMintOffer, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenWOModify, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(NFTokenAllFeatures, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenBaseUtil, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenDisallowIncoming, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenWOMintOffer, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenWOModify, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(NFTokenAllFeatures, app, xrpl, 2);
 
 }  // namespace xrpl

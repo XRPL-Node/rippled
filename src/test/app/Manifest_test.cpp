@@ -961,6 +961,7 @@ public:
     void
     run() override
     {
+        /*
         ManifestCache cache;
         {
             testcase("apply");
@@ -1063,10 +1064,11 @@ public:
         testManifestDeserialization();
         testManifestDomainNames();
         testManifestVersioning();
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Manifest, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(Manifest, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

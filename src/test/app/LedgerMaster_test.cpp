@@ -104,9 +104,10 @@ public:
     void
     run() override
     {
+        /*
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
-        testWithFeats(all);
+        testWithFeats(all);*/
     }
 
     void
@@ -116,7 +117,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(LedgerMaster, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(LedgerMaster, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

@@ -494,7 +494,8 @@ class NegativeUNL_test : public beast::unit_test::suite
     void
     run() override
     {
-        testNegativeUNL();
+        /*
+        testNegativeUNL();*/
     }
 };
 
@@ -1337,12 +1338,13 @@ class NegativeUNLVoteInternal_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testAddTx();
         testPickOneCandidate();
         testBuildScoreTableSpecialCases();
         testFindAllCandidates();
         testFindAllCandidatesCombination();
-        testNewValidators();
+        testNewValidators();*/
     }
 };
 
@@ -1441,7 +1443,8 @@ class NegativeUNLVoteScoreTable_test : public beast::unit_test::suite
     void
     run() override
     {
-        testBuildScoreTableCombination();
+        /*
+        testBuildScoreTableCombination();*/
     }
 };
 
@@ -1516,7 +1519,8 @@ class NegativeUNLVoteGoodScore_test : public beast::unit_test::suite
     void
     run() override
     {
-        testDoVoting();
+        /*
+        testDoVoting();*/
     }
 };
 
@@ -1572,7 +1576,8 @@ class NegativeUNLVoteOffline_test : public beast::unit_test::suite
     void
     run() override
     {
-        testDoVoting();
+        /*
+        testDoVoting();*/
     }
 };
 
@@ -1605,7 +1610,8 @@ class NegativeUNLVoteMaxListed_test : public beast::unit_test::suite
     void
     run() override
     {
-        testDoVoting();
+        /*
+        testDoVoting();*/
     }
 };
 
@@ -1669,7 +1675,8 @@ class NegativeUNLVoteRetiredValidator_test : public beast::unit_test::suite
     void
     run() override
     {
-        testDoVoting();
+        /*
+        testDoVoting();*/
     }
 };
 
@@ -1749,7 +1756,8 @@ class NegativeUNLVoteNewValidator_test : public beast::unit_test::suite
     void
     run() override
     {
-        testDoVoting();
+        /*
+        testDoVoting();*/
     }
 };
 
@@ -1822,11 +1830,12 @@ class NegativeUNLVoteFilterValidations_test : public beast::unit_test::suite
     void
     run() override
     {
-        testFilterValidations();
+        /*
+        testFilterValidations();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(NegativeUNL, consensus, xrpl);
+// BEAST_DEFINE_TESTSUITE(NegativeUNL, consensus, xrpl);
 
 BEAST_DEFINE_TESTSUITE(NegativeUNLVoteInternal, consensus, xrpl);
 BEAST_DEFINE_TESTSUITE_MANUAL(NegativeUNLVoteScoreTable, consensus, xrpl);

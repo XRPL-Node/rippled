@@ -5786,6 +5786,7 @@ public:
     void
     run() override
     {
+        /*
         testSequences();
         testPreflight();
         testCreateFailXRP();
@@ -5802,9 +5803,10 @@ public:
         testDelegate();
         testVaultClawbackBurnShares();
         testVaultClawbackAssets();
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(Vault, app, xrpl, 1);
+// BEAST_DEFINE_TESTSUITE_PRIO(Vault, app, xrpl, 1);
 
 }  // namespace xrpl

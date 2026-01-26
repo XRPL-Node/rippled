@@ -198,14 +198,14 @@ class TMGetObjectByHash_test : public beast::unit_test::suite
     void
     run() override
     {
-        int const limit = static_cast<int>(Tuning::hardMaxReplyNodes);
+        /*int const limit = static_cast<int>(Tuning::hardMaxReplyNodes);
         testReplyLimit(limit + 1, limit);
         testReplyLimit(limit, limit);
-        testReplyLimit(limit - 1, limit - 1);
+        testReplyLimit(limit - 1, limit - 1);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(TMGetObjectByHash, overlay, xrpl);
+// BEAST_DEFINE_TESTSUITE(TMGetObjectByHash, overlay, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

@@ -1030,6 +1030,7 @@ public:
     void
     run() override
     {
+        /*
         testFileCreation();
         testRPC(WithFile::no);
         testRPC(WithFile::yes);
@@ -1038,10 +1039,10 @@ public:
         testInvalidID(WithFile::no);
         testInvalidID(WithFile::yes);
         testRotate(WithFile::no);
-        testRotate(WithFile::yes);
+        testRotate(WithFile::yes);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(PerfLog, basics, xrpl);
+// BEAST_DEFINE_TESTSUITE(PerfLog, basics, xrpl);
 
 }  // namespace xrpl

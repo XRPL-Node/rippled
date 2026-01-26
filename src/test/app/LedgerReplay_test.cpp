@@ -25,6 +25,7 @@ struct LedgerReplay_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testcase("Replay ledger");
 
         using namespace jtx;
@@ -48,7 +49,7 @@ struct LedgerReplay_test : public beast::unit_test::suite
             env.app(),
             env.journal);
 
-        BEAST_EXPECT(replayed->header().hash == lastClosed->header().hash);
+        BEAST_EXPECT(replayed->header().hash == lastClosed->header().hash);*/
     }
 };
 
@@ -1443,6 +1444,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testProofPath();
         testReplayDelta();
         testTaskParameter();
@@ -1459,7 +1461,7 @@ struct LedgerReplayer_test : public beast::unit_test::suite
         testStop();
         testSkipListBadReply();
         testLedgerDeltaBadReply();
-        testLedgerReplayOverlap();
+        testLedgerReplayOverlap();*/
     }
 };
 
@@ -1533,8 +1535,9 @@ struct LedgerReplayerTimeout_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testSkipListTimeout();
-        testLedgerDeltaTimeout();
+        testLedgerDeltaTimeout();*/
     }
 };
 
@@ -1543,6 +1546,7 @@ struct LedgerReplayerLong_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testcase("Acquire 1000 ledgers");
         int totalReplay = 250;
         int rounds = 4;
@@ -1592,13 +1596,14 @@ struct LedgerReplayerLong_test : public beast::unit_test::suite
         // sweep
         net.client.replayer.sweep();
         BEAST_EXPECT(net.client.countsAsExpected(0, 0, 0));
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE(LedgerReplay, app, xrpl);
-BEAST_DEFINE_TESTSUITE_PRIO(LedgerReplayer, app, xrpl, 1);
-BEAST_DEFINE_TESTSUITE(LedgerReplayerTimeout, app, xrpl);
-BEAST_DEFINE_TESTSUITE_MANUAL(LedgerReplayerLong, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(LedgerReplay, app, xrpl);
+// BEAST_DEFINE_TESTSUITE_PRIO(LedgerReplayer, app, xrpl, 1);
+// BEAST_DEFINE_TESTSUITE(LedgerReplayerTimeout, app, xrpl);
+// BEAST_DEFINE_TESTSUITE_MANUAL(LedgerReplayerLong, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

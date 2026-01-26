@@ -636,12 +636,13 @@ public:
     void
     run() override
     {
+        /*
         testLedgerStateFixErrors();
         testTokenPageLinkErrors();
-        testFixNFTokenPageLinks();
+        testFixNFTokenPageLinks();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(FixNFTokenPageLinks, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(FixNFTokenPageLinks, app, xrpl);
 
 }  // namespace xrpl

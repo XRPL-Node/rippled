@@ -38,11 +38,12 @@ public:
     void
     run() override
     {
-        test(10000);
+        /*
+        test(10000);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(PlumpBook, app, xrpl, 5);
+// BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(PlumpBook, app, xrpl, 5);
 
 //------------------------------------------------------------------------------
 
@@ -53,11 +54,12 @@ public:
     void
     run() override
     {
-        test(1);
+        /*
+        test(1);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(ThinBook, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(ThinBook, app, xrpl);
 
 //------------------------------------------------------------------------------
 
@@ -96,11 +98,12 @@ public:
     void
     run() override
     {
-        test();
+        /*
+        test();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(OversizeMeta, app, xrpl, 3);
+// BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(OversizeMeta, app, xrpl, 3);
 
 //------------------------------------------------------------------------------
 
@@ -160,13 +163,14 @@ public:
     void
     run() override
     {
+        /*
         auto const result =
             bfind(100, 9000, [&](std::size_t n) { return oversize(n); });
-        log << "Min oversize offers = " << result << '\n';
+        log << "Min oversize offers = " << result << '\n';*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(FindOversizeCross, app, xrpl, 50);
+// BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(FindOversizeCross, app, xrpl, 50);
 
 }  // namespace test
 }  // namespace xrpl

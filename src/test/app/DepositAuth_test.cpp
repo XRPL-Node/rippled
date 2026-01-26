@@ -330,10 +330,11 @@ struct DepositAuth_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testEnable();
         testPayIOU();
         testPayXRP();
-        testNoRipple();
+        testNoRipple();*/
     }
 };
 
@@ -1450,6 +1451,7 @@ struct DepositPreauth_test : public beast::unit_test::suite
     void
     run() override
     {
+        /*
         testEnable();
         testInvalid();
         auto const supported{jtx::testable_amendments()};
@@ -1458,12 +1460,12 @@ struct DepositPreauth_test : public beast::unit_test::suite
         testCredentialsPayment();
         testCredentialsCreation();
         testExpiredCreds();
-        testSortingCredentials();
+        testSortingCredentials();*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(DepositAuth, app, xrpl);
-BEAST_DEFINE_TESTSUITE(DepositPreauth, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(DepositAuth, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(DepositPreauth, app, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

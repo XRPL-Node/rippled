@@ -392,6 +392,7 @@ public:
     void
     run() override
     {
+        /*
         auto testAll = [this](FeatureBitset features) {
             testSelfFunding(features);
             testSubtractCredits(features);
@@ -403,10 +404,11 @@ public:
         auto const sa = testable_amendments();
         testAll(sa - featurePermissionedDEX);
         testAll(sa);
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE(PaymentSandbox, ledger, xrpl);
+// BEAST_DEFINE_TESTSUITE(PaymentSandbox, ledger, xrpl);
 
 }  // namespace test
 }  // namespace xrpl

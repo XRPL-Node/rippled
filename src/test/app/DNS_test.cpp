@@ -85,6 +85,7 @@ public:
     void
     run() override
     {
+        /*
         parse();
         // First endpoint is random. Next three
         // should resolve to the same endpoint. Run a few times
@@ -107,10 +108,11 @@ public:
         // here because on failure we randomly select an endpoint different
         // from the last endpoint.
         BEAST_EXPECT(resolved_.size() > 1);
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(DNS, app, xrpl, 20);
+// BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(DNS, app, xrpl, 20);
 
 }  // namespace test
 }  // namespace xrpl

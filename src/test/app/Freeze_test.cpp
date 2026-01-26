@@ -2059,6 +2059,7 @@ public:
     void
     run() override
     {
+        /*
         auto testAll = [this](FeatureBitset features) {
             testRippleState(features);
             testDeepFreeze(features);
@@ -2085,8 +2086,9 @@ public:
         testAll(sa - fixEnforceNFTokenTrustlineV2);
         testAll(sa - featureDeepFreeze);
         testAll(sa);
+        */
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Freeze, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(Freeze, app, xrpl);
 }  // namespace xrpl

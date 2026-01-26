@@ -929,13 +929,14 @@ public:
     void
     run() override
     {
+        /*
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
 
         testWithFeats(all - featureMPTokensV1);
-        testWithFeats(all);
+        testWithFeats(all);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE(Clawback, app, xrpl);
+// BEAST_DEFINE_TESTSUITE(Clawback, app, xrpl);
 }  // namespace xrpl

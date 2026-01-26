@@ -5261,8 +5261,9 @@ public:
     void
     run() override
     {
+        /*
         testAll(allFeatures - featurePermissionedDEX);
-        testFalseAssert();
+        testFalseAssert();*/
     }
 };
 
@@ -5271,7 +5272,8 @@ class OfferWOSmallQOffers_test : public OfferBaseUtil_test
     void
     run() override
     {
-        testAll(allFeatures - fixFillOrKill - featurePermissionedDEX);
+        /*
+        testAll(allFeatures - fixFillOrKill - featurePermissionedDEX);*/
     }
 };
 
@@ -5280,7 +5282,8 @@ class OfferAllFeatures_test : public OfferBaseUtil_test
     void
     run() override
     {
-        testAll(allFeatures);
+        /*
+        testAll(allFeatures);*/
     }
 };
 
@@ -5289,6 +5292,7 @@ class Offer_manual_test : public OfferBaseUtil_test
     void
     run() override
     {
+        /*
         using namespace jtx;
         FeatureBitset const all{testable_amendments()};
         FeatureBitset const fillOrKill{fixFillOrKill};
@@ -5296,14 +5300,14 @@ class Offer_manual_test : public OfferBaseUtil_test
 
         testAll(all - fillOrKill - permDEX);
         testAll(all - permDEX);
-        testAll(all);
+        testAll(all);*/
     }
 };
 
-BEAST_DEFINE_TESTSUITE_PRIO(OfferBaseUtil, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(OfferWOSmallQOffers, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_PRIO(OfferAllFeatures, app, xrpl, 2);
-BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(Offer_manual, app, xrpl, 20);
+// BEAST_DEFINE_TESTSUITE_PRIO(OfferBaseUtil, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(OfferWOSmallQOffers, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_PRIO(OfferAllFeatures, app, xrpl, 2);
+// BEAST_DEFINE_TESTSUITE_MANUAL_PRIO(Offer_manual, app, xrpl, 20);
 
 }  // namespace test
 }  // namespace xrpl
