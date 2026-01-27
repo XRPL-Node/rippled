@@ -475,6 +475,9 @@ public:
     friend Number
     root2(Number f);
 
+    friend Number
+    power(Number const& f, unsigned n, unsigned d);
+
     // Thread local rounding control.  Default is to_nearest
     enum rounding_mode { to_nearest, towards_zero, downward, upward };
     static rounding_mode
@@ -570,6 +573,17 @@ private:
     // changing the values inside the range.
     static thread_local std::reference_wrapper<MantissaRange const> range_;
 
+    // And one is needed because it needs to choose between oneSmall and
+    // oneLarge based on the current range
+    static Number
+    one(MantissaRange const& range);
+
+    static Number
+    root(MantissaRange const& range, Number f, unsigned d);
+
+    void
+    normalize(MantissaRange const& range);
+
     void
     normalize();
 
@@ -598,6 +612,9 @@ private:
         MantissaRange::rep const& maxMantissa);
 
     bool
+    isnormal(MantissaRange const& range) const noexcept;
+
+    bool
     isnormal() const noexcept;
 
     // Copy the number, but modify the exponent by "exponentDelta". Because the
@@ -620,7 +637,36 @@ private:
      */
     template <detail::UnsignedMantissa Rep = internalrep>
     std::tuple<bool, Rep, int>
+    toInternal(MantissaRange const& range) const;
+
+    /** Breaks down the number into components, potentially de-normalizing it.
+     *
+     * Ensures that the mantissa always has range_.log digits.
+     *
+     */
+    template <detail::UnsignedMantissa Rep = internalrep>
+    std::tuple<bool, Rep, int>
     toInternal() const;
+
+    /** Rebuilds the number from components.
+     *
+     * If "normalized" is true, the values are expected to be normalized - all
+     * in their valid ranges.
+     *
+     * If "normalized" is false, the values are expected to be "near
+     * normalized", meaning that the mantissa has to be modified at most once to
+     * bring it back into range.
+     *
+     */
+    template <
+        bool expectNormal = true,
+        detail::UnsignedMantissa Rep = internalrep>
+    void
+    fromInternal(
+        bool negative,
+        Rep mantissa,
+        int exponent,
+        MantissaRange const* pRange);
 
     /** Rebuilds the number from components.
      *
@@ -803,14 +849,19 @@ Number::lowest() noexcept
 }
 
 inline bool
-Number::isnormal() const noexcept
+Number::isnormal(MantissaRange const& range) const noexcept
 {
-    MantissaRange const& range = range_;
     auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
 
     return *this == Number{} ||
         (range.min <= abs_m && abs_m <= range.max &&  //
          minExponent <= exponent_ && exponent_ <= maxExponent);
+}
+
+inline bool
+Number::isnormal() const noexcept
+{
+    return isnormal(range_);
 }
 
 template <Integral64 T>

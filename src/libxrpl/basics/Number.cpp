@@ -342,14 +342,13 @@ Number::externalToInternal(rep mantissa)
  */
 template <detail::UnsignedMantissa Rep>
 std::tuple<bool, Rep, int>
-Number::toInternal() const
+Number::toInternal(MantissaRange const& range) const
 {
     auto exponent = exponent_;
     bool const negative = mantissa_ < 0;
     auto const sign = negative ? -1 : 1;
     Rep mantissa = static_cast<Rep>(sign * mantissa_);
 
-    auto const& range = Number::range_.get();
     auto const referenceMin = range.referenceMin;
     auto const minMantissa = range.min;
 
@@ -367,25 +366,43 @@ Number::toInternal() const
     return {negative, mantissa, exponent};
 }
 
+/** Breaks down the number into components, potentially de-normalizing it.
+ *
+ * Ensures that the mantissa always has range_.log digits.
+ *
+ */
+template <detail::UnsignedMantissa Rep>
+std::tuple<bool, Rep, int>
+Number::toInternal() const
+{
+    return toInternal(range_);
+}
+
 /** Rebuilds the number from components.
  *
- * If "normalized" is true, the values are expected to be normalized - all in
- * their valid ranges.
+ * If "normalized" is true, the values are expected to be normalized - all
+ * in their valid ranges.
  *
- * If "normalized" is false, the values are expected to be "near normalized",
- * meaning that the mantissa has to be modified at most once to bring it back
- * into range.
+ * If "normalized" is false, the values are expected to be "near
+ * normalized", meaning that the mantissa has to be modified at most once to
+ * bring it back into range.
  *
  */
 template <bool expectNormal, detail::UnsignedMantissa Rep>
 void
-Number::fromInternal(bool negative, Rep mantissa, int exponent)
+Number::fromInternal(
+    bool negative,
+    Rep mantissa,
+    int exponent,
+    MantissaRange const* pRange)
 {
     if constexpr (std::is_same_v<
                       std::bool_constant<expectNormal>,
                       std::false_type>)
     {
-        auto const& range = Number::range_.get();
+        if (!pRange)
+            throw std::runtime_error("Missing range to Number::fromInternal!");
+        auto const& range = *pRange;
 
         auto const maxMantissa = range.max;
         auto const minMantissa = range.min;
@@ -412,7 +429,34 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent)
     exponent_ = exponent;
 
     XRPL_ASSERT_PARTS(
-        isnormal(), "ripple::Number::fromInternal", "Number is normalized");
+        (pRange && isnormal(*pRange)) || isnormal(),
+        "ripple::Number::fromInternal",
+        "Number is normalized");
+}
+
+/** Rebuilds the number from components.
+ *
+ * If "normalized" is true, the values are expected to be normalized - all in
+ * their valid ranges.
+ *
+ * If "normalized" is false, the values are expected to be "near normalized",
+ * meaning that the mantissa has to be modified at most once to bring it back
+ * into range.
+ *
+ */
+template <bool expectNormal, detail::UnsignedMantissa Rep>
+void
+Number::fromInternal(bool negative, Rep mantissa, int exponent)
+{
+    MantissaRange const* pRange = nullptr;
+    if constexpr (std::is_same_v<
+                      std::bool_constant<expectNormal>,
+                      std::false_type>)
+    {
+        pRange = &Number::range_.get();
+    }
+
+    fromInternal(negative, mantissa, exponent, pRange);
 }
 
 constexpr Number
@@ -440,12 +484,18 @@ Number::oneLarge()
 constexpr Number oneLrg = Number::oneLarge();
 
 Number
+Number::one(MantissaRange const& range)
+{
+    if (&range == &smallRange)
+        return oneSml;
+    XRPL_ASSERT(&range == &largeRange, "Number::one() : valid range");
+    return oneLrg;
+}
+
+Number
 Number::one()
 {
-    if (&range_.get() == &smallRange)
-        return oneSml;
-    XRPL_ASSERT(&range_.get() == &largeRange, "Number::one() : valid range_");
-    return oneLrg;
+    return one(range_);
 }
 
 // Use the member names in this static function for now so the diff is cleaner
@@ -558,15 +608,19 @@ Number::normalize<unsigned long>(
 }
 
 void
-Number::normalize()
+Number::normalize(MantissaRange const& range)
 {
-    auto const& range = range_.get();
-
-    auto [negative, mantissa, exponent] = toInternal();
+    auto [negative, mantissa, exponent] = toInternal(range);
 
     normalize(negative, mantissa, exponent, range.min, range.max);
 
-    fromInternal(negative, mantissa, exponent);
+    fromInternal(negative, mantissa, exponent, &range);
+}
+
+void
+Number::normalize()
+{
+    normalize(range_);
 }
 
 // Copy the number, but set a new exponent. Because the mantissa doesn't change,
@@ -595,12 +649,14 @@ Number::Number(bool negative, internalrep mantissa, int exponent, normalized)
 {
     auto const& range = range_.get();
     normalize(negative, mantissa, exponent, range.min, range.max);
-    fromInternal(negative, mantissa, exponent);
+    fromInternal(negative, mantissa, exponent, &range);
 }
 
 Number&
 Number::operator+=(Number const& y)
 {
+    auto const& range = range_.get();
+
     constexpr Number zero = Number{};
     if (y == zero)
         return *this;
@@ -616,7 +672,7 @@ Number::operator+=(Number const& y)
     }
 
     XRPL_ASSERT(
-        isnormal() && y.isnormal(),
+        isnormal(range) && y.isnormal(range),
         "xrpl::Number::operator+=(Number) : is normal");
     // *n = negative
     // *s = sign
@@ -625,9 +681,9 @@ Number::operator+=(Number const& y)
 
     // Need to use uint128_t, because large mantissas can overflow when added
     // together.
-    auto [xn, xm, xe] = toInternal<uint128_t>();
+    auto [xn, xm, xe] = toInternal<uint128_t>(range);
 
-    auto [yn, ym, ye] = y.toInternal<uint128_t>();
+    auto [yn, ym, ye] = y.toInternal<uint128_t>(range);
 
     Guard g;
     if (xe < ye)
@@ -653,7 +709,6 @@ Number::operator+=(Number const& y)
         } while (xe > ye);
     }
 
-    auto const& range = range_.get();
     auto const& minMantissa = range.min;
     auto const& maxMantissa = range.max;
 
@@ -691,7 +746,7 @@ Number::operator+=(Number const& y)
     }
 
     normalize(xn, xm, xe, minMantissa, maxMantissa);
-    fromInternal(xn, xm, xe);
+    fromInternal(xn, xm, xe, &range);
     return *this;
 }
 
@@ -726,6 +781,8 @@ divu10(uint128_t& u)
 Number&
 Number::operator*=(Number const& y)
 {
+    auto const& range = range_.get();
+
     constexpr Number zero = Number{};
     if (*this == zero)
         return *this;
@@ -739,10 +796,10 @@ Number::operator*=(Number const& y)
     // *m = mantissa
     // *e = exponent
 
-    auto [xn, xm, xe] = toInternal();
+    auto [xn, xm, xe] = toInternal(range);
     int xs = xn ? -1 : 1;
 
-    auto [yn, ym, ye] = y.toInternal();
+    auto [yn, ym, ye] = y.toInternal(range);
     int ys = yn ? -1 : 1;
 
     auto zm = uint128_t(xm) * uint128_t(ym);
@@ -753,7 +810,6 @@ Number::operator*=(Number const& y)
     if (zn)
         g.set_negative();
 
-    auto const& range = range_.get();
     auto const& minMantissa = range.min;
     auto const& maxMantissa = range.max;
 
@@ -776,13 +832,15 @@ Number::operator*=(Number const& y)
         "Number::multiplication overflow : exponent is " + std::to_string(xe));
 
     normalize(zn, xm, xe, minMantissa, maxMantissa);
-    fromInternal(zn, xm, xe);
+    fromInternal(zn, xm, xe, &range);
     return *this;
 }
 
 Number&
 Number::operator/=(Number const& y)
 {
+    auto const& range = range_.get();
+
     constexpr Number zero = Number{};
     if (y == zero)
         throw std::overflow_error("Number: divide by 0");
@@ -795,13 +853,12 @@ Number::operator/=(Number const& y)
     // *m = mantissa
     // *e = exponent
 
-    auto [np, nm, ne] = toInternal();
+    auto [np, nm, ne] = toInternal(range);
     int ns = (np ? -1 : 1);
 
-    auto [dp, dm, de] = y.toInternal();
+    auto [dp, dm, de] = y.toInternal(range);
     int ds = (dp ? -1 : 1);
 
-    auto const& range = range_.get();
     auto const& minMantissa = range.min;
     auto const& maxMantissa = range.max;
 
@@ -813,7 +870,7 @@ Number::operator/=(Number const& y)
     // f can be up to 10^(38-19) = 10^19 safely
     static_assert(smallRange.log == 15);
     static_assert(largeRange.log == 18);
-    bool small = Number::getMantissaScale() == MantissaRange::small;
+    bool small = range.scale == MantissaRange::small;
     uint128_t const f =
         small ? 100'000'000'000'000'000 : 10'000'000'000'000'000'000ULL;
     XRPL_ASSERT_PARTS(
@@ -865,9 +922,9 @@ Number::operator/=(Number const& y)
         }
     }
     normalize(zn, zm, ze, minMantissa, maxMantissa);
-    fromInternal(zn, zm, ze);
+    fromInternal(zn, zm, ze, &range);
     XRPL_ASSERT_PARTS(
-        isnormal(), "xrpl::Number::operator/=", "result is normalized");
+        isnormal(range), "xrpl::Number::operator/=", "result is normalized");
 
     return *this;
 }
@@ -921,16 +978,18 @@ Number::truncate() const noexcept
 std::string
 to_string(Number const& amount)
 {
+    auto const& range = Number::range_.get();
+
     // keep full internal accuracy, but make more human friendly if possible
     constexpr Number zero = Number{};
     if (amount == zero)
         return "0";
 
     // The mantissa must have a set number of decimal places for this to work
-    auto [negative, mantissa, exponent] = amount.toInternal();
+    auto [negative, mantissa, exponent] = amount.toInternal(range);
 
     // Use scientific notation for exponents that are too small or too large
-    auto const rangeLog = Number::mantissaLog();
+    auto const rangeLog = range.log;
     if (((exponent != 0 && amount.exponent() != 0) &&
          ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
@@ -1035,20 +1094,11 @@ power(Number const& f, unsigned n)
     return r;
 }
 
-// Returns f^(1/d)
-// Uses Newton–Raphson iterations until the result stops changing
-// to find the non-negative root of the polynomial g(x) = x^d - f
-
-// This function, and power(Number f, unsigned n, unsigned d)
-// treat corner cases such as 0 roots as advised by Annex F of
-// the C standard, which itself is consistent with the IEEE
-// floating point standards.
-
 Number
-root(Number f, unsigned d)
+Number::root(MantissaRange const& range, Number f, unsigned d)
 {
     constexpr Number zero = Number{};
-    auto const one = Number::one();
+    auto const one = Number::one(range);
 
     if (f == one || d == 1)
         return f;
@@ -1066,7 +1116,7 @@ root(Number f, unsigned d)
         return f;
 
     auto const [e, di] = [&]() {
-        auto const [negative, mantissa, exponent] = f.toInternal();
+        auto const [negative, mantissa, exponent] = f.toInternal(range);
 
         // Scale f into the range (0, 1) such that the scale change (e) is a
         // multiple of the root (d)
@@ -1088,7 +1138,7 @@ root(Number f, unsigned d)
     XRPL_ASSERT_PARTS(
         e % di == 0, "xrpl::root(Number, unsigned)", "e is divisible by d");
     XRPL_ASSERT_PARTS(
-        f.isnormal(), "xrpl::root(Number, unsigned)", "f is normalized");
+        f.isnormal(range), "xrpl::root(Number, unsigned)", "f is normalized");
     bool neg = false;
     if (f < zero)
     {
@@ -1122,17 +1172,34 @@ root(Number f, unsigned d)
     //  return r * 10^(e/d) to reverse scaling
     auto const result = r.shiftExponent(e / di);
     XRPL_ASSERT_PARTS(
-        result.isnormal(),
+        result.isnormal(range),
         "xrpl::root(Number, unsigned)",
         "result is normalized");
     return result;
 }
 
+// Returns f^(1/d)
+// Uses Newton–Raphson iterations until the result stops changing
+// to find the non-negative root of the polynomial g(x) = x^d - f
+
+// This function, and power(Number f, unsigned n, unsigned d)
+// treat corner cases such as 0 roots as advised by Annex F of
+// the C standard, which itself is consistent with the IEEE
+// floating point standards.
+
+Number
+root(Number f, unsigned d)
+{
+    auto const& range = Number::range_.get();
+    return Number::root(range, f, d);
+}
+
 Number
 root2(Number f)
 {
+    auto const& range = Number::range_.get();
     constexpr Number zero = Number{};
-    auto const one = Number::one();
+    auto const one = Number::one(range);
 
     if (f == one)
         return f;
@@ -1142,7 +1209,7 @@ root2(Number f)
         return f;
 
     auto const e = [&]() {
-        auto const [negative, mantissa, exponent] = f.toInternal();
+        auto const [negative, mantissa, exponent] = f.toInternal(range);
 
         // Scale f into the range (0, 1) such that f's exponent is a
         // multiple of d
@@ -1152,7 +1219,8 @@ root2(Number f)
         f = f.shiftExponent(-e);  // f /= 10^e;
         return e;
     }();
-    XRPL_ASSERT_PARTS(f.isnormal(), "xrpl::root2(Number)", "f is normalized");
+    XRPL_ASSERT_PARTS(
+        f.isnormal(range), "xrpl::root2(Number)", "f is normalized");
 
     // Quadratic least squares curve fit of f^(1/d) in the range [0, 1]
     auto const D = 105;
@@ -1175,7 +1243,7 @@ root2(Number f)
     //  return r * 10^(e/2) to reverse scaling
     auto const result = r.shiftExponent(e / 2);
     XRPL_ASSERT_PARTS(
-        result.isnormal(), "xrpl::root2(Number)", "result is normalized");
+        result.isnormal(range), "xrpl::root2(Number)", "result is normalized");
 
     return result;
 }
@@ -1185,8 +1253,10 @@ root2(Number f)
 Number
 power(Number const& f, unsigned n, unsigned d)
 {
+    auto const& range = Number::range_.get();
+
     constexpr Number zero = Number{};
-    auto const one = Number::one();
+    auto const one = Number::one(range);
 
     if (f == one)
         return f;
@@ -1208,7 +1278,7 @@ power(Number const& f, unsigned n, unsigned d)
     d /= g;
     if ((n % 2) == 1 && (d % 2) == 0 && f < zero)
         throw std::overflow_error("Number::power nan");
-    return root(power(f, n), d);
+    return Number::root(range, power(f, n), d);
 }
 
 }  // namespace xrpl
