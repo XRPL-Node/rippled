@@ -1,0 +1,3 @@
+detect_container_overflow=0
+detect_stack_use_after_return=0
+debug=true
