@@ -19,33 +19,31 @@ JobQueue::Coro::Coro(
     , name_(name)
     , coro_(
           [this, fn = std::forward<F>(f)](
-              boost::coroutines::asymmetric_coroutine<void>::push_type&
+              boost::coroutines::asymmetric_coroutine<int>::push_type&
                   do_yield) {
               struct ScopeExit
               {
-                  std::atomic<CoroState>& state;
+                  JobQueue::Coro* self_;
 
-                  ScopeExit(std::atomic<CoroState>& s) : state(s)
+                  ScopeExit(JobQueue::Coro* self) : self_(self)
                   {
                   }
 
                   ~ScopeExit()
                   {
-                      state = CoroState::Finished;
-                      state.notify_all();
+                      std::lock_guard lock(self_->m_);
+                      self_->state_ = CoroState::Finished;
+                      self_->cv_.notify_all();
                   }
               };
 
-              ScopeExit _{state_};
+              ScopeExit _{this};
               yield_ = &do_yield;
-              yield();
+              yield(0);
               // self makes Coro alive until this function returns
               std::shared_ptr<Coro> self;
-              if (!shouldStop())
-              {
-                  self = shared_from_this();
-                  fn(self);
-              }
+              self = shared_from_this();
+              fn(self);
           },
           boost::coroutines::attributes(megabytes(1)))
 {
@@ -69,14 +67,13 @@ JobQueue::Coro::yield()
         jq_.m_suspendedCoros[this] = weak_from_this();
     }
 
-    boost::coroutines::asymmetric_coroutine<void>::pull_type coro;
-    boost::coroutines::asymmetric_coroutine<void>::push_type* push;
     {
         std::lock_guard lock(m_);
         state_ = CoroState::Suspended;
         cv_.notify_all();
+        yieldCount_++;
     }
-    (*yield_)();
+    (*yield_)(yieldCount_);
 
     return true;
 }
@@ -116,7 +113,12 @@ JobQueue::Coro::resume()
     {
         return;
     }
+
     state_.notify_all();
+
+    // There's a small chance that the coroutine has not yielded yet and is
+    // still running. We need to wait for it to yield before we can resume it.
+    waitForYield();
 
     {
         std::lock_guard lock(jq_.m_mutex);
@@ -160,11 +162,21 @@ JobQueue::Coro::cancel()
         return;
     }
 
+    waitForYield();
+
     coro_ = {};
 
     XRPL_ASSERT(
         state_ == CoroState::Finished,
         "ripple::JobQueue::Coro::cancel : should have finished");
+}
+
+inline void
+JobQueue::Coro::waitForYield()
+{
+    // Busy-wait for the coroutine to yield so that it's safe to destroy it.
+    while (yieldCount_ != coro_.get())
+        ;
 }
 
 }  // namespace xrpl

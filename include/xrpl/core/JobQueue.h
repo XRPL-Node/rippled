@@ -56,8 +56,10 @@ public:
         std::condition_variable cv_;
         std::mutex m_;
 
-        boost::coroutines::asymmetric_coroutine<void>::pull_type coro_;
-        boost::coroutines::asymmetric_coroutine<void>::push_type* yield_;
+        int yieldCount_ = 0;
+
+        boost::coroutines::asymmetric_coroutine<int>::pull_type coro_;
+        boost::coroutines::asymmetric_coroutine<int>::push_type* yield_;
 
     public:
         // Private: Used in the implementation
@@ -127,8 +129,14 @@ public:
         void
         join();
 
+        /** Cancel the coroutine. */
         void
         cancel();
+
+    private:
+        /** Wait for the coroutine to yield. */
+        void
+        waitForYield() const;
     };
 
     using JobFunction = std::function<void()>;
