@@ -24,7 +24,7 @@ include(default)
                 {% set _ = sanitizer_list.append("float-divide-by-zero") %}
             {% endif %}
 
-            {% set sanitizer_flags = "-fsanitize-recover=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
 
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
@@ -47,7 +47,7 @@ include(default)
                 {% set _ = sanitizer_list.append("unsigned-integer-overflow") %}
             {% endif %}
 
-            {% set sanitizer_flags = "-fsanitize-recover=" ~ ",".join(sanitizer_list) %}
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) %}
 
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
