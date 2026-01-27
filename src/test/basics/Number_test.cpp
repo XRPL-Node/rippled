@@ -1159,6 +1159,9 @@ public:
             }
         };
 
+        auto const maxInternalMantissa =
+            power(10, Number::mantissaLog()) * 10 - 1;
+
         auto const cSmall = std::to_array<Number>({
             Number{2},
             Number{2'000'000},
@@ -1169,6 +1172,9 @@ public:
             Number{0},
             Number{5625, -4},
             Number{Number::largestMantissa},
+            maxInternalMantissa,
+            Number{Number::minMantissa(), 0, Number::unchecked{}},
+            Number{Number::maxMantissa(), 0, Number::unchecked{}},
         });
         test(cSmall);
         bool caught = false;

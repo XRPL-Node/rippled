@@ -17,13 +17,10 @@
 
 #ifdef _MSC_VER
 #pragma message("Using boost::multiprecision::uint128_t and int128_t")
-#include <boost/multiprecision/cpp_int.hpp>
-using uint128_t = boost::multiprecision::uint128_t;
-using int128_t = boost::multiprecision::int128_t;
-#else   // !defined(_MSC_VER)
-using uint128_t = __uint128_t;
-using int128_t = __int128_t;
-#endif  // !defined(_MSC_VER)
+#endif
+
+using uint128_t = ripple::detail::uint128_t;
+using int128_t = ripple::detail::int128_t;
 
 namespace xrpl {
 
@@ -63,10 +60,6 @@ Number::setMantissaScale(MantissaRange::mantissa_scale scale)
 // precision to an operation.  This enables the final result
 // to be correctly rounded to the internal precision of Number.
 
-template <class T>
-concept UnsignedMantissa =
-    std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>;
-
 class Number::Guard
 {
     std::uint64_t digits_;   // 16 decimal guard digits
@@ -102,7 +95,7 @@ public:
     round() noexcept;
 
     // Modify the result to the correctly rounded value
-    template <UnsignedMantissa T>
+    template <detail::UnsignedMantissa T>
     void
     doRoundUp(
         bool& negative,
@@ -113,7 +106,7 @@ public:
         std::string_view location);
 
     // Modify the result to the correctly rounded value
-    template <UnsignedMantissa T>
+    template <detail::UnsignedMantissa T>
     void
     doRoundDown(
         bool& negative,
@@ -129,7 +122,7 @@ private:
     void
     doPush(unsigned d) noexcept;
 
-    template <UnsignedMantissa T>
+    template <detail::UnsignedMantissa T>
     void
     bringIntoRange(
         bool& negative,
@@ -220,7 +213,7 @@ Number::Guard::round() noexcept
     return 0;
 }
 
-template <UnsignedMantissa T>
+template <detail::UnsignedMantissa T>
 void
 Number::Guard::bringIntoRange(
     bool& negative,
@@ -245,7 +238,7 @@ Number::Guard::bringIntoRange(
     }
 }
 
-template <UnsignedMantissa T>
+template <detail::UnsignedMantissa T>
 void
 Number::Guard::doRoundUp(
     bool& negative,
@@ -272,7 +265,7 @@ Number::Guard::doRoundUp(
         Throw<std::overflow_error>(std::string(location));
 }
 
-template <UnsignedMantissa T>
+template <detail::UnsignedMantissa T>
 void
 Number::Guard::doRoundDown(
     bool& negative,
@@ -342,7 +335,12 @@ Number::externalToInternal(rep mantissa)
     return static_cast<internalrep>(-temp);
 }
 
-template <class Rep>
+/** Breaks down the number into components, potentially de-normalizing it.
+ *
+ * Ensures that the mantissa always has range_.log digits.
+ *
+ */
+template <detail::UnsignedMantissa Rep>
 std::tuple<bool, Rep, int>
 Number::toInternal() const
 {
@@ -369,24 +367,46 @@ Number::toInternal() const
     return {negative, mantissa, exponent};
 }
 
-template <class Rep>
+/** Rebuilds the number from components.
+ *
+ * If "normalized" is true, the values are expected to be normalized - all in
+ * their valid ranges.
+ *
+ * If "normalized" is false, the values are expected to be "near normalized",
+ * meaning that the mantissa has to be modified at most once to bring it back
+ * into range.
+ *
+ */
+template <bool expectNormal, detail::UnsignedMantissa Rep>
 void
 Number::fromInternal(bool negative, Rep mantissa, int exponent)
 {
-    auto const sign = negative ? -1 : 1;
+    if constexpr (std::is_same_v<
+                      std::bool_constant<expectNormal>,
+                      std::false_type>)
+    {
+        auto const& range = Number::range_.get();
 
-    auto const& range = Number::range_.get();
-    auto const maxMantissa = range.max;
+        auto const maxMantissa = range.max;
+        auto const minMantissa = range.min;
 
-    XRPL_ASSERT_PARTS(
-        mantissa <= maxMantissa,
-        "ripple::Number::fromInternal",
-        "mantissa in range");
-    if constexpr (std::is_signed_v<Rep>)
         XRPL_ASSERT_PARTS(
-            mantissa >= -maxMantissa,
-            "xrpl::Number::fromInternal",
-            "negative mantissa in range");
+            mantissa >= minMantissa,
+            "ripple::Number::fromInternal",
+            "mantissa large enough");
+
+        if (mantissa > maxMantissa || mantissa < minMantissa)
+        {
+            normalize(negative, mantissa, exponent, range.min, maxMantissa);
+        }
+
+        XRPL_ASSERT_PARTS(
+            mantissa >= minMantissa && mantissa <= maxMantissa,
+            "ripple::Number::fromInternal",
+            "mantissa in range");
+    }
+
+    auto const sign = negative ? -1 : 1;
 
     mantissa_ = sign * static_cast<rep>(mantissa);
     exponent_ = exponent;
@@ -557,22 +577,17 @@ Number::shiftExponent(int exponentDelta) const
 {
     XRPL_ASSERT_PARTS(isnormal(), "xrpl::Number::shiftExponent", "normalized");
 
-    auto const [negative, mantissa, exponent] = toInternal();
+    Number result = *this;
 
-    auto const newExponent = exponent_ + exponentDelta;
-    if (newExponent >= maxExponent)
+    result.exponent_ += exponentDelta;
+
+    if (result.exponent_ >= maxExponent)
         throw std::overflow_error("Number::shiftExponent");
-    if (newExponent < minExponent)
+    if (result.exponent_ < minExponent)
     {
         return Number{};
     }
 
-    Number const result{negative, mantissa, newExponent, unchecked{}};
-
-    XRPL_ASSERT_PARTS(
-        result.isnormal(),
-        "xrpl::Number::shiftExponent",
-        "result is normalized");
     return result;
 }
 
@@ -916,9 +931,10 @@ to_string(Number const& amount)
 
     // Use scientific notation for exponents that are too small or too large
     auto const rangeLog = Number::mantissaLog();
-    if (((exponent != 0) &&
+    if (((exponent != 0 && amount.exponent() != 0) &&
          ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
+        // Remove trailing zeroes from the mantissa.
         while (mantissa != 0 && mantissa % 10 == 0 &&
                exponent < Number::maxExponent)
         {
@@ -927,8 +943,11 @@ to_string(Number const& amount)
         }
         std::string ret = negative ? "-" : "";
         ret.append(std::to_string(mantissa));
-        ret.append(1, 'e');
-        ret.append(std::to_string(exponent));
+        if (exponent != 0)
+        {
+            ret.append(1, 'e');
+            ret.append(std::to_string(exponent));
+        }
         return ret;
     }
 
@@ -1046,20 +1065,28 @@ root(Number f, unsigned d)
     if (f == zero)
         return f;
 
-    // Scale f into the range (0, 1) such that f's exponent is a multiple of d
-    auto e = f.exponent_ + Number::mantissaLog() + 1;
-    auto const di = static_cast<int>(d);
-    auto ex = [e = e, di = di]()  // Euclidean remainder of e/d
-    {
-        int k = (e >= 0 ? e : e - (di - 1)) / di;
-        int k2 = e - k * di;
-        if (k2 == 0)
-            return 0;
-        return di - k2;
-    }();
-    e += ex;
-    f = f.shiftExponent(-e);  // f /= 10^e;
+    auto const [e, di] = [&]() {
+        auto const [negative, mantissa, exponent] = f.toInternal();
 
+        // Scale f into the range (0, 1) such that the scale change (e) is a
+        // multiple of the root (d)
+        auto e = exponent + Number::mantissaLog() + 1;
+        auto const di = static_cast<int>(d);
+        auto ex = [e = e, di = di]()  // Euclidean remainder of e/d
+        {
+            int k = (e >= 0 ? e : e - (di - 1)) / di;
+            int k2 = e - k * di;
+            if (k2 == 0)
+                return 0;
+            return di - k2;
+        }();
+        e += ex;
+        f = f.shiftExponent(-e);  // f /= 10^e;
+        return std::make_tuple(e, di);
+    }();
+
+    XRPL_ASSERT_PARTS(
+        e % di == 0, "xrpl::root(Number, unsigned)", "e is divisible by d");
     XRPL_ASSERT_PARTS(
         f.isnormal(), "xrpl::root(Number, unsigned)", "f is normalized");
     bool neg = false;
@@ -1114,11 +1141,17 @@ root2(Number f)
     if (f == zero)
         return f;
 
-    // Scale f into the range (0, 1) such that f's exponent is a multiple of d
-    auto e = f.exponent_ + Number::mantissaLog() + 1;
-    if (e % 2 != 0)
-        ++e;
-    f = f.shiftExponent(-e);  // f /= 10^e;
+    auto const e = [&]() {
+        auto const [negative, mantissa, exponent] = f.toInternal();
+
+        // Scale f into the range (0, 1) such that f's exponent is a
+        // multiple of d
+        auto e = exponent + Number::mantissaLog() + 1;
+        if (e % 2 != 0)
+            ++e;
+        f = f.shiftExponent(-e);  // f /= 10^e;
+        return e;
+    }();
     XRPL_ASSERT_PARTS(f.isnormal(), "xrpl::root2(Number)", "f is normalized");
 
     // Quadratic least squares curve fit of f^(1/d) in the range [0, 1]
