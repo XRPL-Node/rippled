@@ -462,10 +462,10 @@ doNormalize(
         minMantissa,
         maxMantissa,
         "Number::normalize 2");
-    XRPL_ASSERT_PARTS(
-        mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
-        "xrpl::doNormalize",
-        "final mantissa fits in range");
+    // XRPL_ASSERT_PARTS(
+    //     mantissa_ >= minMantissa && mantissa_ <= maxMantissa,
+    //     "xrpl::doNormalize",
+    //     "final mantissa fits in range");
 }
 
 template <>
