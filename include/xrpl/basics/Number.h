@@ -138,12 +138,7 @@ private:
     static constexpr rep
     computeMin(rep max)
     {
-        auto min = max + 1;
-        auto const r = min % 10;
-        min /= 10;
-        if (r != 0)
-            ++min;
-        return min;
+        return max / 10 + 1;
     }
 
     static constexpr rep
@@ -274,9 +269,7 @@ class Number
     using rep = std::int64_t;
     using internalrep = MantissaRange::rep;
 
-    // TODO: Get rid of negative_ and convert mantissa back to rep
-    bool negative_{false};
-    internalrep mantissa_{0};
+    rep mantissa_{0};
     int exponent_{std::numeric_limits<int>::lowest()};
 
 public:
@@ -374,8 +367,7 @@ public:
     friend constexpr bool
     operator==(Number const& x, Number const& y) noexcept
     {
-        return x.negative_ == y.negative_ && x.mantissa_ == y.mantissa_ &&
-            x.exponent_ == y.exponent_;
+        return x.mantissa_ == y.mantissa_ && x.exponent_ == y.exponent_;
     }
 
     friend constexpr bool
@@ -389,8 +381,8 @@ public:
     {
         // If the two amounts have different signs (zero is treated as positive)
         // then the comparison is true iff the left is negative.
-        bool const lneg = x.negative_;
-        bool const rneg = y.negative_;
+        bool const lneg = x.mantissa_ < 0;
+        bool const rneg = y.mantissa_ < 0;
 
         if (lneg != rneg)
             return lneg;
@@ -418,7 +410,7 @@ public:
     constexpr int
     signum() const noexcept
     {
-        return negative_ ? -1 : (mantissa_ ? 1 : 0);
+        return mantissa_ < 0 ? -1 : (mantissa_ ? 1 : 0);
     }
 
     Number
@@ -601,6 +593,11 @@ private:
     std::tuple<bool, Rep, int>
     toInternal() const;
 
+    // Set the Number from an internal representation
+    template <class Rep = internalrep>
+    void
+    fromInternal(bool negative, Rep mantissa, int exponent);
+
     class Guard;
 
 public:
@@ -612,7 +609,8 @@ inline constexpr Number::Number(
     internalrep mantissa,
     int exponent,
     unchecked) noexcept
-    : negative_(negative), mantissa_{mantissa}, exponent_{exponent}
+    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}
+    , exponent_{exponent}
 {
 }
 
@@ -625,16 +623,6 @@ inline constexpr Number::Number(
 }
 
 constexpr static Number numZero{};
-
-inline Number::Number(
-    bool negative,
-    internalrep mantissa,
-    int exponent,
-    normalized)
-    : Number(negative, mantissa, exponent, unchecked{})
-{
-    normalize();
-}
 
 inline Number::Number(internalrep mantissa, int exponent, normalized)
     : Number(false, mantissa, exponent, normalized{})
@@ -658,8 +646,7 @@ inline Number::Number(rep mantissa) : Number{mantissa, 0}
 inline constexpr Number::rep
 Number::mantissa() const noexcept
 {
-    auto const sign = negative_ ? -1 : 1;
-    return sign * static_cast<Number::rep>(mantissa_);
+    return mantissa_;
 }
 
 /** Returns the exponent of the external view of the Number.
@@ -685,7 +672,7 @@ Number::operator-() const noexcept
     if (mantissa_ == 0)
         return Number{};
     auto x = *this;
-    x.negative_ = !x.negative_;
+    x.mantissa_ = -1 * x.mantissa_;
     return x;
 }
 
@@ -779,7 +766,8 @@ inline bool
 Number::isnormal() const noexcept
 {
     MantissaRange const& range = range_;
-    auto const abs_m = mantissa_;
+    auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
+
     return *this == Number{} ||
         (range.min <= abs_m && abs_m <= range.max &&  //
          minExponent <= exponent_ && exponent_ <= maxExponent);
@@ -789,8 +777,9 @@ template <Integral64 T>
 std::pair<T, int>
 Number::normalizeToRange(T minMantissa, T maxMantissa) const
 {
-    bool negative = negative_;
-    internalrep mantissa = mantissa_;
+    bool negative = mantissa_ < 0;
+    auto const sign = negative ? -1 : 1;
+    internalrep mantissa = sign * mantissa_;
     int exponent = exponent_;
 
     if constexpr (std::is_unsigned_v<T>)

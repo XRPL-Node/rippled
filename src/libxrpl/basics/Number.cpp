@@ -239,7 +239,7 @@ Number::Guard::bringIntoRange(
     {
         constexpr Number zero = Number{};
 
-        negative = zero.negative_;
+        negative = false;
         mantissa = zero.mantissa_;
         exponent = zero.exponent_;
     }
@@ -347,23 +347,52 @@ std::tuple<bool, Rep, int>
 Number::toInternal() const
 {
     auto exponent = exponent_;
-    Rep mantissa = mantissa_;
-    bool const negative = negative_;
+    bool const negative = mantissa_ < 0;
+    auto const sign = negative ? -1 : 1;
+    Rep mantissa = static_cast<Rep>(sign * mantissa_);
 
-    auto const referenceMin = Number::range_.get().referenceMin;
+    auto const& range = Number::range_.get();
+    auto const referenceMin = range.referenceMin;
+    auto const minMantissa = range.min;
 
-    if (mantissa != 0 && mantissa < referenceMin)
+    if (mantissa != 0 && mantissa >= minMantissa && mantissa < referenceMin)
     {
         // Ensure the mantissa has the correct number of digits
         mantissa *= 10;
         --exponent;
+        XRPL_ASSERT_PARTS(
+            mantissa >= referenceMin && mantissa < referenceMin * 10,
+            "ripple::Number::toInternal()",
+            "Number is within reference range and has 'log' digits");
     }
-    XRPL_ASSERT_PARTS(
-        mantissa >= referenceMin && mantissa < referenceMin * 10,
-        "ripple::Number::toInternal()",
-        "Number is within reference range and has 'log' digits");
 
     return {negative, mantissa, exponent};
+}
+
+template <class Rep>
+void
+Number::fromInternal(bool negative, Rep mantissa, int exponent)
+{
+    auto const sign = negative ? -1 : 1;
+
+    auto const& range = Number::range_.get();
+    auto const maxMantissa = range.max;
+
+    XRPL_ASSERT_PARTS(
+        mantissa <= maxMantissa,
+        "ripple::Number::fromInternal",
+        "mantissa in range");
+    if constexpr (std::is_signed_v<Rep>)
+        XRPL_ASSERT_PARTS(
+            mantissa >= -maxMantissa,
+            "xrpl::Number::fromInternal",
+            "negative mantissa in range");
+
+    mantissa_ = sign * static_cast<rep>(mantissa);
+    exponent_ = exponent;
+
+    XRPL_ASSERT_PARTS(
+        isnormal(), "ripple::Number::fromInternal", "Number is normalized");
 }
 
 constexpr Number
@@ -419,7 +448,7 @@ doNormalize(
     {
         mantissa = zero.mantissa_;
         exponent = zero.exponent_;
-        negative = zero.negative_;
+        negative = false;
         return;
     }
 
@@ -444,7 +473,7 @@ doNormalize(
     {
         mantissa = zero.mantissa_;
         exponent = zero.exponent_;
-        negative = zero.negative_;
+        negative = false;
         return;
     }
 
@@ -512,7 +541,12 @@ void
 Number::normalize()
 {
     auto const& range = range_.get();
-    normalize(negative_, mantissa_, exponent_, range.min, range.max);
+
+    auto [negative, mantissa, exponent] = toInternal();
+
+    normalize(negative, mantissa, exponent, range.min, range.max);
+
+    fromInternal(negative, mantissa, exponent);
 }
 
 // Copy the number, but set a new exponent. Because the mantissa doesn't change,
@@ -522,6 +556,9 @@ Number
 Number::shiftExponent(int exponentDelta) const
 {
     XRPL_ASSERT_PARTS(isnormal(), "xrpl::Number::shiftExponent", "normalized");
+
+    auto const [negative, mantissa, exponent] = toInternal();
+
     auto const newExponent = exponent_ + exponentDelta;
     if (newExponent >= maxExponent)
         throw std::overflow_error("Number::shiftExponent");
@@ -529,12 +566,21 @@ Number::shiftExponent(int exponentDelta) const
     {
         return Number{};
     }
-    Number const result{negative_, mantissa_, newExponent, unchecked{}};
+
+    Number const result{negative, mantissa, newExponent, unchecked{}};
+
     XRPL_ASSERT_PARTS(
         result.isnormal(),
         "xrpl::Number::shiftExponent",
         "result is normalized");
     return result;
+}
+
+Number::Number(bool negative, internalrep mantissa, int exponent, normalized)
+{
+    auto const& range = range_.get();
+    normalize(negative, mantissa, exponent, range.min, range.max);
+    fromInternal(negative, mantissa, exponent);
 }
 
 Number&
@@ -629,10 +675,8 @@ Number::operator+=(Number const& y)
         g.doRoundDown(xn, xm, xe, minMantissa);
     }
 
-    negative_ = xn;
-    mantissa_ = static_cast<internalrep>(xm);
-    exponent_ = xe;
-    normalize();
+    normalize(xn, xm, xe, minMantissa, maxMantissa);
+    fromInternal(xn, xm, xe);
     return *this;
 }
 
@@ -680,15 +724,11 @@ Number::operator*=(Number const& y)
     // *m = mantissa
     // *e = exponent
 
-    bool xn = negative_;
+    auto [xn, xm, xe] = toInternal();
     int xs = xn ? -1 : 1;
-    internalrep xm = mantissa_;
-    auto xe = exponent_;
 
-    bool yn = y.negative_;
+    auto [yn, ym, ye] = y.toInternal();
     int ys = yn ? -1 : 1;
-    internalrep ym = y.mantissa_;
-    auto ye = y.exponent_;
 
     auto zm = uint128_t(xm) * uint128_t(ym);
     auto ze = xe + ye;
@@ -719,11 +759,9 @@ Number::operator*=(Number const& y)
         minMantissa,
         maxMantissa,
         "Number::multiplication overflow : exponent is " + std::to_string(xe));
-    negative_ = zn;
-    mantissa_ = xm;
-    exponent_ = xe;
 
-    normalize();
+    normalize(zn, xm, xe, minMantissa, maxMantissa);
+    fromInternal(zn, xm, xe);
     return *this;
 }
 
@@ -742,15 +780,11 @@ Number::operator/=(Number const& y)
     // *m = mantissa
     // *e = exponent
 
-    bool np = negative_;
+    auto [np, nm, ne] = toInternal();
     int ns = (np ? -1 : 1);
-    auto nm = mantissa_;
-    auto ne = exponent_;
 
-    bool dp = y.negative_;
+    auto [dp, dm, de] = y.toInternal();
     int ds = (dp ? -1 : 1);
-    auto dm = y.mantissa_;
-    auto de = y.exponent_;
 
     auto const& range = range_.get();
     auto const& minMantissa = range.min;
@@ -816,9 +850,7 @@ Number::operator/=(Number const& y)
         }
     }
     normalize(zn, zm, ze, minMantissa, maxMantissa);
-    negative_ = zn;
-    mantissa_ = static_cast<internalrep>(zm);
-    exponent_ = ze;
+    fromInternal(zn, zm, ze);
     XRPL_ASSERT_PARTS(
         isnormal(), "xrpl::Number::operator/=", "result is normalized");
 
@@ -832,7 +864,7 @@ Number::operator rep() const
     Guard g;
     if (drops != 0)
     {
-        if (negative_)
+        if (drops < 0)
         {
             g.set_negative();
             drops = -drops;
@@ -844,7 +876,7 @@ Number::operator rep() const
         }
         for (; offset > 0; --offset)
         {
-            if (drops > largeRange.max / 10)
+            if (drops >= largeRange.min)
                 throw std::overflow_error("Number::operator rep() overflow");
             drops *= 10;
         }

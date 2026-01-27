@@ -1082,7 +1082,6 @@ public:
         };
         */
 
-        auto const maxMantissa = Number::maxMantissa();
         auto const maxInternalMantissa =
             static_cast<std::uint64_t>(
                 static_cast<std::int64_t>(power(10, Number::mantissaLog()))) *
