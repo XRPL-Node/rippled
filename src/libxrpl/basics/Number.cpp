@@ -268,7 +268,7 @@ Number::Guard::doRoundUp(
     }
     bringIntoRange(negative, mantissa, exponent, minMantissa);
     if (exponent > maxExponent)
-        throw std::overflow_error(location);
+        Throw<std::overflow_error>(location);
 }
 
 template <UnsignedMantissa T>
