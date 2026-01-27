@@ -10,6 +10,10 @@
 #include <ostream>
 #include <string>
 
+#ifdef _MSC_VER
+#include <boost/multiprecision/cpp_int.hpp>
+#endif  // !defined(_MSC_VER)
+
 namespace xrpl {
 
 class Number;
@@ -109,6 +113,14 @@ struct MantissaRange
             throw std::out_of_range("(max + 10) / 10 < min");
     }
 
+    // Explicitly delete copy and move operations
+    MantissaRange(MantissaRange const&) = delete;
+    MantissaRange(MantissaRange&&) = delete;
+    MantissaRange&
+    operator=(MantissaRange const&) = delete;
+    MantissaRange&
+    operator=(MantissaRange&&) = delete;
+
     rep max;
     rep min;
     // This is not a great name. Used to determine if mantissas are in range,
@@ -167,6 +179,19 @@ private:
 template <class T>
 concept Integral64 =
     std::is_same_v<T, std::int64_t> || std::is_same_v<T, std::uint64_t>;
+
+namespace detail {
+#ifdef _MSC_VER
+using uint128_t = boost::multiprecision::uint128_t;
+using int128_t = boost::multiprecision::int128_t;
+#else   // !defined(_MSC_VER)
+using uint128_t = __uint128_t;
+using int128_t = __int128_t;
+#endif  // !defined(_MSC_VER)
+
+template <class T>
+concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>;
+}  // namespace detail
 
 /** Number is a floating point type that can represent a wide range of values.
  *
@@ -587,14 +612,26 @@ private:
     static internalrep
     externalToInternal(rep mantissa);
 
-    // Safely convert Number to the internal rep where the mantissa always has
-    // the same number of digits
-    template <class Rep = internalrep>
+    /** Breaks down the number into components, potentially de-normalizing it.
+     *
+     * Ensures that the mantissa always has range_.log digits.
+     *
+     */
+    template <detail::UnsignedMantissa Rep = internalrep>
     std::tuple<bool, Rep, int>
     toInternal() const;
 
-    // Set the Number from an internal representation
-    template <class Rep = internalrep>
+    /** Rebuilds the number from components.
+     *
+     * If "normalized" is true, the values are expected to be normalized - all
+     * in their valid ranges.
+     *
+     * If "normalized" is false, the values are expected to be "near
+     * normalized", meaning that the mantissa has to be modified at most once to
+     * bring it back into range.
+     *
+     */
+    template <bool expectNormal = true, detail::UnsignedMantissa Rep = internalrep>
     void
     fromInternal(bool negative, Rep mantissa, int exponent);
 
