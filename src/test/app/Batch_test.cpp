@@ -2738,8 +2738,7 @@ class Batch_test : public beast::unit_test::suite
             env(set(lender, vaultKeylet.key),
                 managementFeeRate(TenthBips16(100)),
                 debtMaximum(debtMaximumValue),
-                coverRateMinimum(TenthBips32(percentageToTenthBips(10))),
-                coverRateLiquidation(TenthBips32(percentageToTenthBips(25))));
+                coverRateMinimum(TenthBips32(percentageToTenthBips(10))));
 
             env(coverDeposit(lender, brokerKeylet.key, coverDepositValue));
 
