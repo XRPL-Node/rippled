@@ -148,8 +148,8 @@ if(is_gcc)
     list(JOIN SANITIZER_TYPES "," SANITIZER_TYPES_STR)
 
     # Add sanitizer to compile and link flags
-    list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize=${SANITIZER_TYPES_STR}")
-    set(SANITIZERS_LINK_FLAGS "${SANITIZERS_RELOCATION_FLAGS}" "-fsanitize=${SANITIZER_TYPES_STR}")
+    list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize-recover=${SANITIZER_TYPES_STR}")
+    set(SANITIZERS_LINK_FLAGS "${SANITIZERS_RELOCATION_FLAGS}" "-fsanitize-recover=${SANITIZER_TYPES_STR}")
 
 elseif(is_clang)
     # Add ignorelist for Clang (GCC doesn't support this)
@@ -166,8 +166,8 @@ elseif(is_clang)
     list(JOIN SANITIZER_TYPES "," SANITIZER_TYPES_STR)
 
     # Add sanitizer to compile and link flags
-    list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize=${SANITIZER_TYPES_STR}")
-    set(SANITIZERS_LINK_FLAGS "-fsanitize=${SANITIZER_TYPES_STR}")
+    list(APPEND SANITIZERS_COMPILE_FLAGS "-fsanitize-recover=${SANITIZER_TYPES_STR}")
+    set(SANITIZERS_LINK_FLAGS "-fsanitize-recover=${SANITIZER_TYPES_STR}")
 endif()
 
 message(STATUS "  Compile flags: ${SANITIZERS_COMPILE_FLAGS}")
