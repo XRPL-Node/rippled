@@ -20,7 +20,6 @@
 # See: https://github.com/google/sanitizers/issues/189
 
 # Boost - false positives from stackful coroutines
-interceptor_name:boost
 interceptor_name:clock_gettime
 interceptor_name:memcpy
 interceptor_name:__bzero

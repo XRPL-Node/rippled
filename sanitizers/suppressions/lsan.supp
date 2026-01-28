@@ -3,8 +3,9 @@
 # Suppress leaks detected by asan in boost code.
 # These are false positives from Boost.Asio SSL internals that use OpenSSL BIO structures.
 # The BIO structures are managed by OpenSSL's internal reference counting and freed at process exit.
-leak:boost::asio
-leak:boost/asio
+
+#leak:boost::asio
+#leak:boost/asio
 
 # OpenSSL BIO memory is managed internally and freed at process exit
 leak:CRYPTO_malloc
