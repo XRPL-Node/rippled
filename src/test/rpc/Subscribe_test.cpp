@@ -876,7 +876,7 @@ public:
                 auto reply = wsc.getMsg(100ms);
                 if (reply)
                 {
-                    JLOG(j.warn()) << "getTxHash reply: " << *reply;
+                    std::cout << "getTxHash reply: " << *reply;
                     auto r = *reply;
                     if (r.isMember(jss::account_history_tx_index))
                         idx = r[jss::account_history_tx_index].asInt();
@@ -1117,10 +1117,10 @@ public:
              * add more txns, then subscribe bob tx history and
              * genesis account tx history. Their earliest txns should match.
              */
+            sendPayments(env, env.master, bob, 30, 300);
             wscTxHistory = makeWSClient(env.app().config());
             request[jss::account_history_tx_stream][jss::account] = bob.human();
             jv = wscTxHistory->invoke("subscribe", request);
-            sendPayments(env, env.master, bob, 30, 300);
 
             bobFullHistoryVec.clear();
             BEAST_EXPECT(
