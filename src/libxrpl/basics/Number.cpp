@@ -292,7 +292,8 @@ Number::Guard::doRound(rep& drops, std::string location)
     auto r = round();
     if (r == 1 || (r == 0 && (drops & 1) == 1))
     {
-        if (drops >= maxMantissa())
+        auto const& range = range_.get();
+        if (drops >= range.max)
         {
             static_assert(sizeof(internalrep) == sizeof(rep));
             // This should be impossible, because it's impossible to represent
@@ -1119,7 +1120,7 @@ Number::root(MantissaRange const& range, Number f, unsigned d)
 
         // Scale f into the range (0, 1) such that the scale change (e) is a
         // multiple of the root (d)
-        auto e = exponent + Number::mantissaLog() + 1;
+        auto e = exponent + range.log + 1;
         auto const di = static_cast<int>(d);
         auto ex = [e = e, di = di]()  // Euclidean remainder of e/d
         {
@@ -1212,7 +1213,7 @@ root2(Number f)
 
         // Scale f into the range (0, 1) such that f's exponent is a
         // multiple of d
-        auto e = exponent + Number::mantissaLog() + 1;
+        auto e = exponent + range.log + 1;
         if (e % 2 != 0)
             ++e;
         f = f.shiftExponent(-e);  // f /= 10^e;
