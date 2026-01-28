@@ -1041,7 +1041,7 @@ public:
             sendPayments(env, env.master, alice, 1, 1, 123456);
 
             IdxHashVec vec;
-            auto r = getTxHash(*wscTxHistory, vec, 1, env.journal);
+            auto r = getTxHash(*wscTxHistory, vec, 1);
             if (!BEAST_EXPECT(r.first && r.second))
                 return;
 
@@ -1226,7 +1226,6 @@ public:
                 env.close();
                 return 2;
             };
-            // test
 
             // subscribe
             Json::Value request;
