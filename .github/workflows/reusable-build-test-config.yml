@@ -224,7 +224,7 @@ jobs:
             -j "${PARALLELISM}"
 
       - name: Run the embedded tests
-        if: ${{ !inputs.build_only }}
+        if: ${{ always() && !inputs.build_only }}
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
