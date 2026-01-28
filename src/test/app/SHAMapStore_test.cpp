@@ -36,22 +36,16 @@ class SHAMapStore_test : public beast::unit_test::suite
     }
 
     bool
-    goodLedger(
-        jtx::Env& env,
-        Json::Value const& json,
-        std::string ledgerID,
-        bool checkDB = false)
+    goodLedger(jtx::Env& env, Json::Value const& json, std::string ledgerID, bool checkDB = false)
     {
-        auto good = json.isMember(jss::result) &&
-            !RPC::contains_error(json[jss::result]) &&
+        auto good = json.isMember(jss::result) && !RPC::contains_error(json[jss::result]) &&
             json[jss::result][jss::ledger][jss::ledger_index] == ledgerID;
         if (!good || !checkDB)
             return good;
 
         auto const seq = json[jss::result][jss::ledger_index].asUInt();
 
-        std::optional<LedgerHeader> oinfo =
-            env.app().getRelationalDatabase().getLedgerInfoByIndex(seq);
+        std::optional<LedgerHeader> oinfo = env.app().getRelationalDatabase().getLedgerInfoByIndex(seq);
         if (!oinfo)
             return false;
         LedgerHeader const& info = oinfo.value();
@@ -60,25 +54,19 @@ class SHAMapStore_test : public beast::unit_test::suite
         LedgerIndex const outSeq = info.seq;
         std::string const outParentHash = to_string(info.parentHash);
         std::string const outDrops = to_string(info.drops);
-        std::uint64_t const outCloseTime =
-            info.closeTime.time_since_epoch().count();
-        std::uint64_t const outParentCloseTime =
-            info.parentCloseTime.time_since_epoch().count();
-        std::uint64_t const outCloseTimeResolution =
-            info.closeTimeResolution.count();
+        std::uint64_t const outCloseTime = info.closeTime.time_since_epoch().count();
+        std::uint64_t const outParentCloseTime = info.parentCloseTime.time_since_epoch().count();
+        std::uint64_t const outCloseTimeResolution = info.closeTimeResolution.count();
         std::uint64_t const outCloseFlags = info.closeFlags;
         std::string const outAccountHash = to_string(info.accountHash);
         std::string const outTxHash = to_string(info.txHash);
 
         auto const& ledger = json[jss::result][jss::ledger];
-        return outHash == ledger[jss::ledger_hash].asString() &&
-            outSeq == seq &&
-            outParentHash == ledger[jss::parent_hash].asString() &&
-            outDrops == ledger[jss::total_coins].asString() &&
+        return outHash == ledger[jss::ledger_hash].asString() && outSeq == seq &&
+            outParentHash == ledger[jss::parent_hash].asString() && outDrops == ledger[jss::total_coins].asString() &&
             outCloseTime == ledger[jss::close_time].asUInt() &&
             outParentCloseTime == ledger[jss::parent_close_time].asUInt() &&
-            outCloseTimeResolution ==
-            ledger[jss::close_time_resolution].asUInt() &&
+            outCloseTimeResolution == ledger[jss::close_time_resolution].asUInt() &&
             outCloseFlags == ledger[jss::close_flags].asUInt() &&
             outAccountHash == ledger[jss::account_hash].asString() &&
             outTxHash == ledger[jss::transaction_hash].asString();
@@ -87,8 +75,7 @@ class SHAMapStore_test : public beast::unit_test::suite
     bool
     bad(Json::Value const& json, error_code_i error = rpcLGR_NOT_FOUND)
     {
-        return json.isMember(jss::result) &&
-            RPC::contains_error(json[jss::result]) &&
+        return json.isMember(jss::result) && RPC::contains_error(json[jss::result]) &&
             json[jss::result][jss::error_code] == error;
     }
 
@@ -96,8 +83,7 @@ class SHAMapStore_test : public beast::unit_test::suite
     getHash(Json::Value const& json)
     {
         BEAST_EXPECT(
-            json.isMember(jss::result) &&
-            json[jss::result].isMember(jss::ledger) &&
+            json.isMember(jss::result) && json[jss::result].isMember(jss::ledger) &&
             json[jss::result][jss::ledger].isMember(jss::ledger_hash) &&
             json[jss::result][jss::ledger][jss::ledger_hash].isString());
         return json[jss::result][jss::ledger][jss::ledger_hash].asString();
@@ -107,8 +93,7 @@ class SHAMapStore_test : public beast::unit_test::suite
     ledgerCheck(jtx::Env& env, int const rows, int const first)
     {
         auto const [actualRows, actualFirst, actualLast] =
-            dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())
-                ->getLedgerCountMinMax();
+            dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())->getLedgerCountMinMax();
 
         BEAST_EXPECT(actualRows == rows);
         BEAST_EXPECT(actualFirst == first);
@@ -118,17 +103,14 @@ class SHAMapStore_test : public beast::unit_test::suite
     void
     transactionCheck(jtx::Env& env, int const rows)
     {
-        BEAST_EXPECT(
-            dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())
-                ->getTransactionCount() == rows);
+        BEAST_EXPECT(dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())->getTransactionCount() == rows);
     }
 
     void
     accountTransactionCheck(jtx::Env& env, int const rows)
     {
         BEAST_EXPECT(
-            dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())
-                ->getAccountTransactionCount() == rows);
+            dynamic_cast<SQLiteDatabase*>(&env.app().getRelationalDatabase())->getAccountTransactionCount() == rows);
     }
 
     int
@@ -205,11 +187,8 @@ public:
 
         for (auto i = 3; i < deleteInterval + lastRotated; ++i)
         {
-            ledgers.emplace(
-                std::make_pair(i, env.rpc("ledger", std::to_string(i))));
-            BEAST_EXPECT(
-                goodLedger(env, ledgers[i], std::to_string(i), true) &&
-                getHash(ledgers[i]).length());
+            ledgers.emplace(std::make_pair(i, env.rpc("ledger", std::to_string(i))));
+            BEAST_EXPECT(goodLedger(env, ledgers[i], std::to_string(i), true) && getHash(ledgers[i]).length());
         }
 
         ledgerCheck(env, deleteInterval + 1, 2);
@@ -221,8 +200,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "current");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(deleteInterval + 4)));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(deleteInterval + 4)));
         }
 
         store.rendezvous();
@@ -248,14 +226,9 @@ public:
             ledgerTmp = env.rpc("ledger", "current");
             BEAST_EXPECT(goodLedger(env, ledgerTmp, std::to_string(i + 3)));
 
-            ledgers.emplace(
-                std::make_pair(i, env.rpc("ledger", std::to_string(i))));
-            BEAST_EXPECT(
-                store.getLastRotated() == lastRotated ||
-                i == lastRotated + deleteInterval - 2);
-            BEAST_EXPECT(
-                goodLedger(env, ledgers[i], std::to_string(i), true) &&
-                getHash(ledgers[i]).length());
+            ledgers.emplace(std::make_pair(i, env.rpc("ledger", std::to_string(i))));
+            BEAST_EXPECT(store.getLastRotated() == lastRotated || i == lastRotated + deleteInterval - 2);
+            BEAST_EXPECT(goodLedger(env, ledgers[i], std::to_string(i), true) && getHash(ledgers[i]).length());
         }
 
         store.rendezvous();
@@ -294,8 +267,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -310,8 +282,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
         }
 
         store.rendezvous();
@@ -327,8 +298,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -367,8 +337,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -377,12 +346,9 @@ public:
         BEAST_EXPECT(lastRotated == store.getLastRotated());
 
         // This does not kick off a cleanup
-        canDelete = env.rpc(
-            "can_delete", std::to_string(ledgerSeq + deleteInterval / 2));
+        canDelete = env.rpc("can_delete", std::to_string(ledgerSeq + deleteInterval / 2));
         BEAST_EXPECT(!RPC::contains_error(canDelete[jss::result]));
-        BEAST_EXPECT(
-            canDelete[jss::result][jss::can_delete] ==
-            ledgerSeq + deleteInterval / 2);
+        BEAST_EXPECT(canDelete[jss::result][jss::can_delete] == ledgerSeq + deleteInterval / 2);
 
         store.rendezvous();
 
@@ -394,8 +360,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
         }
 
         store.rendezvous();
@@ -411,8 +376,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -424,8 +388,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
         }
 
         store.rendezvous();
@@ -438,9 +401,7 @@ public:
         // This does not kick off a cleanup
         canDelete = env.rpc("can_delete", "always");
         BEAST_EXPECT(!RPC::contains_error(canDelete[jss::result]));
-        BEAST_EXPECT(
-            canDelete[jss::result][jss::can_delete] ==
-            std::numeric_limits<unsigned int>::max());
+        BEAST_EXPECT(canDelete[jss::result][jss::can_delete] == std::numeric_limits<unsigned int>::max());
 
         for (; ledgerSeq < lastRotated + deleteInterval; ++ledgerSeq)
         {
@@ -448,8 +409,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -461,8 +421,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
         }
 
         store.rendezvous();
@@ -483,8 +442,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq), true));
         }
 
         store.rendezvous();
@@ -496,8 +454,7 @@ public:
             env.close();
 
             auto ledger = env.rpc("ledger", "validated");
-            BEAST_EXPECT(
-                goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
+            BEAST_EXPECT(goodLedger(env, ledger, std::to_string(ledgerSeq++), true));
         }
 
         store.rendezvous();
@@ -509,13 +466,9 @@ public:
     }
 
     std::unique_ptr<NodeStore::Backend>
-    makeBackendRotating(
-        jtx::Env& env,
-        NodeStoreScheduler& scheduler,
-        std::string path)
+    makeBackendRotating(jtx::Env& env, NodeStoreScheduler& scheduler, std::string path)
     {
-        Section section{
-            env.app().config().section(ConfigSection::nodeDatabase())};
+        Section section{env.app().config().section(ConfigSection::nodeDatabase())};
         boost::filesystem::path newPath;
 
         if (!BEAST_EXPECT(path.size()))
@@ -525,8 +478,7 @@ public:
 
         auto backend{NodeStore::Manager::instance().make_Backend(
             section,
-            megabytes(env.app().config().getValueFor(
-                SizedItem::burstSize, std::nullopt)),
+            megabytes(env.app().config().getValueFor(SizedItem::burstSize, std::nullopt)),
             scheduler,
             env.app().logs().journal("NodeStoreTest"))};
         backend->open();
@@ -551,15 +503,11 @@ public:
         // Provide default values:
         if (!nscfg.exists("cache_size"))
             nscfg.set(
-                "cache_size",
-                std::to_string(env.app().config().getValueFor(
-                    SizedItem::treeCacheSize, std::nullopt)));
+                "cache_size", std::to_string(env.app().config().getValueFor(SizedItem::treeCacheSize, std::nullopt)));
 
         if (!nscfg.exists("cache_age"))
             nscfg.set(
-                "cache_age",
-                std::to_string(env.app().config().getValueFor(
-                    SizedItem::treeCacheAge, std::nullopt)));
+                "cache_age", std::to_string(env.app().config().getValueFor(SizedItem::treeCacheAge, std::nullopt)));
 
         NodeStoreScheduler scheduler(env.app().getJobQueue());
 
@@ -585,11 +533,9 @@ public:
         std::atomic<int> threadNum = 0;
 
         {
-            auto newBackend = makeBackendRotating(
-                env, scheduler, std::to_string(++threadNum));
+            auto newBackend = makeBackendRotating(env, scheduler, std::to_string(++threadNum));
 
-            auto const cb = [&](std::string const& writableName,
-                                std::string const& archiveName) {
+            auto const cb = [&](std::string const& writableName, std::string const& archiveName) {
                 BEAST_EXPECT(writableName == "1");
                 BEAST_EXPECT(archiveName == "write");
                 // Ensure that dbr functions can be called from within the
@@ -605,25 +551,21 @@ public:
         /////////////////////////////////////////////////////////////
         // Do something stupid. Try to re-enter rotate from inside the callback.
         {
-            auto const cb = [&](std::string const& writableName,
-                                std::string const& archiveName) {
+            auto const cb = [&](std::string const& writableName, std::string const& archiveName) {
                 BEAST_EXPECT(writableName == "3");
                 BEAST_EXPECT(archiveName == "2");
                 // Ensure that dbr functions can be called from within the
                 // callback
                 BEAST_EXPECT(dbr->getName() == "3");
             };
-            auto const cbReentrant = [&](std::string const& writableName,
-                                         std::string const& archiveName) {
+            auto const cbReentrant = [&](std::string const& writableName, std::string const& archiveName) {
                 BEAST_EXPECT(writableName == "2");
                 BEAST_EXPECT(archiveName == "1");
-                auto newBackend = makeBackendRotating(
-                    env, scheduler, std::to_string(++threadNum));
+                auto newBackend = makeBackendRotating(env, scheduler, std::to_string(++threadNum));
                 // Reminder: doing this is stupid and should never happen
                 dbr->rotate(std::move(newBackend), cb);
             };
-            auto newBackend = makeBackendRotating(
-                env, scheduler, std::to_string(++threadNum));
+            auto newBackend = makeBackendRotating(env, scheduler, std::to_string(++threadNum));
             dbr->rotate(std::move(newBackend), cbReentrant);
         }
 
