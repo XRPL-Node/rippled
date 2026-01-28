@@ -866,8 +866,7 @@ public:
          */
         auto getTxHash = [](WSClient& wsc,
                             IdxHashVec& v,
-                            int numReplies,
-                            beast::Journal const& j) -> std::pair<bool, bool> {
+                            int numReplies) -> std::pair<bool, bool> {
             bool first_flag = false;
 
             for (int i = 0; i < numReplies; ++i)
@@ -1055,7 +1054,7 @@ public:
             BEAST_EXPECT(goodSubRPC(jv));
 
             sendPayments(env, env.master, alice, 1, 1);
-            r = getTxHash(*wscTxHistory, vec, 1, env.journal);
+            r = getTxHash(*wscTxHistory, vec, 1);
             BEAST_EXPECT(!r.first);
         }
         {
@@ -1074,9 +1073,7 @@ public:
                 return;
             IdxHashVec genesisFullHistoryVec;
             if (!BEAST_EXPECT(
-                    !getTxHash(
-                         *wscTxHistory, genesisFullHistoryVec, 1, env.journal)
-                         .first))
+                    !getTxHash(*wscTxHistory, genesisFullHistoryVec, 1).first))
                 return;
 
             /*
@@ -1085,8 +1082,7 @@ public:
              */
             sendPayments(env, env.master, bob, 1, 1, 654321);
 
-            auto r =
-                getTxHash(*wscTxHistory, genesisFullHistoryVec, 1, env.journal);
+            auto r = getTxHash(*wscTxHistory, genesisFullHistoryVec, 1);
             if (!BEAST_EXPECT(r.first && r.second))
                 return;
 
@@ -1095,7 +1091,7 @@ public:
             if (!BEAST_EXPECT(goodSubRPC(jv)))
                 return;
             IdxHashVec bobFullHistoryVec;
-            r = getTxHash(*wscTxHistory, bobFullHistoryVec, 1, env.journal);
+            r = getTxHash(*wscTxHistory, bobFullHistoryVec, 1);
             if (!BEAST_EXPECT(r.first && r.second))
                 return;
             BEAST_EXPECT(
@@ -1124,8 +1120,7 @@ public:
 
             bobFullHistoryVec.clear();
             BEAST_EXPECT(
-                getTxHash(*wscTxHistory, bobFullHistoryVec, 31, env.journal)
-                    .second);
+                getTxHash(*wscTxHistory, bobFullHistoryVec, 31).second);
             jv = wscTxHistory->invoke("unsubscribe", request);
 
             request[jss::account_history_tx_stream][jss::account] =
@@ -1133,8 +1128,7 @@ public:
             jv = wscTxHistory->invoke("subscribe", request);
             genesisFullHistoryVec.clear();
             BEAST_EXPECT(
-                getTxHash(*wscTxHistory, genesisFullHistoryVec, 31, env.journal)
-                    .second);
+                getTxHash(*wscTxHistory, genesisFullHistoryVec, 31).second);
             jv = wscTxHistory->invoke("unsubscribe", request);
 
             BEAST_EXPECT(
@@ -1164,8 +1158,7 @@ public:
             sendPayments(env, alice, bob, 5, 1);
             sendPayments(env, alice, bob, 5, 1);
             IdxHashVec accountVec;
-            if (!BEAST_EXPECT(
-                    getTxHash(*wscAccount, accountVec, 10, env.journal).first))
+            if (!BEAST_EXPECT(getTxHash(*wscAccount, accountVec, 10).first))
                 return;
 
             // subscribe account tx history
@@ -1177,9 +1170,7 @@ public:
 
             // compare historical txns
             IdxHashVec txHistoryVec;
-            if (!BEAST_EXPECT(
-                    getTxHash(*wscTxHistory, txHistoryVec, 10, env.journal)
-                        .first))
+            if (!BEAST_EXPECT(getTxHash(*wscTxHistory, txHistoryVec, 10).first))
                 return;
             if (!BEAST_EXPECT(hashCompare(accountVec, txHistoryVec, true)))
                 return;
@@ -1193,20 +1184,16 @@ public:
                 // take out all history txns from stream to prepare next test
                 IdxHashVec initFundTxns;
                 if (!BEAST_EXPECT(
-                        getTxHash(*wscTxHistory, initFundTxns, 10, env.journal)
-                            .second) ||
+                        getTxHash(*wscTxHistory, initFundTxns, 10).second) ||
                     !BEAST_EXPECT(checkBoundary(initFundTxns, false)))
                     return;
             }
 
             // compare future txns
             sendPayments(env, alice, bob, 10, 1);
-            if (!BEAST_EXPECT(
-                    getTxHash(*wscAccount, accountVec, 10, env.journal).first))
+            if (!BEAST_EXPECT(getTxHash(*wscAccount, accountVec, 10).first))
                 return;
-            if (!BEAST_EXPECT(
-                    getTxHash(*wscTxHistory, txHistoryVec, 10, env.journal)
-                        .first))
+            if (!BEAST_EXPECT(getTxHash(*wscTxHistory, txHistoryVec, 10).first))
                 return;
             if (!BEAST_EXPECT(hashCompare(accountVec, txHistoryVec, true)))
                 return;
@@ -1251,12 +1238,12 @@ public:
             {
                 // take out existing txns from the stream
                 IdxHashVec tempVec;
-                getTxHash(*ws, tempVec, 100, env.journal);
+                getTxHash(*ws, tempVec, 100);
             }
 
             auto count = mixedPayments();
             IdxHashVec vec1;
-            if (!BEAST_EXPECT(getTxHash(*ws, vec1, count, env.journal).first))
+            if (!BEAST_EXPECT(getTxHash(*ws, vec1, count).first))
                 return;
             ws->invoke("unsubscribe", request);
         }
@@ -1285,7 +1272,7 @@ public:
             {
                 // take out existing txns from the stream
                 IdxHashVec tempVec;
-                getTxHash(*wscLong, tempVec, 100, env.journal);
+                getTxHash(*wscLong, tempVec, 100);
             }
 
             // repeat the payments many rounds
@@ -1293,16 +1280,14 @@ public:
             {
                 auto count = oneRound(kk);
                 IdxHashVec vec1;
-                if (!BEAST_EXPECT(
-                        getTxHash(*wscLong, vec1, count, env.journal).first))
+                if (!BEAST_EXPECT(getTxHash(*wscLong, vec1, count).first))
                     return;
 
                 // another subscribe, only for this round
                 auto wscShort = makeWSClient(env.app().config());
                 auto jv = wscShort->invoke("subscribe", request);
                 IdxHashVec vec2;
-                if (!BEAST_EXPECT(
-                        getTxHash(*wscShort, vec2, count, env.journal).first))
+                if (!BEAST_EXPECT(getTxHash(*wscShort, vec2, count).first))
                     return;
                 if (!BEAST_EXPECT(hashCompare(vec1, vec2, true)))
                     return;
