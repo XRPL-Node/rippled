@@ -2411,6 +2411,7 @@ struct HostFuncImpl_test : public beast::unit_test::suite
     {
         testcase("floatSet");
         using namespace test::jtx;
+        using namespace wasm_float;
 
         Env env{*this};
         OpenView ov{*env.current()};
@@ -2435,7 +2436,7 @@ struct HostFuncImpl_test : public beast::unit_test::suite
 
         {
             auto const result =
-                hfs.floatSet(1, wasm_float::maxExponent + normalExp + 1, 0);
+                hfs.floatSet(1, wasmMaxExponent + normalExp + 1, 0);
             BEAST_EXPECT(!result) &&
                 BEAST_EXPECT(
                     result.error() ==
@@ -2444,46 +2445,35 @@ struct HostFuncImpl_test : public beast::unit_test::suite
 
         {
             auto const result =
-                hfs.floatSet(1, wasm_float::maxExponent + normalExp + 1, 0);
-            BEAST_EXPECT(!result) &&
-                BEAST_EXPECT(
-                    result.error() ==
-                    HostFunctionError::FLOAT_COMPUTATION_ERROR);
-        }
-
-        {
-            auto const result =
-                hfs.floatSet(1, wasm_float::minExponent + normalExp - 1, 0);
+                hfs.floatSet(1, wasmMinExponent + normalExp - 1, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatIntZero);
         }
 
         {
-            auto const result =
-                hfs.floatSet(1, wasm_float::maxExponent + normalExp, 0);
+            auto const result = hfs.floatSet(1, wasmMaxExponent + normalExp, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatMaxExp);
         }
 
         {
             auto const result =
-                hfs.floatSet(-1, wasm_float::maxExponent + normalExp, 0);
+                hfs.floatSet(-1, wasmMaxExponent + normalExp, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatMinusMaxExp);
         }
 
         {
             auto const result =
-                hfs.floatSet(1, wasm_float::maxExponent + normalExp - 1, 0);
+                hfs.floatSet(1, wasmMaxExponent + normalExp - 1, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatPreMaxExp);
         }
 
         {
             auto const result =
-                hfs.floatSet(STAmount::cMaxValue, wasm_float::maxExponent, 0);
+                hfs.floatSet(STAmount::cMaxValue, wasmMaxExponent, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatMaxIOU);
         }
 
         {
-            auto const result =
-                hfs.floatSet(1, wasm_float::minExponent + normalExp, 0);
+            auto const result = hfs.floatSet(1, wasmMinExponent + normalExp, 0);
             BEAST_EXPECT(result) && BEAST_EXPECT(*result == floatMinExp);
         }
 
@@ -3067,7 +3057,7 @@ struct HostFuncImpl_test : public beast::unit_test::suite
         {
             auto const x = hfs.floatSet(1, -2, 0);  // 0.01
             auto const y =
-                hfs.floatSet(-1999999993734431, -15, 0);  // almost -2
+                hfs.floatSet(-2'000'000'000'000'000ll, -15, 0);  // -2
             if (BEAST_EXPECT(x && y))
             {
                 auto const result = hfs.floatLog(makeSlice(*x), 0);
@@ -3077,7 +3067,7 @@ struct HostFuncImpl_test : public beast::unit_test::suite
     }
 
     void
-    testFloatNonIOU()
+    testFloatSpecialCases()
     {
         testcase("float Xrp+Mpt");
         using namespace test::jtx;
@@ -3136,6 +3126,20 @@ struct HostFuncImpl_test : public beast::unit_test::suite
                 !result &&
                 result.error() == HostFunctionError::FLOAT_INPUT_MALFORMED);
         }
+
+        testcase("float non-canonical");
+
+        {  // non-canonical mantissa 10 000 000 000 000 000
+            Bytes x = float1;
+            *reinterpret_cast<uint64_t*>(x.data()) = 0x0000C16FF286A3D4ull;
+            {
+                auto const result =
+                    hfs.floatCompare(makeSlice(x), makeSlice(float1));
+                BEAST_EXPECT(
+                    !result &&
+                    result.error() == HostFunctionError::FLOAT_INPUT_MALFORMED);
+            }
+        }
     }
 
     void
@@ -3153,7 +3157,7 @@ struct HostFuncImpl_test : public beast::unit_test::suite
         testFloatRoot();
         testFloatPower();
         testFloatLog();
-        testFloatNonIOU();
+        testFloatSpecialCases();
     }
 
     void
