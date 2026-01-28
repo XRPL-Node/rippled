@@ -106,14 +106,12 @@ class ClosureCounter_test : public beast::unit_test::suite
         }
 
         // Copy constructor
-        TrackedString(TrackedString const& rhs)
-            : copies(rhs.copies + 1), moves(rhs.moves), str(rhs.str)
+        TrackedString(TrackedString const& rhs) : copies(rhs.copies + 1), moves(rhs.moves), str(rhs.str)
         {
         }
 
         // Move constructor
-        TrackedString(TrackedString&& rhs) noexcept
-            : copies(rhs.copies), moves(rhs.moves + 1), str(std::move(rhs.str))
+        TrackedString(TrackedString&& rhs) noexcept : copies(rhs.copies), moves(rhs.moves + 1), str(std::move(rhs.str))
         {
         }
 
@@ -148,8 +146,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped =
-                strCounter.wrap([](TrackedString in) { return in += "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString in) { return in += "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
@@ -166,8 +163,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString const&> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped = strCounter.wrap(
-                [](TrackedString const& in) { return in + "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString const& in) { return in + "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
@@ -184,8 +180,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString&> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped =
-                strCounter.wrap([](TrackedString& in) { return in += "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString& in) { return in += "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
