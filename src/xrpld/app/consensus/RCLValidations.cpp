@@ -122,7 +122,7 @@ RCLValidationsAdaptor::acquire(LedgerHash const& hash)
 
         app_.getInboundLedgers().acquireAsync(
             jtADVANCE,
-            "getConsensusLedger2",
+            "GetConsL2",
             hash,
             0,
             InboundLedger::Reason::CONSENSUS);
