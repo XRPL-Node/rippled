@@ -230,6 +230,25 @@ public:
                     // mantissa ends up less than largestMantissa.
                     Number{
                         false,
+                        Number::largestMantissa,
+                        0,
+                        Number::normalized{}},
+                    Number{
+                        false,
+                        Number::largestMantissa,
+                        0,
+                        Number::normalized{}},
+                    Number{
+                        false,
+                        Number::largestMantissa * 2,
+                        0,
+                        Number::normalized{}},
+                },
+                {
+                    // These mantissas round down, so adding them together won't
+                    // have any consequences.
+                    Number{
+                        false,
                         9'999'999'999'999'999'990ULL,
                         0,
                         Number::normalized{}},
@@ -604,7 +623,6 @@ public:
                          Number::normalized{}},
                      __LINE__},
                     // Maximum actual mantissa range - same as int64
-                    // 99'999'999'999'999'999'800'000'000'000'000'000'100
                     {Number{false, maxMantissa, 0, Number::normalized{}},
                      Number{false, maxMantissa, 0, Number::normalized{}},
                      Number{85'070'591'730'234'615'84, 19},

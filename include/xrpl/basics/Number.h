@@ -632,7 +632,7 @@ private:
 
     /** Breaks down the number into components, potentially de-normalizing it.
      *
-     * Ensures that the mantissa always has range_.log digits.
+     * Ensures that the mantissa always has range_.log + 1 digits.
      *
      */
     template <detail::UnsignedMantissa Rep = internalrep>
@@ -641,7 +641,7 @@ private:
 
     /** Breaks down the number into components, potentially de-normalizing it.
      *
-     * Ensures that the mantissa always has range_.log digits.
+     * Ensures that the mantissa always has range_.log + 1 digits.
      *
      */
     template <detail::UnsignedMantissa Rep = internalrep>
