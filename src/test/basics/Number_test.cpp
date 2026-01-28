@@ -1885,6 +1885,206 @@ public:
     }
 
     void
+    testNormalizeToRange()
+    {
+        // Test edge-cases of normalizeToRange
+        auto const scale = Number::getMantissaScale();
+        testcase << "normalizeToRange " << to_string(scale);
+
+        auto test = [this](
+                        Number const& n,
+                        auto const rangeMin,
+                        auto const rangeMax,
+                        auto const expectedMantissa,
+                        auto const expectedExponent,
+                        auto const line) {
+            auto const normalized = n.normalizeToRange(rangeMin, rangeMax);
+            BEAST_EXPECTS(
+                normalized.first == expectedMantissa,
+                "Number " + to_string(n) + " scaled to " +
+                    std::to_string(rangeMax) +
+                    ". Expected mantissa:" + std::to_string(expectedMantissa) +
+                    ", got: " + std::to_string(normalized.first) + " @ " +
+                    std::to_string(line));
+            BEAST_EXPECTS(
+                normalized.second == expectedExponent,
+                "Number " + to_string(n) + " scaled to " +
+                    std::to_string(rangeMax) +
+                    ". Expected exponent:" + std::to_string(expectedExponent) +
+                    ", got: " + std::to_string(normalized.second) + " @ " +
+                    std::to_string(line));
+        };
+
+        std::int64_t constexpr iRangeMin = 100;
+        std::int64_t constexpr iRangeMax = 999;
+
+        std::uint64_t constexpr uRangeMin = 100;
+        std::uint64_t constexpr uRangeMax = 999;
+
+        constexpr static MantissaRange largeRange{MantissaRange::large};
+
+        std::int64_t constexpr iBigMin = largeRange.min;
+        std::int64_t constexpr iBigMax = largeRange.max;
+
+        auto const testSuite = [&](Number const& n,
+                                   auto const expectedSmallMantissa,
+                                   auto const expectedSmallExponent,
+                                   auto const expectedLargeMantissa,
+                                   auto const expectedLargeExponent,
+                                   auto const line) {
+            test(
+                n,
+                iRangeMin,
+                iRangeMax,
+                expectedSmallMantissa,
+                expectedSmallExponent,
+                line);
+            test(
+                n,
+                iBigMin,
+                iBigMax,
+                expectedLargeMantissa,
+                expectedLargeExponent,
+                line);
+
+            // Only test non-negative. testing a negative number with an
+            // unsigned range will assert, and asserts can't be tested.
+            if (n.signum() >= 0)
+            {
+                test(
+                    n,
+                    uRangeMin,
+                    uRangeMax,
+                    expectedSmallMantissa,
+                    expectedSmallExponent,
+                    line);
+                test(
+                    n,
+                    largeRange.min,
+                    largeRange.max,
+                    expectedLargeMantissa,
+                    expectedLargeExponent,
+                    line);
+            }
+        };
+
+        {
+            // zero
+            Number const n{0};
+
+            testSuite(
+                n,
+                0,
+                std::numeric_limits<int>::lowest(),
+                0,
+                std::numeric_limits<int>::lowest(),
+                __LINE__);
+        }
+        {
+            // Small positive number
+            Number const n{2};
+
+            testSuite(n, 200, -2, 2'000'000'000'000'000'000, -18, __LINE__);
+        }
+        {
+            // Negative number
+            Number const n{-2};
+
+            testSuite(n, -200, -2, -2'000'000'000'000'000'000, -18, __LINE__);
+        }
+        {
+            // Biggest valid mantissa
+            Number const n{Number::largestMantissa, 0, Number::normalized{}};
+
+            if (scale == MantissaRange::small)
+                // With the small mantissa range, the value rounds up. Because
+                // it rounds up, when scaling up to the full int64 range, it
+                // can't go over the max, so it is one digit smaller than the
+                // full value.
+                testSuite(n, 922, 16, 922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, 922, 16, Number::largestMantissa, 0, __LINE__);
+        }
+        {
+            // Biggest valid mantissa + 1
+            Number const n{
+                Number::largestMantissa + 1, 0, Number::normalized{}};
+
+            if (scale == MantissaRange::small)
+                // With the small mantissa range, the value rounds up. Because
+                // it rounds up, when scaling up to the full int64 range, it
+                // can't go over the max, so it is one digit smaller than the
+                // full value.
+                testSuite(n, 922, 16, 922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, 922, 16, 922'337'203'685'477'581, 1, __LINE__);
+        }
+        {
+            // Biggest valid mantissa + 2
+            Number const n{
+                Number::largestMantissa + 2, 0, Number::normalized{}};
+
+            if (scale == MantissaRange::small)
+                // With the small mantissa range, the value rounds up. Because
+                // it rounds up, when scaling up to the full int64 range, it
+                // can't go over the max, so it is one digit smaller than the
+                // full value.
+                testSuite(n, 922, 16, 922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, 922, 16, 922'337'203'685'477'581, 1, __LINE__);
+        }
+        {
+            // Biggest valid mantissa + 3
+            Number const n{
+                Number::largestMantissa + 3, 0, Number::normalized{}};
+
+            if (scale == MantissaRange::small)
+                // With the small mantissa range, the value rounds up. Because
+                // it rounds up, when scaling up to the full int64 range, it
+                // can't go over the max, so it is one digit smaller than the
+                // full value.
+                testSuite(n, 922, 16, 922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, 922, 16, 922'337'203'685'477'581, 1, __LINE__);
+        }
+        {
+            // int64 min
+            Number const n{std::numeric_limits<std::int64_t>::min(), 0};
+
+            if (scale == MantissaRange::small)
+                testSuite(n, -922, 16, -922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, -922, 16, -922'337'203'685'477'581, 1, __LINE__);
+        }
+        {
+            // int64 min + 1
+            Number const n{std::numeric_limits<std::int64_t>::min() + 1, 0};
+
+            if (scale == MantissaRange::small)
+                testSuite(n, -922, 16, -922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, -922, 16, -9'223'372'036'854'775'807, 0, __LINE__);
+        }
+        {
+            // int64 min - 1
+            // Need to cast to uint, even though we're dealing with a negative
+            // number to avoid overflow and UB
+            Number const n{
+                true,
+                -static_cast<std::uint64_t>(
+                    std::numeric_limits<std::int64_t>::min()) +
+                    1,
+                0,
+                Number::normalized{}};
+
+            if (scale == MantissaRange::small)
+                testSuite(n, -922, 16, -922'337'203'685'477'600, 1, __LINE__);
+            else
+                testSuite(n, -922, 16, -922'337'203'685'477'581, 1, __LINE__);
+        }
+    }
+
+    void
     run() override
     {
         for (auto const scale : {MantissaRange::small, MantissaRange::large})
@@ -1911,6 +2111,7 @@ public:
             test_truncate();
             testRounding();
             testInt64();
+            testNormalizeToRange();
         }
     }
 };

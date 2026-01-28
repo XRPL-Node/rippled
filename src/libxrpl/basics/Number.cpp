@@ -11,6 +11,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -102,7 +103,7 @@ public:
         int& exponent,
         internalrep const& minMantissa,
         internalrep const& maxMantissa,
-        std::string location);
+        std::string_view location);
 
     // Modify the result to the correctly rounded value
     template <detail::UnsignedMantissa T>
@@ -115,7 +116,7 @@ public:
 
     // Modify the result to the correctly rounded value
     void
-    doRound(rep& drops, std::string location);
+    doRound(rep& drops, std::string_view location);
 
 private:
     void
@@ -245,7 +246,7 @@ Number::Guard::doRoundUp(
     int& exponent,
     internalrep const& minMantissa,
     internalrep const& maxMantissa,
-    std::string location)
+    std::string_view location)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (mantissa & 1) == 1))
@@ -261,7 +262,7 @@ Number::Guard::doRoundUp(
     }
     bringIntoRange(negative, mantissa, exponent, minMantissa);
     if (exponent > maxExponent)
-        throw std::overflow_error(location);
+        throw std::overflow_error(std::string{location});
 }
 
 template <detail::UnsignedMantissa T>
@@ -287,7 +288,7 @@ Number::Guard::doRoundDown(
 
 // Modify the result to the correctly rounded value
 void
-Number::Guard::doRound(rep& drops, std::string location)
+Number::Guard::doRound(rep& drops, std::string_view location)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (drops & 1) == 1))
@@ -302,7 +303,7 @@ Number::Guard::doRound(rep& drops, std::string location)
             // or "(maxRep + 1) / 10", neither of which will round up when
             // converting to rep, though the latter might overflow _before_
             // rounding.
-            throw std::overflow_error(location);  // LCOV_EXCL_LINE
+            throw std::overflow_error(std::string{location});  // LCOV_EXCL_LINE
         }
         ++drops;
     }
@@ -322,17 +323,10 @@ Number::externalToInternal(rep mantissa)
     // If the mantissa is already positive, just return it
     if (mantissa >= 0)
         return mantissa;
-    // If the mantissa is negative, but fits within the positive range of rep,
-    // return it negated
-    if (mantissa >= -std::numeric_limits<rep>::max())
-        return -mantissa;
 
-    // If the mantissa doesn't fit within the positive range, convert to
-    // int128_t, negate that, and cast it back down to the internalrep
-    // In practice, this is only going to cover the case of
-    // std::numeric_limits<rep>::min().
-    int128_t temp = mantissa;
-    return static_cast<internalrep>(-temp);
+    // Cast to unsigned before negating to avoid undefined behavior
+    // when v == INT64_MIN (negating INT64_MIN in signed is UB)
+    return -static_cast<internalrep>(mantissa);
 }
 
 /** Breaks down the number into components, potentially de-normalizing it.
