@@ -278,6 +278,9 @@ TEST(HTTPClient, basic_http_request)
     EXPECT_FALSE(result_error);
     EXPECT_EQ(result_status, 200);
     EXPECT_EQ(result_data, test_body);
+
+    // Clean up SSL context to prevent memory leaks
+    HTTPClient::cleanupSSLContext();
 }
 
 TEST(HTTPClient, empty_response)
@@ -298,6 +301,9 @@ TEST(HTTPClient, empty_response)
     EXPECT_FALSE(result_error);
     EXPECT_EQ(result_status, 200);
     EXPECT_TRUE(result_data.empty());
+
+    // Clean up SSL context to prevent memory leaks
+    HTTPClient::cleanupSSLContext();
 }
 
 TEST(HTTPClient, different_status_codes)
