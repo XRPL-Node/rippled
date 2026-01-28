@@ -131,6 +131,8 @@ jobs:
           subtract: ${{ inputs.nproc_subtract }}
 
       - name: Setup Conan
+        env:
+          SANITIZERS: ${{ inputs.sanitizers }}
         uses: ./.github/actions/setup-conan
 
       - name: Build dependencies
