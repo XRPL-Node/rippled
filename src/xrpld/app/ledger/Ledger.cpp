@@ -191,12 +191,9 @@ Ledger::Ledger(create_genesis_t, Config const& config, std::vector<uint256> cons
                 sle->at(sfReserveIncrement) = *f;
             sle->at(sfReferenceFeeUnits) = Config::FEE_UNITS_DEPRECATED;
         }
-        if (std::find(
-                amendments.begin(), amendments.end(), featureSmartEscrow) !=
-            amendments.end())
+        if (std::find(amendments.begin(), amendments.end(), featureSmartEscrow) != amendments.end())
         {
-            sle->at(sfExtensionComputeLimit) =
-                config.FEES.extension_compute_limit;
+            sle->at(sfExtensionComputeLimit) = config.FEES.extension_compute_limit;
             sle->at(sfExtensionSizeLimit) = config.FEES.extension_size_limit;
             sle->at(sfGasPrice) = config.FEES.gas_price;
         }
@@ -586,12 +583,9 @@ Ledger::setup()
             {
                 auto const baseFeeXRP = sle->at(~sfBaseFeeDrops);
                 auto const reserveBaseXRP = sle->at(~sfReserveBaseDrops);
-                auto const reserveIncrementXRP =
-                    sle->at(~sfReserveIncrementDrops);
+                auto const reserveIncrementXRP = sle->at(~sfReserveIncrementDrops);
 
-                auto assign = [&ret](
-                                  XRPAmount& dest,
-                                  std::optional<STAmount> const& src) {
+                auto assign = [&ret](XRPAmount& dest, std::optional<STAmount> const& src) {
                     if (src)
                     {
                         if (src->native())
@@ -606,13 +600,11 @@ Ledger::setup()
                 newFees = baseFeeXRP || reserveBaseXRP || reserveIncrementXRP;
             }
             {
-                auto const extensionComputeLimit =
-                    sle->at(~sfExtensionComputeLimit);
+                auto const extensionComputeLimit = sle->at(~sfExtensionComputeLimit);
                 auto const extensionSizeLimit = sle->at(~sfExtensionSizeLimit);
                 auto const gasPrice = sle->at(~sfGasPrice);
 
-                auto assign = [](std::uint32_t& dest,
-                                 std::optional<std::uint32_t> const& src) {
+                auto assign = [](std::uint32_t& dest, std::optional<std::uint32_t> const& src) {
                     if (src)
                     {
                         dest = src.value();
@@ -621,8 +613,7 @@ Ledger::setup()
                 assign(fees_.extensionComputeLimit, extensionComputeLimit);
                 assign(fees_.extensionSizeLimit, extensionSizeLimit);
                 assign(fees_.gasPrice, gasPrice);
-                extensionFees =
-                    extensionComputeLimit || extensionSizeLimit || gasPrice;
+                extensionFees = extensionComputeLimit || extensionSizeLimit || gasPrice;
             }
             if (oldFees && newFees)
                 // Should be all of one or the other, but not both
@@ -653,9 +644,8 @@ void
 Ledger::defaultFees(Config const& config)
 {
     XRPL_ASSERT(
-        fees_.base == 0 && fees_.reserve == 0 && fees_.increment == 0 &&
-            fees_.extensionComputeLimit == 0 && fees_.extensionSizeLimit == 0 &&
-            fees_.gasPrice == 0,
+        fees_.base == 0 && fees_.reserve == 0 && fees_.increment == 0 && fees_.extensionComputeLimit == 0 &&
+            fees_.extensionSizeLimit == 0 && fees_.gasPrice == 0,
         "xrpl::Ledger::defaultFees : zero fees");
     if (fees_.base == 0)
         fees_.base = config.FEES.reference_fee;

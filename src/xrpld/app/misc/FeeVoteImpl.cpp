@@ -100,11 +100,7 @@ FeeVoteImpl::doValidation(Fees const& lastFees, Rules const& rules, STValidation
     // Values should always be in a valid range (because the voting process
     // will ignore out-of-range values) but if we detect such a case, we do
     // not send a value.
-    auto vote = [&v, this](
-                    auto const current,
-                    auto target,
-                    char const* name,
-                    auto const& sfield) {
+    auto vote = [&v, this](auto const current, auto target, char const* name, auto const& sfield) {
         if (current != target)
         {
             JLOG(journal_.info()) << "Voting for " << name << " of " << target;
@@ -120,12 +116,8 @@ FeeVoteImpl::doValidation(Fees const& lastFees, Rules const& rules, STValidation
     }
     else
     {
-        auto to32 = [](XRPAmount target) {
-            return target.dropsAs<std::uint32_t>();
-        };
-        auto to64 = [](XRPAmount target) {
-            return target.dropsAs<std::uint64_t>();
-        };
+        auto to32 = [](XRPAmount target) { return target.dropsAs<std::uint32_t>(); };
+        auto to64 = [](XRPAmount target) { return target.dropsAs<std::uint64_t>(); };
         auto voteAndConvert = [&v, this](
                                   auto const current,
                                   XRPAmount target,
@@ -141,20 +133,9 @@ FeeVoteImpl::doValidation(Fees const& lastFees, Rules const& rules, STValidation
             }
         };
 
-        voteAndConvert(
-            lastFees.base, target_.reference_fee, to64, "base fee", sfBaseFee);
-        voteAndConvert(
-            lastFees.reserve,
-            target_.account_reserve,
-            to32,
-            "base reserve",
-            sfReserveBase);
-        voteAndConvert(
-            lastFees.increment,
-            target_.owner_reserve,
-            to32,
-            "reserve increment",
-            sfReserveIncrement);
+        voteAndConvert(lastFees.base, target_.reference_fee, to64, "base fee", sfBaseFee);
+        voteAndConvert(lastFees.reserve, target_.account_reserve, to32, "base reserve", sfReserveBase);
+        voteAndConvert(lastFees.increment, target_.owner_reserve, to32, "reserve increment", sfReserveIncrement);
     }
     if (rules.enabled(featureSmartEscrow))
     {
@@ -163,11 +144,7 @@ FeeVoteImpl::doValidation(Fees const& lastFees, Rules const& rules, STValidation
             target_.extension_compute_limit,
             "extension compute limit",
             sfExtensionComputeLimit);
-        vote(
-            lastFees.extensionSizeLimit,
-            target_.extension_size_limit,
-            "extension size limit",
-            sfExtensionSizeLimit);
+        vote(lastFees.extensionSizeLimit, target_.extension_size_limit, "extension size limit", sfExtensionSizeLimit);
         vote(lastFees.gasPrice, target_.gas_price, "gas price", sfGasPrice);
     }
 }
@@ -189,15 +166,11 @@ FeeVoteImpl::doVoting(
     detail::VotableValue incReserveVote(lastClosedLedger->fees().increment, target_.owner_reserve);
 
     detail::VotableValue extensionComputeVote(
-        lastClosedLedger->fees().extensionComputeLimit,
-        target_.extension_compute_limit);
+        lastClosedLedger->fees().extensionComputeLimit, target_.extension_compute_limit);
 
-    detail::VotableValue extensionSizeVote(
-        lastClosedLedger->fees().extensionSizeLimit,
-        target_.extension_size_limit);
+    detail::VotableValue extensionSizeVote(lastClosedLedger->fees().extensionSizeLimit, target_.extension_size_limit);
 
-    detail::VotableValue gasPriceVote(
-        lastClosedLedger->fees().gasPrice, target_.gas_price);
+    detail::VotableValue gasPriceVote(lastClosedLedger->fees().gasPrice, target_.gas_price);
 
     auto const& rules = lastClosedLedger->rules();
     if (rules.enabled(featureXRPFees))
@@ -205,8 +178,7 @@ FeeVoteImpl::doVoting(
         auto doVote = [](std::shared_ptr<STValidation> const& val,
                          detail::VotableValue<XRPAmount>& value,
                          SF_AMOUNT const& xrpField) {
-            if (auto const field = ~val->at(~xrpField);
-                field && field->native())
+            if (auto const field = ~val->at(~xrpField); field && field->native())
             {
                 auto const vote = field->xrp();
                 if (isLegalAmountSigned(vote))
@@ -217,133 +189,130 @@ FeeVoteImpl::doVoting(
                 }
             };
 
-        for (auto const& val : set)
-        {
-            if (!val->isTrusted())
-                continue;
-            doVote(val, baseFeeVote, sfBaseFeeDrops);
-            doVote(val, baseReserveVote, sfReserveBaseDrops);
-            doVote(val, incReserveVote, sfReserveIncrementDrops);
-        }
-    }
-    else
-    {
-        auto doVote = [](std::shared_ptr<STValidation> const& val,
-                         detail::VotableValue<XRPAmount>& value,
-                         auto const& valueField) {
-            if (auto const field = val->at(~valueField))
+            for (auto const& val : set)
             {
-                using XRPType = XRPAmount::value_type;
-                auto const vote = *field;
-                if (vote <= std::numeric_limits<XRPType>::max() &&
-                    isLegalAmountSigned(XRPAmount{unsafe_cast<XRPType>(vote)}))
-                    value.addVote(XRPAmount{unsafe_cast<XRPType>(vote)});
-                else
+                if (!val->isTrusted())
+                    continue;
+                doVote(val, baseFeeVote, sfBaseFeeDrops);
+                doVote(val, baseReserveVote, sfReserveBaseDrops);
+                doVote(val, incReserveVote, sfReserveIncrementDrops);
+            }
+        } else
+        {
+            auto doVote = [](std::shared_ptr<STValidation> const& val,
+                             detail::VotableValue<XRPAmount>& value,
+                             auto const& valueField) {
+                if (auto const field = val->at(~valueField))
                 {
-                    value.noVote();
+                    using XRPType = XRPAmount::value_type;
+                    auto const vote = *field;
+                    if (vote <= std::numeric_limits<XRPType>::max() &&
+                        isLegalAmountSigned(XRPAmount{unsafe_cast<XRPType>(vote)}))
+                        value.addVote(XRPAmount{unsafe_cast<XRPType>(vote)});
+                    else
+                    {
+                        value.noVote();
+                    }
+                };
+
+                for (auto const& val : set)
+                {
+                    if (!val->isTrusted())
+                        continue;
+                    doVote(val, baseFeeVote, sfBaseFee);
+                    doVote(val, baseReserveVote, sfReserveBase);
+                    doVote(val, incReserveVote, sfReserveIncrement);
                 }
-            };
+            } if (rules.enabled(featureSmartEscrow))
+            {
+                auto doVote = [](std::shared_ptr<STValidation> const& val,
+                                 detail::VotableValue<std::uint32_t>& value,
+                                 SF_UINT32 const& extensionField) {
+                    if (auto const field = ~val->at(~extensionField); field)
+                    {
+                        value.addVote(field.value());
+                    }
+                    else
+                    {
+                        value.noVote();
+                    }
+                };
 
-        for (auto const& val : set)
-        {
-            if (!val->isTrusted())
-                continue;
-            doVote(val, baseFeeVote, sfBaseFee);
-            doVote(val, baseReserveVote, sfReserveBase);
-            doVote(val, incReserveVote, sfReserveIncrement);
+                for (auto const& val : set)
+                {
+                    if (!val->isTrusted())
+                        continue;
+                    doVote(val, extensionComputeVote, sfExtensionComputeLimit);
+                    doVote(val, extensionSizeVote, sfExtensionSizeLimit);
+                    doVote(val, gasPriceVote, sfGasPrice);
+                }
+            }
+
+            // choose our positions
+            // TODO: Use structured binding once LLVM 16 is the minimum supported
+            // version. See also: https://github.com/llvm/llvm-project/issues/48582
+            // https://github.com/llvm/llvm-project/commit/127bf44385424891eb04cff8e52d3f157fc2cb7c
+            auto const baseFee = baseFeeVote.getVotes();
+            auto const baseReserve = baseReserveVote.getVotes();
+            auto const incReserve = incReserveVote.getVotes();
+            auto const extensionCompute = extensionComputeVote.getVotes();
+            auto const extensionSize = extensionSizeVote.getVotes();
+            auto const gasPrice = gasPriceVote.getVotes();
+
+            auto const seq = lastClosedLedger->header().seq + 1;
+
+            // add transactions to our position
+            if (baseFee.second || baseReserve.second || incReserve.second || extensionCompute.second ||
+                extensionSize.second || gasPrice.second)
+            {
+                JLOG(journal_.warn()) << "We are voting for a fee change: " << baseFee.first << "/" << baseReserve.first
+                                      << "/" << incReserve.first;
+
+                STTx feeTx(ttFEE, [=, &rules](auto& obj) {
+                    obj[sfAccount] = AccountID();
+                    obj[sfLedgerSequence] = seq;
+                    if (rules.enabled(featureXRPFees))
+                    {
+                        obj[sfBaseFeeDrops] = baseFee.first;
+                        obj[sfReserveBaseDrops] = baseReserve.first;
+                        obj[sfReserveIncrementDrops] = incReserve.first;
+                    }
+                    else
+                    {
+                        // Without the featureXRPFees amendment, these fields are
+                        // required.
+                        obj[sfBaseFee] = baseFee.first.dropsAs<std::uint64_t>(baseFeeVote.current());
+                        obj[sfReserveBase] = baseReserve.first.dropsAs<std::uint32_t>(baseReserveVote.current());
+                        obj[sfReserveIncrement] = incReserve.first.dropsAs<std::uint32_t>(incReserveVote.current());
+                        obj[sfReferenceFeeUnits] = Config::FEE_UNITS_DEPRECATED;
+                    }
+                    if (rules.enabled(featureSmartEscrow))
+                    {
+                        obj[sfExtensionComputeLimit] = extensionCompute.first;
+                        obj[sfExtensionSizeLimit] = extensionSize.first;
+                        obj[sfGasPrice] = gasPrice.first;
+                    }
+                });
+
+                uint256 txID = feeTx.getTransactionID();
+
+                JLOG(journal_.warn()) << "Vote: " << txID;
+
+                Serializer s;
+                feeTx.add(s);
+
+                if (!initialPosition->addGiveItem(SHAMapNodeType::tnTRANSACTION_NM, make_shamapitem(txID, s.slice())))
+                {
+                    JLOG(journal_.warn()) << "Ledger already had fee change";
+                }
+            }
         }
-    }
-    if (rules.enabled(featureSmartEscrow))
-    {
-        auto doVote = [](std::shared_ptr<STValidation> const& val,
-                         detail::VotableValue<std::uint32_t>& value,
-                         SF_UINT32 const& extensionField) {
-            if (auto const field = ~val->at(~extensionField); field)
-            {
-                value.addVote(field.value());
-            }
-            else
-            {
-                value.noVote();
-            }
-        };
 
-        for (auto const& val : set)
+        //------------------------------------------------------------------------------
+
+        std::unique_ptr<FeeVote> make_FeeVote(FeeSetup const& setup, beast::Journal journal)
         {
-            if (!val->isTrusted())
-                continue;
-            doVote(val, extensionComputeVote, sfExtensionComputeLimit);
-            doVote(val, extensionSizeVote, sfExtensionSizeLimit);
-            doVote(val, gasPriceVote, sfGasPrice);
+            return std::make_unique<FeeVoteImpl>(setup, journal);
         }
-    }
 
-    // choose our positions
-    // TODO: Use structured binding once LLVM 16 is the minimum supported
-    // version. See also: https://github.com/llvm/llvm-project/issues/48582
-    // https://github.com/llvm/llvm-project/commit/127bf44385424891eb04cff8e52d3f157fc2cb7c
-    auto const baseFee = baseFeeVote.getVotes();
-    auto const baseReserve = baseReserveVote.getVotes();
-    auto const incReserve = incReserveVote.getVotes();
-    auto const extensionCompute = extensionComputeVote.getVotes();
-    auto const extensionSize = extensionSizeVote.getVotes();
-    auto const gasPrice = gasPriceVote.getVotes();
-
-    auto const seq = lastClosedLedger->header().seq + 1;
-
-    // add transactions to our position
-    if (baseFee.second || baseReserve.second || incReserve.second ||
-        extensionCompute.second || extensionSize.second || gasPrice.second)
-    {
-        JLOG(journal_.warn()) << "We are voting for a fee change: " << baseFee.first << "/" << baseReserve.first << "/"
-                              << incReserve.first;
-
-        STTx feeTx(ttFEE, [=, &rules](auto& obj) {
-            obj[sfAccount] = AccountID();
-            obj[sfLedgerSequence] = seq;
-            if (rules.enabled(featureXRPFees))
-            {
-                obj[sfBaseFeeDrops] = baseFee.first;
-                obj[sfReserveBaseDrops] = baseReserve.first;
-                obj[sfReserveIncrementDrops] = incReserve.first;
-            }
-            else
-            {
-                // Without the featureXRPFees amendment, these fields are
-                // required.
-                obj[sfBaseFee] = baseFee.first.dropsAs<std::uint64_t>(baseFeeVote.current());
-                obj[sfReserveBase] = baseReserve.first.dropsAs<std::uint32_t>(baseReserveVote.current());
-                obj[sfReserveIncrement] = incReserve.first.dropsAs<std::uint32_t>(incReserveVote.current());
-                obj[sfReferenceFeeUnits] = Config::FEE_UNITS_DEPRECATED;
-            }
-            if (rules.enabled(featureSmartEscrow))
-            {
-                obj[sfExtensionComputeLimit] = extensionCompute.first;
-                obj[sfExtensionSizeLimit] = extensionSize.first;
-                obj[sfGasPrice] = gasPrice.first;
-            }
-        });
-
-        uint256 txID = feeTx.getTransactionID();
-
-        JLOG(journal_.warn()) << "Vote: " << txID;
-
-        Serializer s;
-        feeTx.add(s);
-
-        if (!initialPosition->addGiveItem(SHAMapNodeType::tnTRANSACTION_NM, make_shamapitem(txID, s.slice())))
-        {
-            JLOG(journal_.warn()) << "Ledger already had fee change";
-        }
-    }
-}
-
-//------------------------------------------------------------------------------
-
-std::unique_ptr<FeeVote>
-make_FeeVote(FeeSetup const& setup, beast::Journal journal)
-{
-    return std::make_unique<FeeVoteImpl>(setup, journal);
-}
-
-}  // namespace xrpl
+    }  // namespace xrpl
