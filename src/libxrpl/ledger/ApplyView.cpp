@@ -169,8 +169,7 @@ ApplyView::dirAdd(
         return directory::createRoot(*this, directory, key, describe);
     }
 
-    auto [page, node, indexes] =
-        directory::findPreviousPage(*this, directory, root);
+    auto [page, node, indexes] = directory::findPreviousPage(*this, directory, root);
 
     if (rules().enabled(featureDefragDirectories))
     {
@@ -213,12 +212,10 @@ ApplyView::dirAdd(
     // If there's space, we use it:
     if (indexes.size() < dirNodeMaxEntries)
     {
-        return directory::insertKey(
-            *this, node, page, preserveOrder, indexes, key);
+        return directory::insertKey(*this, node, page, preserveOrder, indexes, key);
     }
 
-    return directory::insertPage(
-        *this, page, node, 0, root, key, directory, describe);
+    return directory::insertPage(*this, page, node, 0, root, key, directory, describe);
 }
 
 bool
@@ -230,8 +227,7 @@ ApplyView::emptyDirDelete(Keylet const& directory)
         return false;
 
     // Verify that the passed directory node is the directory root.
-    if (directory.type != ltDIR_NODE ||
-        node->getFieldH256(sfRootIndex) != directory.key)
+    if (directory.type != ltDIR_NODE || node->getFieldH256(sfRootIndex) != directory.key)
     {
         // LCOV_EXCL_START
         UNREACHABLE("xrpl::ApplyView::emptyDirDelete : invalid node type");
@@ -291,11 +287,7 @@ ApplyView::emptyDirDelete(Keylet const& directory)
 }
 
 bool
-ApplyView::dirRemove(
-    Keylet const& directory,
-    std::uint64_t page,
-    uint256 const& key,
-    bool keepRoot)
+ApplyView::dirRemove(Keylet const& directory, std::uint64_t page, uint256 const& key, bool keepRoot)
 {
     auto node = peek(keylet::page(directory, page));
 
@@ -416,8 +408,7 @@ ApplyView::dirRemove(
 
     // Check whether the next page is the last page and, if
     // so, whether it's empty. If it is, delete it.
-    if (nextPage != rootPage && next->getFieldU64(sfIndexNext) == rootPage &&
-        next->getFieldV256(sfIndexes).empty())
+    if (nextPage != rootPage && next->getFieldU64(sfIndexNext) == rootPage && next->getFieldV256(sfIndexes).empty())
     {
         // Since next doesn't point to the root, it
         // can't be pointing to prev.
@@ -452,9 +443,7 @@ ApplyView::dirRemove(
 }
 
 bool
-ApplyView::dirDelete(
-    Keylet const& directory,
-    std::function<void(uint256 const&)> const& callback)
+ApplyView::dirDelete(Keylet const& directory, std::function<void(uint256 const&)> const& callback)
 {
     std::optional<std::uint64_t> pi;
 
