@@ -11,6 +11,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -109,7 +110,7 @@ public:
         int& exponent,
         internalrep const& minMantissa,
         internalrep const& maxMantissa,
-        std::string location);
+        std::string_view location);
 
     // Modify the result to the correctly rounded value
     template <UnsignedMantissa T>
@@ -122,7 +123,7 @@ public:
 
     // Modify the result to the correctly rounded value
     void
-    doRound(rep& drops, std::string location);
+    doRound(rep& drops, std::string_view location);
 
 private:
     void
@@ -252,7 +253,7 @@ Number::Guard::doRoundUp(
     int& exponent,
     internalrep const& minMantissa,
     internalrep const& maxMantissa,
-    std::string location)
+    std::string_view location)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (mantissa & 1) == 1))
@@ -268,7 +269,7 @@ Number::Guard::doRoundUp(
     }
     bringIntoRange(negative, mantissa, exponent, minMantissa);
     if (exponent > maxExponent)
-        Throw<std::overflow_error>(location);
+        Throw<std::overflow_error>(std::string(location));
 }
 
 template <UnsignedMantissa T>
@@ -294,7 +295,7 @@ Number::Guard::doRoundDown(
 
 // Modify the result to the correctly rounded value
 void
-Number::Guard::doRound(rep& drops, std::string location)
+Number::Guard::doRound(rep& drops, std::string_view location)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (drops & 1) == 1))
@@ -308,7 +309,7 @@ Number::Guard::doRound(rep& drops, std::string location)
             // or "(maxRep + 1) / 10", neither of which will round up when
             // converting to rep, though the latter might overflow _before_
             // rounding.
-            throw std::overflow_error(location);  // LCOV_EXCL_LINE
+            throw std::overflow_error(std::string(location));  // LCOV_EXCL_LINE
         }
         ++drops;
     }
