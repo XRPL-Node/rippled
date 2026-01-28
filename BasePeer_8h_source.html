@@ -173,17 +173,16 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="classxrpl_1_1BasePeer.html#af9ab3f17e2da48dce255b51e183b78ea">   82</a></span><a class="code hl_function" href="classxrpl_1_1BasePeer.html#af9ab3f17e2da48dce255b51e183b78ea">BasePeer&lt;Handler, Impl&gt;::close</a>()</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>{</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordflow">if</span> (!strand_.running_in_this_thread())</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        <span class="keywordflow">return</span> post(</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>            strand_, <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/utility/functional/bind.html">std::bind</a>(&amp;<a class="code hl_function" href="classxrpl_1_1BasePeer.html#af9ab3f17e2da48dce255b51e183b78ea">BasePeer::close</a>, impl().shared_from_this()));</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_typedef" href="classxrpl_1_1BasePeer.html#a08912f9880442ff2d0bd82f16036164c">error_code</a> ec;</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    <a class="code hl_function" href="namespacexrpl.html#a82730409876bd3e598b502e6c201f320">xrpl::get_lowest_layer</a>(impl().ws_).socket().close(ec);</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>}</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        <span class="keywordflow">return</span> post(strand_, <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/utility/functional/bind.html">std::bind</a>(&amp;<a class="code hl_function" href="classxrpl_1_1BasePeer.html#af9ab3f17e2da48dce255b51e183b78ea">BasePeer::close</a>, impl().shared_from_this()));</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    <a class="code hl_typedef" href="classxrpl_1_1BasePeer.html#a08912f9880442ff2d0bd82f16036164c">error_code</a> ec;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <a class="code hl_function" href="namespacexrpl.html#a82730409876bd3e598b502e6c201f320">xrpl::get_lowest_layer</a>(impl().ws_).socket().close(ec);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>}</div>
 </div>
 </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>}  <span class="comment">// namespace xrpl</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>}  <span class="comment">// namespace xrpl</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#endif</span></div>
 </div>
 </div>
 <div class="ttc" id="aatomic_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/header/atomic.html">atomic</a></div></div>

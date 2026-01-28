@@ -420,7 +420,7 @@ Static Private Member Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a9420945fd34d224b81b68fd3dcc9fed6a0512ccca18ad134fcb5eec993d41603a" name="a9420945fd34d224b81b68fd3dcc9fed6a0512ccca18ad134fcb5eec993d41603a"></a>Custom&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00138">138</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00123">123</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -562,7 +562,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00149">149</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00142">142</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -591,7 +591,7 @@ Static Private Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="classxrpl_1_1Transactor.html#a812d1e3e83c7edfdc358a1737ccd54b3">xrpl::Transactor</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00466">466</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00401">401</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -619,7 +619,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00351">351</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00318">318</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -730,7 +730,7 @@ Static Private Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00480">480</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00415">415</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -828,7 +828,7 @@ Static Private Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00626">626</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00527">527</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -927,7 +927,7 @@ Static Private Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 <p>a = (t/T) * A (1) b = (t/T) * B (2) where A,B: current pool composition T: current balance of outstanding LPTokens a: balance of asset A being added b: balance of asset B being added t: balance of LPTokens issued to LP after a successful transaction Use equation 1 to compute the amount of t, given the amount in Asset1In. Let this be Z Use equation 2 to compute the amount of asset2, given t~Z. Let the computed amount of asset2 be X. If X &lt;= amount in Asset2In: The amount of asset1 to be deposited is the one specified in Asset1In The amount of asset2 to be deposited is X The amount of LPTokens to be issued is Z If X &gt; amount in Asset2In: Use equation 2 to compute , given the amount in Asset2In. Let this be W Use equation 1 to compute the amount of asset1, given t~W from above. Let the computed amount of asset1 be Y If Y &lt;= amount in Asset1In: The amount of asset1 to be deposited is Y The amount of asset2 to be deposited is the one specified in Asset2In The amount of LPTokens to be issued is W else, failed transaction </p>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00702">702</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00598">598</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -1012,7 +1012,7 @@ Static Private Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 <p>t = T * (b / B - x) / (1 + x) (3) where f1 = (1 - 0.5 * tfee) / (1 - tfee) x = sqrt(f1**2 + b / (B * (1 - tfee)) - f1 Use equation 3 </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="classxrpl_1_1AMMDeposit.html#aa9523b1590393beccf68f6dd306d40e5" title="Single asset deposit (Asset1In) by the amount.">singleDeposit</a> to compute amount of LPTokens to be issued, given the amount <a class="el" href="namespacexrpl.html#a8c276c0296ec751cf0e0eb51dbc7f72da13b5bfe96f3e2fe411c9f66f4a582adf">in</a> Asset1In. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00779">779</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00671">671</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -1097,7 +1097,7 @@ Static Private Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 <p>Use equation 4 to compute the amount of asset1 to be deposited, given t represented by amount of LPTokens. Equation 4 solves equation 3 </p><dl class="section see"><dt>See also</dt><dd><a class="el" href="classxrpl_1_1AMMDeposit.html#aa9523b1590393beccf68f6dd306d40e5" title="Single asset deposit (Asset1In) by the amount.">singleDeposit</a> for b. <a class="el" href="namespacexrpl.html#a4cbb7567b1f1ba856f834eb7657cf049aceaa0734f0b3c738120c67344d8f3ec1" title="Should not be retried in this ledger.">Fail</a> if b exceeds specified Max amount to <a class="el" href="classxrpl_1_1AMMDeposit.html#afe38b518992f00e47d115e2d19f4da7d" title="Deposit requested assets and token amount into LP account.">deposit</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00826">826</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00716">716</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -1184,7 +1184,7 @@ Static Private Member Functions</h2></td></tr>
 <dd>
 <a class="el" href="classxrpl_1_1AMMDeposit.html#aa9523b1590393beccf68f6dd306d40e5" title="Single asset deposit (Asset1In) by the amount.">singleDeposit</a> &amp; III and the given EPrice to compute the following two variables: The amount of asset1 <a class="el" href="namespacexrpl.html#a8c276c0296ec751cf0e0eb51dbc7f72da13b5bfe96f3e2fe411c9f66f4a582adf">in</a>. Let this be Q The amount of LPTokens <a class="el" href="namespacexrpl.html#a8c276c0296ec751cf0e0eb51dbc7f72dac68271a63ddbc431c307beb7d2918275">out</a>. Let this be W The amount of asset1 to be deposited is Q The amount of LPTokens to be issued is W </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00884">884</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00772">772</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -1259,7 +1259,7 @@ Static Private Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00989">989</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMDeposit_8cpp_source.html#l00866">866</a> of file <a class="el" href="AMMDeposit_8cpp_source.html">AMMDeposit.cpp</a>.</p>
 
 </div>
 </div>
@@ -1288,7 +1288,7 @@ Static Private Member Functions</h2></td></tr>
 
 <p>Process the transaction. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01135">1135</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01043">1043</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1315,7 +1315,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00144">144</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00129">129</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1342,7 +1342,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00150">150</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00135">135</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1386,7 +1386,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00432">432</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00407">407</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1414,7 +1414,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00503">503</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00471">471</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1452,7 +1452,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00332">332</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00313">313</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1480,7 +1480,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00728">728</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00676">676</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1542,7 +1542,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00659">659</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00613">613</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1570,7 +1570,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00738">738</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00684">684</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1608,7 +1608,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00283">283</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00269">269</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1638,7 +1638,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00393">393</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00365">365</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1734,7 +1734,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00267">267</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00253">253</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1784,7 +1784,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00552">552</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00514">514</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1811,7 +1811,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00622">622</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00578">578</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1840,7 +1840,7 @@ template&lt;&gt; </div>
 
 <p>Reimplemented in <a class="el" href="classxrpl_1_1Change.html#ac7f1aff3ef755020f30e8af2b30c9255">xrpl::Change</a>, and <a class="el" href="classxrpl_1_1SetSignerList.html#a960aee48ab666ee59f278d3116acc1b1">xrpl::SetSignerList</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00614">614</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00572">572</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1907,7 +1907,7 @@ template&lt;&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00322">322</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00307">307</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1945,7 +1945,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00302">302</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00287">287</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -1973,7 +1973,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00261">261</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00247">247</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2011,7 +2011,7 @@ template&lt;&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00245">245</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00233">233</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2057,7 +2057,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00420">420</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00391">391</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2103,7 +2103,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00429">429</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00400">400</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2145,7 +2145,7 @@ template&lt;class T &gt; </div>
 
 <p>Minimum will usually be zero. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00439">439</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00407">407</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2187,7 +2187,7 @@ template&lt;class T , class Unit &gt; </div>
 
 <p>Minimum will usually be zero. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00448">448</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00416">416</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2224,7 +2224,7 @@ template&lt;class T , class Unit &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>A pair containing the transaction result and the actual fee charged. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01073">1073</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00985">985</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2252,7 +2252,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00533">533</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00497">497</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2279,7 +2279,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00397">397</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00373">373</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2335,7 +2335,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00784">784</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00726">726</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2391,7 +2391,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00816">816</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00758">758</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2419,7 +2419,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01128">1128</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l01036">1036</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2461,7 +2461,7 @@ template&lt;class T , class Unit &gt; </div>
 <p>(And passes flagMask to preflight0)</p>
 <p>Do not try to call preflight1 from <a class="el" href="classxrpl_1_1AMMDeposit.html#ad37e7cac2ad3aaf8d0b458e50150cfb1">preflight()</a> in derived classes. See the description of invokePreflight for details. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00144">144</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00136">136</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2492,7 +2492,7 @@ template&lt;class T , class Unit &gt; </div>
 <p>Checks whether the signature appears valid. </p>
 <p>Do not try to call preflight2 from <a class="el" href="classxrpl_1_1AMMDeposit.html#ad37e7cac2ad3aaf8d0b458e50150cfb1">preflight()</a> in derived classes. See the description of invokePreflight for details. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00199">199</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00189">189</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -2541,7 +2541,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00124">124</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00109">109</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2565,7 +2565,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00125">125</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00110">110</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2589,7 +2589,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00126">126</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00111">111</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2613,7 +2613,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00128">128</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00113">113</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2637,7 +2637,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00129">129</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00114">114</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -2661,7 +2661,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00130">130</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00115">115</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
