@@ -224,8 +224,7 @@ jobs:
         run: |
           ctest \
             --output-on-failure \
-            -C "${BUILD_TYPE}" \
-            -j "${PARALLELISM}"
+            -C "${BUILD_TYPE}"
 
       - name: Run the embedded tests
         if: ${{ !inputs.build_only }}
@@ -233,7 +232,7 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
+          ./xrpld --unittest
 
         # Pipeline should fail if the separate tests failed.
       - name: Check results of the SeparateTests
