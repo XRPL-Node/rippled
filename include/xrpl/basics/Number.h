@@ -874,14 +874,22 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
     int exponent = exponent_;
 
     if constexpr (std::is_unsigned_v<T>)
+    {
         XRPL_ASSERT_PARTS(
             !negative,
             "xrpl::Number::normalizeToRange",
             "Number is non-negative for unsigned range.");
+        // To avoid logical errors in release builds, throw if the Number is
+        // negative for an unsigned range.
+        if (negative)
+            throw std::runtime_error(
+                "Number::normalizeToRange: Number is negative for "
+                "unsigned range.");
+    }
     Number::normalize(negative, mantissa, exponent, minMantissa, maxMantissa);
 
-    // Cast mantissa to signed type first to avoid unsigned integer overflow
-    // when multiplying by negative sign
+    // Cast mantissa to signed type first (if T is a signed type) to avoid
+    // unsigned integer overflow when multiplying by negative sign
     T signedMantissa = static_cast<T>(mantissa);
     if (negative)
         signedMantissa = -signedMantissa;
