@@ -52,11 +52,8 @@ public:
         JobQueue& jq_;
         JobType type_;
         std::string name_;
-        CoroState state_ = CoroState::None;
-        std::condition_variable cv_;
-        std::mutex m_;
-
-        int yieldCount_ = 0;
+        std::atomic<CoroState> state_ = CoroState::None;
+        std::atomic_int yieldCount_ = 0;
 
         boost::coroutines::asymmetric_coroutine<int>::pull_type coro_;
         boost::coroutines::asymmetric_coroutine<int>::push_type* yield_;
