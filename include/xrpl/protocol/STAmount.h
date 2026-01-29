@@ -570,7 +570,7 @@ STAmount::fromNumber(A const& a, Number const& number)
 
     XRPL_ASSERT_PARTS(
         working.signum() >= 0,
-        "ripple::STAmount::fromNumber",
+        "xrpl::STAmount::fromNumber",
         "non-negative Number to normalize");
     auto const [mantissa, exponent] =
         working.normalizeToRange(cMinValue, cMaxValue);

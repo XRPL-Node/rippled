@@ -19,8 +19,8 @@
 #pragma message("Using boost::multiprecision::uint128_t and int128_t")
 #endif
 
-using uint128_t = ripple::detail::uint128_t;
-using int128_t = ripple::detail::int128_t;
+using uint128_t = xrpl::detail::uint128_t;
+using int128_t = xrpl::detail::int128_t;
 
 namespace xrpl {
 
@@ -354,7 +354,7 @@ Number::toInternal(MantissaRange const& range) const
         --exponent;
         XRPL_ASSERT_PARTS(
             mantissa >= referenceMin && mantissa < referenceMin * 10,
-            "ripple::Number::toInternal()",
+            "xrpl::Number::toInternal()",
             "Number is within reference range and has 'log' digits");
     }
 
@@ -404,7 +404,7 @@ Number::fromInternal(
 
         XRPL_ASSERT_PARTS(
             mantissa >= minMantissa,
-            "ripple::Number::fromInternal",
+            "xrpl::Number::fromInternal",
             "mantissa large enough");
 
         if (mantissa > maxMantissa || mantissa < minMantissa)
@@ -414,7 +414,7 @@ Number::fromInternal(
 
         XRPL_ASSERT_PARTS(
             mantissa >= minMantissa && mantissa <= maxMantissa,
-            "ripple::Number::fromInternal",
+            "xrpl::Number::fromInternal",
             "mantissa in range");
     }
 
@@ -425,7 +425,7 @@ Number::fromInternal(
 
     XRPL_ASSERT_PARTS(
         (pRange && isnormal(*pRange)) || isnormal(),
-        "ripple::Number::fromInternal",
+        "xrpl::Number::fromInternal",
         "Number is normalized");
 }
 
