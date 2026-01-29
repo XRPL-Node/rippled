@@ -216,8 +216,7 @@ public:
         accountTransactionCheck(env, 2 * deleteInterval);
 
         // The last iteration of this loop should trigger a rotate
-        for (auto i = lastRotated - 3; i < lastRotated + deleteInterval - 1;
-             ++i)
+        for (auto i = lastRotated - 3; i < lastRotated + deleteInterval - 1; ++i)
         {
             BEAST_EXPECT(store.getLastRotated() == lastRotated);
 
@@ -233,8 +232,7 @@ public:
 
         store.rendezvous();
 
-        BEAST_EXPECT(
-            store.getLastRotated() == deleteInterval + lastRotated + 2);
+        BEAST_EXPECT(store.getLastRotated() == deleteInterval + lastRotated + 2);
 
         ledgerCheck(env, deleteInterval + 1, lastRotated);
         transactionCheck(env, 0);
@@ -589,11 +587,9 @@ public:
         auto& ns = env.app().getNodeStore();
         std::map<LedgerIndex, uint256> hashes;
         auto storeHash = [&]() {
-            hashes.emplace(
-                env.current()->info().seq, env.current()->info().hash);
+            hashes.emplace(env.current()->info().seq, env.current()->info().hash);
 
-            auto const& root =
-                ns.fetchNodeObject(hashes[env.current()->info().seq]);
+            auto const& root = ns.fetchNodeObject(hashes[env.current()->info().seq]);
             BEAST_EXPECT(root);
         };
 
@@ -741,8 +737,7 @@ public:
                 {
                     auto const nodeObject = ns.fetchNodeObject(hash);
                     std::stringstream ss;
-                    ss << "minSeq: " << minSeq << ", maxSeq: " << maxSeq
-                       << ", search: " << seq << ". Should "
+                    ss << "minSeq: " << minSeq << ", maxSeq: " << maxSeq << ", search: " << seq << ". Should "
                        << (seq < minSeq ? "NOT " : "") << "be found";
                     if (seq < minSeq)
                         BEAST_EXPECTS(!nodeObject, ss.str());
