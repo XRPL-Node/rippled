@@ -1905,15 +1905,9 @@ doSendMulti(
     beast::Journal j,
     WaiveTransferFee waiveFee,
     // Don't pass back parameters that the caller already has
-    std::function<
-        TER(AccountID const& senderID,
-            AccountID const& receiverID,
-            STAmount const& amount,
-            bool checkIssuer)> doCredit,
-    std::function<
-        TER(AccountID const& issuer,
-            STAmount const& takeFromSender,
-            STAmount const& amount)> preMint = {})
+    std::function<TER(AccountID const& senderID, AccountID const& receiverID, STAmount const& amount, bool checkIssuer)>
+        doCredit,
+    std::function<TER(AccountID const& issuer, STAmount const& takeFromSender, STAmount const& amount)> preMint = {})
 {
     // Use the same pattern for all the SendMulti functions to help avoid
     // divergence and copy/paste errors.
@@ -1941,9 +1935,7 @@ doSendMulti(
             continue;
 
         using namespace std::string_literals;
-        XRPL_ASSERT(
-            !isXRP(receiverID),
-            ("xrpl::"s + name + " : receiver is not XRP").c_str());
+        XRPL_ASSERT(!isXRP(receiverID), ("xrpl::"s + name + " : receiver is not XRP").c_str());
 
         if (senderID == issuer || receiverID == issuer || issuer == noAccount())
         {
@@ -1966,17 +1958,14 @@ doSendMulti(
 
         // Calculate the amount to transfer accounting
         // for any transfer fees if the fee is not waived:
-        STAmount actualSend =
-            (waiveFee == WaiveTransferFee::Yes || issue.native())
+        STAmount actualSend = (waiveFee == WaiveTransferFee::Yes || issue.native())
             ? amount
             : multiply(amount, transferRate(view, amount));
         actual += actualSend;
         takeFromSender += actualSend;
 
-        JLOG(j.debug()) << name << "> " << to_string(senderID) << " - > "
-                        << to_string(receiverID)
-                        << " : deliver=" << amount.getFullText()
-                        << " cost=" << actualSend.getFullText();
+        JLOG(j.debug()) << name << "> " << to_string(senderID) << " - > " << to_string(receiverID)
+                        << " : deliver=" << amount.getFullText() << " cost=" << actualSend.getFullText();
 
         if (TER const terResult = doCredit(issuer, receiverID, amount, true))
             return terResult;
@@ -1984,8 +1973,7 @@ doSendMulti(
 
     if (senderID != issuer && takeFromSender)
     {
-        if (TER const terResult =
-                doCredit(senderID, issuer, takeFromSender, true))
+        if (TER const terResult = doCredit(senderID, issuer, takeFromSender, true))
             return terResult;
     }
 
@@ -2005,28 +1993,14 @@ rippleSendMultiIOU(
     beast::Journal j,
     WaiveTransferFee waiveFee)
 {
-    XRPL_ASSERT(
-        !isXRP(senderID), "xrpl::rippleSendMultiIOU : sender is not XRP");
+    XRPL_ASSERT(!isXRP(senderID), "xrpl::rippleSendMultiIOU : sender is not XRP");
 
-    auto doCredit = [&view, j](
-                        AccountID const& senderID,
-                        AccountID const& receiverID,
-                        STAmount const& amount,
-                        bool checkIssuer) {
-        return rippleCreditIOU(
-            view, senderID, receiverID, amount, checkIssuer, j);
-    };
+    auto doCredit =
+        [&view, j](AccountID const& senderID, AccountID const& receiverID, STAmount const& amount, bool checkIssuer) {
+            return rippleCreditIOU(view, senderID, receiverID, amount, checkIssuer, j);
+        };
 
-    return doSendMulti(
-        "rippleSendMultiIOU",
-        view,
-        senderID,
-        issue,
-        receivers,
-        actual,
-        j,
-        waiveFee,
-        doCredit);
+    return doSendMulti("rippleSendMultiIOU", view, senderID, issue, receivers, actual, j, waiveFee, doCredit);
 }
 
 static TER
@@ -2158,8 +2132,7 @@ accountSendMultiIOU(
     STAmount actual;
     if (!issue.native())
     {
-        JLOG(j.trace()) << "accountSendMultiIOU: " << to_string(senderID)
-                        << " sending " << receivers.size() << " IOUs";
+        JLOG(j.trace()) << "accountSendMultiIOU: " << to_string(senderID) << " sending " << receivers.size() << " IOUs";
 
         return rippleSendMultiIOU(view, senderID, issue, receivers, actual, j, waiveFee);
     }
@@ -2190,20 +2163,16 @@ accountSendMultiIOU(
                         bool /*checkIssuer*/) -> TER {
         if (!senderID)
         {
-            SLE::pointer receiver = receiverID != beast::zero
-                ? view.peek(keylet::account(receiverID))
-                : SLE::pointer();
+            SLE::pointer receiver = receiverID != beast::zero ? view.peek(keylet::account(receiverID)) : SLE::pointer();
 
             if (auto stream = j.trace())
             {
                 std::string receiver_bal("-");
 
                 if (receiver)
-                    receiver_bal =
-                        receiver->getFieldAmount(sfBalance).getFullText();
+                    receiver_bal = receiver->getFieldAmount(sfBalance).getFullText();
 
-                stream << "accountSendMultiIOU> " << to_string(senderID)
-                       << " -> " << to_string(receiverID) << " ("
+                stream << "accountSendMultiIOU> " << to_string(senderID) << " -> " << to_string(receiverID) << " ("
                        << receiver_bal << ") : " << amount.getFullText();
             }
 
@@ -2222,11 +2191,9 @@ accountSendMultiIOU(
                 std::string receiver_bal("-");
 
                 if (receiver)
-                    receiver_bal =
-                        receiver->getFieldAmount(sfBalance).getFullText();
+                    receiver_bal = receiver->getFieldAmount(sfBalance).getFullText();
 
-                stream << "accountSendMultiIOU< " << to_string(senderID)
-                       << " -> " << to_string(receiverID) << " ("
+                stream << "accountSendMultiIOU< " << to_string(senderID) << " -> " << to_string(receiverID) << " ("
                        << receiver_bal << ") : " << amount.getFullText();
             }
             return tesSUCCESS;
@@ -2256,23 +2223,13 @@ accountSendMultiIOU(
             if (sender)
                 sender_bal = sender->getFieldAmount(sfBalance).getFullText();
 
-            stream << "accountSendMultiIOU< " << to_string(senderID) << " ("
-                   << sender_bal << ") -> " << receivers.size()
-                   << " receivers.";
+            stream << "accountSendMultiIOU< " << to_string(senderID) << " (" << sender_bal << ") -> "
+                   << receivers.size() << " receivers.";
         }
 
         return tesSUCCESS;
     };
-    return doSendMulti(
-        "accountSendMultiIOU",
-        view,
-        senderID,
-        issue,
-        receivers,
-        actual,
-        j,
-        waiveFee,
-        doCredit);
+    return doSendMulti("accountSendMultiIOU", view, senderID, issue, receivers, actual, j, waiveFee, doCredit);
 
     // Failures return immediately.
     STAmount takeFromSender{issue};
@@ -2490,9 +2447,7 @@ rippleSendMultiMPT(
     if (!sle)
         return tecOBJECT_NOT_FOUND;
 
-    auto preMint = [&](AccountID const& issuer,
-                       STAmount const& takeFromSender,
-                       STAmount const& amount) -> TER {
+    auto preMint = [&](AccountID const& issuer, STAmount const& takeFromSender, STAmount const& amount) -> TER {
         // if sender is issuer, check that the new OutstandingAmount will
         // not exceed MaximumAmount
         if (senderID == issuer)
@@ -2502,35 +2457,19 @@ rippleSendMultiMPT(
                 "rippler::rippleSendMultiMPT",
                 "sender == issuer, takeFromSender == zero");
             auto const sendAmount = amount.mpt().value();
-            auto const maximumAmount =
-                sle->at(~sfMaximumAmount).value_or(maxMPTokenAmount);
-            if (sendAmount > maximumAmount ||
-                sle->getFieldU64(sfOutstandingAmount) >
-                    maximumAmount - sendAmount)
+            auto const maximumAmount = sle->at(~sfMaximumAmount).value_or(maxMPTokenAmount);
+            if (sendAmount > maximumAmount || sle->getFieldU64(sfOutstandingAmount) > maximumAmount - sendAmount)
                 return tecPATH_DRY;
         }
 
         return tesSUCCESS;
     };
-    auto doCredit = [&view, j](
-                        AccountID const& senderID,
-                        AccountID const& receiverID,
-                        STAmount const& amount,
-                        bool) {
+    auto doCredit = [&view, j](AccountID const& senderID, AccountID const& receiverID, STAmount const& amount, bool) {
         return rippleCreditMPT(view, senderID, receiverID, amount, j);
     };
 
     return doSendMulti(
-        "rippleSendMultiMPT",
-        view,
-        senderID,
-        mptIssue,
-        receivers,
-        actual,
-        j,
-        waiveFee,
-        doCredit,
-        preMint);
+        "rippleSendMultiMPT", view, senderID, mptIssue, receivers, actual, j, waiveFee, doCredit, preMint);
 }
 
 static TER
