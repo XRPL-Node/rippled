@@ -172,7 +172,7 @@ struct MPTConvert
     std::optional<MPTID> id = std::nullopt;
     std::optional<std::uint64_t> amt = std::nullopt;
     std::optional<std::string> proof = std::nullopt;
-
+    std::optional<bool> fillAuditorEncryptedAmt = true;
     // indicates whether to autofill schnorr proof.
     // default : auto generate proof if holderPubKey is present.
     // true: force proof generation.
@@ -232,6 +232,8 @@ struct MPTConvertBack
     std::optional<Buffer> holderEncryptedAmt = std::nullopt;
     std::optional<Buffer> issuerEncryptedAmt = std::nullopt;
     std::optional<Buffer> auditorEncryptedAmt = std::nullopt;
+    std::optional<bool> fillAuditorEncryptedAmt = true;
+    // not an txn param, only used for autofilling
     std::optional<Buffer> blindingFactor = std::nullopt;
     std::optional<Buffer> pedersenCommitment = std::nullopt;
     std::optional<std::uint32_t> ownerCount = std::nullopt;
@@ -371,12 +373,6 @@ public:
     issuer() const
     {
         return issuer_;
-    }
-
-    std::optional<Account> const&
-    auditor() const
-    {
-        return auditor_;
     }
 
     Account const&

@@ -482,7 +482,7 @@ MPTTester::set(MPTSet const& arg)
                 return forObject([&](SLEP const& sle) -> bool {
                     if (sle)
                     {
-                        if (!auditor_)
+                        if (!auditor_.has_value())
                             Throw<std::runtime_error>(
                                 "MPTTester::set: auditor is not set");
 
@@ -1078,8 +1078,8 @@ MPTTester::fillConversionCiphertexts(
     // Handle Auditor
     if (arg.auditorEncryptedAmt)
         auditorCiphertext = *arg.auditorEncryptedAmt;
-    else if (auditor())
-        auditorCiphertext = encryptAmount(*auditor(), *arg.amt, blindingFactor);
+    else if (auditor_.has_value() && *arg.fillAuditorEncryptedAmt)
+        auditorCiphertext = encryptAmount(*auditor_, *arg.amt, blindingFactor);
 
     // Update auditor JSON only if ciphertext exists
     if (auditorCiphertext)
@@ -1288,7 +1288,7 @@ MPTTester::send(MPTConfidentialSend const& arg)
     std::optional<Buffer> auditorAmt;
     if (arg.auditorEncryptedAmt)
         auditorAmt = arg.auditorEncryptedAmt;
-    else if (auditor_)
+    else if (auditor_.has_value())
         auditorAmt = encryptAmount(*auditor_, *arg.amt, blindingFactor);
 
     jv[sfSenderEncryptedAmount] = strHex(senderAmt);
