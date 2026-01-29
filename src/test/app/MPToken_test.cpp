@@ -3107,8 +3107,7 @@ public:
         using namespace test::jtx;
         FeatureBitset const all{testable_amendments()};
 
-        auto const featuresNoSAV =
-            all - featureSingleAssetVault - featureLendingProtocol;
+        auto const featuresNoSAV = all - featureSingleAssetVault - featureLendingProtocol;
         auto const featuresNoDomains = all - featurePermissionedDomains;
         // MPTokenIssuanceCreate
         testCreateValidation(featuresNoSAV);

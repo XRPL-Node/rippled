@@ -142,10 +142,9 @@ Rules::enabled(uint256 const& feature) const
     if (transitiveFeatureMap.contains(feature))
     {
         auto const& transitiveFeatures = transitiveFeatureMap.at(feature);
-        if (std::any_of(
-                transitiveFeatures.begin(),
-                transitiveFeatures.end(),
-                [this](auto const& f) { return impl_->enabled(f); }))
+        if (std::any_of(transitiveFeatures.begin(), transitiveFeatures.end(), [this](auto const& f) {
+                return impl_->enabled(f);
+            }))
             return true;
     }
 

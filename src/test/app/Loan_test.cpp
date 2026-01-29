@@ -22,9 +22,7 @@ protected:
     // Ensure that all the features needed for Lending Protocol are included,
     // even if they are set to unsupported.
     FeatureBitset const all{
-        (jtx::testable_amendments() | featureMPTokensV1 |
-         featureLendingProtocol) -
-        featureSingleAssetVault};
+        (jtx::testable_amendments() | featureMPTokensV1 | featureLendingProtocol) - featureSingleAssetVault};
 
     std::string const iouCurrency{"IOU"};
 

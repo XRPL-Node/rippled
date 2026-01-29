@@ -1501,8 +1501,7 @@ class Delegate_test : public beast::unit_test::suite
         BitsetWrapper() = default;
 
         template <class... Fs>
-        BitsetWrapper(uint256 const& f, Fs&&... fs)
-            : FeatureBitset(f, std::forward<Fs>(fs)...)
+        BitsetWrapper(uint256 const& f, Fs&&... fs) : FeatureBitset(f, std::forward<Fs>(fs)...)
         {
         }
     };
@@ -1513,8 +1512,7 @@ class Delegate_test : public beast::unit_test::suite
         testcase("test delegate disabled tx");
         using namespace jtx;
 
-        BitsetWrapper const featuresSAV{
-            featureSingleAssetVault, featureLendingProtocol};
+        BitsetWrapper const featuresSAV{featureSingleAssetVault, featureLendingProtocol};
 
         // map of tx and required feature.
         // non-delegable tx are not included.

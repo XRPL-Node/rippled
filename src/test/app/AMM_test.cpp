@@ -69,8 +69,7 @@ private:
             {},
             0,
             {},
-            {testable_amendments() - featureSingleAssetVault -
-             featureLendingProtocol});
+            {testable_amendments() - featureSingleAssetVault - featureLendingProtocol});
 
         // IOU to IOU
         testAMM(
@@ -3875,18 +3874,12 @@ private:
                 BEAST_EXPECT(
                     !env.current()->rules().enabled(featureSingleAssetVault) &&
                     !env.current()->rules().enabled(featureLendingProtocol));
-                auto const lp2Balance =
-                    getAccountLines(env, LP2, TST)["lines"][0u]["balance"]
-                        .asString();
-                BEAST_EXPECTS(
-                    lp2TSTBalance == lp2Balance,
-                    "Got: " + lp2Balance + ", Expected: " + lp2TSTBalance);
+                auto const lp2Balance = getAccountLines(env, LP2, TST)["lines"][0u]["balance"].asString();
+                BEAST_EXPECTS(lp2TSTBalance == lp2Balance, "Got: " + lp2Balance + ", Expected: " + lp2TSTBalance);
                 auto const offer = getAccountOffers(env, LP2)["offers"][0u];
                 BEAST_EXPECT(lp2TakerGets == offer["taker_gets"].asString());
                 auto const takerPays = offer["taker_pays"]["value"].asString();
-                BEAST_EXPECTS(
-                    lp2TakerPays == takerPays,
-                    "Got: " + takerPays + ", Expected: " + lp2TakerPays);
+                BEAST_EXPECTS(lp2TakerPays == takerPays, "Got: " + takerPays + ", Expected: " + lp2TakerPays);
             });
     }
 
@@ -5943,13 +5936,8 @@ private:
                 features[featureSingleAssetVault] ? ter{terADDRESS_COLLISION} : ter{tecDUPLICATE});
         };
 
-        testCase(
-            "tecDUPLICATE",
-            testable_amendments() - featureSingleAssetVault -
-                featureLendingProtocol);
-        testCase(
-            "terADDRESS_COLLISION",
-            testable_amendments() | featureSingleAssetVault);
+        testCase("tecDUPLICATE", testable_amendments() - featureSingleAssetVault - featureLendingProtocol);
+        testCase("terADDRESS_COLLISION", testable_amendments() | featureSingleAssetVault);
     }
 
     void
@@ -6241,8 +6229,7 @@ private:
     run() override
     {
         FeatureBitset const all{testable_amendments()};
-        FeatureBitset const featuresNoSAV =
-            all - featureSingleAssetVault - featureLendingProtocol;
+        FeatureBitset const featuresNoSAV = all - featureSingleAssetVault - featureLendingProtocol;
         testInvalidInstance();
         testInstanceCreate();
         testInvalidDeposit(all);

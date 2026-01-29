@@ -576,9 +576,7 @@ class Vault_test : public beast::unit_test::suite
         };
 
         testCase(
-            testDisabled(),
-            {.features = testable_amendments() - featureSingleAssetVault -
-                 featureLendingProtocol});
+            testDisabled(), {.features = testable_amendments() - featureSingleAssetVault - featureLendingProtocol});
 
         testCase(
             [&](Env& env, Account const& issuer, Account const& owner, Asset const& asset, Vault& vault) {
