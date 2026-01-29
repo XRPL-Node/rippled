@@ -118,8 +118,7 @@ insertPage(
     // Check whether we're out of pages.
     if (page == 0)
         return std::nullopt;
-    if (!view.rules().enabled(fixDirectoryLimit) &&
-        page >= dirNodeMaxPages)  // Old pages limit
+    if (!view.rules().enabled(fixDirectoryLimit) && page >= dirNodeMaxPages)  // Old pages limit
     {
         return std::nullopt;
     }
@@ -180,8 +179,7 @@ ApplyView::dirAdd(
         while (page && indexes.size() >= dirNodeMaxEntries)
         {
             // Find a page with space, or a gap in pages.
-            auto [prevPage, prevNode, prevIndexes] =
-                directory::findPreviousPage(*this, directory, node);
+            auto [prevPage, prevNode, prevIndexes] = directory::findPreviousPage(*this, directory, node);
             if (!gapPages && prevPage != page - 1)
                 gapPages.emplace(prevPage, prevNode, page, node);
             page = prevPage;
@@ -204,8 +202,7 @@ ApplyView::dirAdd(
                     directory,
                     describe);
             }
-            std::tie(page, node, indexes) =
-                directory::findPreviousPage(*this, directory, root);
+            std::tie(page, node, indexes) = directory::findPreviousPage(*this, directory, root);
         }
     }
 
