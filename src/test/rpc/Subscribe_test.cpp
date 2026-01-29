@@ -875,7 +875,6 @@ public:
                 auto reply = wsc.getMsg(100ms);
                 if (reply)
                 {
-                    std::cout << "getTxHash reply: " << *reply;
                     auto r = *reply;
                     if (r.isMember(jss::account_history_tx_index))
                         idx = r[jss::account_history_tx_index].asInt();
