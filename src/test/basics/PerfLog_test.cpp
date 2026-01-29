@@ -968,11 +968,7 @@ public:
     void
     run() override
     {
-        env_.emplace(
-            *this,
-            test::jtx::envconfig(),
-            nullptr,
-            beast::severities::kDisabled);
+        env_.emplace(*this, test::jtx::envconfig(), nullptr, beast::severities::kDisabled);
         j_.emplace(env_->app().journal("PerfLog_test"));
 
         testFileCreation();

@@ -405,8 +405,7 @@ run(int argc, char** argv)
         po::value<std::int64_t>(),
         "Supplies a reference fee (in drops) to unit tests. If provided, this "
         "value is used in every suite that does not override it.")(
-        "unittest-ipv6",
-        "Use IPv6 localhost when running unittests (default is IPv4).")(
+        "unittest-ipv6", "Use IPv6 localhost when running unittests (default is IPv4).")(
         "unittest-log",
         "Force unit test log message output. Only useful in combination with "
         "--quiet, in which case log messages will print but suite/case names "
@@ -531,14 +530,12 @@ run(int argc, char** argv)
     // LCOV_EXCL_START
     else
     {
-        if (vm.count("unittest-jobs") || vm.count("unittest-arg") ||
-            vm.count("unittest-fee") || vm.count("unittest-log") ||
-            vm.count("unittest-ipv6"))
+        if (vm.count("unittest-jobs") || vm.count("unittest-arg") || vm.count("unittest-fee") ||
+            vm.count("unittest-log") || vm.count("unittest-ipv6"))
         {
             // unittest jobs only makes sense with `unittest`
-            std::cerr
-                << "rippled: unittest-related parameter specified without "
-                   "'--unittest'.\n";
+            std::cerr << "rippled: unittest-related parameter specified without "
+                         "'--unittest'.\n";
             std::cerr << "To run the unit tests the '--unittest' option must "
                          "be present.\n";
             return 1;

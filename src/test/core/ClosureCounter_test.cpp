@@ -302,8 +302,7 @@ public:
     void
     run() override
     {
-        env_.emplace(
-            *this, jtx::envconfig(), nullptr, beast::severities::kDisabled);
+        env_.emplace(*this, jtx::envconfig(), nullptr, beast::severities::kDisabled);
         j.emplace(env_->app().journal("ClosureCounter_test"));
 
         testConstruction();

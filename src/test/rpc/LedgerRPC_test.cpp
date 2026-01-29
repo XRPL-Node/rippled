@@ -232,9 +232,8 @@ class LedgerRPC_test : public beast::unit_test::suite
         testcase("Lookup ledger");
         using namespace test::jtx;
 
-        Env env{
-            *this, FeatureBitset{}, XRPAmount(10)};  // hashes requested below
-                                                     // assume no amendments
+        Env env{*this, FeatureBitset{}, XRPAmount(10)};  // hashes requested below
+                                                         // assume no amendments
         env.fund(XRP(10000), "alice");
         env.close();
         env.fund(XRP(10000), "bob");

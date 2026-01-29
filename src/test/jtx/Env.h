@@ -166,12 +166,7 @@ public:
         std::optional<beast::severities::Severity> thresh = std::nullopt,
         std::optional<XRPAmount> referenceFee = std::nullopt)
         : test(suite_)
-        , bundle_(
-              suite_,
-              std::move(config),
-              std::move(logs),
-              thresh.value_or(beast::severities::kError),
-              referenceFee)
+        , bundle_(suite_, std::move(config), std::move(logs), thresh.value_or(beast::severities::kError), referenceFee)
         , journal{bundle_.app->journal("Env")}
     {
         memoize(Account::master);
@@ -198,12 +193,7 @@ public:
         FeatureBitset features,
         std::unique_ptr<Logs> logs,
         std::optional<XRPAmount> referenceFee = std::nullopt)
-        : Env(suite_,
-              envconfig(),
-              features,
-              std::move(logs),
-              std::nullopt,
-              referenceFee)
+        : Env(suite_, envconfig(), features, std::move(logs), std::nullopt, referenceFee)
     {
     }
     /**
@@ -220,15 +210,8 @@ public:
      * @param referenceFee non-default reference fee
      *
      */
-    Env(beast::unit_test::suite& suite_,
-        FeatureBitset features,
-        std::optional<XRPAmount> referenceFee = std::nullopt)
-        : Env(suite_,
-              envconfig(),
-              features,
-              nullptr,
-              std::nullopt,
-              referenceFee)
+    Env(beast::unit_test::suite& suite_, FeatureBitset features, std::optional<XRPAmount> referenceFee = std::nullopt)
+        : Env(suite_, envconfig(), features, nullptr, std::nullopt, referenceFee)
     {
     }
 
@@ -249,12 +232,7 @@ public:
         std::unique_ptr<Logs> logs = nullptr,
         std::optional<beast::severities::Severity> thresh = std::nullopt,
         std::optional<XRPAmount> referenceFee = std::nullopt)
-        : Env(suite_,
-              std::move(config),
-              testable_amendments(),
-              std::move(logs),
-              thresh,
-              referenceFee)
+        : Env(suite_, std::move(config), testable_amendments(), std::move(logs), thresh, referenceFee)
     {
     }
 
@@ -271,15 +249,8 @@ public:
      * tweaks.
      * @param referenceFee Optional reference fee to use in fee settings.
      */
-    Env(beast::unit_test::suite& suite_,
-        std::unique_ptr<Config> config,
-        std::optional<XRPAmount> referenceFee)
-        : Env(suite_,
-              std::move(config),
-              testable_amendments(),
-              nullptr,
-              std::nullopt,
-              referenceFee)
+    Env(beast::unit_test::suite& suite_, std::unique_ptr<Config> config, std::optional<XRPAmount> referenceFee)
+        : Env(suite_, std::move(config), testable_amendments(), nullptr, std::nullopt, referenceFee)
     {
     }
 
@@ -292,8 +263,7 @@ public:
      *
      * @param suite_ the current unit_test::suite
      */
-    Env(beast::unit_test::suite& suite_, std::optional<XRPAmount> referenceFee)
-        : Env(suite_, envconfig(), referenceFee)
+    Env(beast::unit_test::suite& suite_, std::optional<XRPAmount> referenceFee) : Env(suite_, envconfig(), referenceFee)
     {
     }
 

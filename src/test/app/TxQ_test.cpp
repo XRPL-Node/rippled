@@ -2548,9 +2548,7 @@ public:
         testcase("full queue gap handling");
 
         auto cfg = makeConfig(
-            {{"minimum_txn_in_ledger_standalone", "1"},
-             {"ledgers_in_queue", "10"},
-             {"maximum_txn_per_account", "11"}});
+            {{"minimum_txn_in_ledger_standalone", "1"}, {"ledgers_in_queue", "10"}, {"maximum_txn_per_account", "11"}});
         Env env(*this, std::move(cfg), XRPAmount(10));
 
         auto const baseFee = env.current()->fees().base.drops();

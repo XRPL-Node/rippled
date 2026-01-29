@@ -133,11 +133,8 @@ public:
     {
         using namespace test::jtx;
 
-        Env env{
-            *this,
-            FeatureBitset{},
-            XRPAmount(10)};  // the hashes being checked below
-                             // assume no amendments
+        Env env{*this, FeatureBitset{}, XRPAmount(10)};  // the hashes being checked below
+                                                         // assume no amendments
         Account const gw{"gateway"};
         auto const USD = gw["USD"];
         env.fund(XRP(100000), gw);
