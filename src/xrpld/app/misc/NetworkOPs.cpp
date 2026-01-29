@@ -945,9 +945,7 @@ NetworkOPsImp::processHeartbeatTimer()
         {
             if (mMode != OperatingMode::DISCONNECTED)
             {
-                setMode(
-                    OperatingMode::DISCONNECTED,
-                    "Heartbeat: insufficient peers");
+                setMode(OperatingMode::DISCONNECTED, "Heartbeat: insufficient peers");
                 std::stringstream ss;
                 ss << "Node count (" << numPeers << ") has fallen "
                    << "below required minimum (" << minPeerCount_ << ").";
@@ -972,10 +970,8 @@ NetworkOPsImp::processHeartbeatTimer()
         if (mMode == OperatingMode::DISCONNECTED)
         {
             setMode(OperatingMode::CONNECTED, "Heartbeat: sufficient peers");
-            JLOG(m_journal.info())
-                << "Node count (" << numPeers << ") is sufficient.";
-            CLOG(clog.ss()) << "setting mode to CONNECTED based on " << numPeers
-                            << " peers. ";
+            JLOG(m_journal.info()) << "Node count (" << numPeers << ") is sufficient.";
+            CLOG(clog.ss()) << "setting mode to CONNECTED based on " << numPeers << " peers. ";
         }
 
         // Check if the last validated ledger forces a change between these
@@ -1860,8 +1856,7 @@ NetworkOPsImp::beginConsensus(uint256 const& networkClosed, std::unique_ptr<std:
         // this shouldn't happen unless we jump ledgers
         if (mMode == OperatingMode::FULL)
         {
-            JLOG(m_journal.warn())
-                << "beginConsensus Don't have LCL, going to tracking";
+            JLOG(m_journal.warn()) << "beginConsensus Don't have LCL, going to tracking";
             setMode(OperatingMode::TRACKING, "beginConsensus: No LCL");
             CLOG(clog) << "beginConsensus Don't have LCL, going to tracking. ";
         }
@@ -2342,25 +2337,20 @@ NetworkOPsImp::recvValidation(std::shared_ptr<STValidation> const& val, std::str
     JLOG(m_journal.trace()) << "recvValidation " << val->getLedgerHash() << " from " << source;
 
     {
-        CanProcess const check(
-            validationsMutex_, pendingValidations_, val->getLedgerHash());
+        CanProcess const check(validationsMutex_, pendingValidations_, val->getLedgerHash());
         try
         {
-            BypassAccept bypassAccept =
-                check ? BypassAccept::no : BypassAccept::yes;
+            BypassAccept bypassAccept = check ? BypassAccept::no : BypassAccept::yes;
             handleNewValidation(app_, val, source, bypassAccept, m_journal);
         }
         catch (std::exception const& e)
         {
-            JLOG(m_journal.warn())
-                << "Exception thrown for handling new validation "
-                << val->getLedgerHash() << ": " << e.what();
+            JLOG(m_journal.warn()) << "Exception thrown for handling new validation " << val->getLedgerHash() << ": "
+                                   << e.what();
         }
         catch (...)
         {
-            JLOG(m_journal.warn())
-                << "Unknown exception thrown for handling new validation "
-                << val->getLedgerHash();
+            JLOG(m_journal.warn()) << "Unknown exception thrown for handling new validation " << val->getLedgerHash();
         }
     }
 

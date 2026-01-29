@@ -185,8 +185,7 @@ to_string(InboundLedger::Reason reason)
         case CONSENSUS:
             return "CONSENSUS";
         default:
-            UNREACHABLE(
-                "ripple::to_string(InboundLedger::Reason) : unknown value");
+            UNREACHABLE("ripple::to_string(InboundLedger::Reason) : unknown value");
             return "unknown";
     }
 }

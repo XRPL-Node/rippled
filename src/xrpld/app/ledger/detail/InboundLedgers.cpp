@@ -67,8 +67,7 @@ public:
             std::stringstream ss;
             ss << "InboundLedger::acquire: "
                << "Request: " << to_string(hash) << ", " << seq
-               << " NeedNetworkLedger: " << (needNetworkLedger ? "yes" : "no")
-               << " Reason: " << to_string(reason)
+               << " NeedNetworkLedger: " << (needNetworkLedger ? "yes" : "no") << " Reason: " << to_string(reason)
                << " Should acquire: " << (shouldAcquire ? "true." : "false.");
 
             /*  Acquiring ledgers is somewhat expensive. It requires lots of
@@ -91,24 +90,18 @@ public:
                 // Plus it might not become validated. On the other hand, if
                 // it's more than 20 in the future, this node should request
                 // it so that it can jump ahead and get caught up.
-                LedgerIndex const validSeq =
-                    app_.getLedgerMaster().getValidLedgerIndex();
+                LedgerIndex const validSeq = app_.getLedgerMaster().getValidLedgerIndex();
                 constexpr std::size_t lagLeeway = 20;
-                bool const nearFuture =
-                    (seq > validSeq) && (seq < validSeq + lagLeeway);
+                bool const nearFuture = (seq > validSeq) && (seq < validSeq + lagLeeway);
                 // If everything else is ok, don't try to acquire the ledger
                 // if the request is related to consensus. (Note that
                 // consensus calls usually pass a seq of 0, so nearFuture
                 // will be false other than on a brand new network.)
-                bool const consensus =
-                    reason == InboundLedger::Reason::CONSENSUS;
+                bool const consensus = reason == InboundLedger::Reason::CONSENSUS;
                 ss << " Evaluating whether to broadcast requests to peers"
-                   << ". full: " << (isFull ? "true" : "false")
-                   << ". ledger sequence " << seq
-                   << ". Valid sequence: " << validSeq
-                   << ". Lag leeway: " << lagLeeway
-                   << ". request for near future ledger: "
-                   << (nearFuture ? "true" : "false")
+                   << ". full: " << (isFull ? "true" : "false") << ". ledger sequence " << seq
+                   << ". Valid sequence: " << validSeq << ". Lag leeway: " << lagLeeway
+                   << ". request for near future ledger: " << (nearFuture ? "true" : "false")
                    << ". Consensus: " << (consensus ? "true" : "false");
 
                 // If the node is not synced, send requests.
@@ -124,8 +117,7 @@ public:
                     return false;
                 return true;
             }();
-            ss << ". Would broadcast to peers? "
-               << (shouldBroadcast ? "true." : "false.");
+            ss << ". Would broadcast to peers? " << (shouldBroadcast ? "true." : "false.");
 
             if (!shouldAcquire)
             {
@@ -179,8 +171,7 @@ public:
             return inbound->getLedger();
         };
         using namespace std::chrono_literals;
-        return perf::measureDurationAndLog(
-            doAcquire, "InboundLedgersImp::acquire", 500ms, j_);
+        return perf::measureDurationAndLog(doAcquire, "InboundLedgersImp::acquire", 500ms, j_);
     }
 
     void
@@ -194,9 +185,7 @@ public:
             }
             catch (std::exception const& e)
             {
-                JLOG(j_.warn())
-                    << "Exception thrown for acquiring new inbound ledger "
-                    << hash << ": " << e.what();
+                JLOG(j_.warn()) << "Exception thrown for acquiring new inbound ledger " << hash << ": " << e.what();
             }
             catch (...)
             {
