@@ -125,9 +125,8 @@ ValidatorSite::load(std::vector<std::string> const& siteURIs, std::lock_guard<st
         try
         {
             // This is not super efficient, but it doesn't happen often.
-            bool found = std::ranges::any_of(sites_, [&uri](auto const& site) {
-                return site.loadedResource->uri == uri;
-            });
+            bool found =
+                std::ranges::any_of(sites_, [&uri](auto const& site) { return site.loadedResource->uri == uri; });
             if (!found)
                 sites_.emplace_back(uri);
         }
@@ -189,9 +188,7 @@ void
 ValidatorSite::setTimer(std::lock_guard<std::mutex> const& site_lock, std::lock_guard<std::mutex> const& state_lock)
 {
     if (!sites_.empty() &&  //
-        std::ranges::all_of(sites_, [](auto const& site) {
-            return site.lastRefreshStatus.has_value();
-        }))
+        std::ranges::all_of(sites_, [](auto const& site) { return site.lastRefreshStatus.has_value(); }))
     {
         // If all of the sites have been handled at least once (including
         // errors and timeouts), call missingSite, which will load the cache
@@ -308,8 +305,7 @@ ValidatorSite::onRequestTimeout(std::size_t siteIdx, error_code const& ec)
             JLOG(j_.error()) << "Request took too long, but a response has "
                                 "already been processed";
         if (!site.lastRefreshStatus)
-            site.lastRefreshStatus.emplace(Site::Status{
-                clock_type::now(), ListDisposition::invalid, "timeout"});
+            site.lastRefreshStatus.emplace(Site::Status{clock_type::now(), ListDisposition::invalid, "timeout"});
     }
 
     std::lock_guard lock_state{state_mutex_};
