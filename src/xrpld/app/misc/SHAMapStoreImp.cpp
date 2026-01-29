@@ -264,8 +264,7 @@ SHAMapStoreImp::run()
         bool const readyToRotate =
             validatedSeq >= lastRotated + deleteInterval_ && canDelete_ >= lastRotated - 1 && healthWait() == keepGoing;
 
-        JLOG(journal_.debug())
-            << "run: Setting lastGoodValidatedLedger_ to " << validatedSeq;
+        JLOG(journal_.debug()) << "run: Setting lastGoodValidatedLedger_ to " << validatedSeq;
 
         {
             // Note that this is set after the healthWait() check, so that we
@@ -279,14 +278,11 @@ SHAMapStoreImp::run()
         // will delete up to (not including) lastRotated
         if (readyToRotate)
         {
-            JLOG(journal_.warn())
-                << "rotating  validatedSeq " << validatedSeq << " lastRotated "
-                << lastRotated << " deleteInterval " << deleteInterval_
-                << " canDelete_ " << canDelete_ << " state "
-                << app_.getOPs().strOperatingMode(false) << " age "
-                << ledgerMaster_->getValidatedLedgerAge().count()
-                << "s. Complete ledgers: "
-                << ledgerMaster_->getCompleteLedgers();
+            JLOG(journal_.warn()) << "rotating  validatedSeq " << validatedSeq << " lastRotated " << lastRotated
+                                  << " deleteInterval " << deleteInterval_ << " canDelete_ " << canDelete_ << " state "
+                                  << app_.getOPs().strOperatingMode(false) << " age "
+                                  << ledgerMaster_->getValidatedLedgerAge().count()
+                                  << "s. Complete ledgers: " << ledgerMaster_->getCompleteLedgers();
 
             clearPrior(lastRotated);
             if (healthWait() == stopping)
@@ -339,10 +335,9 @@ SHAMapStoreImp::run()
                     clearCaches(validatedSeq);
                 });
 
-            JLOG(journal_.warn())
-                << "finished rotation. validatedSeq: " << validatedSeq
-                << ", lastRotated: " << lastRotated << ". Complete ledgers: "
-                << ledgerMaster_->getCompleteLedgers();
+            JLOG(journal_.warn()) << "finished rotation. validatedSeq: " << validatedSeq
+                                  << ", lastRotated: " << lastRotated
+                                  << ". Complete ledgers: " << ledgerMaster_->getCompleteLedgers();
         }
     }
 }
@@ -574,11 +569,8 @@ SHAMapStoreImp::healthWait()
     OperatingMode mode = netOPs_->getOperatingMode();
     std::unique_lock lock(mutex_);
 
-    auto numMissing = ledgerMaster_->missingFromCompleteLedgerRange(
-        lastGoodValidatedLedger_, index);
-    while (
-        !stop_ &&
-        (mode != OperatingMode::FULL || age > ageThreshold_ || numMissing > 0))
+    auto numMissing = ledgerMaster_->missingFromCompleteLedgerRange(lastGoodValidatedLedger_, index);
+    while (!stop_ && (mode != OperatingMode::FULL || age > ageThreshold_ || numMissing > 0))
     {
         // this value shouldn't change, so grab it while we have the
         // lock
@@ -586,28 +578,21 @@ SHAMapStoreImp::healthWait()
 
         lock.unlock();
 
-        auto const stream = mode != OperatingMode::FULL || age > ageThreshold_
-            ? journal_.warn()
-            : journal_.info();
+        auto const stream = mode != OperatingMode::FULL || age > ageThreshold_ ? journal_.warn() : journal_.info();
         JLOG(stream) << "Waiting " << recoveryWaitTime_.count()
-                     << "s for node to stabilize. state: "
-                     << app_.getOPs().strOperatingMode(mode, false) << ". age "
-                     << age.count() << "s. Missing ledgers: " << numMissing
-                     << ". Expect: " << lastGood << "-" << index
-                     << ". Complete ledgers: "
-                     << ledgerMaster_->getCompleteLedgers();
+                     << "s for node to stabilize. state: " << app_.getOPs().strOperatingMode(mode, false) << ". age "
+                     << age.count() << "s. Missing ledgers: " << numMissing << ". Expect: " << lastGood << "-" << index
+                     << ". Complete ledgers: " << ledgerMaster_->getCompleteLedgers();
         std::this_thread::sleep_for(recoveryWaitTime_);
         index = ledgerMaster_->getValidLedgerIndex();
         age = ledgerMaster_->getValidatedLedgerAge();
         mode = netOPs_->getOperatingMode();
-        numMissing =
-            ledgerMaster_->missingFromCompleteLedgerRange(lastGood, index);
+        numMissing = ledgerMaster_->missingFromCompleteLedgerRange(lastGood, index);
 
         lock.lock();
     }
 
-    JLOG(journal_.debug()) << "healthWait: Setting lastGoodValidatedLedger_ to "
-                           << index;
+    JLOG(journal_.debug()) << "healthWait: Setting lastGoodValidatedLedger_ to " << index;
     lastGoodValidatedLedger_ = index;
 
     return stop_ ? stopping : keepGoing;

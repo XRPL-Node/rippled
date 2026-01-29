@@ -583,9 +583,7 @@ public:
 
         std::map<LedgerIndex, uint256> hashes;
 
-        auto failureMessage = [&](char const* label,
-                                  auto expected,
-                                  auto actual) {
+        auto failureMessage = [&](char const* label, auto expected, auto actual) {
             std::stringstream ss;
             ss << label << ": Expected: " << expected << ", Got: " << actual;
             return ss.str();
@@ -602,18 +600,13 @@ public:
         store.rendezvous();
         LedgerIndex lastRotated = store.getLastRotated();
         BEAST_EXPECTS(maxSeq == 3, to_string(maxSeq));
-        BEAST_EXPECTS(
-            lm.getCompleteLedgers() == "2-3", lm.getCompleteLedgers());
+        BEAST_EXPECTS(lm.getCompleteLedgers() == "2-3", lm.getCompleteLedgers());
         BEAST_EXPECTS(lastRotated == 3, to_string(lastRotated));
         BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq, maxSeq) == 0);
-        BEAST_EXPECT(
-            lm.missingFromCompleteLedgerRange(minSeq + 1, maxSeq - 1) == 0);
-        BEAST_EXPECT(
-            lm.missingFromCompleteLedgerRange(minSeq - 1, maxSeq + 1) == 2);
-        BEAST_EXPECT(
-            lm.missingFromCompleteLedgerRange(minSeq - 2, maxSeq - 2) == 2);
-        BEAST_EXPECT(
-            lm.missingFromCompleteLedgerRange(minSeq + 2, maxSeq + 2) == 2);
+        BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq + 1, maxSeq - 1) == 0);
+        BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq - 1, maxSeq + 1) == 2);
+        BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq - 2, maxSeq - 2) == 2);
+        BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq + 2, maxSeq + 2) == 2);
 
         // Close enough ledgers to rotate a few times
         while (maxSeq < 20)
@@ -641,26 +634,20 @@ public:
                 }
                 lm.clearLedger(deleteSeq);
 
-                auto expectedRange =
-                    [](auto minSeq, auto deleteSeq, auto maxSeq) {
-                        std::stringstream expectedRange;
-                        expectedRange << minSeq << "-" << (deleteSeq - 1);
-                        if (deleteSeq + 1 == maxSeq)
-                            expectedRange << "," << maxSeq;
-                        else if (deleteSeq < maxSeq)
-                            expectedRange << "," << (deleteSeq + 1) << "-"
-                                          << maxSeq;
-                        return expectedRange.str();
-                    };
+                auto expectedRange = [](auto minSeq, auto deleteSeq, auto maxSeq) {
+                    std::stringstream expectedRange;
+                    expectedRange << minSeq << "-" << (deleteSeq - 1);
+                    if (deleteSeq + 1 == maxSeq)
+                        expectedRange << "," << maxSeq;
+                    else if (deleteSeq < maxSeq)
+                        expectedRange << "," << (deleteSeq + 1) << "-" << maxSeq;
+                    return expectedRange.str();
+                };
                 BEAST_EXPECTS(
-                    lm.getCompleteLedgers() ==
-                        expectedRange(minSeq, deleteSeq, maxSeq),
+                    lm.getCompleteLedgers() == expectedRange(minSeq, deleteSeq, maxSeq),
                     failureMessage(
-                        "Complete ledgers",
-                        expectedRange(minSeq, deleteSeq, maxSeq),
-                        lm.getCompleteLedgers()));
-                BEAST_EXPECT(
-                    lm.missingFromCompleteLedgerRange(minSeq, maxSeq) == 1);
+                        "Complete ledgers", expectedRange(minSeq, deleteSeq, maxSeq), lm.getCompleteLedgers()));
+                BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq, maxSeq) == 1);
 
                 // Close another ledger, which will trigger a rotation, but the
                 // rotation will be stuck until the missing ledger is filled in.
@@ -671,15 +658,11 @@ public:
                 // Nothing has changed
                 BEAST_EXPECTS(
                     store.getLastRotated() == lastRotated,
-                    failureMessage(
-                        "lastRotated", lastRotated, store.getLastRotated()));
+                    failureMessage("lastRotated", lastRotated, store.getLastRotated()));
                 BEAST_EXPECTS(
-                    lm.getCompleteLedgers() ==
-                        expectedRange(minSeq, deleteSeq, maxSeq),
+                    lm.getCompleteLedgers() == expectedRange(minSeq, deleteSeq, maxSeq),
                     failureMessage(
-                        "Complete ledgers",
-                        expectedRange(minSeq, deleteSeq, maxSeq),
-                        lm.getCompleteLedgers()));
+                        "Complete ledgers", expectedRange(minSeq, deleteSeq, maxSeq), lm.getCompleteLedgers()));
 
                 // Close 5 more ledgers, waiting one second in between to
                 // simulate the ledger making progress while online delete waits
@@ -694,17 +677,11 @@ public:
                     // Nothing has changed
                     BEAST_EXPECTS(
                         store.getLastRotated() == lastRotated,
-                        failureMessage(
-                            "lastRotated",
-                            lastRotated,
-                            store.getLastRotated()));
+                        failureMessage("lastRotated", lastRotated, store.getLastRotated()));
                     BEAST_EXPECTS(
-                        lm.getCompleteLedgers() ==
-                            expectedRange(minSeq, deleteSeq, maxSeq),
+                        lm.getCompleteLedgers() == expectedRange(minSeq, deleteSeq, maxSeq),
                         failureMessage(
-                            "Complete Ledgers",
-                            expectedRange(minSeq, deleteSeq, maxSeq),
-                            lm.getCompleteLedgers()));
+                            "Complete Ledgers", expectedRange(minSeq, deleteSeq, maxSeq), lm.getCompleteLedgers()));
                     std::this_thread::sleep_for(1s);
                 }
 
@@ -719,30 +696,20 @@ public:
             }
             BEAST_EXPECT(maxSeq != lastRotated + deleteInterval);
             BEAST_EXPECTS(
-                env.closed()->header().seq == maxSeq,
-                failureMessage("maxSeq", maxSeq, env.closed()->header().seq));
+                env.closed()->header().seq == maxSeq, failureMessage("maxSeq", maxSeq, env.closed()->header().seq));
             BEAST_EXPECTS(
                 store.getLastRotated() == lastRotated,
-                failureMessage(
-                    "lastRotated", lastRotated, store.getLastRotated()));
+                failureMessage("lastRotated", lastRotated, store.getLastRotated()));
             std::stringstream expectedRange;
             expectedRange << minSeq << "-" << maxSeq;
             BEAST_EXPECTS(
                 lm.getCompleteLedgers() == expectedRange.str(),
-                failureMessage(
-                    "CompleteLedgers",
-                    expectedRange.str(),
-                    lm.getCompleteLedgers()));
-            BEAST_EXPECT(
-                lm.missingFromCompleteLedgerRange(minSeq, maxSeq) == 0);
-            BEAST_EXPECT(
-                lm.missingFromCompleteLedgerRange(minSeq + 1, maxSeq - 1) == 0);
-            BEAST_EXPECT(
-                lm.missingFromCompleteLedgerRange(minSeq - 1, maxSeq + 1) == 2);
-            BEAST_EXPECT(
-                lm.missingFromCompleteLedgerRange(minSeq - 2, maxSeq - 2) == 2);
-            BEAST_EXPECT(
-                lm.missingFromCompleteLedgerRange(minSeq + 2, maxSeq + 2) == 2);
+                failureMessage("CompleteLedgers", expectedRange.str(), lm.getCompleteLedgers()));
+            BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq, maxSeq) == 0);
+            BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq + 1, maxSeq - 1) == 0);
+            BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq - 1, maxSeq + 1) == 2);
+            BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq - 2, maxSeq - 2) == 2);
+            BEAST_EXPECT(lm.missingFromCompleteLedgerRange(minSeq + 2, maxSeq + 2) == 2);
         }
     }
 
