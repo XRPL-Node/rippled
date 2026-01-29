@@ -1,14 +1,10 @@
 #include <xrpl/nodestore/detail/DatabaseNodeImp.h>
 
-namespace ripple {
+namespace xrpl {
 namespace NodeStore {
 
 void
-DatabaseNodeImp::store(
-    NodeObjectType type,
-    Blob&& data,
-    uint256 const& hash,
-    std::uint32_t)
+DatabaseNodeImp::store(NodeObjectType type, Blob&& data, uint256 const& hash, std::uint32_t)
 {
     storeStats(1, data.size());
 
@@ -31,11 +27,7 @@ DatabaseNodeImp::sweep()
 }
 
 std::shared_ptr<NodeObject>
-DatabaseNodeImp::fetchNodeObject(
-    uint256 const& hash,
-    std::uint32_t,
-    FetchReport& fetchReport,
-    bool duplicate)
+DatabaseNodeImp::fetchNodeObject(uint256 const& hash, std::uint32_t, FetchReport& fetchReport, bool duplicate)
 {
     std::shared_ptr<NodeObject> nodeObject = nullptr;
     Status status;
@@ -46,8 +38,7 @@ DatabaseNodeImp::fetchNodeObject(
     }
     catch (std::exception const& e)
     {
-        JLOG(j_.fatal()) << "fetchNodeObject " << hash
-                         << ": Exception fetching from backend: " << e.what();
+        JLOG(j_.fatal()) << "fetchNodeObject " << hash << ": Exception fetching from backend: " << e.what();
         Rethrow();
     }
 
@@ -57,12 +48,10 @@ DatabaseNodeImp::fetchNodeObject(
         case notFound:
             break;
         case dataCorrupt:
-            JLOG(j_.fatal()) << "fetchNodeObject " << hash
-                             << ": nodestore data is corrupted";
+            JLOG(j_.fatal()) << "fetchNodeObject " << hash << ": nodestore data is corrupted";
             break;
         default:
-            JLOG(j_.warn()) << "fetchNodeObject " << hash
-                            << ": backend returns unknown result " << status;
+            JLOG(j_.warn()) << "fetchNodeObject " << hash << ": backend returns unknown result " << status;
             break;
     }
 
@@ -91,19 +80,15 @@ DatabaseNodeImp::fetchBatch(std::vector<uint256> const& hashes)
     {
         if (!results[i])
         {
-            JLOG(j_.error())
-                << "fetchBatch - "
-                << "record not found in db. hash = " << strHex(hashes[i]);
+            JLOG(j_.error()) << "fetchBatch - "
+                             << "record not found in db. hash = " << strHex(hashes[i]);
         }
     }
 
-    auto fetchDurationUs =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            steady_clock::now() - before)
-            .count();
+    auto fetchDurationUs = std::chrono::duration_cast<std::chrono::microseconds>(steady_clock::now() - before).count();
     updateFetchMetrics(hashes.size(), 0, fetchDurationUs);
     return results;
 }
 
 }  // namespace NodeStore
-}  // namespace ripple
+}  // namespace xrpl
