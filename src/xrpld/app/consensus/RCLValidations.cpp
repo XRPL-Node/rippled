@@ -109,12 +109,7 @@ RCLValidationsAdaptor::acquire(LedgerHash const& hash)
     {
         JLOG(j_.warn()) << "Need validated ledger for preferred ledger analysis " << hash;
 
-        app_.getInboundLedgers().acquireAsync(
-            jtADVANCE,
-            "GetConsL2",
-            hash,
-            0,
-            InboundLedger::Reason::CONSENSUS);
+        app_.getInboundLedgers().acquireAsync(jtADVANCE, "GetConsL2", hash, 0, InboundLedger::Reason::CONSENSUS);
         return std::nullopt;
     }
 

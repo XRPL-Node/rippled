@@ -106,8 +106,7 @@ public:
             return inbound->getLedger();
         };
         using namespace std::chrono_literals;
-        return perf::measureDurationAndLog(
-            doAcquire, "InboundLedgersImp::acquire", 500ms, j_);
+        return perf::measureDurationAndLog(doAcquire, "InboundLedgersImp::acquire", 500ms, j_);
     }
 
     void
@@ -118,32 +117,27 @@ public:
         std::uint32_t seq,
         InboundLedger::Reason reason) override
     {
-        if (auto check = std::make_shared<CanProcess const>(
-                acquiresMutex_, pendingAcquires_, hash);
-            *check)
+        if (auto check = std::make_shared<CanProcess const>(acquiresMutex_, pendingAcquires_, hash); *check)
         {
-            app_.getJobQueue().addJob(
-                type, name, [check, name, hash, seq, reason, this]() {
-                    JLOG(j_.debug())
-                        << "JOB acquireAsync " << name << " started ";
-                    try
-                    {
-                        acquire(hash, seq, reason);
-                    }
-                    catch (std::exception const& e)
-                    {
-                        JLOG(j_.warn()) << "Exception thrown for acquiring new "
-                                           "inbound ledger "
-                                        << hash << ": " << e.what();
-                    }
-                    catch (...)
-                    {
-                        JLOG(j_.warn())
-                            << "Unknown exception thrown for acquiring new "
-                               "inbound ledger "
-                            << hash;
-                    }
-                });
+            app_.getJobQueue().addJob(type, name, [check, name, hash, seq, reason, this]() {
+                JLOG(j_.debug()) << "JOB acquireAsync " << name << " started ";
+                try
+                {
+                    acquire(hash, seq, reason);
+                }
+                catch (std::exception const& e)
+                {
+                    JLOG(j_.warn()) << "Exception thrown for acquiring new "
+                                       "inbound ledger "
+                                    << hash << ": " << e.what();
+                }
+                catch (...)
+                {
+                    JLOG(j_.warn()) << "Unknown exception thrown for acquiring new "
+                                       "inbound ledger "
+                                    << hash;
+                }
+            });
         }
     }
 

@@ -100,12 +100,7 @@ RCLConsensus::Adaptor::acquireLedger(LedgerHash const& hash)
             // Tell the ledger acquire system that we need the consensus ledger
             acquiringLedger_ = hash;
 
-            app_.getInboundLedgers().acquireAsync(
-                jtADVANCE,
-                "GetConsL1",
-                hash,
-                0,
-                InboundLedger::Reason::CONSENSUS);
+            app_.getInboundLedgers().acquireAsync(jtADVANCE, "GetConsL1", hash, 0, InboundLedger::Reason::CONSENSUS);
         }
         return std::nullopt;
     }
@@ -920,8 +915,7 @@ void
 RCLConsensus::Adaptor::updateOperatingMode(std::size_t const positions) const
 {
     if (!positions && app_.getOPs().isFull())
-        app_.getOPs().setMode(
-            OperatingMode::CONNECTED, "updateOperatingMode: no positions");
+        app_.getOPs().setMode(OperatingMode::CONNECTED, "updateOperatingMode: no positions");
 }
 
 void
