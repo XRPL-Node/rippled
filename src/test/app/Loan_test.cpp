@@ -2347,12 +2347,9 @@ protected:
                         broker.params.managementFeeRate);
 
                     BEAST_EXPECT(
-                        paymentComponents.trackedValueDelta ==
-                            roundedPeriodicPayment ||
-                        (paymentComponents.specialCase ==
-                             detail::PaymentSpecialCase::final &&
-                         paymentComponents.trackedValueDelta <
-                             roundedPeriodicPayment));
+                        paymentComponents.trackedValueDelta == roundedPeriodicPayment ||
+                        (paymentComponents.specialCase == detail::PaymentSpecialCase::final &&
+                         paymentComponents.trackedValueDelta < roundedPeriodicPayment));
 
                     xrpl::LoanState const nextTrueState = computeTheoreticalLoanState(
                         state.periodicPayment,

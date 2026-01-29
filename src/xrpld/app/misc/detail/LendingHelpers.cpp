@@ -960,39 +960,31 @@ computePaymentComponents(
         }
         XRPL_ASSERT_PARTS(excess >= beast::zero, "xrpl::detail::computePaymentComponents", "excess non-negative");
     };
-    auto giveTo =
-        [](Number& component, Number& shortage, Number const& maximum) {
-            if (shortage > beast::zero)
-            {
-                // Put as much of the shortage as we can into the provided part
-                // and the total
-                auto part = std::min(maximum - component, shortage);
-                component += part;
-                shortage -= part;
-            }
-            // If the shortage goes negative, we put too much, which should be
-            // impossible
-            XRPL_ASSERT_PARTS(
-                shortage >= beast::zero,
-                "ripple::detail::computePaymentComponents",
-                "excess non-negative");
-        };
+    auto giveTo = [](Number& component, Number& shortage, Number const& maximum) {
+        if (shortage > beast::zero)
+        {
+            // Put as much of the shortage as we can into the provided part
+            // and the total
+            auto part = std::min(maximum - component, shortage);
+            component += part;
+            shortage -= part;
+        }
+        // If the shortage goes negative, we put too much, which should be
+        // impossible
+        XRPL_ASSERT_PARTS(shortage >= beast::zero, "ripple::detail::computePaymentComponents", "excess non-negative");
+    };
     auto addressExcess = [&takeFrom](LoanStateDeltas& deltas, Number& excess) {
         // This order is based on where errors are the least problematic
         takeFrom(deltas.interest, excess);
         takeFrom(deltas.managementFee, excess);
         takeFrom(deltas.principal, excess);
     };
-    auto addressShortage = [&giveTo](
-                               LoanStateDeltas& deltas,
-                               Number& shortage,
-                               LoanState const& current) {
+    auto addressShortage = [&giveTo](LoanStateDeltas& deltas, Number& shortage, LoanState const& current) {
         giveTo(deltas.interest, shortage, current.interestDue);
         giveTo(deltas.managementFee, shortage, current.managementFeeDue);
         giveTo(deltas.principal, shortage, current.principalOutstanding);
     };
-    Number totalOverpayment =
-        deltas.total() - currentLedgerState.valueOutstanding;
+    Number totalOverpayment = deltas.total() - currentLedgerState.valueOutstanding;
 
     if (totalOverpayment > beast::zero)
     {
@@ -1030,10 +1022,7 @@ computePaymentComponents(
     // positive, either, which indicates that we're not going to take the whole
     // payment amount. Only the last payment should be allowed to have a
     // shortage, and that's handled in a special case above.
-    XRPL_ASSERT_PARTS(
-        shortage == beast::zero,
-        "ripple::detail::computePaymentComponents",
-        "no shortage or excess");
+    XRPL_ASSERT_PARTS(shortage == beast::zero, "ripple::detail::computePaymentComponents", "no shortage or excess");
 #if LOANCOMPLETE
     /*
     // This used to be part of the above assert. It will eventually be removed
