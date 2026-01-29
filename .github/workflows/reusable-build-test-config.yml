@@ -121,7 +121,7 @@ jobs:
       - name: Get number of processors
         id: nproc
         run: |
-          echo "nproc=30" >> "${GITHUB_OUTPUT}"
+          echo "nproc=40" >> "${GITHUB_OUTPUT}"
 
       - name: Setup Conan
         env:
