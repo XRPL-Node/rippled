@@ -87,6 +87,10 @@ The `network_id` field was added in the `server_info` response in version 1.5.0 
 
 As of 2025-04-04, version 2.5.0 is in development. You can use a pre-release version by building from source or [using the `nightly` package](https://xrpl.org/docs/infrastructure/installation/install-rippled-on-ubuntu).
 
+### Breaking changes in 2.5.0
+
+- `feature`: The `vetoed` field is now always a boolean. Obsolete amendments now have `"vetoed": true` and a new `"obsolete": true` field, instead of the previous `"vetoed": "Obsolete"` string value. This change improves type safety for API clients.
+
 ### Additions and bugfixes in 2.5.0
 
 - `channel_authorize`: If `signing_support` is not enabled in the config, the RPC is disabled.
