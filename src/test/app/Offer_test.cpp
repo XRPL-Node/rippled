@@ -4174,6 +4174,165 @@ public:
     }
 
     void
+    testDisallowIncomingTrustline(FeatureBitset features)
+    {
+        testcase("DisallowIncomingTrustline in OfferCreate");
+        // Test that asfDisallowIncomingTrustline flag prevents offer crossing
+        // when the taker doesn't have a trustline.
+        //
+        // 1. alice creates an offer to acquire USD/gw, an asset for which
+        //    she does not have a trust line. The offer is created successfully.
+        //
+        // 2. gw sets asfDisallowIncomingTrustline flag.
+        //
+        // 3. bob tries to create an offer for USD/gw without a trustline.
+        //    This should fail with tecNO_LINE.
+        //
+        // 4. bob creates a trustline to USD/gw, then creates an offer.
+        //    The offer should succeed and cross alice's offer.
+
+        using namespace jtx;
+
+        // Test without fixDisallowIncomingV1 amendment
+        {
+            Env env{*this, features - fixDisallowIncomingV1};
+
+            auto const gw = Account("gw");
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const gwUSD = gw["USD"];
+
+            env.fund(XRP(400000), gw, alice, bob);
+            env.close();
+
+            // Alice creates trustline and gets some USD
+            env(trust(alice, gwUSD(100)));
+            env.close();
+            env(pay(gw, alice, gwUSD(50)));
+            env.close();
+
+            // Alice creates sell offer
+            env(offer(alice, XRP(4000), gwUSD(40)));
+            env.close();
+            env.require(offers(alice, 1));
+
+            // GW sets DisallowIncomingTrustline flag
+            env(fset(gw, asfDisallowIncomingTrustline));
+            env.close();
+
+            // Without the amendment, bob can still create offer without trustline
+            // and the offer should cross (old behavior)
+            env(offer(bob, gwUSD(40), XRP(4000)));
+            env.close();
+
+            // Offer should have crossed
+            env.require(offers(alice, 0));
+            env.require(offers(bob, 0));
+            env.require(balance(bob, gwUSD(40)));
+        }
+
+        // Test with fixDisallowIncomingV1 amendment
+        {
+            Env env{*this, features};
+
+            auto const gw = Account("gw");
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const carol = Account("carol");
+            auto const gwUSD = gw["USD"];
+
+            env.fund(XRP(400000), gw, alice, bob, carol);
+            env.close();
+
+            // Alice creates trustline and gets some USD
+            env(trust(alice, gwUSD(100)));
+            env.close();
+            env(pay(gw, alice, gwUSD(50)));
+            env.close();
+
+            // Alice creates sell offer
+            env(offer(alice, XRP(4000), gwUSD(40)));
+            env.close();
+            env.require(offers(alice, 1));
+            env.require(balance(alice, gwUSD(50)));
+
+            // GW sets DisallowIncomingTrustline flag
+            env(fset(gw, asfDisallowIncomingTrustline));
+            env.close();
+
+            // Bob tries to create offer without trustline - should fail
+            env(offer(bob, gwUSD(40), XRP(4000)), ter(tecNO_LINE));
+            env.close();
+
+            // Alice's offer should still exist
+            env.require(offers(alice, 1));
+            env.require(balance(alice, gwUSD(50)));
+
+            // Bob shouldn't have any offers or balance
+            env.require(offers(bob, 0));
+            env.require(balance(bob, gwUSD(none)));
+
+            // Bob creates trustline first
+            env(trust(bob, gwUSD(100)));
+            env.close();
+
+            // Now bob can create an offer and it should cross
+            env(offer(bob, gwUSD(40), XRP(4000)));
+            env.close();
+
+            // Offer should have crossed
+            env.require(offers(alice, 0));
+            env.require(offers(bob, 0));
+            env.require(balance(alice, gwUSD(10)));
+            env.require(balance(bob, gwUSD(40)));
+
+            // Test scenario where carol already has a trustline before flag is set
+            env(trust(carol, gwUSD(100)));
+            env.close();
+
+            // Alice creates another sell offer
+            env(offer(alice, XRP(1000), gwUSD(10)));
+            env.close();
+            env.require(offers(alice, 1));
+
+            // Carol should be able to create offer since trustline already exists
+            env(offer(carol, gwUSD(10), XRP(1000)));
+            env.close();
+
+            // Offer should have crossed
+            env.require(offers(alice, 0));
+            env.require(offers(carol, 0));
+            env.require(balance(alice, gwUSD(0)));
+            env.require(balance(carol, gwUSD(10)));
+
+            // Test that gw can clear the flag
+            env(fclear(gw, asfDisallowIncomingTrustline));
+            env.close();
+
+            // Create new account dan without trustline
+            auto const dan = Account("dan");
+            env.fund(XRP(400000), dan);
+            env.close();
+
+            // Bob creates another sell offer
+            env(pay(gw, bob, gwUSD(50)));
+            env.close();
+            env(offer(bob, XRP(5000), gwUSD(50)));
+            env.close();
+            env.require(offers(bob, 1));
+
+            // Dan should now be able to create offer without trustline (flag is cleared)
+            env(offer(dan, gwUSD(50), XRP(5000)));
+            env.close();
+
+            // Offer should have crossed
+            env.require(offers(bob, 0));
+            env.require(offers(dan, 0));
+            env.require(balance(dan, gwUSD(50)));
+        }
+    }
+
+    void
     testRCSmoketest(FeatureBitset features)
     {
         testcase("RippleConnect Smoketest payment flow");
@@ -5009,6 +5168,7 @@ public:
         testSelfPayUnlimitedFunds(features);
         testRequireAuth(features);
         testMissingAuth(features);
+        testDisallowIncomingTrustline(features);
         testRCSmoketest(features);
         testSelfAuth(features);
         testDeletedOfferIssuer(features);
