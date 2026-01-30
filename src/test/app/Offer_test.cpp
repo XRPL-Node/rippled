@@ -4193,9 +4193,9 @@ public:
 
         using namespace jtx;
 
-        // Test without fixDisallowIncomingV2 amendment
+        // Test without fixDisallowIncomingV1_1 amendment
         {
-            Env env{*this, features - fixDisallowIncomingV2};
+            Env env{*this, features - fixDisallowIncomingV1_1};
 
             auto const gw = Account("gw");
             auto const alice = Account("alice");
@@ -4231,7 +4231,7 @@ public:
             env.require(balance(bob, gwUSD(40)));
         }
 
-        // Test with fixDisallowIncomingV2 amendment
+        // Test with fixDisallowIncomingV1_1 amendment
         {
             Env env{*this, features};
 
