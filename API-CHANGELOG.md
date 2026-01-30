@@ -90,6 +90,7 @@ As of 2025-04-04, version 2.5.0 is in development. You can use a pre-release ver
 ### Additions and bugfixes in 2.5.0
 
 - `channel_authorize`: If `signing_support` is not enabled in the config, the RPC is disabled.
+- `submit`: Augmented response fields (`accepted`, `applied`, `broadcast`, `queued`, `kept`, `account_sequence_next`, `account_sequence_available`, `open_ledger_cost`, `validated_ledger_index`) are now included in sign-and-submit mode. Previously, these fields were only returned when submitting a binary transaction blob.
 
 ## XRP Ledger server version 2.4.0
 
