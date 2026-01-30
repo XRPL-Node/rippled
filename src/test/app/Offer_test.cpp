@@ -4184,12 +4184,16 @@ public:
         //
         // 2. gw sets asfDisallowIncomingTrustline flag.
         //
-        // 3. bob tries to create an offer for USD/gw without a trustline.
+        // 3. An account without a trustline tries to create an offer for USD/gw.
         //    Without amendment: succeeds and crosses alice's offer (backward compatible).
         //    With amendment: fails with tecNO_LINE (new behavior).
         //
-        // 4. bob creates a trustline to USD/gw, then creates an offer.
+        // 4. An account WITH an existing trustline can create an offer.
         //    The offer succeeds and crosses alice's offer.
+        //
+        // Note: The DisallowIncomingTrustline flag also prevents NEW trustlines
+        // from being created via TrustSet (enforced by fixDisallowIncomingV1).
+        // So accounts must create trustlines BEFORE the issuer sets the flag.
 
         using namespace jtx;
 
@@ -4239,15 +4243,22 @@ public:
             auto const alice = Account("alice");
             auto const bob = Account("bob");
             auto const carol = Account("carol");
+            auto const dan = Account("dan");
             auto const gwUSD = gw["USD"];
 
-            env.fund(XRP(400000), gw, alice, bob, carol);
+            env.fund(XRP(400000), gw, alice, bob, carol, dan);
             env.close();
 
             // Alice creates trustline and gets some USD
             env(trust(alice, gwUSD(100)));
             env.close();
             env(pay(gw, alice, gwUSD(50)));
+            env.close();
+
+            // Bob and carol create trustlines BEFORE the flag is set
+            env(trust(bob, gwUSD(100)));
+            env.close();
+            env(trust(carol, gwUSD(100)));
             env.close();
 
             // Alice creates sell offer
@@ -4260,23 +4271,19 @@ public:
             env(fset(gw, asfDisallowIncomingTrustline));
             env.close();
 
-            // Bob tries to create offer without trustline - should fail
-            env(offer(bob, gwUSD(40), XRP(4000)), ter(tecNO_LINE));
+            // Dan tries to create offer without trustline - should fail
+            env(offer(dan, gwUSD(40), XRP(4000)), ter(tecNO_LINE));
             env.close();
 
             // Alice's offer should still exist
             env.require(offers(alice, 1));
             env.require(balance(alice, gwUSD(50)));
 
-            // Bob shouldn't have any offers or balance
-            env.require(offers(bob, 0));
-            env.require(balance(bob, gwUSD(none)));
+            // Dan shouldn't have any offers or balance
+            env.require(offers(dan, 0));
+            env.require(balance(dan, gwUSD(none)));
 
-            // Bob creates trustline first
-            env(trust(bob, gwUSD(100)));
-            env.close();
-
-            // Now bob can create an offer and it should cross
+            // Bob already has trustline, so his offer should succeed and cross
             env(offer(bob, gwUSD(40), XRP(4000)));
             env.close();
 
@@ -4286,35 +4293,30 @@ public:
             env.require(balance(alice, gwUSD(10)));
             env.require(balance(bob, gwUSD(40)));
 
-            // Test scenario where carol creates a trustline after the flag is set
-            // and then creates an offer. This verifies that accounts can create
-            // trustlines even with DisallowIncomingTrustline set; the flag only
-            // prevents offers without existing trustlines, not trustline creation.
-            env(trust(carol, gwUSD(100)));
+            // Test scenario where carol already has a trustline (created before flag was set)
+            // Carol should be able to create offer since trustline already exists
+            env(pay(gw, alice, gwUSD(50)));
             env.close();
-
-            // Alice creates another sell offer
             env(offer(alice, XRP(1000), gwUSD(10)));
             env.close();
             env.require(offers(alice, 1));
 
-            // Carol should be able to create offer since trustline already exists
             env(offer(carol, gwUSD(10), XRP(1000)));
             env.close();
 
             // Offer should have crossed
             env.require(offers(alice, 0));
             env.require(offers(carol, 0));
-            env.require(balance(alice, gwUSD(0)));
+            env.require(balance(alice, gwUSD(50)));
             env.require(balance(carol, gwUSD(10)));
 
             // Test that gw can clear the flag
             env(fclear(gw, asfDisallowIncomingTrustline));
             env.close();
 
-            // Create new account dan without trustline
-            auto const dan = Account("dan");
-            env.fund(XRP(400000), dan);
+            // Create new account eve without trustline
+            auto const eve = Account("eve");
+            env.fund(XRP(400000), eve);
             env.close();
 
             // Bob creates another sell offer
@@ -4324,14 +4326,14 @@ public:
             env.close();
             env.require(offers(bob, 1));
 
-            // Dan should now be able to create offer without trustline (flag is cleared)
-            env(offer(dan, gwUSD(50), XRP(5000)));
+            // Eve should now be able to create offer without trustline (flag is cleared)
+            env(offer(eve, gwUSD(50), XRP(5000)));
             env.close();
 
             // Offer should have crossed
             env.require(offers(bob, 0));
-            env.require(offers(dan, 0));
-            env.require(balance(dan, gwUSD(50)));
+            env.require(offers(eve, 0));
+            env.require(balance(eve, gwUSD(50)));
         }
     }
 
