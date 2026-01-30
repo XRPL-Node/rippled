@@ -9,7 +9,7 @@
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFlags.h>
 
-namespace ripple {
+namespace xrpl {
 
 NotTEC
 ConfidentialSend::preflight(PreflightContext const& ctx)
@@ -411,4 +411,4 @@ ConfidentialSend::doApply()
     view().update(sleDestinationMPToken);
     return tesSUCCESS;
 }
-}  // namespace ripple
+}  // namespace xrpl

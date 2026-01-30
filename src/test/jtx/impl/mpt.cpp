@@ -1623,7 +1623,7 @@ MPTTester::encryptAmount(
     if (auto const pubKey = getPubKey(account))
     {
         if (auto const result =
-                ripple::encryptAmount(amt, *pubKey, blindingFactor))
+                xrpl::encryptAmount(amt, *pubKey, blindingFactor))
             return *result;
     }
 
