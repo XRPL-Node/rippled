@@ -96,6 +96,12 @@ Workers::stop()
     m_cv.wait(lk, [this] { return m_allPaused; });
     lk.unlock();
 
+    // Ensure we observe the latest value of m_runningTaskCount.
+    // This acquire fence pairs with the release fence in Worker::run()
+    // after decrementing m_runningTaskCount, ensuring proper memory
+    // visibility on ARM architectures.
+    std::atomic_thread_fence(std::memory_order_acquire);
+
     XRPL_ASSERT(numberOfCurrentlyRunningTasks() == 0, "xrpl::Workers::stop : zero running tasks");
 }
 
@@ -223,6 +229,11 @@ Workers::Worker::run()
         //
         if (--m_workers.m_activeCount == 0)
         {
+            // Ensure all workers' decrements of m_runningTaskCount are visible
+            // before we signal that all workers are paused. This pairs with the
+            // acquire fence in stop().
+            std::atomic_thread_fence(std::memory_order_release);
+
             std::lock_guard lk{m_workers.m_mut};
             m_workers.m_allPaused = true;
             m_workers.m_cv.notify_all();
