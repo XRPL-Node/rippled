@@ -81,7 +81,7 @@ public:
               It may not suspend at all if the JobQueue is stopping, and returns
               false in such a case.
         */
-        bool
+        void
         yield();
 
         /** Schedule coroutine execution.

@@ -50,9 +50,15 @@ inline JobQueue::Coro::~Coro()
         "xrpl::JobQueue::Coro::~Coro : is not running");
 }
 
-inline bool
+inline void
 JobQueue::Coro::yield()
 {
+    CoroState expected = CoroState::Running;
+    if (!state_.compare_exchange_strong(expected, CoroState::Suspended))
+    {
+        return;
+    }
+
     {
         std::lock_guard lock(jq_.m_mutex);
 
@@ -61,15 +67,8 @@ JobQueue::Coro::yield()
         jq_.m_suspendedCoros[this] = weak_from_this();
     }
 
-    CoroState expected = CoroState::Running;
-    if (!state_.compare_exchange_strong(expected, CoroState::Suspended))
-    {
-        return false;
-    }
     state_.notify_all();
     (*yield_)(++yieldCount_);
-
-    return true;
 }
 
 inline bool
