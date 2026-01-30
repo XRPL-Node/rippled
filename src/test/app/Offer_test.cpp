@@ -4180,16 +4180,16 @@ public:
         // Test that asfDisallowIncomingTrustline flag prevents offer crossing
         // when the taker doesn't have a trustline.
         //
-        // 1. alice creates an offer to acquire USD/gw, an asset for which
-        //    she does not have a trust line. The offer is created successfully.
+        // 1. alice creates a trustline and sells USD/gw tokens.
         //
         // 2. gw sets asfDisallowIncomingTrustline flag.
         //
         // 3. bob tries to create an offer for USD/gw without a trustline.
-        //    This should fail with tecNO_LINE.
+        //    Without amendment: succeeds and crosses alice's offer (backward compatible).
+        //    With amendment: fails with tecNO_LINE (new behavior).
         //
         // 4. bob creates a trustline to USD/gw, then creates an offer.
-        //    The offer should succeed and cross alice's offer.
+        //    The offer succeeds and crosses alice's offer.
 
         using namespace jtx;
 
@@ -4286,7 +4286,10 @@ public:
             env.require(balance(alice, gwUSD(10)));
             env.require(balance(bob, gwUSD(40)));
 
-            // Test scenario where carol already has a trustline before flag is set
+            // Test scenario where carol creates a trustline after the flag is set
+            // and then creates an offer. This verifies that accounts can create
+            // trustlines even with DisallowIncomingTrustline set; the flag only
+            // prevents offers without existing trustlines, not trustline creation.
             env(trust(carol, gwUSD(100)));
             env.close();
 
