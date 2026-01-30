@@ -221,7 +221,7 @@ CreateOffer::checkAcceptAsset(
 
     // Check if the issuer has lsfDisallowIncomingTrustline set
     // If so, the account must already have a trustline to receive tokens
-    if (view.rules().enabled(fixDisallowIncomingV1) && 
+    if (view.rules().enabled(fixDisallowIncomingV2) && 
         ((*issuerAccount)[sfFlags] & lsfDisallowIncomingTrustline))
     {
         if (!trustLine)
