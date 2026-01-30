@@ -1,8 +1,6 @@
 #ifndef XRPL_JSON_OUTPUT_H_INCLUDED
 #define XRPL_JSON_OUTPUT_H_INCLUDED
 
-#include <boost/beast/core/string.hpp>
-
 #include <functional>
 #include <string>
 #include <string_view>
