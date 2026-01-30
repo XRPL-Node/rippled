@@ -83,6 +83,12 @@ The [commandline](https://xrpl.org/docs/references/http-websocket-apis/api-conve
 
 The `network_id` field was added in the `server_info` response in version 1.5.0 (2019), but it is not returned in [reporting mode](https://xrpl.org/rippled-server-modes.html#reporting-mode). However, use of reporting mode is now discouraged, in favor of using [Clio](https://github.com/XRPLF/clio) instead.
 
+## Unreleased Changes
+
+### Additions and bugfixes
+
+- `submit`: Augmented response fields (`accepted`, `applied`, `broadcast`, `queued`, `kept`, `account_sequence_next`, `account_sequence_available`, `open_ledger_cost`, `validated_ledger_index`) are now included in sign-and-submit mode. Previously, these fields were only returned when submitting a binary transaction blob. ([#6304](https://github.com/XRPLF/rippled/pull/6304))
+
 ## XRP Ledger server version 2.5.0
 
 As of 2025-04-04, version 2.5.0 is in development. You can use a pre-release version by building from source or [using the `nightly` package](https://xrpl.org/docs/infrastructure/installation/install-rippled-on-ubuntu).
@@ -90,7 +96,6 @@ As of 2025-04-04, version 2.5.0 is in development. You can use a pre-release ver
 ### Additions and bugfixes in 2.5.0
 
 - `channel_authorize`: If `signing_support` is not enabled in the config, the RPC is disabled.
-- `submit`: Augmented response fields (`accepted`, `applied`, `broadcast`, `queued`, `kept`, `account_sequence_next`, `account_sequence_available`, `open_ledger_cost`, `validated_ledger_index`) are now included in sign-and-submit mode. Previously, these fields were only returned when submitting a binary transaction blob.
 
 ## XRP Ledger server version 2.4.0
 
