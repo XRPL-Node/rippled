@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <list>
+#include <string_view>
 
 namespace xrpl {
 
@@ -49,7 +50,7 @@ private:
     bool ping_active_ = false;
     boost::beast::websocket::ping_data payload_;
     error_code ec_;
-    std::function<void(boost::beast::websocket::frame_type, boost::beast::string_view)> control_callback_;
+    std::function<void(boost::beast::websocket::frame_type, std::string_view)> control_callback_;
 
 public:
     template <class Body, class Headers>
@@ -137,7 +138,7 @@ protected:
     on_ping(error_code const& ec);
 
     void
-    on_ping_pong(boost::beast::websocket::frame_type kind, boost::beast::string_view payload);
+    on_ping_pong(boost::beast::websocket::frame_type kind, std::string_view payload);
 
     void
     on_timer(error_code ec);
@@ -390,11 +391,11 @@ BaseWSPeer<Handler, Impl>::on_ping(error_code const& ec)
 
 template <class Handler, class Impl>
 void
-BaseWSPeer<Handler, Impl>::on_ping_pong(boost::beast::websocket::frame_type kind, boost::beast::string_view payload)
+BaseWSPeer<Handler, Impl>::on_ping_pong(boost::beast::websocket::frame_type kind, std::string_view payload)
 {
     if (kind == boost::beast::websocket::frame_type::pong)
     {
-        boost::beast::string_view p(payload_.begin());
+        std::string_view p(payload_.begin());
         if (payload == p)
         {
             close_on_timer_ = false;

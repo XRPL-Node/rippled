@@ -58,7 +58,7 @@ to_string(ProtocolVersion const& p)
 }
 
 std::vector<ProtocolVersion>
-parseProtocolVersions(boost::beast::string_view const& value)
+parseProtocolVersions(std::string_view const& value)
 {
     static boost::regex re(
         "^"                        // start of line
@@ -127,7 +127,7 @@ negotiateProtocolVersion(std::vector<ProtocolVersion> const& versions)
 }
 
 std::optional<ProtocolVersion>
-negotiateProtocolVersion(boost::beast::string_view const& versions)
+negotiateProtocolVersion(std::string_view const& versions)
 {
     auto const them = parseProtocolVersions(versions);
 
