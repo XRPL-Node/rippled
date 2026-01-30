@@ -395,7 +395,7 @@ BaseWSPeer<Handler, Impl>::on_ping_pong(boost::beast::websocket::frame_type kind
 {
     if (kind == boost::beast::websocket::frame_type::pong)
     {
-        std::string_view p(payload_.begin());
+        std::string_view p(payload_.begin(), payload_.size());
         if (payload == p)
         {
             close_on_timer_ = false;
