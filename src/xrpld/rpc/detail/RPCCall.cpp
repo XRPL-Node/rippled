@@ -292,7 +292,7 @@ private:
         }
         else
         {
-            std::int32_t ledgerMin, ledgerMax;
+            std::int32_t ledgerMin = 0, ledgerMax = 0;  // note: these are only used when properly set
             if (auto const ledgerMinOpt = jvParseInt(jvParams[1u]))
             {
                 // A value of -1 instructs the server to use the most recent
@@ -314,7 +314,8 @@ private:
             }
 
             // `-1` means "most recent validated ledger version available"
-            if (ledgerMax != -1 && ledgerMax < ledgerMin)
+            static std::int32_t const USE_MOST_RECENT_LEDGER = -1;
+            if (ledgerMax != USE_MOST_RECENT_LEDGER && ledgerMax < ledgerMin)
             {
                 if (apiVersion_ == 1)
                     return rpcError(rpcLGR_IDXS_INVALID);
