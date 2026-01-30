@@ -2071,7 +2071,7 @@ public:
             // number to avoid overflow and UB
             Number const n{
                 true,
-                -static_cast<std::uint64_t>(
+                static_cast<std::uint64_t>(
                     std::numeric_limits<std::int64_t>::min()) +
                     1,
                 0,
