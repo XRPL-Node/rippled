@@ -55,13 +55,12 @@ public:
 
         gate g1, g2;
         std::shared_ptr<JobQueue::Coro> c;
-        env.app().getJobQueue().postCoro(
-            jtCLIENT, "CoroTest", [&](auto const& cr) {
-                c = cr;
-                g1.signal();
-                c->yield();
-                g2.signal();
-            });
+        env.app().getJobQueue().postCoro(jtCLIENT, "CoroTest", [&](auto const& cr) {
+            c = cr;
+            g1.signal();
+            c->yield();
+            g2.signal();
+        });
         BEAST_EXPECT(g1.wait_for(5s));
         c->join();
         c->post();
@@ -83,12 +82,11 @@ public:
 
         gate g;
         gate gStart;
-        auto coro = env.app().getJobQueue().postCoro(
-            jtCLIENT, "CoroTest", [&](auto const& c) {
-                gStart.signal();
-                c->yield();
-                g.signal();
-            });
+        auto coro = env.app().getJobQueue().postCoro(jtCLIENT, "CoroTest", [&](auto const& c) {
+            gStart.signal();
+            c->yield();
+            g.signal();
+        });
 
         // Wait for the coroutine to start.
         BEAST_EXPECT(gStart.wait_for(5s));
@@ -183,23 +181,22 @@ public:
         std::condition_variable cv;
         std::mutex m;
         std::unique_lock<std::mutex> lk(m);
-        auto coro = env.app().getJobQueue().postCoro(
-            jtCLIENT, "Coroutine-Test", [&](auto const& c) {
-                try
-                {
-                    started = true;
-                    cv.notify_all();
-                    c->yield();
-                    finished = true;
-                    cv.notify_all();
-                }
-                catch (...)
-                {
-                    finished = true;
-                    cv.notify_all();
-                    throw;
-                }
-            });
+        auto coro = env.app().getJobQueue().postCoro(jtCLIENT, "Coroutine-Test", [&](auto const& c) {
+            try
+            {
+                started = true;
+                cv.notify_all();
+                c->yield();
+                finished = true;
+                cv.notify_all();
+            }
+            catch (...)
+            {
+                finished = true;
+                cv.notify_all();
+                throw;
+            }
+        });
 
         cv.wait_for(lk, 5s, [&]() { return started; });
         env.app().getJobQueue().stop();
@@ -223,11 +220,7 @@ public:
 
         {
             auto coro = std::make_shared<JobQueue::Coro>(
-                Coro_create_t{},
-                env.app().getJobQueue(),
-                JobType::jtCLIENT,
-                "test",
-                [](auto coro) {
+                Coro_create_t{}, env.app().getJobQueue(), JobType::jtCLIENT, "test", [](auto coro) {
 
                 });
         }

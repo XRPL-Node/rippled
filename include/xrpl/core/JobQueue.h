@@ -155,7 +155,9 @@ public:
 
         @return true if jobHandler added to queue.
     */
-    template <typename JobHandler>
+    template <
+        typename JobHandler,
+        typename = std::enable_if_t<std::is_same<decltype(std::declval<JobHandler&&>()()), void>::value>>
     bool
     addJob(JobType type, std::string const& name, JobHandler&& jobHandler)
         requires std::is_void_v<std::invoke_result_t<JobHandler>>
@@ -164,8 +166,7 @@ public:
         {
             return false;
         }
-        return addJobNoStatusCheck(
-            type, name, std::forward<JobHandler>(jobHandler));
+        return addJobNoStatusCheck(type, name, std::forward<JobHandler>(jobHandler));
     }
 
     /** Creates a coroutine and adds a job to the queue which will run it.
@@ -274,14 +275,10 @@ private:
 
     template <typename JobHandler>
     bool
-    addJobNoStatusCheck(
-        JobType type,
-        std::string const& name,
-        JobHandler&& jobHandler)
+    addJobNoStatusCheck(JobType type, std::string const& name, JobHandler&& jobHandler)
         requires std::is_void_v<std::invoke_result_t<JobHandler>>
     {
-        if (auto optionalCountedJob =
-                jobCounter_.wrap(std::forward<JobHandler>(jobHandler)))
+        if (auto optionalCountedJob = jobCounter_.wrap(std::forward<JobHandler>(jobHandler)))
         {
             return addRefCountedJob(type, name, std::move(*optionalCountedJob));
         }
@@ -297,10 +294,7 @@ private:
     //
     //    return true if func added to queue.
     bool
-    addRefCountedJob(
-        JobType type,
-        std::string const& name,
-        JobFunction const& func);
+    addRefCountedJob(JobType type, std::string const& name, JobFunction const& func);
 
     // Returns the next Job we should run now.
     //
@@ -433,8 +427,7 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
         Last param is the function the coroutine runs. Signature of
         void(std::shared_ptr<Coro>).
     */
-    auto coro = std::make_shared<Coro>(
-        Coro_create_t{}, *this, t, name, std::forward<F>(f));
+    auto coro = std::make_shared<Coro>(Coro_create_t{}, *this, t, name, std::forward<F>(f));
     if (!coro->post())
     {
         // The Coro was not successfully posted.  Disable it so it's destructor
