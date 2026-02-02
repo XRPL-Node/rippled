@@ -67,7 +67,8 @@ DatabaseNodeImp::fetchBatch(std::vector<uint256> const& hashes)
     using namespace std::chrono;
     auto const before = steady_clock::now();
 
-    std::vector<uint256 const*> batch{hashes.size()};
+    std::vector<uint256 const*> batch{};
+    batch.reserve(hashes.size());
     for (size_t i = 0; i < hashes.size(); ++i)
     {
         auto const& hash = hashes[i];
