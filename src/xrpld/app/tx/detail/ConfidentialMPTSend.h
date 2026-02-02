@@ -5,12 +5,12 @@
 
 namespace xrpl {
 
-class ConfidentialSend : public Transactor
+class ConfidentialMPTSend : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit ConfidentialSend(ApplyContext& ctx) : Transactor(ctx)
+    explicit ConfidentialMPTSend(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 

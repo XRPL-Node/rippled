@@ -1,16 +1,16 @@
-#ifndef XRPL_TX_CONFIDENTIALCONVERT_H_INCLUDED
-#define XRPL_TX_CONFIDENTIALCONVERT_H_INCLUDED
+#ifndef XRPL_TX_CONFIDENTIALCLAWSBACK_H_INCLUDED
+#define XRPL_TX_CONFIDENTIALCLAWSBACK_H_INCLUDED
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
 namespace xrpl {
 
-class ConfidentialConvert : public Transactor
+class ConfidentialMPTClawback : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit ConfidentialConvert(ApplyContext& ctx) : Transactor(ctx)
+    explicit ConfidentialMPTClawback(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 

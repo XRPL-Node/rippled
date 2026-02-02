@@ -1,16 +1,16 @@
-#ifndef XRPL_TX_CONFIDENTIALCLAWSBACK_H_INCLUDED
-#define XRPL_TX_CONFIDENTIALCLAWSBACK_H_INCLUDED
+#ifndef XRPL_TX_CONFIDENTIALMERGEINBOX_H_INCLUDED
+#define XRPL_TX_CONFIDENTIALMERGEINBOX_H_INCLUDED
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
 namespace xrpl {
 
-class ConfidentialClawback : public Transactor
+class ConfidentialMPTMergeInbox : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit ConfidentialClawback(ApplyContext& ctx) : Transactor(ctx)
+    explicit ConfidentialMPTMergeInbox(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 

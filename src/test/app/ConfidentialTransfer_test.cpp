@@ -1028,7 +1028,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testSendPreflight(FeatureBitset features)
     {
-        testcase("test ConfidentialSend Preflight");
+        testcase("test ConfidentialMPTSend Preflight");
         using namespace test::jtx;
 
         // test disabled
@@ -1166,7 +1166,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testSendPreclaim(FeatureBitset features)
     {
-        testcase("test ConfidentialSend Preclaim");
+        testcase("test ConfidentialMPTSend Preclaim");
 
         using namespace test::jtx;
         Env env{*this, features};
@@ -1228,7 +1228,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             Json::Value jv;
             jv[jss::Account] = bob.human();
             jv[jss::Destination] = carol.human();
-            jv[jss::TransactionType] = jss::ConfidentialSend;
+            jv[jss::TransactionType] = jss::ConfidentialMPTSend;
             jv[sfMPTokenIssuanceID] = to_string(mptAlice.issuanceID());
             jv[sfSenderEncryptedAmount] = strHex(getTrivialCiphertext());
             jv[sfDestinationEncryptedAmount] = strHex(getTrivialCiphertext());
@@ -2082,7 +2082,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testClawback(FeatureBitset features)
     {
-        testcase("test ConfidentialClawback");
+        testcase("test ConfidentialMPTClawback");
         using namespace test::jtx;
 
         Env env{*this, features};
@@ -2159,7 +2159,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testClawbackWithAuditor(FeatureBitset features)
     {
-        testcase("test ConfidentialClawback with auditor");
+        testcase("test ConfidentialMPTClawback with auditor");
         using namespace test::jtx;
 
         Env env{*this, features};
@@ -2241,7 +2241,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testClawbackPreflight(FeatureBitset features)
     {
-        testcase("test ConfidentialClawback Preflight");
+        testcase("test ConfidentialMPTClawback Preflight");
         using namespace test::jtx;
 
         // test feature disabled
@@ -2285,7 +2285,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 Json::Value jv;
                 jv[jss::Account] = alice.human();
                 jv[sfHolder] = bob.human();
-                jv[jss::TransactionType] = jss::ConfidentialClawback;
+                jv[jss::TransactionType] = jss::ConfidentialMPTClawback;
                 jv[sfMPTAmount] = std::to_string(10);
                 jv[sfZKProof] = "123";
 
@@ -2408,7 +2408,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             Json::Value jv;
             jv[jss::Account] = alice.human();
             jv[sfHolder] = bob.human();
-            jv[jss::TransactionType] = jss::ConfidentialClawback;
+            jv[jss::TransactionType] = jss::ConfidentialMPTClawback;
             jv[sfMPTAmount] = std::to_string(10);
             std::string const dummyProof(196, '0');
             jv[sfZKProof] = dummyProof;
@@ -2490,7 +2490,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
     void
     testClawbackProof(FeatureBitset features)
     {
-        testcase("ConfidentialClawback Proof");
+        testcase("ConfidentialMPTClawback Proof");
         using namespace test::jtx;
 
         Account const alice("alice");
@@ -2951,14 +2951,14 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
 
         testSetPreflight(features);
 
-        // ConfidentialSend
+        // ConfidentialMPTSend
         testSend(features);
         testSendPreflight(features);
         testSendPreclaim(features);
         testSendDepositPreauth(features);
         testSendWithAuditor(features);
 
-        // ConfidentialClawback
+        // ConfidentialMPTClawback
         testClawback(features);
         testClawbackPreflight(features);
         testClawbackPreclaim(features);

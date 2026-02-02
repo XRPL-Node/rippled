@@ -1,16 +1,16 @@
-#ifndef XRPL_TX_CONFIDENTIALMERGEINBOX_H_INCLUDED
-#define XRPL_TX_CONFIDENTIALMERGEINBOX_H_INCLUDED
+#ifndef XRPL_TX_CONFIDENTIALCONVERTBACK_H_INCLUDED
+#define XRPL_TX_CONFIDENTIALCONVERTBACK_H_INCLUDED
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
 namespace xrpl {
 
-class ConfidentialMergeInbox : public Transactor
+class ConfidentialMPTConvertBack : public Transactor
 {
 public:
     static constexpr ConsequencesFactoryType ConsequencesFactory{Normal};
 
-    explicit ConfidentialMergeInbox(ApplyContext& ctx) : Transactor(ctx)
+    explicit ConfidentialMPTConvertBack(ApplyContext& ctx) : Transactor(ctx)
     {
     }
 

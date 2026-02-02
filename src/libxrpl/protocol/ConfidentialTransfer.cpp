@@ -28,7 +28,7 @@ getSendContextHash(
     std::uint32_t version)
 {
     Serializer s;
-    addCommonZKPFields(s, ttCONFIDENTIAL_SEND, account, sequence, issuanceID);
+    addCommonZKPFields(s, ttCONFIDENTIAL_MPT_SEND, account, sequence, issuanceID);
 
     s.addBitString(destination);
     s.addInteger(version);
@@ -45,7 +45,7 @@ getClawbackContextHash(
     AccountID const& holder)
 {
     Serializer s;
-    addCommonZKPFields(s, ttCONFIDENTIAL_CLAWBACK, account, sequence, issuanceID);
+    addCommonZKPFields(s, ttCONFIDENTIAL_MPT_CLAWBACK, account, sequence, issuanceID);
 
     s.add64(amount);
     s.addBitString(holder);
@@ -57,7 +57,7 @@ uint256
 getConvertContextHash(AccountID const& account, std::uint32_t sequence, uint192 const& issuanceID, std::uint64_t amount)
 {
     Serializer s;
-    addCommonZKPFields(s, ttCONFIDENTIAL_CONVERT, account, sequence, issuanceID);
+    addCommonZKPFields(s, ttCONFIDENTIAL_MPT_CONVERT, account, sequence, issuanceID);
 
     s.add64(amount);
 
@@ -73,7 +73,7 @@ getConvertBackContextHash(
     std::uint32_t version)
 {
     Serializer s;
-    addCommonZKPFields(s, ttCONFIDENTIAL_CONVERT_BACK, account, sequence, issuanceID);
+    addCommonZKPFields(s, ttCONFIDENTIAL_MPT_CONVERT_BACK, account, sequence, issuanceID);
 
     s.add64(amount);
     s.addInteger(version);

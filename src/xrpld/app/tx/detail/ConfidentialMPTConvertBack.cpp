@@ -1,4 +1,4 @@
-#include <xrpld/app/tx/detail/ConfidentialConvertBack.h>
+#include <xrpld/app/tx/detail/ConfidentialMPTConvertBack.h>
 
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/ConfidentialTransfer.h>
@@ -13,7 +13,7 @@
 namespace xrpl {
 
 NotTEC
-ConfidentialConvertBack::preflight(PreflightContext const& ctx)
+ConfidentialMPTConvertBack::preflight(PreflightContext const& ctx)
 {
     if (!ctx.rules.enabled(featureConfidentialTransfer))
         return temDISABLED;
@@ -99,7 +99,7 @@ verifyProofs(STTx const& tx, std::shared_ptr<SLE const> const& issuance, std::sh
 }
 
 TER
-ConfidentialConvertBack::preclaim(PreclaimContext const& ctx)
+ConfidentialMPTConvertBack::preclaim(PreclaimContext const& ctx)
 {
     auto const mptIssuanceID = ctx.tx[sfMPTokenIssuanceID];
     auto const account = ctx.tx[sfAccount];
@@ -165,7 +165,7 @@ ConfidentialConvertBack::preclaim(PreclaimContext const& ctx)
 }
 
 TER
-ConfidentialConvertBack::doApply()
+ConfidentialMPTConvertBack::doApply()
 {
     auto const mptIssuanceID = ctx_.tx[sfMPTokenIssuanceID];
 
