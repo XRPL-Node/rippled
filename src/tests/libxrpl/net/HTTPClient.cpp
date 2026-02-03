@@ -65,9 +65,7 @@ public:
 
     ~TestHTTPServer()
     {
-        XRPL_ASSERT(
-            finished(),
-            "xrpl::TestHTTPServer::~TestHTTPServer : accept future ready");
+        XRPL_ASSERT(finished(), "xrpl::TestHTTPServer::~TestHTTPServer : accept future ready");
     }
 
     boost::asio::io_context&
@@ -121,8 +119,7 @@ private:
         {
             try
             {
-                auto socket =
-                    co_await acceptor_.async_accept(boost::asio::use_awaitable);
+                auto socket = co_await acceptor_.async_accept(boost::asio::use_awaitable);
 
                 if (!running_)
                     break;
@@ -150,8 +147,7 @@ private:
             boost::beast::http::request<boost::beast::http::string_body> req;
 
             // Read the HTTP request asynchronously
-            co_await boost::beast::http::async_read(
-                socket, buffer, req, boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read(socket, buffer, req, boost::asio::use_awaitable);
 
             // Create response
             boost::beast::http::response<boost::beast::http::string_body> res;
@@ -172,13 +168,11 @@ private:
             }
 
             // Send response asynchronously
-            co_await boost::beast::http::async_write(
-                socket, res, boost::asio::use_awaitable);
+            co_await boost::beast::http::async_write(socket, res, boost::asio::use_awaitable);
 
             // Shutdown socket gracefully
             boost::system::error_code shutdownEc;
-            socket.shutdown(
-                boost::asio::ip::tcp::socket::shutdown_send, shutdownEc);
+            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, shutdownEc);
         }
         catch (std::exception const& e)
         {
@@ -210,9 +204,7 @@ runHTTPTest(
         path,
         1024,  // max response size
         std::chrono::seconds(5),
-        [&](boost::system::error_code const& ec,
-            int status,
-            std::string const& data) -> bool {
+        [&](boost::system::error_code const& ec, int status, std::string const& data) -> bool {
             resultError = ec;
             resultStatus = status;
             resultData = data;
@@ -225,9 +217,7 @@ runHTTPTest(
     auto start = std::chrono::steady_clock::now();
     while (server.ioc().run_one() != 0)
     {
-        if (std::chrono::steady_clock::now() - start >=
-                std::chrono::seconds(10) ||
-            server.finished())
+        if (std::chrono::steady_clock::now() - start >= std::chrono::seconds(10) || server.finished())
         {
             break;
         }
@@ -272,14 +262,7 @@ TEST(HTTPClient, case_insensitive_content_length)
         beast::Journal j{TestSink::instance()};
         HTTPClient::initializeSSLContext("", "", false, j);
 
-        bool testCompleted = runHTTPTest(
-            server,
-            "/test",
-            completed,
-            resultStatus,
-            resultData,
-            resultError,
-            j);
+        bool testCompleted = runHTTPTest(server, "/test", completed, resultStatus, resultData, resultError, j);
         // Verify results
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);
@@ -307,8 +290,7 @@ TEST(HTTPClient, basic_http_request)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(
-        server, "/basic", completed, resultStatus, resultData, resultError, j);
+    bool testCompleted = runHTTPTest(server, "/basic", completed, resultStatus, resultData, resultError, j);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
@@ -334,8 +316,7 @@ TEST(HTTPClient, empty_response)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(
-        server, "/empty", completed, resultStatus, resultData, resultError, j);
+    bool testCompleted = runHTTPTest(server, "/empty", completed, resultStatus, resultData, resultError, j);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
@@ -365,14 +346,7 @@ TEST(HTTPClient, different_status_codes)
         std::string resultData;
         boost::system::error_code resultError;
 
-        bool testCompleted = runHTTPTest(
-            server,
-            "/status",
-            completed,
-            resultStatus,
-            resultData,
-            resultError,
-            j);
+        bool testCompleted = runHTTPTest(server, "/status", completed, resultStatus, resultData, resultError, j);
 
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);

@@ -210,7 +210,6 @@ class Xrpl(ConanFile):
             "boost::program_options",
             "boost::process",
             "boost::regex",
-            "boost::system",
             "boost::thread",
             "date::date",
             "ed25519::ed25519",
