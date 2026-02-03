@@ -73,13 +73,16 @@ JobQueue::Coro::resume()
         std::lock_guard lock(jq_.m_mutex);
         --jq_.nSuspend_;
     }
-    auto saved = detail::getLocalValues().release();
-    detail::getLocalValues().reset(&lvs_);
+    auto saved = detail::releaseLocalValues();
+    detail::resetLocalValues(&lvs_);
     std::lock_guard lock(mutex_);
     XRPL_ASSERT(static_cast<bool>(coro_), "xrpl::JobQueue::Coro::resume : is runnable");
     coro_();
-    detail::getLocalValues().release();
-    detail::getLocalValues().reset(saved);
+
+    // Restore the thread's original LocalValues
+    detail::releaseLocalValues();
+    detail::resetLocalValues(saved);
+
     std::lock_guard lk(mutex_run_);
     running_ = false;
     cv_.notify_all();
