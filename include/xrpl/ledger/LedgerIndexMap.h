@@ -5,7 +5,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace ripple {
+namespace xrpl {
 
 template <class Key, class Mapped>
 class LedgerIndexMap
@@ -114,6 +114,6 @@ private:
     mutable std::mutex mutex_;
 };
 
-}  // namespace ripple
+}  // namespace xrpl
 
 #endif  // XRPL_APP_LEDGER_INDEX_MAP_H_INCLUDED

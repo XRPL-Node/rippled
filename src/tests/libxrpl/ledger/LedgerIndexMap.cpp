@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-using namespace ripple;
+using namespace xrpl;
 
 TEST_SUITE_BEGIN("LedgerIndexMap");
 
