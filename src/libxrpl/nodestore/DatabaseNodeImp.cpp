@@ -71,6 +71,7 @@ DatabaseNodeImp::fetchBatch(std::vector<uint256> const& hashes)
     }
 
     auto results = backend_->fetchBatch(batch).first;
+    XRPL_ASSERT(hashes.size() == results.size(), "number of input hashes matches number of output objects");
     for (size_t i = 0; i < results.size(); ++i)
     {
         if (!results[i])
