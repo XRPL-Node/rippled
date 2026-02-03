@@ -480,12 +480,19 @@ void
 SHAMapStoreImp::clearCaches(LedgerIndex validatedSeq)
 {
     ledgerMaster_->clearLedgerCachePrior(validatedSeq);
+    // Also clear the FullBelowCache so its generation counter is bumped.
+    // This prevents stale "full below" markers from persisting across
+    // backend rotation/online deletion and interfering with SHAMap sync.
+    app_.getNodeFamily().getFullBelowCache().clear();
 }
 
 void
 SHAMapStoreImp::freshenCaches()
 {
-    freshenCache(*app_.getNodeFamily().getTreeNodeCache()) && freshenCache(app_.getMasterTransaction().getCache());
+    if (freshenCache(*app_.getNodeFamily().getTreeNodeCache()))
+        return;
+
+    freshenCache(app_.getMasterTransaction().getCache());
 }
 
 void
