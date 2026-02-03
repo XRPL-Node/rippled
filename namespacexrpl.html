@@ -1123,6 +1123,9 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1ServerImpl.html">ServerImpl</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Service registry for dependency injection.  <a href="classxrpl_1_1ServiceRegistry.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1Session.html">Session</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Persistent state information for a connection session.  <a href="classxrpl_1_1Session.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1643,6 +1646,11 @@ Typedefs</h2></td></tr>
 <tr class="separator:a680051b92b1da336ad756a09cb666bb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af932718788df9cbed370ae33669d48bd" id="r_af932718788df9cbed370ae33669d48bd"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af932718788df9cbed370ae33669d48bd">JobCounter</a> = <a class="el" href="classxrpl_1_1ClosureCounter.html">ClosureCounter</a>&lt; void &gt;</td></tr>
 <tr class="separator:af932718788df9cbed370ae33669d48bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad81b495f486055d2575a83800bd66a84" id="r_ad81b495f486055d2575a83800bd66a84"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ad81b495f486055d2575a83800bd66a84">RCLValidations</a> = <a class="el" href="classxrpl_1_1Validations.html">Validations</a>&lt; <a class="el" href="classxrpl_1_1RCLValidationsAdaptor.html">RCLValidationsAdaptor</a> &gt;</td></tr>
+<tr class="memdesc:ad81b495f486055d2575a83800bd66a84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for RCL-specific instantiation of generic <a class="el" href="classxrpl_1_1Validations.html" title="Maintains current and recent ledger validations.">Validations</a>.  <br /></td></tr>
+<tr class="separator:ad81b495f486055d2575a83800bd66a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90e2562450e0013f0d01a6ba443e9329" id="r_a90e2562450e0013f0d01a6ba443e9329"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a90e2562450e0013f0d01a6ba443e9329">NodeCache</a> = <a class="el" href="classxrpl_1_1TaggedCache.html">TaggedCache</a>&lt; <a class="el" href="classxrpl_1_1SHAMapHash.html">SHAMapHash</a>, <a class="el" href="namespacexrpl.html#a9c45e3c454e975035b02eaee421bec30">Blob</a> &gt;</td></tr>
+<tr class="separator:a90e2562450e0013f0d01a6ba443e9329"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09923a111781399c32385ba65761e9e8" id="r_a09923a111781399c32385ba65761e9e8"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a09923a111781399c32385ba65761e9e8">CachedSLEs</a> = <a class="el" href="classxrpl_1_1TaggedCache.html">TaggedCache</a>&lt; <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a>, <a class="el" href="namespacexrpl.html#a7dd44ba0950a623d378c3da99084fb28">SLE</a> const  &gt;</td></tr>
 <tr class="separator:a09923a111781399c32385ba65761e9e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2985c3aafe4bcf476b31ef941fff91a0" id="r_a2985c3aafe4bcf476b31ef941fff91a0"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a2985c3aafe4bcf476b31ef941fff91a0">majorityAmendments_t</a> = <a class="elRef" href="http://en.cppreference.com/w/cpp/container/map.html">std::map</a>&lt; <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a>, <a class="el" href="classxrpl_1_1NetClock.html#a6fdfbe103d809c714f11b914b391f8df">NetClock::time_point</a> &gt;</td></tr>
@@ -1799,16 +1807,11 @@ Typedefs</h2></td></tr>
 <tr class="separator:a7c5f5cf4799ff49578d3d84ffe3f390c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bc3e69bb02044c57ac3fb17774c6be0" id="r_a5bc3e69bb02044c57ac3fb17774c6be0"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a5bc3e69bb02044c57ac3fb17774c6be0">sha256_t</a> = <a class="el" href="classxrpl_1_1unsigned__integer.html">unsigned_integer</a>&lt; 256, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> &gt;</td></tr>
 <tr class="separator:a5bc3e69bb02044c57ac3fb17774c6be0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad81b495f486055d2575a83800bd66a84" id="r_ad81b495f486055d2575a83800bd66a84"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ad81b495f486055d2575a83800bd66a84">RCLValidations</a> = <a class="el" href="classxrpl_1_1Validations.html">Validations</a>&lt; <a class="el" href="classxrpl_1_1RCLValidationsAdaptor.html">RCLValidationsAdaptor</a> &gt;</td></tr>
-<tr class="memdesc:ad81b495f486055d2575a83800bd66a84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for RCL-specific instantiation of generic <a class="el" href="classxrpl_1_1Validations.html" title="Maintains current and recent ledger validations.">Validations</a>.  <br /></td></tr>
-<tr class="separator:ad81b495f486055d2575a83800bd66a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae607d75c2e98a56104332ce797c6b3f7" id="r_ae607d75c2e98a56104332ce797c6b3f7"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ae607d75c2e98a56104332ce797c6b3f7">CachedLedger</a> = <a class="el" href="classxrpl_1_1CachedView.html">CachedView</a>&lt; <a class="el" href="classxrpl_1_1Ledger.html">Ledger</a> &gt;</td></tr>
 <tr class="memdesc:ae607d75c2e98a56104332ce797c6b3f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">A ledger wrapped in a <a class="el" href="classxrpl_1_1CachedView.html" title="Wraps a DigestAwareReadView to provide caching.">CachedView</a>.  <br /></td></tr>
 <tr class="separator:ae607d75c2e98a56104332ce797c6b3f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab96b366c0d38b3930d1fd2bf57fd5866" id="r_ab96b366c0d38b3930d1fd2bf57fd5866"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab96b366c0d38b3930d1fd2bf57fd5866">OrderedTxs</a> = <a class="el" href="classxrpl_1_1CanonicalTXSet.html">CanonicalTXSet</a></td></tr>
 <tr class="separator:ab96b366c0d38b3930d1fd2bf57fd5866"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84617ab60178dc5acb18523a8797ab1d" id="r_a84617ab60178dc5acb18523a8797ab1d"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a84617ab60178dc5acb18523a8797ab1d">NodeCache</a> = <a class="el" href="classxrpl_1_1TaggedCache.html">TaggedCache</a>&lt; <a class="el" href="classxrpl_1_1SHAMapHash.html">SHAMapHash</a>, <a class="el" href="namespacexrpl.html#a9c45e3c454e975035b02eaee421bec30">Blob</a> &gt;</td></tr>
-<tr class="separator:a84617ab60178dc5acb18523a8797ab1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a055968bc5c1ab9d6c68f6b4ecebd23e9" id="r_a055968bc5c1ab9d6c68f6b4ecebd23e9"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a055968bc5c1ab9d6c68f6b4ecebd23e9">CheckCancel</a> = <a class="el" href="classxrpl_1_1CancelCheck.html">CancelCheck</a></td></tr>
 <tr class="separator:a055968bc5c1ab9d6c68f6b4ecebd23e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c46693078a21ac6e1660575b09e16fb" id="r_a6c46693078a21ac6e1660575b09e16fb"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a6c46693078a21ac6e1660575b09e16fb">OfferCancel</a> = <a class="el" href="classxrpl_1_1CancelOffer.html">CancelOffer</a></td></tr>
@@ -6973,6 +6976,40 @@ template&lt;class Value , class Hash  = hardened_hash&lt;strong_hash&gt;, class 
 
 </div>
 </div>
+<a id="ad81b495f486055d2575a83800bd66a84" name="ad81b495f486055d2575a83800bd66a84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad81b495f486055d2575a83800bd66a84">&#9670;&#160;</a></span>RCLValidations</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="classxrpl_1_1Validations.html">Validations</a>&lt; <a class="el" href="classxrpl_1_1RCLValidationsAdaptor.html">RCLValidationsAdaptor</a> &gt; <a class="el" href="namespacexrpl.html#ad81b495f486055d2575a83800bd66a84">xrpl::RCLValidations</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Alias for RCL-specific instantiation of generic <a class="el" href="classxrpl_1_1Validations.html" title="Maintains current and recent ledger validations.">Validations</a>. </p>
+
+<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00057">57</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
+
+</div>
+</div>
+<a id="a90e2562450e0013f0d01a6ba443e9329" name="a90e2562450e0013f0d01a6ba443e9329"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90e2562450e0013f0d01a6ba443e9329">&#9670;&#160;</a></span>NodeCache</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="classxrpl_1_1TaggedCache.html">TaggedCache</a>&lt; <a class="el" href="classxrpl_1_1SHAMapHash.html">SHAMapHash</a>, <a class="el" href="namespacexrpl.html#a9c45e3c454e975035b02eaee421bec30">Blob</a> &gt; <a class="el" href="namespacexrpl.html#a90e2562450e0013f0d01a6ba443e9329">xrpl::NodeCache</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00059">59</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
+
+</div>
+</div>
 <a id="a09923a111781399c32385ba65761e9e8" name="a09923a111781399c32385ba65761e9e8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a09923a111781399c32385ba65761e9e8">&#9670;&#160;</a></span>CachedSLEs</h2>
 
@@ -8140,24 +8177,6 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a id="ad81b495f486055d2575a83800bd66a84" name="ad81b495f486055d2575a83800bd66a84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad81b495f486055d2575a83800bd66a84">&#9670;&#160;</a></span>RCLValidations</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classxrpl_1_1Validations.html">Validations</a>&lt; <a class="el" href="classxrpl_1_1RCLValidationsAdaptor.html">RCLValidationsAdaptor</a> &gt; <a class="el" href="namespacexrpl.html#ad81b495f486055d2575a83800bd66a84">xrpl::RCLValidations</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Alias for RCL-specific instantiation of generic <a class="el" href="classxrpl_1_1Validations.html" title="Maintains current and recent ledger validations.">Validations</a>. </p>
-
-<p class="definition">Definition at line <a class="el" href="RCLValidations_8h_source.html#l00220">220</a> of file <a class="el" href="RCLValidations_8h_source.html">RCLValidations.h</a>.</p>
-
-</div>
-</div>
 <a id="ae607d75c2e98a56104332ce797c6b3f7" name="ae607d75c2e98a56104332ce797c6b3f7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae607d75c2e98a56104332ce797c6b3f7">&#9670;&#160;</a></span>CachedLedger</h2>
 
@@ -8189,22 +8208,6 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="OpenLedger_8h_source.html#l00027">27</a> of file <a class="el" href="OpenLedger_8h_source.html">OpenLedger.h</a>.</p>
-
-</div>
-</div>
-<a id="a84617ab60178dc5acb18523a8797ab1d" name="a84617ab60178dc5acb18523a8797ab1d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a84617ab60178dc5acb18523a8797ab1d">&#9670;&#160;</a></span>NodeCache</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">using <a class="el" href="namespacexrpl.html#a84617ab60178dc5acb18523a8797ab1d">xrpl::NodeCache</a> = typedef <a class="el" href="classxrpl_1_1TaggedCache.html">TaggedCache</a>&lt;<a class="el" href="classxrpl_1_1SHAMapHash.html">SHAMapHash</a>, <a class="el" href="namespacexrpl.html#a9c45e3c454e975035b02eaee421bec30">Blob</a>&gt;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="Application_8h_source.html#l00087">87</a> of file <a class="el" href="Application_8h_source.html">Application.h</a>.</p>
 
 </div>
 </div>
