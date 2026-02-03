@@ -21,11 +21,6 @@ DatabaseNodeImp::asyncFetch(
     Database::asyncFetch(hash, ledgerSeq, std::move(callback));
 }
 
-void
-DatabaseNodeImp::sweep()
-{
-}
-
 std::shared_ptr<NodeObject>
 DatabaseNodeImp::fetchNodeObject(uint256 const& hash, std::uint32_t, FetchReport& fetchReport, bool duplicate)
 {

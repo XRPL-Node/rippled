@@ -56,9 +56,6 @@ public:
     void
     sync() override;
 
-    void
-    sweep() override;
-
 private:
     std::shared_ptr<Backend> writableBackend_;
     std::shared_ptr<Backend> archiveBackend_;

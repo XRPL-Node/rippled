@@ -78,9 +78,6 @@ public:
         std::uint32_t ledgerSeq,
         std::function<void(std::shared_ptr<NodeObject> const&)>&& callback) override;
 
-    void
-    sweep() override;
-
 private:
     // Persistent key/value storage
     std::shared_ptr<Backend> backend_;
