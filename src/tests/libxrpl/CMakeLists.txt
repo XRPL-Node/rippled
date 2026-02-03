@@ -30,11 +30,11 @@ target_link_libraries(xrpl.test.json PRIVATE xrpl.imports.test)
 add_dependencies(xrpl.tests xrpl.test.json)
 
 # Network unit tests are currently not supported on Windows
-if(NOT WIN32)
-  xrpl_add_test(net)
-  target_link_libraries(xrpl.test.net PRIVATE xrpl.imports.test)
-  add_dependencies(xrpl.tests xrpl.test.net)
-endif()
+if (NOT WIN32)
+    xrpl_add_test(net)
+    target_link_libraries(xrpl.test.net PRIVATE xrpl.imports.test)
+    add_dependencies(xrpl.tests xrpl.test.net)
+endif ()
 
 xrpl_add_test(ledger)
 target_link_libraries(xrpl.test.ledger PRIVATE xrpl.imports.test)

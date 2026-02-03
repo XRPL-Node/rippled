@@ -8,13 +8,7 @@
 
 namespace xrpl {
 
-<<<<<<< HEAD
 LedgerHistory::LedgerHistory(beast::insight::Collector::ptr const& collector, Application& app)
-=======
-// FIXME: Need to clean up ledgers by index at some point
-
-LedgerHistory::LedgerHistory(beast::insight::Collector::ptr const& collector, Application& app)
->>>>>>> develop
     : app_(app)
     , collector_(collector)
     , mismatch_counter_(collector->make_counter("ledger.history", "mismatch"))
