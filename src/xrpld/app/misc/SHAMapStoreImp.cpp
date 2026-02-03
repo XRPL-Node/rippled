@@ -483,7 +483,7 @@ SHAMapStoreImp::clearCaches(LedgerIndex validatedSeq)
     // Also clear the FullBelowCache so its generation counter is bumped.
     // This prevents stale "full below" markers from persisting across
     // backend rotation/online deletion and interfering with SHAMap sync.
-    app_.getNodeFamily().getFullBelowCache().clear();
+    app_.getNodeFamily().getFullBelowCache()->clear();
 }
 
 void
