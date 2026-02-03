@@ -866,7 +866,7 @@ STAmount::canonicalize()
 
     if (mValue == 0)
     {
-        mOffset = -100;
+        mOffset = cZeroOffset;
         mIsNegative = false;
         return;
     }
@@ -890,7 +890,7 @@ STAmount::canonicalize()
     {
         mValue = 0;
         mIsNegative = false;
-        mOffset = -100;
+        mOffset = cZeroOffset;
         return;
     }
 
@@ -903,7 +903,7 @@ STAmount::canonicalize()
     XRPL_ASSERT(
         (mValue == 0) || ((mOffset >= cMinOffset) && (mOffset <= cMaxOffset)),
         "xrpl::STAmount::canonicalize : offset inside range");
-    XRPL_ASSERT((mValue != 0) || (mOffset != -100), "xrpl::STAmount::canonicalize : value or offset set");
+    XRPL_ASSERT((mValue != 0) || (mOffset == cZeroOffset), "xrpl::STAmount::canonicalize : value or offset set");
 }
 
 void

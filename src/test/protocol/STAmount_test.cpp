@@ -1,7 +1,9 @@
 #include <test/jtx.h>
 
+#include <xrpl/basics/Number.h>
 #include <xrpl/basics/random.h>
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/protocol/IOUAmount.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/XRPAmount.h>
 
@@ -1143,6 +1145,148 @@ public:
         }
     }
 
+    void
+    testNumberConversion()
+    {
+        testcase("Number to STAmount conversions");
+
+        Issue const usd{Currency(0x5553440000000000), AccountID(0x4985601)};
+        NumberSO stNumberSO{true};
+
+        // Test zero conversion
+        {
+            Number const zero{};
+            STAmount const result{usd, zero};
+            BEAST_EXPECT(result.mantissa() == 0);
+            BEAST_EXPECT(result.exponent() == STAmount::cZeroOffset);
+            BEAST_EXPECT(!result.negative());
+        }
+
+        // Test positive zero
+        {
+            Number const zero{0, 0};
+            STAmount const result{usd, zero};
+            BEAST_EXPECT(result.mantissa() == 0);
+            BEAST_EXPECT(result.exponent() == STAmount::cZeroOffset);
+        }
+
+        // Test negative zero (should become positive zero)
+        {
+            Number const negZero{-0, 0};
+            STAmount const result{usd, negZero};
+            BEAST_EXPECT(result.mantissa() == 0);
+            BEAST_EXPECT(!result.negative());
+        }
+
+        // Test minimum positive IOU amount
+        {
+            Number const minPos{STAmount::cMinValue, STAmount::cMinOffset};
+            STAmount const result{usd, minPos};
+            BEAST_EXPECT(result.mantissa() == STAmount::cMinValue);
+            BEAST_EXPECT(result.exponent() == STAmount::cMinOffset);
+            BEAST_EXPECT(!result.negative());
+        }
+
+        // Test maximum positive IOU amount
+        {
+            Number const maxPos{STAmount::cMaxValue, STAmount::cMaxOffset};
+            STAmount const result{usd, maxPos};
+            BEAST_EXPECT(result.mantissa() == STAmount::cMaxValue);
+            BEAST_EXPECT(result.exponent() == STAmount::cMaxOffset);
+            BEAST_EXPECT(!result.negative());
+        }
+
+        // Test negative amounts
+        {
+            Number const neg{-static_cast<std::int64_t>(STAmount::cMinValue), STAmount::cMinOffset};
+            STAmount const result{usd, neg};
+            BEAST_EXPECT(result.mantissa() == STAmount::cMinValue);
+            BEAST_EXPECT(result.exponent() == STAmount::cMinOffset);
+            BEAST_EXPECT(result.negative());
+        }
+
+        // Test value requiring scale up (mantissa too small)
+        {
+            Number const small{1000000000000000ull / 10, -95};  // Will scale up
+            STAmount const result{usd, small};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+            BEAST_EXPECT(result.exponent() >= STAmount::cMinOffset);
+            BEAST_EXPECT(result.exponent() <= STAmount::cMaxOffset);
+        }
+
+        // Test value requiring scale down (mantissa too large)
+        {
+            Number const large{9999999999999999ull * 10, 79};  // Will scale down
+            STAmount const result{usd, large};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+            BEAST_EXPECT(result.exponent() >= STAmount::cMinOffset);
+            BEAST_EXPECT(result.exponent() <= STAmount::cMaxOffset);
+        }
+
+        // Test boundary mantissa values
+        {
+            Number const atMin{STAmount::cMinValue, 0};
+            STAmount const result{usd, atMin};
+            BEAST_EXPECT(result.mantissa() == STAmount::cMinValue);
+        }
+
+        {
+            Number const atMax{STAmount::cMaxValue, 0};
+            STAmount const result{usd, atMax};
+            BEAST_EXPECT(result.mantissa() == STAmount::cMaxValue);
+        }
+
+        // Test typical amounts
+        {
+            Number const typical{1234567890123456ull, -10};
+            STAmount const result{usd, typical};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+            BEAST_EXPECT(result.exponent() >= STAmount::cMinOffset);
+            BEAST_EXPECT(result.exponent() <= STAmount::cMaxOffset);
+        }
+
+        // Test round-trip conversion (Number -> STAmount -> Number)
+        {
+            Number const original{5000000000000000ull, 5};
+            STAmount const st{usd, original};
+            Number const recovered{st};
+            BEAST_EXPECT(original == recovered);
+        }
+
+        // Test various exponents
+        for (int exp = STAmount::cMinOffset; exp <= STAmount::cMaxOffset; exp += 10)
+        {
+            Number const n{STAmount::cMinValue, exp};
+            STAmount const result{usd, n};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+            BEAST_EXPECT(result.exponent() >= STAmount::cMinOffset);
+            BEAST_EXPECT(result.exponent() <= STAmount::cMaxOffset);
+        }
+
+        // Test both mantissa scales (if applicable)
+        {
+            // Small mantissa scale test
+            NumberMantissaScaleGuard guard{MantissaRange::small};
+            Number const n{5000000000000000ull, 5};
+            STAmount const result{usd, n};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+        }
+
+        {
+            // Large mantissa scale test
+            NumberMantissaScaleGuard guard{MantissaRange::large};
+            Number const n{5000000000000000ull, 5};
+            STAmount const result{usd, n};
+            BEAST_EXPECT(result.mantissa() >= STAmount::cMinValue);
+            BEAST_EXPECT(result.mantissa() <= STAmount::cMaxValue);
+        }
+    }
+
     //--------------------------------------------------------------------------
 
     void
@@ -1157,6 +1301,7 @@ public:
         testParseJson();
         testConvertXRP();
         testConvertIOU();
+        testNumberConversion();
         testCanAddXRP();
         testCanAddIOU();
         testCanAddMPT();

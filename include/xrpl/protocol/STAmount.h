@@ -45,6 +45,9 @@ public:
 
     static int const cMinOffset = -96;
     static int const cMaxOffset = 80;
+    // The -100 is used to allow 0 to sort less than small positive values
+    // which will have a large negative exponent.
+    static int const cZeroOffset = -100;
 
     // Maximum native value supported by the code
     constexpr static std::uint64_t cMinValue = 1'000'000'000'000'000ull;
@@ -524,7 +527,32 @@ STAmount::fromNumber(A const& a, Number const& number)
 
     auto const [mantissa, exponent] = working.normalizeToRange(cMinValue, cMaxValue);
 
-    return STAmount{asset, mantissa, exponent, negative};
+    // Special case: normalizeToRange returns mantissa=0 with Number's default
+    // exponent (std::numeric_limits<int>::lowest()), but STAmount expects zero
+    // IOUs to have the canonical zero offset. Handle this explicitly.
+    if (mantissa == 0)
+    {
+        return STAmount{asset, 0, cZeroOffset, false, unchecked{}};
+    }
+
+    // Handle underflow: if exponent is below minimum or mantissa is too small,
+    // the value underflows to zero.
+    if ((exponent < cMinOffset) || (mantissa < cMinValue))
+    {
+        return STAmount{asset, 0, cZeroOffset, false, unchecked{}};
+    }
+
+    // Handle overflow: if exponent exceeds maximum, throw.
+    if (exponent > cMaxOffset)
+        Throw<std::runtime_error>("value overflow");
+
+    // normalizeToRange already produced canonical mantissa/exponent in the range
+    // [cMinValue, cMaxValue], so bypass canonicalize() to avoid redundant work.
+    XRPL_ASSERT(
+        mantissa >= cMinValue && mantissa <= cMaxValue, "xrpl::STAmount::fromNumber : mantissa in canonical range");
+    XRPL_ASSERT(
+        exponent >= cMinOffset && exponent <= cMaxOffset, "xrpl::STAmount::fromNumber : exponent in canonical range");
+    return STAmount{asset, static_cast<std::uint64_t>(mantissa), exponent, negative, unchecked{}};
 }
 
 inline void
@@ -537,9 +565,7 @@ STAmount::negate()
 inline void
 STAmount::clear()
 {
-    // The -100 is used to allow 0 to sort less than a small positive values
-    // which have a negative exponent.
-    mOffset = integral() ? 0 : -100;
+    mOffset = integral() ? 0 : cZeroOffset;
     mValue = 0;
     mIsNegative = false;
 }
