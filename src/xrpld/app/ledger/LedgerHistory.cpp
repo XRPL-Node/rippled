@@ -71,7 +71,7 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
 
     {
         // Add this ledger to the local tracking by index
-        XRPL_ASSERT(ret->isImmutable(), "ripple::LedgerHistory::getLedgerBySeq : immutable result ledger");
+        XRPL_ASSERT(ret->isImmutable(), "xrpl::LedgerHistory::getLedgerBySeq : immutable result ledger");
         m_ledgers_by_hash.canonicalize_replace_client(ret->info().hash, ret);
         mLedgersByIndex[ret->info().seq] = ret->info().hash;
         return (ret->info().seq == index) ? ret : nullptr;

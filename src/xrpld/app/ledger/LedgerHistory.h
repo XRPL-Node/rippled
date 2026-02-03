@@ -124,7 +124,7 @@ private:
     ConsensusValidated m_consensus_validated;
 
     // Maps ledger indexes to the corresponding hash.
-    ripple::LedgerIndexMap<LedgerIndex, LedgerHash> mLedgersByIndex;  // validated ledgers
+    xrpl::LedgerIndexMap<LedgerIndex, LedgerHash> mLedgersByIndex;  // validated ledgers
 
     beast::Journal j_;
 };
