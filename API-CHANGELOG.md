@@ -30,6 +30,10 @@ This version is supported by all `rippled` versions. For WebSocket and HTTP JSON
 
 - `vault_info`: New RPC method to retrieve information about a specific vault (part of XLS-66 Lending Protocol). ([#6156](https://github.com/XRPLF/rippled/pull/6156))
 
+### Bugfixes in 3.1.0
+
+- Peer Crawler: The `port` field in `overlay.active[]` now consistently returns an integer instead of a string for outbound peers.
+
 ## XRP Ledger server version 3.0.0
 
 [Version 3.0.0](https://github.com/XRPLF/rippled/releases/tag/3.0.0) was released on Dec 9, 2025.
