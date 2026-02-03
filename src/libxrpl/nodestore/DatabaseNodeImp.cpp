@@ -75,8 +75,7 @@ DatabaseNodeImp::fetchBatch(std::vector<uint256> const& hashes)
         batch.push_back(&hash);
     }
 
-    std::vector<std::shared_ptr<NodeObject>> results{hashes.size()};
-    results = backend_->fetchBatch(batch).first;
+    std::vector<std::shared_ptr<NodeObject>> const results = backend_->fetchBatch(batch).first;
     for (size_t i = 0; i < results.size(); ++i)
     {
         if (!results[i])
