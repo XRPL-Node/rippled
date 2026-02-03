@@ -22,6 +22,12 @@ API version 2 is available in `rippled` version 2.0.0 and later. See [API-VERSIO
 
 This version is supported by all `rippled` versions. For WebSocket and HTTP JSON-RPC requests, it is currently the default API version used when no `api_version` is specified.
 
+## Unreleased
+
+### Bugfixes
+
+- Peer Crawler: The `port` field in `overlay.active[]` now consistently returns an integer instead of a string for outbound peers. [#6318](https://github.com/XRPLF/rippled/pull/6318)
+
 ## XRP Ledger server version 3.1.0
 
 [Version 3.1.0](https://github.com/XRPLF/rippled/releases/tag/3.1.0) was released on Jan 27, 2026.
@@ -29,10 +35,6 @@ This version is supported by all `rippled` versions. For WebSocket and HTTP JSON
 ### Additions in 3.1.0
 
 - `vault_info`: New RPC method to retrieve information about a specific vault (part of XLS-66 Lending Protocol). ([#6156](https://github.com/XRPLF/rippled/pull/6156))
-
-### Bugfixes in 3.1.0
-
-- Peer Crawler: The `port` field in `overlay.active[]` now consistently returns an integer instead of a string for outbound peers.
 
 ## XRP Ledger server version 3.0.0
 
