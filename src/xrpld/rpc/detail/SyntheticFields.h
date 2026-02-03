@@ -23,18 +23,10 @@ struct JsonContext;
    @{
  */
 void
-insertAllSyntheticInJson(
-    Json::Value& metadata,
-    ReadView const&,
-    std::shared_ptr<STTx const> const&,
-    TxMeta const&);
+insertAllSyntheticInJson(Json::Value& metadata, ReadView const&, std::shared_ptr<STTx const> const&, TxMeta const&);
 
 void
-insertAllSyntheticInJson(
-    Json::Value& metadata,
-    JsonContext const&,
-    std::shared_ptr<STTx const> const&,
-    TxMeta const&);
+insertAllSyntheticInJson(Json::Value& metadata, JsonContext const&, std::shared_ptr<STTx const> const&, TxMeta const&);
 /** @} */
 
 }  // namespace RPC
