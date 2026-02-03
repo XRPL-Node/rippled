@@ -1,13 +1,13 @@
 #include <xrpld/app/paths/TrustLine.h>
 #include <xrpld/rpc/Context.h>
-#include <xrpld/rpc/detail/RPCHelpers.h>
+#include <xrpld/rpc/detail/RPCLedgerHelpers.h>
 
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/RPCErr.h>
 #include <xrpl/protocol/jss.h>
 
-namespace ripple {
+namespace xrpl {
 
 Json::Value
 doAccountCurrencies(RPC::JsonContext& context)
@@ -63,17 +63,15 @@ doAccountCurrencies(RPC::JsonContext& context)
     send.erase(badCurrency());
     receive.erase(badCurrency());
 
-    Json::Value& sendCurrencies =
-        (result[jss::send_currencies] = Json::arrayValue);
+    Json::Value& sendCurrencies = (result[jss::send_currencies] = Json::arrayValue);
     for (auto const& c : send)
         sendCurrencies.append(to_string(c));
 
-    Json::Value& recvCurrencies =
-        (result[jss::receive_currencies] = Json::arrayValue);
+    Json::Value& recvCurrencies = (result[jss::receive_currencies] = Json::arrayValue);
     for (auto const& c : receive)
         recvCurrencies.append(to_string(c));
 
     return result;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

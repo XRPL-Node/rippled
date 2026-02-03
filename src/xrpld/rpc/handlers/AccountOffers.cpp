@@ -1,5 +1,6 @@
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/detail/RPCHelpers.h>
+#include <xrpld/rpc/detail/RPCLedgerHelpers.h>
 #include <xrpld/rpc/detail/Tuning.h>
 
 #include <xrpl/json/json_value.h>
@@ -10,13 +11,12 @@
 #include <xrpl/protocol/jss.h>
 #include <xrpl/resource/Fees.h>
 
-namespace ripple {
+namespace xrpl {
 
 void
 appendOfferJson(std::shared_ptr<SLE const> const& offer, Json::Value& offers)
 {
-    STAmount dirRate =
-        amountFromQuality(getQuality(offer->getFieldH256(sfBookDirectory)));
+    STAmount dirRate = amountFromQuality(getQuality(offer->getFieldH256(sfBookDirectory)));
     Json::Value& obj(offers.append(Json::objectValue));
     offer->getFieldAmount(sfTakerPays).setJson(obj[jss::taker_pays]);
     offer->getFieldAmount(sfTakerGets).setJson(obj[jss::taker_gets]);
@@ -119,12 +119,11 @@ doAccountOffers(RPC::JsonContext& context)
             startAfter,
             startHint,
             limit + 1,
-            [&offers, &count, &marker, &limit, &nextHint, &accountID](
-                std::shared_ptr<SLE const> const& sle) {
+            [&offers, &count, &marker, &limit, &nextHint, &accountID](std::shared_ptr<SLE const> const& sle) {
                 if (!sle)
                 {
                     // LCOV_EXCL_START
-                    UNREACHABLE("ripple::doAccountOffers : null SLE");
+                    UNREACHABLE("xrpl::doAccountOffers : null SLE");
                     return false;
                     // LCOV_EXCL_STOP
                 }
@@ -152,8 +151,7 @@ doAccountOffers(RPC::JsonContext& context)
     if (count == limit + 1 && marker)
     {
         result[jss::limit] = limit;
-        result[jss::marker] =
-            to_string(*marker) + "," + std::to_string(nextHint);
+        result[jss::marker] = to_string(*marker) + "," + std::to_string(nextHint);
     }
 
     for (auto const& offer : offers)
@@ -163,4 +161,4 @@ doAccountOffers(RPC::JsonContext& context)
     return result;
 }
 
-}  // namespace ripple
+}  // namespace xrpl
