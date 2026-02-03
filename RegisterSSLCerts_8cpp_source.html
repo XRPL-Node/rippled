@@ -170,15 +170,16 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">// There is a very unpleasant interaction between &lt;wincrypt&gt; and</span></div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="comment">// openssl x509 types (namely the former has macros that stomp</span></div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="comment">// on the latter), these undefs allow this TU to be safely used in</span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">// unity builds without messing up subsequent TUs.</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="preprocessor">#if BOOST_OS_WINDOWS</span></div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="preprocessor">#undef X509_NAME</span></div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#undef X509_EXTENSIONS</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#undef X509_CERT_PAIR</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#undef PKCS7_ISSUER_AND_SERIAL</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#undef OCSP_REQUEST</span></div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor">#undef OCSP_RESPONSE</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">// unity builds without messing up subsequent TUs. Although we</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">// no longer use unity builds, leaving the undefs here does no harm.</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="preprocessor">#if BOOST_OS_WINDOWS</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#undef X509_NAME</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#undef X509_EXTENSIONS</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#undef X509_CERT_PAIR</span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="preprocessor">#undef PKCS7_ISSUER_AND_SERIAL</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="preprocessor">#undef OCSP_REQUEST</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="preprocessor">#undef OCSP_RESPONSE</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="abasic_string_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
 <div class="ttc" id="aclassbeast_1_1Journal_html"><div class="ttname"><a href="classbeast_1_1Journal.html">beast::Journal</a></div><div class="ttdoc">A generic endpoint for log messages.</div><div class="ttdef"><b>Definition</b> <a href="Journal_8h_source.html#l00040">Journal.h:41</a></div></div>
 <div class="ttc" id="aclassbeast_1_1Journal_html_ad8fefe3e8ad583e1ed1bf02094ac3d8f"><div class="ttname"><a href="classbeast_1_1Journal.html#ad8fefe3e8ad583e1ed1bf02094ac3d8f">beast::Journal::warn</a></div><div class="ttdeci">Stream warn() const</div><div class="ttdef"><b>Definition</b> <a href="Journal_8h_source.html#l00313">Journal.h:313</a></div></div>
