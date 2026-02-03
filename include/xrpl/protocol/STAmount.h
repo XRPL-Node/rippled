@@ -527,32 +527,11 @@ STAmount::fromNumber(A const& a, Number const& number)
 
     auto const [mantissa, exponent] = working.normalizeToRange(cMinValue, cMaxValue);
 
-    // Special case: normalizeToRange returns mantissa=0 with Number's default
-    // exponent (std::numeric_limits<int>::lowest()), but STAmount expects zero
-    // IOUs to have the canonical zero offset. Handle this explicitly.
-    if (mantissa == 0)
-    {
-        return STAmount{asset, 0, cZeroOffset, false, unchecked{}};
-    }
-
-    // Handle underflow: if exponent is below minimum or mantissa is too small,
-    // the value underflows to zero.
-    if ((exponent < cMinOffset) || (mantissa < cMinValue))
-    {
-        return STAmount{asset, 0, cZeroOffset, false, unchecked{}};
-    }
-
-    // Handle overflow: if exponent exceeds maximum, throw.
-    if (exponent > cMaxOffset)
-        Throw<std::runtime_error>("value overflow");
-
-    // normalizeToRange already produced canonical mantissa/exponent in the range
-    // [cMinValue, cMaxValue], so bypass canonicalize() to avoid redundant work.
-    XRPL_ASSERT(
-        mantissa >= cMinValue && mantissa <= cMaxValue, "xrpl::STAmount::fromNumber : mantissa in canonical range");
-    XRPL_ASSERT(
-        exponent >= cMinOffset && exponent <= cMaxOffset, "xrpl::STAmount::fromNumber : exponent in canonical range");
-    return STAmount{asset, static_cast<std::uint64_t>(mantissa), exponent, negative, unchecked{}};
+    // normalizeToRange produces values in canonical mantissa range [cMinValue, cMaxValue],
+    // but may produce out-of-range exponents for overflow/underflow cases.
+    // Use the regular constructor - canonicalize() will detect already-normalized mantissa
+    // and skip redundant scaling loops, while still handling overflow/underflow.
+    return STAmount{asset, static_cast<std::uint64_t>(mantissa), exponent, negative};
 }
 
 inline void

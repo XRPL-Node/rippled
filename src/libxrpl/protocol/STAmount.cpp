@@ -871,21 +871,30 @@ STAmount::canonicalize()
         return;
     }
 
-    while ((mValue < cMinValue) && (mOffset > cMinOffset))
+    // Fast path: if mantissa is already in canonical range, skip scaling loops.
+    // This handles values from normalizeToRange that only need overflow/underflow checks.
+    bool const mantissaCanonical = (mValue >= cMinValue) && (mValue <= cMaxValue);
+
+    if (!mantissaCanonical)
     {
-        mValue *= 10;
-        --mOffset;
+        // Mantissa needs normalization
+        while ((mValue < cMinValue) && (mOffset > cMinOffset))
+        {
+            mValue *= 10;
+            --mOffset;
+        }
+
+        while (mValue > cMaxValue)
+        {
+            if (mOffset >= cMaxOffset)
+                Throw<std::runtime_error>("value overflow");
+
+            mValue /= 10;
+            ++mOffset;
+        }
     }
 
-    while (mValue > cMaxValue)
-    {
-        if (mOffset >= cMaxOffset)
-            Throw<std::runtime_error>("value overflow");
-
-        mValue /= 10;
-        ++mOffset;
-    }
-
+    // Check for underflow (applies whether we scaled or not)
     if ((mOffset < cMinOffset) || (mValue < cMinValue))
     {
         mValue = 0;
@@ -894,6 +903,7 @@ STAmount::canonicalize()
         return;
     }
 
+    // Check for overflow (applies whether we scaled or not)
     if (mOffset > cMaxOffset)
         Throw<std::runtime_error>("value overflow");
 
