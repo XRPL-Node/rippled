@@ -38,7 +38,10 @@ Number::getround()
 Number::rounding_mode
 Number::setround(rounding_mode mode)
 {
-    return std::exchange(mode_, mode);
+    auto const old = mode_;
+    if (old != mode)
+        mode_ = mode;
+    return old;
 }
 
 MantissaRange::mantissa_scale
@@ -52,6 +55,8 @@ Number::setMantissaScale(MantissaRange::mantissa_scale scale)
 {
     if (scale != MantissaRange::small && scale != MantissaRange::large)
         LogicError("Unknown mantissa scale");
+    if (range_.get().scale == scale)
+        return;
     range_ = scale == MantissaRange::small ? smallRange : largeRange;
 }
 
