@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_DETAIL_SYNTHETICFIELDS_H_INCLUDED
-#define XRPL_RPC_DETAIL_SYNTHETICFIELDS_H_INCLUDED
+#pragma once
 
 #include <xrpl/json/json_forwards.h>
 #include <xrpl/protocol/STTx.h>
@@ -31,5 +30,3 @@ insertAllSyntheticInJson(Json::Value& metadata, JsonContext const&, std::shared_
 
 }  // namespace RPC
 }  // namespace xrpl
-
-#endif
