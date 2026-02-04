@@ -42,11 +42,29 @@ struct LocalValues
     std::unordered_map<void const*, std::unique_ptr<BasicValue>> values;
 };
 
+// Wrapper to ensure proper cleanup when thread exits
+struct LocalValuesHolder
+{
+    LocalValues* ptr = nullptr;
+
+    ~LocalValuesHolder()
+    {
+        if (ptr && !ptr->onCoro)
+            delete ptr;
+    }
+};
+
+inline LocalValuesHolder&
+getLocalValuesHolder()
+{
+    thread_local LocalValuesHolder holder;
+    return holder;
+}
+
 inline LocalValues*&
 getLocalValuesPtr()
 {
-    thread_local LocalValues* ptr = nullptr;
-    return ptr;
+    return getLocalValuesHolder().ptr;
 }
 
 inline LocalValues*
