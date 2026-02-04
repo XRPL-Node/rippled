@@ -1,6 +1,6 @@
 #include <xrpl/ledger/LedgerIndexMap.h>
 
-#include <doctest/doctest.h>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>
@@ -8,164 +8,162 @@
 
 using namespace xrpl;
 
-TEST_SUITE_BEGIN("LedgerIndexMap");
-
 using TestMap = LedgerIndexMap<int, std::string>;
 
-TEST_CASE("Default empty")
+TEST(LedgerIndexMap, DefaultEmpty)
 {
     TestMap m;
-    CHECK(m.size() == 0);
-    CHECK(m.empty());
-    CHECK(m.get(42) == nullptr);
-    CHECK_FALSE(m.contains(42));
+    EXPECT_EQ(m.size(), 0);
+    EXPECT_TRUE(m.empty());
+    EXPECT_EQ(m.get(42), nullptr);
+    EXPECT_FALSE(m.contains(42));
 }
 
-TEST_CASE("Operator bracket inserts default")
+TEST(LedgerIndexMap, OperatorBracketInsertsDefault)
 {
     TestMap m;
     auto& v = m[10];
-    CHECK(m.size() == 1);
-    CHECK(m.contains(10));
-    CHECK(v.empty());
+    EXPECT_EQ(m.size(), 1);
+    EXPECT_TRUE(m.contains(10));
+    EXPECT_TRUE(v.empty());
 }
 
-TEST_CASE("Operator bracket, rvalue key")
+TEST(LedgerIndexMap, OperatorBracketRvalueKey)
 {
     TestMap m;
     int k = 7;
     auto& v1 = m[std::move(k)];
     v1 = "seven";
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.size(), 1);
     auto* got = m.get(7);
-    REQUIRE(got != nullptr);
-    CHECK(*got == "seven");
+    ASSERT_NE(got, nullptr);
+    EXPECT_EQ(*got, "seven");
 }
 
-TEST_CASE("Insert through put")
+TEST(LedgerIndexMap, InsertThroughPut)
 {
     TestMap m;
     auto& v = m.put(20, "twenty");
-    CHECK(v == "twenty");
+    EXPECT_EQ(v, "twenty");
     auto* got = m.get(20);
-    REQUIRE(got != nullptr);
-    CHECK(*got == "twenty");
-    CHECK(m.size() == 1);
+    ASSERT_NE(got, nullptr);
+    EXPECT_EQ(*got, "twenty");
+    EXPECT_EQ(m.size(), 1);
 }
 
-TEST_CASE("Overwrite existing key with put")
+TEST(LedgerIndexMap, OverwriteExistingKeyWithPut)
 {
     TestMap m;
     m.put(5, "five");
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.size(), 1);
     m.put(5, "FIVE");
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.size(), 1);
     auto* got = m.get(5);
-    REQUIRE(got != nullptr);
-    CHECK(*got == "FIVE");
+    ASSERT_NE(got, nullptr);
+    EXPECT_EQ(*got, "FIVE");
 }
 
-TEST_CASE("Once found, one not found")
+TEST(LedgerIndexMap, OnceFoundOneNotFound)
 {
     TestMap m;
     m.put(1, "one");
-    CHECK(m.get(1) != nullptr);
-    CHECK(m.get(2) == nullptr);
+    EXPECT_NE(m.get(1), nullptr);
+    EXPECT_EQ(m.get(2), nullptr);
 }
 
-TEST_CASE("Try eraseBefore - nothing to do")
+TEST(LedgerIndexMap, TryEraseBeforeNothingToDo)
 {
     TestMap m;
     m.put(10, "a");
     m.put(11, "b");
     m.put(12, "c");
-    CHECK(m.eraseBefore(10) == 0);
-    CHECK(m.size() == 3);
-    CHECK(m.contains(10));
-    CHECK(m.contains(11));
-    CHECK(m.contains(12));
+    EXPECT_EQ(m.eraseBefore(10), 0);
+    EXPECT_EQ(m.size(), 3);
+    EXPECT_TRUE(m.contains(10));
+    EXPECT_TRUE(m.contains(11));
+    EXPECT_TRUE(m.contains(12));
 }
 
-TEST_CASE("eraseBefore - removes several entries")
+TEST(LedgerIndexMap, EraseBeforeRemovesSeveralEntries)
 {
     TestMap m;
     m.put(10, "a");
     m.put(11, "b");
     m.put(12, "c");
     m.put(13, "d");
-    CHECK(m.eraseBefore(12) == 2);
-    CHECK_FALSE(m.contains(10));
-    CHECK_FALSE(m.contains(11));
-    CHECK(m.contains(12));
-    CHECK(m.contains(13));
-    CHECK(m.size() == 2);
+    EXPECT_EQ(m.eraseBefore(12), 2);
+    EXPECT_FALSE(m.contains(10));
+    EXPECT_FALSE(m.contains(11));
+    EXPECT_TRUE(m.contains(12));
+    EXPECT_TRUE(m.contains(13));
+    EXPECT_EQ(m.size(), 2);
 }
 
-TEST_CASE("eraseBefore - removes all entries")
+TEST(LedgerIndexMap, EraseBeforeRemovesAllEntries)
 {
     TestMap m;
     m.put(1, "x");
     m.put(2, "y");
-    CHECK(m.eraseBefore(1000) == 2);
-    CHECK(m.size() == 0);
-    CHECK(m.empty());
+    EXPECT_EQ(m.eraseBefore(1000), 2);
+    EXPECT_EQ(m.size(), 0);
+    EXPECT_TRUE(m.empty());
 }
 
-TEST_CASE("eraseBefore - same call, second time nothing to do")
+TEST(LedgerIndexMap, EraseBeforeSameCallSecondTimeNothingToDo)
 {
     TestMap m;
     m.put(10, "a");
     m.put(11, "b");
     m.put(12, "c");
-    CHECK(m.eraseBefore(12) == 2);
-    CHECK(m.contains(12));
-    CHECK(m.eraseBefore(12) == 0);
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.eraseBefore(12), 2);
+    EXPECT_TRUE(m.contains(12));
+    EXPECT_EQ(m.eraseBefore(12), 0);
+    EXPECT_EQ(m.size(), 1);
 }
 
-TEST_CASE("eraseBefore - single entry removed")
+TEST(LedgerIndexMap, EraseBeforeSingleEntryRemoved)
 {
     TestMap m;
     m.put(10, "v1");
     m.put(10, "v2");
     m.put(10, "v3");
-    CHECK(m.size() == 1);
-    CHECK(m.eraseBefore(11) == 1);
-    CHECK(m.size() == 0);
+    EXPECT_EQ(m.size(), 1);
+    EXPECT_EQ(m.eraseBefore(11), 1);
+    EXPECT_EQ(m.size(), 0);
 }
 
-TEST_CASE("eraseBefore - outlier still removed in one call")
+TEST(LedgerIndexMap, EraseBeforeOutlierStillRemovedInOneCall)
 {
     TestMap m;
     m.put(10, "a");
     m.put(12, "c");
     m.put(11, "b");  // out-of-order insert
 
-    CHECK(m.eraseBefore(12) == 2);  // removes 10 and 11
-    CHECK_FALSE(m.contains(10));
-    CHECK_FALSE(m.contains(11));
-    CHECK(m.contains(12));
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.eraseBefore(12), 2);  // removes 10 and 11
+    EXPECT_FALSE(m.contains(10));
+    EXPECT_FALSE(m.contains(11));
+    EXPECT_TRUE(m.contains(12));
+    EXPECT_EQ(m.size(), 1);
 }
 
-TEST_CASE("eraseBefore - erase in two steps (one first, then some more)")
+TEST(LedgerIndexMap, EraseBeforeEraseInTwoSteps)
 {
     TestMap m;
     for (int k : {10, 11, 12, 13})
         m.put(k, std::to_string(k));
 
-    CHECK(m.eraseBefore(11) == 1);
-    CHECK_FALSE(m.contains(10));
-    CHECK(m.size() == 3);
+    EXPECT_EQ(m.eraseBefore(11), 1);
+    EXPECT_FALSE(m.contains(10));
+    EXPECT_EQ(m.size(), 3);
 
-    CHECK(m.eraseBefore(13) == 2);
-    CHECK_FALSE(m.contains(11));
-    CHECK_FALSE(m.contains(12));
-    CHECK(m.contains(13));
-    CHECK(m.size() == 1);
+    EXPECT_EQ(m.eraseBefore(13), 2);
+    EXPECT_FALSE(m.contains(11));
+    EXPECT_FALSE(m.contains(12));
+    EXPECT_TRUE(m.contains(13));
+    EXPECT_EQ(m.size(), 1);
 }
 
-TEST_CASE("rehash does not lose entries")
+TEST(LedgerIndexMap, RehashDoesNotLoseEntries)
 {
     TestMap m;
     for (int k = 0; k < 16; ++k)
@@ -177,15 +175,13 @@ TEST_CASE("rehash does not lose entries")
     for (int k = 0; k < 16; ++k)
     {
         auto* v = m.get(k);
-        REQUIRE(v != nullptr);
-        CHECK(*v == "v" + std::to_string(k));
+        ASSERT_NE(v, nullptr);
+        EXPECT_EQ(*v, "v" + std::to_string(k));
     }
 
-    CHECK(m.eraseBefore(8) == 8);
+    EXPECT_EQ(m.eraseBefore(8), 8);
     for (int k = 0; k < 8; ++k)
-        CHECK_FALSE(m.contains(k));
+        EXPECT_FALSE(m.contains(k));
     for (int k = 8; k < 16; ++k)
-        CHECK(m.contains(k));
+        EXPECT_TRUE(m.contains(k));
 }
-
-TEST_SUITE_END();

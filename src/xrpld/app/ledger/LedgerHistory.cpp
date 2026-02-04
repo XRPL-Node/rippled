@@ -32,7 +32,7 @@ LedgerHistory::insert(std::shared_ptr<Ledger const> const& ledger, bool validate
 
     XRPL_ASSERT(ledger->stateMap().getHash().isNonZero(), "xrpl::LedgerHistory::insert : nonzero hash");
 
-    bool const alreadyHad = m_ledgers_by_hash.canonicalize_replace_cache(ledger->info().hash, ledger);
+    bool const alreadyHad = m_ledgers_by_hash.canonicalize_replace_cache(ledger->header().hash, ledger);
     if (validated)
         mLedgersByIndex[ledger->header().seq] = ledger->header().hash;
 
@@ -66,9 +66,9 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
     {
         // Add this ledger to the local tracking by index
         XRPL_ASSERT(ret->isImmutable(), "xrpl::LedgerHistory::getLedgerBySeq : immutable result ledger");
-        m_ledgers_by_hash.canonicalize_replace_client(ret->info().hash, ret);
-        mLedgersByIndex[ret->info().seq] = ret->info().hash;
-        return (ret->info().seq == index) ? ret : nullptr;
+        m_ledgers_by_hash.canonicalize_replace_client(ret->header().hash, ret);
+        mLedgersByIndex[ret->header().seq] = ret->header().hash;
+        return (ret->header().seq == index) ? ret : nullptr;
     }
 }
 
@@ -436,7 +436,7 @@ LedgerHistory::clearLedgerCachePrior(LedgerIndex seq)
     for (LedgerHash it : m_ledgers_by_hash.getKeys())
     {
         auto const ledger = getLedgerByHash(it);
-        if (!ledger || ledger->info().seq < seq)
+        if (!ledger || ledger->header().seq < seq)
         {
             m_ledgers_by_hash.del(it, false);
             ++hashesCleared;
