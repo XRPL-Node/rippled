@@ -2,6 +2,116 @@
 
 #include <test/app/wasm_fixtures/fixtures.h>
 
+#include <iterator>
+
+namespace wasm_constants {
+
+namespace {
+
+// Helper: Variable-length integer encoding (LEB128)
+void
+pushLeb128(std::vector<uint8_t>& buf, uint32_t val)
+{
+    do
+    {
+        uint8_t byte = val & 0x7F;
+        val >>= 7;
+        if (val != 0)
+            byte |= 0x80;
+        buf.push_back(byte);
+    } while (val != 0);
+}
+
+// Helper: append bytes from an array to a vector
+template <typename T>
+void
+appendBytes(std::vector<uint8_t>& buf, T const& arr)
+{
+    buf.insert(buf.end(), std::begin(arr), std::end(arr));
+}
+
+// Helper: append a WASM section (ID + LEB128 size + content)
+// extraSize is added to the encoded size (for trailing fill bytes)
+void
+appendSection(
+    std::vector<uint8_t>& wasm,
+    uint8_t sectionId,
+    std::vector<uint8_t> const& content,
+    uint32_t extraSize = 0)
+{
+    wasm.push_back(sectionId);
+    pushLeb128(wasm, static_cast<uint32_t>(content.size() + extraSize));
+    appendBytes(wasm, content);
+}
+
+}  // namespace
+
+std::vector<uint8_t>
+generateCodeBlob(uint32_t num_instructions)
+{
+    std::vector<uint8_t> wasm;
+    appendBytes(wasm, WASM_HEADER);
+    appendBytes(wasm, TYPE_EMPTY_FUNC);
+    appendBytes(wasm, FUNC_TYPE0);
+    appendBytes(wasm, EXPORT_FINISH);
+
+    std::vector<uint8_t> body;
+    pushLeb128(body, 0);  // No locals
+    body.insert(body.end(), num_instructions, INSTR_NOP);
+    body.push_back(INSTR_END);
+
+    std::vector<uint8_t> section;
+    pushLeb128(section, 1);  // 1 function
+    pushLeb128(section, static_cast<uint32_t>(body.size()));
+    appendBytes(section, body);
+
+    appendSection(wasm, SECTION_CODE, section);
+    return wasm;
+}
+
+std::vector<uint8_t>
+generateDataBlob(uint32_t data_size)
+{
+    std::vector<uint8_t> wasm;
+    appendBytes(wasm, WASM_HEADER);
+    appendBytes(wasm, TYPE_EMPTY_FUNC);
+    appendBytes(wasm, FUNC_TYPE0);
+
+    // Memory Section: must be large enough for data_size
+    uint32_t pages = (data_size + 65535) / 65536;
+    std::vector<uint8_t> mem_p;
+    pushLeb128(mem_p, 1);      // 1 memory defined
+    mem_p.push_back(0x00);     // Flags (minimum only)
+    pushLeb128(mem_p, pages);  // Page count
+    appendSection(wasm, SECTION_MEMORY, mem_p);
+
+    appendBytes(wasm, EXPORT_FINISH);
+
+    // Code Section: MUST come before Data Section per WASM spec
+    std::vector<uint8_t> code_p;
+    pushLeb128(code_p, 1);  // 1 function body
+    pushLeb128(code_p, static_cast<uint32_t>(std::size(EMPTY_BODY)));
+    appendBytes(code_p, EMPTY_BODY);
+    appendSection(wasm, SECTION_CODE, code_p);
+
+    // Data Section: the actual bloat
+    std::vector<uint8_t> data_seg;
+    data_seg.push_back(0x00);  // Memory index 0
+    appendBytes(data_seg, DATA_OFFSET_ZERO);
+    pushLeb128(data_seg, data_size);
+
+    std::vector<uint8_t> data_p;
+    pushLeb128(data_p, 1);  // 1 data segment
+    appendBytes(data_p, data_seg);
+
+    appendSection(wasm, SECTION_DATA, data_p, data_size);
+    wasm.insert(wasm.end(), data_size, DATA_FILL_BYTE);
+
+    return wasm;
+}
+
+}  // namespace wasm_constants
+
 extern std::string const fibWasmHex =
     "0061736d0100000001090260000060017f017f0303020001071b02115f5f"
     "7761736d5f63616c6c5f63746f727300000366696200010a440202000b3f"
@@ -1278,7 +1388,6 @@ extern std::string const infiniteLoopWasmHex =
     "303861373930636664623432626432343732302900490f7461726765745f66656174757265"
     "73042b0f6d757461626c652d676c6f62616c732b087369676e2d6578742b0f726566657265"
     "6e63652d74797065732b0a6d756c746976616c7565";
-
 extern std::string const startLoopHex =
     "0061736d010000000108026000006000017f03030200010712020573746172740000066669"
     "6e69736800010801000a0e02070003400c000b0b040041010b";
@@ -1318,3 +1427,21 @@ extern std::string const badAlignWasmHex =
     "65637420616234623561326462353832393538616631656533303861373930636664623432626432343732302900490f7461726765745f6665"
     "617475726573042b0f6d757461626c652d676c6f62616c732b087369676e2d6578742b0f7265666572656e63652d74797065732b0a6d756c74"
     "6976616c7565";
+
+extern std::string const updateDataWasmHex =
+    "0061736d01000000010e0360027f7f017f6000006000017f02130103656e760b7570646174"
+    "655f64617461000003030201020503010002063f0a7f01419088040b7f004180080b7f0041"
+    "85080b7f004190080b7f00419088040b7f004180080b7f00419088040b7f00418080080b7f"
+    "0041000b7f0041010b07aa010c066d656d6f72790200115f5f7761736d5f63616c6c5f6374"
+    "6f727300010666696e69736800020c5f5f64736f5f68616e646c6503010a5f5f646174615f"
+    "656e6403020b5f5f737461636b5f6c6f7703030c5f5f737461636b5f6869676803040d5f5f"
+    "676c6f62616c5f6261736503050b5f5f686561705f6261736503060a5f5f686561705f656e"
+    "6403070d5f5f6d656d6f72795f6261736503080c5f5f7461626c655f6261736503090a3f02"
+    "02000b3a01017f230041106b220024002000410c6a4184082d00003a000020004180082800"
+    "00360208200041086a410410001a200041106a240041807e0b0b0b01004180080b04446174"
+    "61007f0970726f647563657273010c70726f6365737365642d62790105636c616e675f3139"
+    "2e312e352d776173692d73646b202868747470733a2f2f6769746875622e636f6d2f6c6c76"
+    "6d2f6c6c766d2d70726f6a6563742061623462356132646235383239353861663165653330"
+    "3861373930636664623432626432343732302900490f7461726765745f6665617475726573"
+    "042b0f6d757461626c652d676c6f62616c732b087369676e2d6578742b0f7265666572656e"
+    "63652d74797065732b0a6d756c746976616c7565";

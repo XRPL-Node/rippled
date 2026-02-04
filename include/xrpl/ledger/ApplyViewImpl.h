@@ -48,6 +48,18 @@ public:
         deliver_ = amount;
     }
 
+    void
+    setGasUsed(std::optional<std::uint32_t> const gasUsed)
+    {
+        gasUsed_ = gasUsed;
+    }
+
+    void
+    setWasmReturnCode(std::int32_t const wasmReturnCode)
+    {
+        wasmReturnCode_ = wasmReturnCode;
+    }
+
     /** Get the number of modified entries
      */
     std::size_t
@@ -66,6 +78,8 @@ public:
 
 private:
     std::optional<STAmount> deliver_;
+    std::optional<std::uint32_t> gasUsed_;
+    std::optional<std::int32_t> wasmReturnCode_;
 };
 
 }  // namespace xrpl

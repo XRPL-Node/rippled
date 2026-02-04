@@ -89,6 +89,8 @@ ApplyStateTable::apply(
     TER ter,
     std::optional<STAmount> const& deliver,
     std::optional<uint256 const> const& parentBatchId,
+    std::optional<std::uint32_t> const& gasUsed,
+    std::optional<std::int32_t> const& wasmReturnCode,
     bool isDryRun,
     beast::Journal j)
 {
@@ -103,6 +105,8 @@ ApplyStateTable::apply(
 
         meta.setDeliveredAmount(deliver);
         meta.setParentBatchID(parentBatchId);
+        meta.setGasUsed(gasUsed);
+        meta.setWasmReturnCode(wasmReturnCode);
 
         Mods newMod;
         for (auto& item : items_)
