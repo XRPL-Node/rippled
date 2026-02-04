@@ -1708,7 +1708,7 @@ class LoanBroker_test : public beast::unit_test::suite
         testcase("testFixAmendmentEnabled");
         Env env{*this};
 
-        BEAST_EXPECT(env.enabled(fixLendingProtocolv1_1));
+        BEAST_EXPECT(env.enabled(fixLendingProtocolV1_1));
     }
 
 public:
