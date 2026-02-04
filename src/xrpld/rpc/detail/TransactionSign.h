@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_TRANSACTIONSIGN_H_INCLUDED
-#define XRPL_RPC_TRANSACTIONSIGN_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/NetworkOPs.h>
@@ -133,5 +132,3 @@ transactionSubmitMultiSigned(
 
 }  // namespace RPC
 }  // namespace xrpl
-
-#endif
