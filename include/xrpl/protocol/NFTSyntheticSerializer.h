@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_NFTSYNTHETICSERIALIZER_H_INCLUDED
-#define XRPL_PROTOCOL_NFTSYNTHETICSERIALIZER_H_INCLUDED
+#pragma once
 
 #include <xrpl/json/json_forwards.h>
 #include <xrpl/protocol/STTx.h>
@@ -22,5 +21,3 @@ insertNFTSyntheticInJson(Json::Value& metadata, std::shared_ptr<STTx const> cons
 
 }  // namespace RPC
 }  // namespace xrpl
-
-#endif
