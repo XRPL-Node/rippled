@@ -47,6 +47,17 @@ public:
         return id_;
     }
 
+    /**
+     * Get the SHAMapNodeID of a child node at the specified branch.
+     *
+     * @param m  The branch number (0-15) indicating which child to descend to.
+     *           In the SHAMap's 16-way radix tree, each inner node has up to
+     *           16 children, indexed by the corresponding nibble (4 bits) of
+     *           the key at the current depth.
+     * @return SHAMapNodeID of the child node at branch m.
+     * @throws std::logic_error if this node is at the maximum leaf depth (64)
+     *         or if the node's id doesn't match its depth mask.
+     */
     SHAMapNodeID
     getChildNodeID(unsigned int m) const;
 
@@ -106,8 +117,7 @@ to_string(SHAMapNodeID const& node)
     if (node.isRoot())
         return "NodeID(root)";
 
-    return "NodeID(" + std::to_string(node.getDepth()) + "," +
-        to_string(node.getNodeID()) + ")";
+    return "NodeID(" + std::to_string(node.getDepth()) + "," + to_string(node.getNodeID()) + ")";
 }
 
 inline std::ostream&

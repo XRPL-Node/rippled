@@ -177,8 +177,7 @@ private:
 
 // Like std::integral, but only 64-bit integral types.
 template <class T>
-concept Integral64 =
-    std::is_same_v<T, std::int64_t> || std::is_same_v<T, std::uint64_t>;
+concept Integral64 = std::is_same_v<T, std::int64_t> || std::is_same_v<T, std::uint64_t>;
 
 namespace detail {
 #ifdef _MSC_VER
@@ -328,22 +327,11 @@ public:
 
     Number(rep mantissa);
     explicit Number(rep mantissa, int exponent);
-    explicit constexpr Number(
-        bool negative,
-        internalrep mantissa,
-        int exponent,
-        unchecked) noexcept;
+    explicit constexpr Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept;
     // Assume unsigned values are... unsigned. i.e. positive
-    explicit constexpr Number(
-        internalrep mantissa,
-        int exponent,
-        unchecked) noexcept;
+    explicit constexpr Number(internalrep mantissa, int exponent, unchecked) noexcept;
     // Only unit tests are expected to use this ctor
-    explicit Number(
-        bool negative,
-        internalrep mantissa,
-        int exponent,
-        normalized);
+    explicit Number(bool negative, internalrep mantissa, int exponent, normalized);
     // Assume unsigned values are... unsigned. i.e. positive
     explicit Number(internalrep mantissa, int exponent, normalized);
 
@@ -700,10 +688,7 @@ inline constexpr Number::Number(
 {
 }
 
-inline constexpr Number::Number(
-    internalrep mantissa,
-    int exponent,
-    unchecked) noexcept
+inline constexpr Number::Number(internalrep mantissa, int exponent, unchecked) noexcept
     : Number(false, mantissa, exponent, unchecked{})
 {
 }
@@ -958,8 +943,7 @@ public:
     {
         Number::setround(mode_);
     }
-    explicit saveNumberRoundMode(Number::rounding_mode mode) noexcept
-        : mode_{mode}
+    explicit saveNumberRoundMode(Number::rounding_mode mode) noexcept : mode_{mode}
     {
     }
     saveNumberRoundMode(saveNumberRoundMode const&) = delete;
@@ -976,8 +960,7 @@ class NumberRoundModeGuard
     saveNumberRoundMode saved_;
 
 public:
-    explicit NumberRoundModeGuard(Number::rounding_mode mode) noexcept
-        : saved_{Number::setround(mode)}
+    explicit NumberRoundModeGuard(Number::rounding_mode mode) noexcept : saved_{Number::setround(mode)}
     {
     }
 
@@ -997,9 +980,7 @@ class NumberMantissaScaleGuard
     MantissaRange::mantissa_scale const saved_;
 
 public:
-    explicit NumberMantissaScaleGuard(
-        MantissaRange::mantissa_scale scale) noexcept
-        : saved_{Number::getMantissaScale()}
+    explicit NumberMantissaScaleGuard(MantissaRange::mantissa_scale scale) noexcept : saved_{Number::getMantissaScale()}
     {
         Number::setMantissaScale(scale);
     }

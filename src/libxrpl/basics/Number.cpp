@@ -25,8 +25,7 @@ using int128_t = xrpl::detail::int128_t;
 namespace xrpl {
 
 thread_local Number::rounding_mode Number::mode_ = Number::to_nearest;
-thread_local std::reference_wrapper<MantissaRange const> Number::range_ =
-    largeRange;
+thread_local std::reference_wrapper<MantissaRange const> Number::range_ = largeRange;
 
 Number::rounding_mode
 Number::getround()
@@ -108,11 +107,7 @@ public:
     // Modify the result to the correctly rounded value
     template <detail::UnsignedMantissa T>
     void
-    doRoundDown(
-        bool& negative,
-        T& mantissa,
-        int& exponent,
-        internalrep const& minMantissa);
+    doRoundDown(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa);
 
     // Modify the result to the correctly rounded value
     void
@@ -124,11 +119,7 @@ private:
 
     template <detail::UnsignedMantissa T>
     void
-    bringIntoRange(
-        bool& negative,
-        T& mantissa,
-        int& exponent,
-        internalrep const& minMantissa);
+    bringIntoRange(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa);
 };
 
 inline void
@@ -215,11 +206,7 @@ Number::Guard::round() noexcept
 
 template <detail::UnsignedMantissa T>
 void
-Number::Guard::bringIntoRange(
-    bool& negative,
-    T& mantissa,
-    int& exponent,
-    internalrep const& minMantissa)
+Number::Guard::bringIntoRange(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa)
 {
     // Bring mantissa back into the minMantissa / maxMantissa range AFTER
     // rounding
@@ -267,11 +254,7 @@ Number::Guard::doRoundUp(
 
 template <detail::UnsignedMantissa T>
 void
-Number::Guard::doRoundDown(
-    bool& negative,
-    T& mantissa,
-    int& exponent,
-    internalrep const& minMantissa)
+Number::Guard::doRoundDown(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (mantissa & 1) == 1))
@@ -716,8 +699,7 @@ Number::operator+=(Number const& y)
             xm /= 10;
             ++xe;
         }
-        g.doRoundUp(
-            xn, xm, xe, minMantissa, maxMantissa, "Number::addition overflow");
+        g.doRoundUp(xn, xm, xe, minMantissa, maxMantissa, "Number::addition overflow");
     }
     else
     {
@@ -1005,8 +987,7 @@ to_string(Number const& amount)
         return ret;
     }
 
-    XRPL_ASSERT(
-        exponent + 43 > 0, "xrpl::to_string(Number) : minimum exponent");
+    XRPL_ASSERT(exponent + 43 > 0, "xrpl::to_string(Number) : minimum exponent");
 
     ptrdiff_t const pad_prefix = rangeLog + 12;
     ptrdiff_t const pad_suffix = rangeLog + 8;
@@ -1032,8 +1013,7 @@ to_string(Number const& amount)
     if (std::distance(pre_from, pre_to) > pad_prefix)
         pre_from += pad_prefix;
 
-    XRPL_ASSERT(
-        post_to >= post_from, "xrpl::to_string(Number) : first distance check");
+    XRPL_ASSERT(post_to >= post_from, "xrpl::to_string(Number) : first distance check");
 
     pre_from = std::find_if(pre_from, pre_to, [](char c) { return c != '0'; });
 
@@ -1042,15 +1022,11 @@ to_string(Number const& amount)
     if (std::distance(post_from, post_to) > pad_suffix)
         post_to -= pad_suffix;
 
-    XRPL_ASSERT(
-        post_to >= post_from,
-        "xrpl::to_string(Number) : second distance check");
+    XRPL_ASSERT(post_to >= post_from, "xrpl::to_string(Number) : second distance check");
 
-    post_to = std::find_if(
-                  std::make_reverse_iterator(post_to),
-                  std::make_reverse_iterator(post_from),
-                  [](char c) { return c != '0'; })
-                  .base();
+    post_to = std::find_if(std::make_reverse_iterator(post_to), std::make_reverse_iterator(post_from), [](char c) {
+                  return c != '0';
+              }).base();
 
     std::string ret;
 

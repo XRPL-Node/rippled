@@ -103,6 +103,7 @@ words:
   - gpgkey
   - hotwallet
   - hwaddress
+  - hwrap
   - ifndef
   - inequation
   - insuf
@@ -116,6 +117,8 @@ words:
   - keylet
   - keylets
   - keyvadb
+  - kwarg
+  - kwargs
   - ledgerentry
   - ledgerhash
   - ledgerindex
@@ -165,6 +168,7 @@ words:
   - nunl
   - Nyffenegger
   - ostr
+  - pargs
   - partitioner
   - paychan
   - paychans

@@ -65,9 +65,7 @@ public:
 
     ~TestHTTPServer()
     {
-        XRPL_ASSERT(
-            finished(),
-            "xrpl::TestHTTPServer::~TestHTTPServer : accept future ready");
+        XRPL_ASSERT(finished(), "xrpl::TestHTTPServer::~TestHTTPServer : accept future ready");
     }
 
     boost::asio::io_context&
@@ -121,8 +119,7 @@ private:
         {
             try
             {
-                auto socket =
-                    co_await acceptor_.async_accept(boost::asio::use_awaitable);
+                auto socket = co_await acceptor_.async_accept(boost::asio::use_awaitable);
 
                 if (!running_)
                     break;
@@ -150,8 +147,7 @@ private:
             boost::beast::http::request<boost::beast::http::string_body> req;
 
             // Read the HTTP request asynchronously
-            co_await boost::beast::http::async_read(
-                socket, buffer, req, boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read(socket, buffer, req, boost::asio::use_awaitable);
 
             // Create response
             boost::beast::http::response<boost::beast::http::string_body> res;
@@ -172,13 +168,11 @@ private:
             }
 
             // Send response asynchronously
-            co_await boost::beast::http::async_write(
-                socket, res, boost::asio::use_awaitable);
+            co_await boost::beast::http::async_write(socket, res, boost::asio::use_awaitable);
 
             // Shutdown socket gracefully
             boost::system::error_code shutdownEc;
-            socket.shutdown(
-                boost::asio::ip::tcp::socket::shutdown_send, shutdownEc);
+            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, shutdownEc);
         }
         catch (std::exception const& e)
         {
@@ -189,6 +183,9 @@ private:
 };
 
 // Helper function to run HTTP client test
+// Note: Caller must ensure HTTPClient::initializeSSLContext has been called
+// before this function, and HTTPClient::cleanupSSLContext is called after
+// all tests are completed.
 bool
 runHTTPTest(
     TestHTTPServer& server,
@@ -196,14 +193,9 @@ runHTTPTest(
     bool& completed,
     int& resultStatus,
     std::string& resultData,
-    boost::system::error_code& resultError)
+    boost::system::error_code& resultError,
+    beast::Journal& j)
 {
-    // Create a null journal for testing
-    beast::Journal j{TestSink::instance()};
-
-    // Initialize HTTPClient SSL context
-    HTTPClient::initializeSSLContext("", "", false, j);
-
     HTTPClient::get(
         false,  // no SSL
         server.ioc(),
@@ -212,9 +204,7 @@ runHTTPTest(
         path,
         1024,  // max response size
         std::chrono::seconds(5),
-        [&](boost::system::error_code const& ec,
-            int status,
-            std::string const& data) -> bool {
+        [&](boost::system::error_code const& ec, int status, std::string const& data) -> bool {
             resultError = ec;
             resultStatus = status;
             resultData = data;
@@ -227,9 +217,7 @@ runHTTPTest(
     auto start = std::chrono::steady_clock::now();
     while (server.ioc().run_one() != 0)
     {
-        if (std::chrono::steady_clock::now() - start >=
-                std::chrono::seconds(10) ||
-            server.finished())
+        if (std::chrono::steady_clock::now() - start >= std::chrono::seconds(10) || server.finished())
         {
             break;
         }
@@ -239,6 +227,9 @@ runHTTPTest(
             server.stop();
         }
     }
+
+    // Drain any remaining handlers to ensure proper cleanup of HTTPClientImp
+    server.ioc().poll();
 
     return completed;
 }
@@ -268,9 +259,10 @@ TEST(HTTPClient, case_insensitive_content_length)
         std::string resultData;
         boost::system::error_code resultError;
 
-        bool testCompleted = runHTTPTest(
-            server, "/test", completed, resultStatus, resultData, resultError);
+        beast::Journal j{TestSink::instance()};
+        HTTPClient::initializeSSLContext("", "", false, j);
 
+        bool testCompleted = runHTTPTest(server, "/test", completed, resultStatus, resultData, resultError, j);
         // Verify results
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);
@@ -284,6 +276,10 @@ TEST(HTTPClient, case_insensitive_content_length)
 
 TEST(HTTPClient, basic_http_request)
 {
+    // Initialize SSL context once for the entire test
+    beast::Journal j{TestSink::instance()};
+    HTTPClient::initializeSSLContext("", "", false, j);
+
     TestHTTPServer server;
     std::string testBody = "Test response body";
     server.setResponseBody(testBody);
@@ -294,8 +290,7 @@ TEST(HTTPClient, basic_http_request)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(
-        server, "/basic", completed, resultStatus, resultData, resultError);
+    bool testCompleted = runHTTPTest(server, "/basic", completed, resultStatus, resultData, resultError, j);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
@@ -308,6 +303,10 @@ TEST(HTTPClient, basic_http_request)
 
 TEST(HTTPClient, empty_response)
 {
+    // Initialize SSL context once for the entire test
+    beast::Journal j{TestSink::instance()};
+    HTTPClient::initializeSSLContext("", "", false, j);
+
     TestHTTPServer server;
     server.setResponseBody("");  // Empty body
     server.setHeader("Content-Length", "0");
@@ -317,8 +316,7 @@ TEST(HTTPClient, empty_response)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(
-        server, "/empty", completed, resultStatus, resultData, resultError);
+    bool testCompleted = runHTTPTest(server, "/empty", completed, resultStatus, resultData, resultError, j);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
@@ -331,6 +329,10 @@ TEST(HTTPClient, empty_response)
 
 TEST(HTTPClient, different_status_codes)
 {
+    // Initialize SSL context once for the entire test
+    beast::Journal j{TestSink::instance()};
+    HTTPClient::initializeSSLContext("", "", false, j);
+
     std::vector<unsigned int> statusCodes = {200, 404, 500};
 
     for (auto status : statusCodes)
@@ -344,13 +346,7 @@ TEST(HTTPClient, different_status_codes)
         std::string resultData;
         boost::system::error_code resultError;
 
-        bool testCompleted = runHTTPTest(
-            server,
-            "/status",
-            completed,
-            resultStatus,
-            resultData,
-            resultError);
+        bool testCompleted = runHTTPTest(server, "/status", completed, resultStatus, resultData, resultError, j);
 
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);

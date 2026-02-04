@@ -142,8 +142,7 @@ enum error_code_i {
     rpcENTRY_NOT_FOUND = 98,
     rpcUNEXPECTED_LEDGER_TYPE = 99,
 
-    rpcLAST =
-        rpcUNEXPECTED_LEDGER_TYPE  // rpcLAST should always equal the last code.
+    rpcLAST = rpcUNEXPECTED_LEDGER_TYPE  // rpcLAST should always equal the last code.
 };
 
 /** Codes returned in the `warnings` array of certain RPC commands.
@@ -169,31 +168,17 @@ namespace RPC {
 struct ErrorInfo
 {
     // Default ctor needed to produce an empty std::array during constexpr eval.
-    constexpr ErrorInfo()
-        : code(rpcUNKNOWN)
-        , token("unknown")
-        , message("An unknown error code.")
-        , http_status(200)
+    constexpr ErrorInfo() : code(rpcUNKNOWN), token("unknown"), message("An unknown error code."), http_status(200)
     {
     }
 
-    constexpr ErrorInfo(
-        error_code_i code_,
-        char const* token_,
-        char const* message_)
+    constexpr ErrorInfo(error_code_i code_, char const* token_, char const* message_)
         : code(code_), token(token_), message(message_), http_status(200)
     {
     }
 
-    constexpr ErrorInfo(
-        error_code_i code_,
-        char const* token_,
-        char const* message_,
-        int http_status_)
-        : code(code_)
-        , token(token_)
-        , message(message_)
-        , http_status(http_status_)
+    constexpr ErrorInfo(error_code_i code_, char const* token_, char const* message_, int http_status_)
+        : code(code_), token(token_), message(message_), http_status(http_status_)
     {
     }
 
@@ -245,7 +230,7 @@ missing_field_error(std::string const& name)
 }
 
 inline Json::Value
-missing_field_error(Json::StaticString name)
+missing_field_error(Json::StaticString const& name)
 {
     return missing_field_error(std::string(name));
 }
@@ -263,7 +248,7 @@ object_field_error(std::string const& name)
 }
 
 inline Json::Value
-object_field_error(Json::StaticString name)
+object_field_error(Json::StaticString const& name)
 {
     return object_field_error(std::string(name));
 }
@@ -275,7 +260,7 @@ invalid_field_message(std::string const& name)
 }
 
 inline std::string
-invalid_field_message(Json::StaticString name)
+invalid_field_message(Json::StaticString const& name)
 {
     return invalid_field_message(std::string(name));
 }
@@ -287,7 +272,7 @@ invalid_field_error(std::string const& name)
 }
 
 inline Json::Value
-invalid_field_error(Json::StaticString name)
+invalid_field_error(Json::StaticString const& name)
 {
     return invalid_field_error(std::string(name));
 }
@@ -299,7 +284,7 @@ expected_field_message(std::string const& name, std::string const& type)
 }
 
 inline std::string
-expected_field_message(Json::StaticString name, std::string const& type)
+expected_field_message(Json::StaticString const& name, std::string const& type)
 {
     return expected_field_message(std::string(name), type);
 }
@@ -311,7 +296,7 @@ expected_field_error(std::string const& name, std::string const& type)
 }
 
 inline Json::Value
-expected_field_error(Json::StaticString name, std::string const& type)
+expected_field_error(Json::StaticString const& name, std::string const& type)
 {
     return expected_field_error(std::string(name), type);
 }
