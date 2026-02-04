@@ -26,7 +26,7 @@ LogThrow(std::string const& title);
     control to the next matching exception handler, if any.
     Otherwise, std::terminate will be called.
 */
-[[noreturn]] inline void XRPL_NO_SANITIZE_ADDRESS
+[[noreturn]] XRPL_NO_SANITIZE_ADDRESS inline void
 Rethrow()
 {
     LogThrow("Re-throwing exception");
@@ -34,7 +34,7 @@ Rethrow()
 }
 
 template <class E, class... Args>
-[[noreturn]] inline void XRPL_NO_SANITIZE_ADDRESS
+[[noreturn]] XRPL_NO_SANITIZE_ADDRESS inline void
 Throw(Args&&... args)
 {
     static_assert(std::is_convertible<E*, std::exception*>::value, "Exception must derive from std::exception.");
