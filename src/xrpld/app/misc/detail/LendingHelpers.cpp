@@ -1733,8 +1733,7 @@ loanMakePayment(
 
     // -------------------------------------------------------------
     // overpayment handling
-    auto const roundedAmount =
-        roundToAsset(asset, amount, loanScale, Number::towards_zero);
+    auto const roundedAmount = roundToAsset(asset, amount, loanScale, Number::towards_zero);
     if (paymentType == LoanPaymentType::overpayment && loan->isFlag(lsfLoanOverpayment) && paymentRemainingProxy > 0 &&
         totalPaid < roundedAmount && numPayments < loanMaximumPaymentsPerTransaction)
     {

@@ -6710,19 +6710,16 @@ protected:
                 .debtMax = Number{100'000'000},
             });
         auto const [currentSeq, vaultId, vaultKeylet] = [&]() {
-            auto const brokerSle =
-                env.le(keylet::loanbroker(brokerInfo.brokerID));
+            auto const brokerSle = env.le(keylet::loanbroker(brokerInfo.brokerID));
             auto const currentSeq = brokerSle->at(sfLoanSequence);
             auto const vaultKeylet = keylet::vault(brokerSle->at(sfVaultID));
             auto const vaultId = brokerSle->at(sfVaultID);
             return std::make_tuple(currentSeq, vaultId, vaultKeylet);
         }();
         Vault vault{env};
-        env(vault.deposit(
-            {.depositor = lender, .id = vaultId, .amount = iou(5'000'000)}));
+        env(vault.deposit({.depositor = lender, .id = vaultId, .amount = iou(5'000'000)}));
         env.close();
-        env(loanBroker::coverDeposit(
-            lender, brokerInfo.brokerID, iou(500'000)));
+        env(loanBroker::coverDeposit(lender, brokerInfo.brokerID, iou(500'000)));
         env.close();
 
         // 4. Loan Parameters (Attack Vector)
@@ -6746,12 +6743,9 @@ protected:
         auto const [periodicPayment, loanScale] = [&]() {
             auto const loanSle = env.le(loanKeylet);
             // Construct Payment
-            return std::make_tuple(
-                STAmount{iou, loanSle->at(sfPeriodicPayment)},
-                loanSle->at(sfLoanScale));
+            return std::make_tuple(STAmount{iou, loanSle->at(sfPeriodicPayment)}, loanSle->at(sfLoanScale));
         }();
-        auto const roundedPayment =
-            roundToScale(periodicPayment, loanScale, Number::upward);
+        auto const roundedPayment = roundToScale(periodicPayment, loanScale, Number::upward);
 
         // ATTACK: Add dust buffer (1e-9) to force 'excess' logic execution
         STAmount const paymentBuffer{iou, Number(1, -9)};
@@ -6779,15 +6773,11 @@ protected:
             auto const loanSle = env.le(loanKeylet);
             if (!BEAST_EXPECT(loanSle))
                 break;
-            auto const updatedPayment =
-                STAmount{iou, loanSle->at(sfPeriodicPayment)};
-            BEAST_EXPECT(
-                (roundToScale(updatedPayment, loanScale, Number::upward) ==
-                 roundedPayment));
+            auto const updatedPayment = STAmount{iou, loanSle->at(sfPeriodicPayment)};
+            BEAST_EXPECT((roundToScale(updatedPayment, loanScale, Number::upward) == roundedPayment));
             BEAST_EXPECT(
                 (updatedPayment == periodicPayment) ||
-                (flags == tfLoanOverpayment && i >= 2 &&
-                 updatedPayment < periodicPayment));
+                (flags == tfLoanOverpayment && i >= 2 && updatedPayment < periodicPayment));
 
             auto const currentVaultSle = env.le(vaultKeylet);
             if (!BEAST_EXPECT(currentVaultSle))
@@ -6806,22 +6796,18 @@ protected:
             {
                 yieldTheftCount++;
                 // delta should be zero
-                log << "[ALERT] Iteration " << i
-                    << ": YIELD THEFT CONFIRMED. Vault Delta: " << delta
-                    << std::endl;
+                log << "[ALERT] Iteration " << i << ": YIELD THEFT CONFIRMED. Vault Delta: " << delta << std::endl;
             }
             else
             {
-                log << "[INFO]  Iteration " << i << ": Normal Yield: " << delta
-                    << std::endl;
+                log << "[INFO]  Iteration " << i << ": Normal Yield: " << delta << std::endl;
             }
 
             previousAssetsTotal = currentAssetsTotal;
         }
 
         BEAST_EXPECTS(yieldTheftCount == 0, std::to_string(yieldTheftCount));
-        log << "[RESULT] Yield Theft Events: " << yieldTheftCount
-            << " / 50 payments." << std::endl;
+        log << "[RESULT] Yield Theft Events: " << yieldTheftCount << " / 50 payments." << std::endl;
     }
 
 public:

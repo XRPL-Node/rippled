@@ -459,13 +459,11 @@ LoanPay::doApply()
         // LCOV_EXCL_START
         JLOG(j_.warn()) << "LoanPay: Vault assets available unchanged after "
                            "rounding: Before: "
-                        << assetsAvailableBefore
-                        << ", After: " << assetsAvailableAfter;
+                        << assetsAvailableBefore << ", After: " << assetsAvailableAfter;
         return tecPRECISION_LOSS;
         // LCOV_EXCL_STOP
     }
-    if (paymentParts->valueChange != beast::zero &&
-        assetsTotalAfter == assetsTotalBefore)
+    if (paymentParts->valueChange != beast::zero && assetsTotalAfter == assetsTotalBefore)
     {
         // Non-zero valueChange with an unchanged assetsTotal indicates that the
         // actual value change rounded to zero. That should be impossible, but I
@@ -473,16 +471,14 @@ LoanPay::doApply()
         // happens.
         //
         // LCOV_EXCL_START
-        JLOG(j_.warn())
-            << "LoanPay: Vault assets expected change, but unchanged after "
-               "rounding: Before: "
-            << assetsTotalBefore << ", After: " << assetsTotalAfter
-            << ", ValueChange: " << paymentParts->valueChange;
+        JLOG(j_.warn()) << "LoanPay: Vault assets expected change, but unchanged after "
+                           "rounding: Before: "
+                        << assetsTotalBefore << ", After: " << assetsTotalAfter
+                        << ", ValueChange: " << paymentParts->valueChange;
         return tecPRECISION_LOSS;
         // LCOV_EXCL_STOP
     }
-    if (paymentParts->valueChange == beast::zero &&
-        assetsTotalAfter != assetsTotalBefore)
+    if (paymentParts->valueChange == beast::zero && assetsTotalAfter != assetsTotalBefore)
     {
         // A change in assetsTotal when there was no valueChange indicates that
         // something really weird happened. That should be flat out impossible.
@@ -499,10 +495,9 @@ LoanPay::doApply()
     {
         // Assets available are not allowed to be larger than assets total.
         // LCOV_EXCL_START
-        JLOG(j_.fatal())
-            << "LoanPay: Vault assets available must not be greater "
-               "than assets outstanding. Available: "
-            << assetsAvailableAfter << ", Total: " << *assetsTotalProxy;
+        JLOG(j_.fatal()) << "LoanPay: Vault assets available must not be greater "
+                            "than assets outstanding. Available: "
+                         << assetsAvailableAfter << ", Total: " << *assetsTotalProxy;
         return tecINTERNAL;
         // LCOV_EXCL_STOP
     }
@@ -551,13 +546,8 @@ LoanPay::doApply()
         return ter;
 
 #if !NDEBUG
-    Number const pseudoAccountBalanceAfter = accountHolds(
-        view,
-        vaultPseudoAccount,
-        asset,
-        FreezeHandling::fhIGNORE_FREEZE,
-        AuthHandling::ahIGNORE_AUTH,
-        j_);
+    Number const pseudoAccountBalanceAfter =
+        accountHolds(view, vaultPseudoAccount, asset, FreezeHandling::fhIGNORE_FREEZE, AuthHandling::ahIGNORE_AUTH, j_);
     XRPL_ASSERT_PARTS(
         assetsAvailableAfter == pseudoAccountBalanceAfter,
         "xrpl::LoanPay::doApply",
@@ -571,14 +561,7 @@ LoanPay::doApply()
               view, vaultPseudoAccount, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_, SpendableHandling::shFULL_BALANCE);
     auto const brokerBalanceAfter = account_ == brokerPayee
         ? STAmount{asset, 0}
-        : accountHolds(
-              view,
-              brokerPayee,
-              asset,
-              fhIGNORE_FREEZE,
-              ahIGNORE_AUTH,
-              j_,
-              SpendableHandling::shFULL_BALANCE);
+        : accountHolds(view, brokerPayee, asset, fhIGNORE_FREEZE, ahIGNORE_AUTH, j_, SpendableHandling::shFULL_BALANCE);
     auto const balanceScale = [&]() {
         // This is so ugly.
         std::vector<int> exponents;
@@ -596,8 +579,7 @@ LoanPay::doApply()
             if (a != beast::zero)
                 exponents.push_back(a.exponent());
         }
-        auto [min, max] =
-            std::minmax_element(exponents.begin(), exponents.end());
+        auto [min, max] = std::minmax_element(exponents.begin(), exponents.end());
         // IOU rounding can be interesting. Give a margin of error that reflects
         // the orders of magnitude between the extremes.
         if (!asset.integral() && *max < STAmount::cMaxOffset * 3 / 4)
@@ -605,68 +587,47 @@ LoanPay::doApply()
         return std::min(*max, STAmount::cMaxOffset);
     }();
 
-    auto const accountBalanceBeforeRounded =
-        roundToScale(accountBalanceBefore, balanceScale);
-    auto const vaultBalanceBeforeRounded =
-        roundToScale(vaultBalanceBefore, balanceScale);
-    auto const brokerBalanceBeforeRounded =
-        roundToScale(brokerBalanceBefore, balanceScale);
+    auto const accountBalanceBeforeRounded = roundToScale(accountBalanceBefore, balanceScale);
+    auto const vaultBalanceBeforeRounded = roundToScale(vaultBalanceBefore, balanceScale);
+    auto const brokerBalanceBeforeRounded = roundToScale(brokerBalanceBefore, balanceScale);
 
-    auto const totalBalanceBefore =
-        accountBalanceBefore + vaultBalanceBefore + brokerBalanceBefore;
-    auto const totalBalanceBeforeRounded =
-        roundToScale(totalBalanceBefore, balanceScale);
+    auto const totalBalanceBefore = accountBalanceBefore + vaultBalanceBefore + brokerBalanceBefore;
+    auto const totalBalanceBeforeRounded = roundToScale(totalBalanceBefore, balanceScale);
 
-    JLOG(j_.trace()) << "Before: account "
-                     << Number(accountBalanceBeforeRounded) << " ("
+    JLOG(j_.trace()) << "Before: account " << Number(accountBalanceBeforeRounded) << " ("
                      << Number(accountBalanceBefore) << ")"
-                     << ", vault " << Number(vaultBalanceBeforeRounded) << " ("
-                     << Number(vaultBalanceBefore) << ")"
-                     << ", broker " << Number(brokerBalanceBeforeRounded)
-                     << " (" << Number(brokerBalanceBefore) << ")"
-                     << ", total " << Number(totalBalanceBeforeRounded) << " ("
-                     << Number(totalBalanceBefore) << ")";
+                     << ", vault " << Number(vaultBalanceBeforeRounded) << " (" << Number(vaultBalanceBefore) << ")"
+                     << ", broker " << Number(brokerBalanceBeforeRounded) << " (" << Number(brokerBalanceBefore) << ")"
+                     << ", total " << Number(totalBalanceBeforeRounded) << " (" << Number(totalBalanceBefore) << ")";
 
-    auto const accountBalanceAfterRounded =
-        roundToScale(accountBalanceAfter, balanceScale);
-    auto const vaultBalanceAfterRounded =
-        roundToScale(vaultBalanceAfter, balanceScale);
-    auto const brokerBalanceAfterRounded =
-        roundToScale(brokerBalanceAfter, balanceScale);
+    auto const accountBalanceAfterRounded = roundToScale(accountBalanceAfter, balanceScale);
+    auto const vaultBalanceAfterRounded = roundToScale(vaultBalanceAfter, balanceScale);
+    auto const brokerBalanceAfterRounded = roundToScale(brokerBalanceAfter, balanceScale);
 
-    auto const totalBalanceAfter =
-        accountBalanceAfter + vaultBalanceAfter + brokerBalanceAfter;
-    auto const totalBalanceAfterRounded =
-        roundToScale(totalBalanceAfter, balanceScale);
+    auto const totalBalanceAfter = accountBalanceAfter + vaultBalanceAfter + brokerBalanceAfter;
+    auto const totalBalanceAfterRounded = roundToScale(totalBalanceAfter, balanceScale);
 
-    JLOG(j_.trace()) << "After: account " << Number(accountBalanceAfterRounded)
-                     << " (" << Number(accountBalanceAfter) << ")"
-                     << ", vault " << Number(vaultBalanceAfterRounded) << " ("
-                     << Number(vaultBalanceAfter) << ")"
-                     << ", broker " << Number(brokerBalanceAfterRounded) << " ("
-                     << Number(brokerBalanceAfter) << ")"
-                     << ", total " << Number(totalBalanceAfterRounded) << " ("
-                     << Number(totalBalanceAfter) << ")";
+    JLOG(j_.trace()) << "After: account " << Number(accountBalanceAfterRounded) << " (" << Number(accountBalanceAfter)
+                     << ")"
+                     << ", vault " << Number(vaultBalanceAfterRounded) << " (" << Number(vaultBalanceAfter) << ")"
+                     << ", broker " << Number(brokerBalanceAfterRounded) << " (" << Number(brokerBalanceAfter) << ")"
+                     << ", total " << Number(totalBalanceAfterRounded) << " (" << Number(totalBalanceAfter) << ")";
 
-    auto const accountBalanceChange =
-        accountBalanceAfter - accountBalanceBefore;
+    auto const accountBalanceChange = accountBalanceAfter - accountBalanceBefore;
     auto const vaultBalanceChange = vaultBalanceAfter - vaultBalanceBefore;
     auto const brokerBalanceChange = brokerBalanceAfter - brokerBalanceBefore;
 
-    auto const totalBalanceChange = roundToScale(
-        accountBalanceChange + vaultBalanceChange + brokerBalanceChange,
-        balanceScale);
+    auto const totalBalanceChange =
+        roundToScale(accountBalanceChange + vaultBalanceChange + brokerBalanceChange, balanceScale);
 
-    JLOG(j_.trace()) << "Changes: account " << to_string(accountBalanceChange)
-                     << ", vault " << to_string(vaultBalanceChange)
-                     << ", broker " << to_string(brokerBalanceChange)
-                     << ", total " << to_string(totalBalanceChange);
+    JLOG(j_.trace()) << "Changes: account " << to_string(accountBalanceChange) << ", vault "
+                     << to_string(vaultBalanceChange) << ", broker " << to_string(brokerBalanceChange) << ", total "
+                     << to_string(totalBalanceChange);
 
     // Rounding for IOUs can be weird, so check a few different ways to show
     // that funds are conserved.
     XRPL_ASSERT_PARTS(
-        totalBalanceBefore == totalBalanceAfter ||
-            totalBalanceBeforeRounded == totalBalanceAfterRounded ||
+        totalBalanceBefore == totalBalanceAfter || totalBalanceBeforeRounded == totalBalanceAfterRounded ||
             totalBalanceChange == beast::zero,
         "xrpl::LoanPay::doApply",
         "funds are conserved (with rounding)");
