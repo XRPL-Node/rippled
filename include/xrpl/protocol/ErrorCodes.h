@@ -230,7 +230,7 @@ missing_field_error(std::string const& name)
 }
 
 inline Json::Value
-missing_field_error(Json::StaticString name)
+missing_field_error(Json::StaticString const& name)
 {
     return missing_field_error(std::string(name));
 }
@@ -248,7 +248,7 @@ object_field_error(std::string const& name)
 }
 
 inline Json::Value
-object_field_error(Json::StaticString name)
+object_field_error(Json::StaticString const& name)
 {
     return object_field_error(std::string(name));
 }
@@ -260,7 +260,7 @@ invalid_field_message(std::string const& name)
 }
 
 inline std::string
-invalid_field_message(Json::StaticString name)
+invalid_field_message(Json::StaticString const& name)
 {
     return invalid_field_message(std::string(name));
 }
@@ -272,7 +272,7 @@ invalid_field_error(std::string const& name)
 }
 
 inline Json::Value
-invalid_field_error(Json::StaticString name)
+invalid_field_error(Json::StaticString const& name)
 {
     return invalid_field_error(std::string(name));
 }
@@ -284,7 +284,7 @@ expected_field_message(std::string const& name, std::string const& type)
 }
 
 inline std::string
-expected_field_message(Json::StaticString name, std::string const& type)
+expected_field_message(Json::StaticString const& name, std::string const& type)
 {
     return expected_field_message(std::string(name), type);
 }
@@ -296,7 +296,7 @@ expected_field_error(std::string const& name, std::string const& type)
 }
 
 inline Json::Value
-expected_field_error(Json::StaticString name, std::string const& type)
+expected_field_error(Json::StaticString const& name, std::string const& type)
 {
     return expected_field_error(std::string(name), type);
 }
