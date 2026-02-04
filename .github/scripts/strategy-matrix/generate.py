@@ -52,22 +52,20 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # Only generate a subset of configurations in PRs.
         if not all:
             # Debian:
-            # - Bookworm using GCC 13: Release and Unity on linux/amd64, set
-            #   the reference fee to 500.
-            # - Bookworm using GCC 15: Debug and no Unity on linux/amd64, enable
-            #   code coverage (which will be done below).
-            # - Bookworm using Clang 16: Debug and no Unity on linux/arm64,
-            #   enable voidstar.
-            # - Bookworm using Clang 17: Release and no Unity on linux/amd64,
-            #   set the reference fee to 1000.
-            # - Bookworm using Clang 20: Debug and Unity on linux/amd64.
+            # - Bookworm using GCC 13: Release on linux/amd64, set the reference
+            #   fee to 500.
+            # - Bookworm using GCC 15: Debug on linux/amd64, enable code
+            #   coverage (which will be done below).
+            # - Bookworm using Clang 16: Debug on linux/arm64, enable voidstar.
+            # - Bookworm using Clang 17: Release on linux/amd64, set the
+            #   reference fee to 1000.
+            # - Bookworm using Clang 20: Debug on linux/amd64.
             if os["distro_name"] == "debian":
                 skip = True
                 if os["distro_version"] == "bookworm":
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-13"
                         and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         unittest_args = f"{unittest_args} --unittest-fee=500"
@@ -75,14 +73,12 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
                         and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-16"
                         and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
                         and architecture["platform"] == "linux/arm64"
                     ):
                         cmake_args = f"-Dvoidstar=ON {cmake_args}"
@@ -90,7 +86,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-17"
                         and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         unittest_args = f"{unittest_args} --unittest-fee=1000"
@@ -98,7 +93,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-20"
                         and build_type == "Debug"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
@@ -106,15 +100,14 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     continue
 
             # RHEL:
-            # - 9 using GCC 12: Debug and Unity on linux/amd64.
-            # - 10 using Clang: Release and no Unity on linux/amd64.
+            # - 9 using GCC 12: Debug on linux/amd64.
+            # - 10 using Clang: Release on linux/amd64.
             if os["distro_name"] == "rhel":
                 skip = True
                 if os["distro_version"] == "9":
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
                         and build_type == "Debug"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
@@ -122,7 +115,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-any"
                         and build_type == "Release"
-                        and "-Dunity=OFF" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
@@ -130,17 +122,16 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     continue
 
             # Ubuntu:
-            # - Jammy using GCC 12: Debug and no Unity on linux/arm64.
-            # - Noble using GCC 14: Release and Unity on linux/amd64.
-            # - Noble using Clang 18: Debug and no Unity on linux/amd64.
-            # - Noble using Clang 19: Release and Unity on linux/arm64.
+            # - Jammy using GCC 12: Debug on linux/arm64.
+            # - Noble using GCC 14: Release on linux/amd64.
+            # - Noble using Clang 18: Debug on linux/amd64.
+            # - Noble using Clang 19: Release on linux/arm64.
             if os["distro_name"] == "ubuntu":
                 skip = True
                 if os["distro_version"] == "jammy":
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
                         and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
                         and architecture["platform"] == "linux/arm64"
                     ):
                         skip = False
@@ -148,21 +139,18 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-14"
                         and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-18"
                         and build_type == "Debug"
-                        and "-Dunity=OFF" in cmake_args
                         and architecture["platform"] == "linux/amd64"
                     ):
                         skip = False
                     if (
                         f"{os['compiler_name']}-{os['compiler_version']}" == "clang-19"
                         and build_type == "Release"
-                        and "-Dunity=ON" in cmake_args
                         and architecture["platform"] == "linux/arm64"
                     ):
                         skip = False
@@ -170,20 +158,16 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
                     continue
 
             # MacOS:
-            # - Debug and no Unity on macos/arm64.
+            # - Debug on macos/arm64.
             if os["distro_name"] == "macos" and not (
-                build_type == "Debug"
-                and "-Dunity=OFF" in cmake_args
-                and architecture["platform"] == "macos/arm64"
+                build_type == "Debug" and architecture["platform"] == "macos/arm64"
             ):
                 continue
 
             # Windows:
-            # - Release and Unity on windows/amd64.
+            # - Release on windows/amd64.
             if os["distro_name"] == "windows" and not (
-                build_type == "Release"
-                and "-Dunity=ON" in cmake_args
-                and architecture["platform"] == "windows/amd64"
+                build_type == "Release" and architecture["platform"] == "windows/amd64"
             ):
                 continue
 
@@ -210,18 +194,17 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         ):
             continue
 
-        # Enable code coverage for Debian Bookworm using GCC 15 in Debug and no
-        # Unity on linux/amd64
+        # Enable code coverage for Debian Bookworm using GCC 15 in Debug on
+        # linux/amd64
         if (
             f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
             and build_type == "Debug"
-            and "-Dunity=OFF" in cmake_args
             and architecture["platform"] == "linux/amd64"
         ):
             cmake_args = f"-Dcoverage=ON -Dcoverage_format=xml -DCODE_COVERAGE_VERBOSE=ON -DCMAKE_C_FLAGS=-O0 -DCMAKE_CXX_FLAGS=-O0 {cmake_args}"
 
         # Generate a unique name for the configuration, e.g. macos-arm64-debug
-        # or debian-bookworm-gcc-12-amd64-release-unity.
+        # or debian-bookworm-gcc-12-amd64-release.
         config_name = os["distro_name"]
         if (n := os["distro_version"]) != "":
             config_name += f"-{n}"
@@ -235,8 +218,6 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         config_name += f"-{build_type.lower()}"
         if "-Dcoverage=ON" in cmake_args:
             config_name += "-coverage"
-        if "-Dunity=ON" in cmake_args:
-            config_name += "-unity"
 
         # Add the configuration to the list, with the most unique fields first,
         # so that they are easier to identify in the GitHub Actions UI, as long
