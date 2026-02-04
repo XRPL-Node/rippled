@@ -371,7 +371,7 @@ Static Private Member Functions</h2></td></tr>
 <div class="textblock"><p><a class="el" href="classxrpl_1_1AMMCreate.html" title="AMMCreate implements Automatic Market Maker(AMM) creation Transactor.">AMMCreate</a> implements Automatic Market Maker(AMM) creation <a class="el" href="classxrpl_1_1Transactor.html">Transactor</a>. </p>
 <p>It creates a new AMM instance with two tokens. Any trader, or Liquidity Provider (LP), can create the AMM instance and receive in return shares of the AMM pool in the form of LPTokens. The number of tokens that LP gets are determined by LPTokens = sqrt(A * B), where A and B is the current composition of the AMM pool. LP can add (<a class="el" href="classxrpl_1_1AMMDeposit.html" title="AMMDeposit implements AMM deposit Transactor.">AMMDeposit</a>) or withdraw (<a class="el" href="classxrpl_1_1AMMWithdraw.html">AMMWithdraw</a>) tokens from AMM and AMM can be used transparently in the payment or offer crossing transactions. Trading fee is charged to the traders for the trades executed against AMM instance. The fee is added to the AMM pool and distributed to the LPs in proportion to the LPTokens upon liquidity removal. The fee can be voted on by LP's (<a class="el" href="classxrpl_1_1AMMVote.html" title="AMMVote implements AMM vote Transactor.">AMMVote</a>). LP's can continuously bid (<a class="el" href="classxrpl_1_1AMMBid.html" title="AMMBid implements AMM bid Transactor.">AMMBid</a>) for the 24 hour auction slot, which enables LP's to trade at zero trading fee. AMM instance creates AccountRoot object with disabled master key for book-keeping of XRP balance if one of the tokens is XRP, a trustline for each IOU token, a trustline to keep track of LPTokens, and ltAMM ledger object. AccountRoot ID is generated internally from the parent's hash. ltAMM's object ID is hash{token1.currency, token1.issuer, token2.currency, token2.issuer}, where issue1 &lt; issue2. ltAMM object provides mapping from the hash to AccountRoot ID and contains: AMMAccount - AMM AccountRoot ID. TradingFee - AMM voted TradingFee. VoteSlots - Array of VoteEntry, contains fee vote information. AuctionSlot - Auction slot, contains discounted fee bid information. LPTokenBalance - LPTokens outstanding balance. AMMToken - currency/issuer information for AMM tokens. <a class="el" href="classxrpl_1_1AMMDeposit.html" title="AMMDeposit implements AMM deposit Transactor.">AMMDeposit</a>, <a class="el" href="classxrpl_1_1AMMWithdraw.html">AMMWithdraw</a>, <a class="el" href="classxrpl_1_1AMMVote.html" title="AMMVote implements AMM vote Transactor.">AMMVote</a>, and <a class="el" href="classxrpl_1_1AMMBid.html" title="AMMBid implements AMM bid Transactor.">AMMBid</a> transactions use the hash to access AMM instance. </p><dl class="section see"><dt>See also</dt><dd><a href="https://github.com/XRPLF/XRPL-Standards/discussions/78">XLS30d:Creating AMM instance on XRPL</a> </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00038">38</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00037">37</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a id="a9420945fd34d224b81b68fd3dcc9fed6" name="a9420945fd34d224b81b68fd3dcc9fed6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9420945fd34d224b81b68fd3dcc9fed6">&#9670;&#160;</a></span>ConsequencesFactoryType</h2>
@@ -398,7 +398,7 @@ Static Private Member Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a9420945fd34d224b81b68fd3dcc9fed6a0512ccca18ad134fcb5eec993d41603a" name="a9420945fd34d224b81b68fd3dcc9fed6a0512ccca18ad134fcb5eec993d41603a"></a>Custom&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00123">123</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00122">122</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -427,7 +427,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00043">43</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00042">42</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
 
 </div>
 </div>
@@ -637,7 +637,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00129">129</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00128">128</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -664,7 +664,7 @@ Static Private Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00135">135</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00134">134</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -922,7 +922,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00365">365</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00364">364</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1369,7 +1369,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00391">391</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00390">390</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1415,7 +1415,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00400">400</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00399">399</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1457,7 +1457,7 @@ template&lt;class T &gt; </div>
 
 <p>Minimum will usually be zero. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00407">407</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00406">406</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1499,7 +1499,7 @@ template&lt;class T , class Unit &gt; </div>
 
 <p>Minimum will usually be zero. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00416">416</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00415">415</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1829,7 +1829,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00041">41</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AMMCreate_8h_source.html#l00040">40</a> of file <a class="el" href="AMMCreate_8h_source.html">AMMCreate.h</a>.</p>
 
 </div>
 </div>
@@ -1853,7 +1853,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00109">109</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00108">108</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1877,7 +1877,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00110">110</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00109">109</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1901,7 +1901,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00111">111</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00110">110</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1925,7 +1925,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00113">113</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00112">112</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1949,7 +1949,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00114">114</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00113">113</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
@@ -1973,7 +1973,7 @@ template&lt;class T , class Unit &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00115">115</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8h_source.html#l00114">114</a> of file <a class="el" href="Transactor_8h_source.html">Transactor.h</a>.</p>
 
 </div>
 </div>
