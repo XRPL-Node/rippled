@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_TAGGEDCACHE_H_INCLUDED
-#define XRPL_BASICS_TAGGEDCACHE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/IntrusivePointer.h>
 #include <xrpl/basics/Log.h>
@@ -295,5 +294,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

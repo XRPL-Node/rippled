@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_LEDGERHISTORY_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGERHISTORY_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/main/Application.h>
@@ -130,5 +129,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif
