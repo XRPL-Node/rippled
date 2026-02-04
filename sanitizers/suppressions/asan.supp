@@ -21,10 +21,5 @@
 
 # Boost - false positives from stackful coroutines
 interceptor_name:clock_gettime
-interceptor_name:memcpy
 interceptor_name:__bzero
-interceptor_name:__asan_memset
-interceptor_name:__asan_memcpy
 interceptor_name:nudb
-interceptor_via_fun:assert
-interceptor_via_fun:static_assert
