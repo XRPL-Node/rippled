@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_ENVCONFIG_H_INCLUDED
-#define XRPL_TEST_JTX_ENVCONFIG_H_INCLUDED
+#pragma once
 
 #include <xrpld/core/Config.h>
 
@@ -123,5 +122,3 @@ makeConfig(std::map<std::string, std::string> extraTxQ = {}, std::map<std::strin
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif
