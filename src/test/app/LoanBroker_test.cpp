@@ -1701,10 +1701,21 @@ class LoanBroker_test : public beast::unit_test::suite
         testRIPD4274MPT();
     }
 
+    void
+    testFixAmendmentEnabled()
+    {
+        using namespace jtx;
+        testcase("testFixAmendmentEnabled");
+        Env env{*this};
+
+        BEAST_EXPECT(env.enabled(fixLendingProtocolv1_1));
+    }
+
 public:
     void
     run() override
     {
+        testFixAmendmentEnabled();
         testLoanBrokerSetDebtMaximum();
         testLoanBrokerCoverDepositNullVault();
 
