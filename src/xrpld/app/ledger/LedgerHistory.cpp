@@ -19,7 +19,7 @@ LedgerHistory::LedgerHistory(beast::insight::Collector::ptr const& collector, Ap
           stopwatch(),
           app_.journal("TaggedCache"))
     , m_consensus_validated("ConsensusValidated", 64, std::chrono::minutes{5}, stopwatch(), app_.journal("TaggedCache"))
-    , mLedgersByIndex(512) // Index map reserve capacity, aligned with typical ledger_history retention.
+    , mLedgersByIndex(512)  // Index map reserve capacity, aligned with typical ledger_history retention.
     , j_(app.journal("LedgerHistory"))
 {
 }
