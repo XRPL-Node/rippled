@@ -139,6 +139,13 @@ public:
         template <typename T>
         ScopedStream(Stream const& stream, T const& t);
 
+        /** Overload for const char* to ensure immediate copy.
+            This prevents stack-use-after-scope issues when the source
+            pointer becomes invalid before the stream buffer operations
+            complete (e.g., during buffer reallocation).
+        */
+        ScopedStream(Stream const& stream, char const* t);
+
         ScopedStream(Stream const& stream, std::ostream& manip(std::ostream&));
 
         ScopedStream&
@@ -158,6 +165,18 @@ public:
         template <typename T>
         std::ostream&
         operator<<(T const& t) const;
+
+        /** Overload for const char* to ensure immediate copy.
+            This prevents stack-use-after-scope issues when the source
+            pointer becomes invalid before the stream buffer operations
+            complete (e.g., during buffer reallocation).
+        */
+        std::ostream&
+        operator<<(char const* t) const
+        {
+            m_ostream << std::string(t);
+            return m_ostream;
+        }
 
     private:
         Sink& m_sink;
@@ -239,6 +258,17 @@ public:
         template <typename T>
         ScopedStream
         operator<<(T const& t) const;
+
+        /** Overload for const char* to ensure immediate copy.
+            This prevents stack-use-after-scope issues when the source
+            pointer becomes invalid before the stream buffer operations
+            complete (e.g., during buffer reallocation).
+        */
+        ScopedStream
+        operator<<(char const* t) const
+        {
+            return ScopedStream(*this, t);
+        }
         /** @} */
 
     private:

@@ -54,12 +54,8 @@ struct LocalValuesHolder
     }
 };
 
-inline LocalValuesHolder&
-getLocalValuesHolder()
-{
-    thread_local LocalValuesHolder holder;
-    return holder;
-}
+LocalValuesHolder&
+getLocalValuesHolder();
 
 inline LocalValues*&
 getLocalValuesPtr()

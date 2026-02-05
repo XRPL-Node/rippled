@@ -6,7 +6,7 @@
 
 namespace xrpl {
 
-static uint256 const&
+static uint256 const
 depthMask(unsigned int depth)
 {
     enum { mask_size = 65 };
