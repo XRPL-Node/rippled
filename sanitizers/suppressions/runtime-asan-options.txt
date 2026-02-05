@@ -7,5 +7,3 @@ print_legend=true
 symbolize=true
 print_cmdline=true
 print_summary=true
-malloc_context_size=30
-fast_unwind_on_malloc=0
