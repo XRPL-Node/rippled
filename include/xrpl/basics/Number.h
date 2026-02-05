@@ -646,11 +646,7 @@ private:
      */
     template <bool expectNormal = true, detail::UnsignedMantissa Rep = internalrep>
     void
-    fromInternal(
-        bool negative,
-        Rep mantissa,
-        int exponent,
-        MantissaRange const* pRange);
+    fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange const* pRange);
 
     /** Rebuilds the number from components.
      *
@@ -662,9 +658,7 @@ private:
      * bring it back into range.
      *
      */
-    template <
-        bool expectNormal = true,
-        detail::UnsignedMantissa Rep = internalrep>
+    template <bool expectNormal = true, detail::UnsignedMantissa Rep = internalrep>
     void
     fromInternal(bool negative, Rep mantissa, int exponent);
 
@@ -674,13 +668,8 @@ public:
     constexpr static internalrep largestMantissa = largeRange.max;
 };
 
-inline constexpr Number::Number(
-    bool negative,
-    internalrep mantissa,
-    int exponent,
-    unchecked) noexcept
-    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}
-    , exponent_{exponent}
+inline constexpr Number::Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept
+    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}, exponent_{exponent}
 {
 }
 
@@ -691,8 +680,7 @@ inline constexpr Number::Number(internalrep mantissa, int exponent, unchecked) n
 
 constexpr static Number numZero{};
 
-inline Number::Number(internalrep mantissa, int exponent, normalized)
-    : Number(false, mantissa, exponent, normalized{})
+inline Number::Number(internalrep mantissa, int exponent, normalized) : Number(false, mantissa, exponent, normalized{})
 {
 }
 
@@ -856,10 +844,7 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 
     if constexpr (std::is_unsigned_v<T>)
     {
-        XRPL_ASSERT_PARTS(
-            !negative,
-            "xrpl::Number::normalizeToRange",
-            "Number is non-negative for unsigned range.");
+        XRPL_ASSERT_PARTS(!negative, "xrpl::Number::normalizeToRange", "Number is non-negative for unsigned range.");
         // To avoid logical errors in release builds, throw if the Number is
         // negative for an unsigned range.
         if (negative)
