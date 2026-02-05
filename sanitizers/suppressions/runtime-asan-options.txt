@@ -2,7 +2,6 @@ detect_container_overflow=0
 detect_stack_use_after_return=0
 debug=true
 halt_on_error=0
-verbosity=1
 print_stats=true
 print_legend=true
 symbolize=true
