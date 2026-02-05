@@ -4,6 +4,14 @@
 
 namespace xrpl {
 
+// Coroutine stack size is set to 2MB to provide sufficient headroom for
+// deep call stacks in RPC operations. With 1MB, stack exhaustion occurred
+// in production scenarios, particularly in:
+// - RPC handlers processing complex JSON (ServerHandler::processRequest)
+// - Transaction validation with deep parsing (TransactionSign::getCurrentNetworkFee)
+// - Amount parsing with boost::split operations (amountFromJson)
+// The 2MB stack provides ~50% safety margin even for the deepest observed
+// call chains while keeping memory overhead reasonable (~2MB per coroutine).
 template <class F>
 JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string const& name, F&& f)
     : jq_(jq)
@@ -19,7 +27,7 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
               finished_ = true;
 #endif
           },
-          boost::coroutines::attributes(megabytes(1)))
+          boost::coroutines::attributes(megabytes(2)))  // 2MB stack (increased from 1MB)
 {
 }
 
