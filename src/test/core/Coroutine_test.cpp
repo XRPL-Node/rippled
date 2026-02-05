@@ -181,7 +181,7 @@ public:
         std::condition_variable cv;
         std::mutex m;
         std::unique_lock<std::mutex> lk(m);
-        auto coro = env.app().getJobQueue().postCoro(jtCLIENT, "Coroutine-Test", [&](auto const& c) {
+        auto coro = env.app().getJobQueue().postCoro(jtCLIENT, "CoroTest", [&](auto const& c) {
             try
             {
                 started = true;
