@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_CONTRACT_H_INCLUDED
-#define XRPL_BASICS_CONTRACT_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/sanitizers.h>
 #include <xrpl/beast/type_name.h>
@@ -49,5 +48,3 @@ Throw(Args&&... args)
 LogicError(std::string const& how) noexcept;
 
 }  // namespace xrpl
-
-#endif
