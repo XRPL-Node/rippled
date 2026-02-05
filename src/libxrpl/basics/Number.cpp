@@ -392,7 +392,8 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
 
     auto const sign = negative ? -1 : 1;
 
-    mantissa_ = static_cast<rep>(sign * mantissa);
+    // mantissa is unsigned, but it might not be uint64
+    mantissa_ = static_cast<rep>(sign * static_cast<internalrep>(mantissa));
     exponent_ = exponent;
 
     XRPL_ASSERT_PARTS(
