@@ -22,12 +22,19 @@ pushLeb128(std::vector<uint8_t>& buf, uint32_t val)
     } while (val != 0);
 }
 
-// Helper: append bytes from an array to a vector
-template <typename T>
+// Helper: append bytes from a C-style array to a vector
+template <std::size_t N>
 void
-appendBytes(std::vector<uint8_t>& buf, T const& arr)
+appendBytes(std::vector<uint8_t>& buf, uint8_t const (&arr)[N])
 {
-    buf.insert(buf.end(), std::begin(arr), std::end(arr));
+    buf.insert(buf.end(), arr, arr + N);
+}
+
+// Helper: append bytes from a vector to a vector
+void
+appendBytes(std::vector<uint8_t>& buf, std::vector<uint8_t> const& src)
+{
+    buf.insert(buf.end(), src.begin(), src.end());
 }
 
 // Helper: append a WASM section (ID + LEB128 size + content)
