@@ -197,7 +197,7 @@ concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>
  * regardless of asset type - XRPAmount, MPTAmount, and IOUAmount, with at least
  * as much precision as those types require.
  *
- * ---- Internal Representation ----
+ * ---- Internal Operational Representation ----
  *
  * Internally, Number is represented with three values:
  *   1. a bool sign flag,
@@ -212,13 +212,21 @@ concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>
  *
  * A non-zero mantissa is (almost) always normalized, meaning it and the
  * exponent are grown or shrunk until the mantissa is in the range
- * [MantissaRange.min, MantissaRange.max].
+ * [MantissaRange.referenceMin, MantissaRange.referenceMin * 10 - 1].
+ *
+ * This internal representation is only used during some operations to ensure
+ * that the mantissa is a known, predictable size. The class itself stores the
+ * values using the external representation described below.
  *
  * Note:
  *   1. Normalization can be disabled by using the "unchecked" ctor tag. This
  *      should only be used at specific conversion points, some constexpr
  *      values, and in unit tests.
- *   2. The max of the "large" range, 2^63-1, TODO: explain the large range.
+ *   2. Unlike MantissaRange.min, referenceMin is always an exact power of 10,
+ *      so a mantissa in the internal representation will always have a
+ *      consistent number of digits.
+ *   3. The functions toInternal() and fromInternal() are used to convert
+ *      between the two representations.
  *
  * ---- External Interface ----
  *
@@ -231,13 +239,12 @@ concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>
  * represent the full range of valid XRP and MPT integer values accurately.
  *
  * Note:
- *   1. 2^63-1 is between 10^18 and 10^19-1, which are the limits of the "large"
- *      mantissa range. TODO: update this explanation.
+ *   1. The "large" mantissa range is (2^63/10+1) to 2^63-1. 2^63-1 is between
+ *      10^18 and 10^19-1, and (2^63/10+1) is between 10^17 and 10^18-1. Thus,
+ *      the mantissa may have 18 or 19 digits. This value will be modified to
+ *      always have 19 digits before some operations to ensure consistency.
  *   2. The functions mantissa() and exponent() return the external view of the
- *      Number value, specifically using a signed 63-bit mantissa. This may
- *      require altering the internal representation to fit into that range
- *      before the value is returned. The interface guarantees consistency of
- *      the two values.
+ *      Number value, specifically using a signed 63-bit mantissa.
  *   3. Number cannot represent -2^63 (std::numeric_limits<std::int64_t>::min())
  *      as an exact integer, but it doesn't need to, because all asset values
  *      on-ledger are non-negative. This is due to implementation details of

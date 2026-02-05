@@ -324,7 +324,8 @@ Number::toInternal(MantissaRange const& range) const
     auto exponent = exponent_;
     bool const negative = mantissa_ < 0;
     auto const sign = negative ? -1 : 1;
-    Rep mantissa = static_cast<Rep>(sign * mantissa_);
+    // It should be impossible for mantissa_ to be INT64_MIN, but use externalToInternal just in case.
+    Rep mantissa = static_cast<Rep>(externalToInternal(mantissa_));
 
     auto const referenceMin = range.referenceMin;
     auto const minMantissa = range.min;
@@ -345,7 +346,7 @@ Number::toInternal(MantissaRange const& range) const
 
 /** Breaks down the number into components, potentially de-normalizing it.
  *
- * Ensures that the mantissa always has range_.log digits.
+ * Ensures that the mantissa always has exactly range_.log + 1 digits.
  *
  */
 template <detail::UnsignedMantissa Rep>
@@ -391,7 +392,7 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
 
     auto const sign = negative ? -1 : 1;
 
-    mantissa_ = sign * static_cast<rep>(mantissa);
+    mantissa_ = static_cast<rep>(sign * mantissa);
     exponent_ = exponent;
 
     XRPL_ASSERT_PARTS(
