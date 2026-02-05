@@ -23,11 +23,13 @@ pushLeb128(std::vector<uint8_t>& buf, uint32_t val)
 }
 
 // Helper: append bytes from a C-style array to a vector
+// Uses a loop to avoid GCC false positive -Werror=stringop-overflow with insert()
 template <std::size_t N>
 void
 appendBytes(std::vector<uint8_t>& buf, uint8_t const (&arr)[N])
 {
-    buf.insert(buf.end(), arr, arr + N);
+    for (std::size_t i = 0; i < N; ++i)
+        buf.push_back(arr[i]);
 }
 
 // Helper: append bytes from a vector to a vector
