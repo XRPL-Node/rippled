@@ -118,14 +118,6 @@ Journal::ScopedStream::ScopedStream(Stream const& stream, std::ostream& manip(st
     m_ostream << manip;
 }
 
-Journal::ScopedStream::ScopedStream(Stream const& stream, char const* t) : ScopedStream(stream.sink(), stream.level())
-{
-    // Convert to std::string immediately to ensure the data is copied.
-    // This prevents stack-use-after-scope issues when the source pointer
-    // becomes invalid before stream buffer operations(like reallocation) complete.
-    m_ostream << std::string(t);
-}
-
 Journal::ScopedStream::~ScopedStream()
 {
     std::string const& s(m_ostream.str());

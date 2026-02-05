@@ -1,5 +1,14 @@
 detect_container_overflow=0
 detect_stack_use_after_return=0
-detect_stack-buffer-overflow=0
 debug=true
-halt_on_error=false
+halt_on_error=0
+# Extra verbosity and details for debugging
+verbosity=1
+print_stats=true
+print_legend=true
+symbolize=true
+print_cmdline=true
+print_summary=true
+# Deep stack traces (default is shallow/fast unwinding)
+malloc_context_size=30
+fast_unwind_on_malloc=0

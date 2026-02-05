@@ -6,6 +6,10 @@
 
 namespace xrpl {
 
+// Returns a depth mask by value to avoid potential lifetime issues in
+// multi-threaded contexts. Returning by const reference to a static member
+// could trigger stack-use-after-scope errors when the reference is used in
+// temporary expressions with operator& in concurrent coroutine scenarios.
 static uint256 const
 depthMask(unsigned int depth)
 {

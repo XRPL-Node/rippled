@@ -3,6 +3,7 @@
 #include <xrpl/beast/utility/instrumentation.h>
 
 #include <sstream>
+#include <string>
 
 namespace beast {
 
@@ -138,13 +139,6 @@ public:
         template <typename T>
         ScopedStream(Stream const& stream, T const& t);
 
-        /** Overload for const char* to ensure immediate copy.
-            This prevents stack-use-after-scope issues when the source
-            pointer becomes invalid before the stream buffer operations
-            complete (e.g., during buffer reallocation).
-        */
-        ScopedStream(Stream const& stream, char const* t);
-
         ScopedStream(Stream const& stream, std::ostream& manip(std::ostream&));
 
         ScopedStream&
@@ -165,10 +159,9 @@ public:
         std::ostream&
         operator<<(T const& t) const;
 
-        /** Overload for const char* to ensure immediate copy.
-            This prevents stack-use-after-scope issues when the source
-            pointer becomes invalid before the stream buffer operations
-            complete (e.g., during buffer reallocation).
+        /** Overload for const char* for chained operations.
+            Handles cases like: stream << "text1" << "text2"
+            Converts to std::string to prevent stack-use-after-scope issues.
         */
         std::ostream&
         operator<<(char const* t) const
@@ -260,13 +253,14 @@ public:
 
         /** Overload for const char* to ensure immediate copy.
             This prevents stack-use-after-scope issues when the source
-            pointer becomes invalid before the stream buffer operations
-            complete (e.g., during buffer reallocation).
+            pointer becomes invalid due to coroutine context switches or
+            stack unwinding. Converts to std::string immediately to copy
+            the data before constructing ScopedStream.
         */
         ScopedStream
         operator<<(char const* t) const
         {
-            return ScopedStream(*this, t);
+            return t ? ScopedStream(*this, std::string(t)) : ScopedStream(*this, std::string());
         }
         /** @} */
 
