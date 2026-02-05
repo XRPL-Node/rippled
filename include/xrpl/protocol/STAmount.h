@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
-#define XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/LocalValue.h>
@@ -740,4 +739,3 @@ getOrThrow(Json::Value const& v, xrpl::SField const& field)
     return amountFromJson(field, inner);
 }
 }  // namespace Json
-#endif
