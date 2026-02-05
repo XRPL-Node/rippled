@@ -343,17 +343,33 @@ ManifestCache::revoked(PublicKey const& pk) const
 ManifestDisposition
 ManifestCache::applyManifest(Manifest m)
 {
+    if (!m.verify())
+    {
+        if (auto stream = j_.warn())
+            logMftAct(stream, "Invalid", m.masterKey, m.sequence);
+        return ManifestDisposition::invalid;
+    }
+
+    bool const revoked = m.revoked();
+    if (auto stream = j_.warn(); stream && revoked)
+        logMftAct(stream, "Revoked", m.masterKey, m.sequence);
+
+    if (!revoked && !m.signingKey)
+    {
+        JLOG(j_.warn()) << to_string(m)
+                        << ": is not revoked and the manifest has no "
+                           "signing key. Hence, the manifest is "
+                           "invalid";
+        return ManifestDisposition::invalid;
+    }
+
     // Check the manifest against the conditions that do not require a
-    // `unique_lock` (write lock) on the `mutex_`. Since the signature can be
-    // relatively expensive, the `checkSignature` parameter determines if the
-    // signature should be checked. Since `prewriteCheck` is run twice (see
-    // comment below), `checkSignature` only needs to be set to true on the
-    // first run.
-    auto prewriteCheck =
-        [this, &m](auto const& iter, bool checkSignature, auto const& lock) -> std::optional<ManifestDisposition> {
-        XRPL_ASSERT(lock.owns_lock(), "xrpl::ManifestCache::applyManifest::prewriteCheck : locked");
+    // `unique_lock` (write lock) on the `mutex_`.
+    auto prewriteCheck = [&](auto const& iter, auto const& lock) -> std::optional<ManifestDisposition> {
+        XRPL_ASSERT(lock.owns_lock(), "xrpl::ManifestCache::applyManifest : locked");
         (void)lock;  // not used. parameter is present to ensure the mutex is
                      // locked when the lambda is called.
+
         if (iter != map_.end() && m.sequence <= iter->second.sequence)
         {
             // We received a manifest whose sequence number is not strictly
@@ -365,13 +381,6 @@ ManifestCache::applyManifest(Manifest m)
             return ManifestDisposition::stale;
         }
 
-        if (checkSignature && !m.verify())
-        {
-            if (auto stream = j_.warn())
-                logMftAct(stream, "Invalid", m.masterKey, m.sequence);
-            return ManifestDisposition::invalid;
-        }
-
         // If the master key associated with a manifest is or might be
         // compromised and is, therefore, no longer trustworthy.
         //
@@ -379,10 +388,6 @@ ManifestCache::applyManifest(Manifest m)
         // setting the sequence number to the highest value possible, the
         // manifest is effectively neutered and cannot be superseded by a forged
         // one.
-        bool const revoked = m.revoked();
-
-        if (auto stream = j_.warn(); stream && revoked)
-            logMftAct(stream, "Revoked", m.masterKey, m.sequence);
 
         // Sanity check: the master key of this manifest should not be used as
         // the ephemeral key of another manifest:
@@ -396,15 +401,6 @@ ManifestCache::applyManifest(Manifest m)
 
         if (!revoked)
         {
-            if (!m.signingKey)
-            {
-                JLOG(j_.warn()) << to_string(m)
-                                << ": is not revoked and the manifest has no "
-                                   "signing key. Hence, the manifest is "
-                                   "invalid";
-                return ManifestDisposition::invalid;
-            }
-
             // Sanity check: the ephemeral key of this manifest should not be
             // used as the master or ephemeral key of another manifest:
             if (auto const x = signingToMasterKeys_.find(*m.signingKey); x != signingToMasterKeys_.end())
@@ -428,25 +424,23 @@ ManifestCache::applyManifest(Manifest m)
 
     {
         std::shared_lock sl{mutex_};
-        if (auto d = prewriteCheck(map_.find(m.masterKey), /*checkSig*/ true, sl))
+        if (auto d = prewriteCheck(map_.find(m.masterKey), sl))
             return *d;
     }
 
-    std::unique_lock sl{mutex_};
+    std::unique_lock ul{mutex_};
     auto const iter = map_.find(m.masterKey);
+
     // Since we released the previously held read lock, it's possible that the
     // collections have been written to. This means we need to run
     // `prewriteCheck` again. This re-does work, but `prewriteCheck` is
     // relatively inexpensive to run, and doing it this way allows us to run
     // `prewriteCheck` under a `shared_lock` above.
-    // Note, the signature has already been checked above, so it
-    // doesn't need to happen again (signature checks are somewhat expensive).
     // Note: It's a mistake to use an upgradable lock. This is a recipe for
     // deadlock.
-    if (auto d = prewriteCheck(iter, /*checkSig*/ false, sl))
+    if (auto d = prewriteCheck(iter, ul))
         return *d;
 
-    bool const revoked = m.revoked();
     // This is the first manifest we are seeing for a master key. This should
     // only ever happen once per validator run.
     if (iter == map_.end())
