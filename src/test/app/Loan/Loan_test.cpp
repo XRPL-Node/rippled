@@ -3396,11 +3396,6 @@ protected:
         // From FIND-001
         testcase << "Batch Bypass Counterparty";
 
-        bool const lendingBatchEnabled =
-            !std::any_of(Batch::disabledTxTypes.begin(), Batch::disabledTxTypes.end(), [](auto const& disabled) {
-                return disabled == ttLOAN_BROKER_SET;
-            });
-
         using namespace jtx;
         using namespace std::chrono_literals;
         Env env(*this, all);
@@ -3444,7 +3439,7 @@ protected:
         env(batch::outer(borrower, seq, batchFee, tfAllOrNothing),
             batch::inner(forgedLoanSet, seq + 1),
             batch::inner(pay(borrower, lender, XRP(1)), seq + 2),
-            ter(lendingBatchEnabled ? temBAD_SIGNATURE : temINVALID_INNER_BATCH));
+            ter(temBAD_SIGNATURE));
         env.close();
 
         // ? Check that the loan was NOT created
@@ -6877,7 +6872,7 @@ public:
     }
 };
 
-class LoanBatch_test : public Loan_test
+class LoanSimulator_test : public Loan_test
 {
 protected:
     beast::xor_shift_engine engine_;
@@ -6977,7 +6972,7 @@ public:
     }
 };
 
-class LoanArbitrary_test : public LoanBatch_test
+class LoanArbitrary_test : public LoanSimulator_test
 {
     void
     run() override
@@ -7003,7 +6998,7 @@ class LoanArbitrary_test : public LoanBatch_test
 };
 
 BEAST_DEFINE_TESTSUITE(Loan, tx, xrpl);
-BEAST_DEFINE_TESTSUITE_MANUAL(LoanBatch, tx, xrpl);
+BEAST_DEFINE_TESTSUITE_MANUAL(LoanSimulator, tx, xrpl);
 BEAST_DEFINE_TESTSUITE_MANUAL(LoanArbitrary, tx, xrpl);
 
 }  // namespace test
