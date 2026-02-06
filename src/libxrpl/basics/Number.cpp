@@ -281,9 +281,9 @@ Number::Guard::doRound(rep& drops, std::string_view location)
         {
             static_assert(sizeof(internalrep) == sizeof(rep));
             // This should be impossible, because it's impossible to represent
-            // "maxRep + 0.6" in Number, regardless of the scale. There aren't
-            // enough digits available. You'd either get a mantissa of "maxRep"
-            // or "(maxRep + 1) / 10", neither of which will round up when
+            // "largestMantissa + 0.6" in Number, regardless of the scale. There aren't
+            // enough digits available. You'd either get a mantissa of "largestMantissa "
+            // or "largestMantissa / 10 + 1", neither of which will round up when
             // converting to rep, though the latter might overflow _before_
             // rounding.
             throw std::overflow_error(std::string{location});  // LCOV_EXCL_LINE
@@ -314,7 +314,7 @@ Number::externalToInternal(rep mantissa)
 
 /** Breaks down the number into components, potentially de-normalizing it.
  *
- * Ensures that the mantissa always has range_.log digits.
+ * Ensures that the mantissa always has range_.log + 1 digits.
  *
  */
 template <detail::UnsignedMantissa Rep>
@@ -393,7 +393,9 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
     auto const sign = negative ? -1 : 1;
 
     // mantissa is unsigned, but it might not be uint64
-    mantissa_ = static_cast<rep>(sign * static_cast<internalrep>(mantissa));
+    mantissa_ = static_cast<rep>(static_cast<internalrep>(mantissa));
+    if (negative)
+        mantissa_ = -mantissa_;
     exponent_ = exponent;
 
     XRPL_ASSERT_PARTS(
@@ -871,7 +873,7 @@ Number::operator rep() const
         if (drops < 0)
         {
             g.set_negative();
-            drops = -drops;
+            drops = externalToInternal(drops);
         }
         for (; offset < 0; ++offset)
         {

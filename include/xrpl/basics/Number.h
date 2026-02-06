@@ -307,12 +307,6 @@ public:
     constexpr static int minExponent = -32768;
     constexpr static int maxExponent = 32768;
 
-#if MAXREP
-    constexpr static internalrep maxRep = std::numeric_limits<rep>::max();
-    static_assert(maxRep == 9'223'372'036'854'775'807);
-    static_assert(-maxRep == std::numeric_limits<rep>::min() + 1);
-#endif
-
     // May need to make unchecked private
     struct unchecked
     {
@@ -537,10 +531,6 @@ private:
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
     static_assert(smallRange.referenceMin == smallRange.min);
     static_assert(smallRange.log == 15);
-#if MAXREP
-    static_assert(smallRange.min < maxRep);
-    static_assert(smallRange.max < maxRep);
-#endif
     constexpr static MantissaRange largeRange{MantissaRange::large};
     static_assert(!isPowerOfTen(largeRange.min));
     static_assert(largeRange.min == 922'337'203'685'477'581ULL);
@@ -555,11 +545,6 @@ private:
     // They both end up < min, but with a leftover. If they round up, everything
     // will be fine. If they don't, well need to bring them up into range.
     // Guard::bringIntoRange handles this situation.
-
-#if MAXREP
-    static_assert(largeRange.min < maxRep);
-    static_assert(largeRange.max > maxRep);
-#endif
 
     // The range for the mantissa when normalized.
     // Use reference_wrapper to avoid making copies, and prevent accidentally
@@ -616,10 +601,7 @@ private:
     Number
     shiftExponent(int exponentDelta) const;
 
-    // Safely convert rep (int64) mantissa to internalrep (uint64). If the rep
-    // is negative, returns the positive value. This takes a little extra work
-    // because converting std::numeric_limits<std::int64_t>::min() flirts with
-    // UB, and can vary across compilers.
+    // Safely return the absolute value of a rep (int64) mantissa as an internalrep (uint64).
     static internalrep
     externalToInternal(rep mantissa);
 
@@ -676,7 +658,7 @@ public:
 };
 
 inline constexpr Number::Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept
-    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}, exponent_{exponent}
+    : mantissa_{negative ? -static_cast<rep>(mantissa) : static_cast<rep>(mantissa)}, exponent_{exponent}
 {
 }
 
@@ -734,7 +716,7 @@ Number::operator-() const noexcept
     if (mantissa_ == 0)
         return Number{};
     auto x = *this;
-    x.mantissa_ = -1 * x.mantissa_;
+    x.mantissa_ = -x.mantissa_;
     return x;
 }
 
@@ -827,7 +809,7 @@ Number::lowest() noexcept
 inline bool
 Number::isnormal(MantissaRange const& range) const noexcept
 {
-    auto const abs_m = mantissa_ < 0 ? -mantissa_ : mantissa_;
+    auto const abs_m = externalToInternal(mantissa_);
 
     return *this == Number{} ||
         (range.min <= abs_m && abs_m <= range.max &&  //
@@ -846,7 +828,7 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 {
     bool negative = mantissa_ < 0;
     auto const sign = negative ? -1 : 1;
-    internalrep mantissa = sign * mantissa_;
+    internalrep mantissa = externalToInternal(mantissa_);
     int exponent = exponent_;
 
     if constexpr (std::is_unsigned_v<T>)
@@ -863,11 +845,8 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 
     // Cast mantissa to signed type first (if T is a signed type) to avoid
     // unsigned integer overflow when multiplying by negative sign
-    T signedMantissa = static_cast<T>(mantissa);
-    if (negative)
-        signedMantissa = -signedMantissa;
+    T signedMantissa = negative ? static_cast<T>(-mantissa) : static_cast<T>(mantissa);
     return std::make_pair(signedMantissa, exponent);
-    return std::make_pair(sign * static_cast<T>(mantissa), exponent);
 }
 
 inline constexpr Number
