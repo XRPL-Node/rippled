@@ -179,7 +179,10 @@ AMMLiquidity<TIn, TOut>::getOffer(ReadView const& view, std::optional<Quality> c
         }
         catch (std::overflow_error const& e)
         {
-            JLOG(j_.error()) << "AMMLiquidity::getOffer overflow " << e.what();
+            // Store e.what() in a local variable to prevent stack-use-after-scope
+            // when the exception's internal storage becomes invalid in coroutine context
+            std::string const errorMsg = e.what();
+            JLOG(j_.error()) << "AMMLiquidity::getOffer overflow " << errorMsg;
             if (!view.rules().enabled(fixAMMOverflowOffer))
                 return maxOffer(balances, view.rules());
             else
@@ -187,7 +190,10 @@ AMMLiquidity<TIn, TOut>::getOffer(ReadView const& view, std::optional<Quality> c
         }
         catch (std::exception const& e)
         {
-            JLOG(j_.error()) << "AMMLiquidity::getOffer exception " << e.what();
+            // Store e.what() in a local variable to prevent stack-use-after-scope
+            // when the exception's internal storage becomes invalid in coroutine context
+            std::string const errorMsg = e.what();
+            JLOG(j_.error()) << "AMMLiquidity::getOffer exception " << errorMsg;
         }
         return std::nullopt;
     }();
