@@ -323,7 +323,6 @@ Number::toInternal(MantissaRange const& range) const
 {
     auto exponent = exponent_;
     bool const negative = mantissa_ < 0;
-    auto const sign = negative ? -1 : 1;
     // It should be impossible for mantissa_ to be INT64_MIN, but use externalToInternal just in case.
     Rep mantissa = static_cast<Rep>(externalToInternal(mantissa_));
 
@@ -358,10 +357,10 @@ Number::toInternal() const
 
 /** Rebuilds the number from components.
  *
- * If "normalized" is true, the values are expected to be normalized - all
+ * If "expectNormal" is true, the values are expected to be normalized - all
  * in their valid ranges.
  *
- * If "normalized" is false, the values are expected to be "near
+ * If "expectNormal" is false, the values are expected to be "near
  * normalized", meaning that the mantissa has to be modified at most once to
  * bring it back into range.
  *
@@ -390,8 +389,6 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
             mantissa >= minMantissa && mantissa <= maxMantissa, "xrpl::Number::fromInternal", "mantissa in range");
     }
 
-    auto const sign = negative ? -1 : 1;
-
     // mantissa is unsigned, but it might not be uint64
     mantissa_ = static_cast<rep>(static_cast<internalrep>(mantissa));
     if (negative)
@@ -404,10 +401,10 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
 
 /** Rebuilds the number from components.
  *
- * If "normalized" is true, the values are expected to be normalized - all in
+ * If "expectNormal" is true, the values are expected to be normalized - all in
  * their valid ranges.
  *
- * If "normalized" is false, the values are expected to be "near normalized",
+ * If "expectNormal" is false, the values are expected to be "near normalized",
  * meaning that the mantissa has to be modified at most once to bring it back
  * into range.
  *

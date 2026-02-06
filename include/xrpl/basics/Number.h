@@ -625,10 +625,10 @@ private:
 
     /** Rebuilds the number from components.
      *
-     * If "normalized" is true, the values are expected to be normalized - all
+     * If "expectNormal" is true, the values are expected to be normalized - all
      * in their valid ranges.
      *
-     * If "normalized" is false, the values are expected to be "near
+     * If "expectNormal" is false, the values are expected to be "near
      * normalized", meaning that the mantissa has to be modified at most once to
      * bring it back into range.
      *
@@ -639,10 +639,10 @@ private:
 
     /** Rebuilds the number from components.
      *
-     * If "normalized" is true, the values are expected to be normalized - all
+     * If "expectNormal" is true, the values are expected to be normalized - all
      * in their valid ranges.
      *
-     * If "normalized" is false, the values are expected to be "near
+     * If "expectNormal" is false, the values are expected to be "near
      * normalized", meaning that the mantissa has to be modified at most once to
      * bring it back into range.
      *
@@ -827,7 +827,6 @@ std::pair<T, int>
 Number::normalizeToRange(T minMantissa, T maxMantissa) const
 {
     bool negative = mantissa_ < 0;
-    auto const sign = negative ? -1 : 1;
     internalrep mantissa = externalToInternal(mantissa_);
     int exponent = exponent_;
 
