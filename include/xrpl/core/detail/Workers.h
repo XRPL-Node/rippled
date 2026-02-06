@@ -193,12 +193,11 @@ private:
 private:
     Callback& m_callback;
     perf::PerfLog* perfLog_;
-    std::string m_threadNames;     // The name to give each thread
-    std::condition_variable m_cv;  // signaled when all threads paused
+    std::string m_threadNames;  // The name to give each thread
     std::mutex m_mut;
     semaphore m_semaphore;                             // each pending task is 1 resource
     int m_numberOfThreads;                             // how many we want active now
-    int m_activeCount;                                 // to know when all are paused
+    std::atomic<int> m_activeCount;                    // to know when all are paused
     std::atomic<int> m_pauseCount;                     // how many threads need to pause now
     std::atomic<int> m_runningTaskCount;               // how many calls to processTask() active
     beast::LockFreeStack<Worker> m_everyone;           // holds all created workers

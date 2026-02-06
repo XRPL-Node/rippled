@@ -91,15 +91,12 @@ Workers::stop()
 {
     setNumberOfThreads(0);
 
-    std::unique_lock<std::mutex> lk{m_mut};
-    m_cv.wait(lk, [this] { return m_activeCount == 0; });
-    lk.unlock();
-
-    // Ensure we observe the latest value of m_runningTaskCount.
-    // This acquire fence pairs with the release fence in Worker::run()
-    // after decrementing m_runningTaskCount, ensuring proper memory
-    // visibility on ARM architectures.
-    std::atomic_thread_fence(std::memory_order_acquire);
+    int activeCount = m_activeCount.load();
+    while (activeCount != 0)
+    {
+        m_activeCount.wait(activeCount);
+        activeCount = m_activeCount.load();
+    }
 
     XRPL_ASSERT(numberOfCurrentlyRunningTasks() == 0, "xrpl::Workers::stop : zero running tasks");
 }
@@ -172,11 +169,8 @@ Workers::Worker::run()
         // Increment the count of active workers, and if
         // we are the first one then reset the "all paused" event
         //
-        {
-            std::lock_guard lk{m_workers.m_mut};
-            ++m_workers.m_activeCount;
-            m_workers.m_cv.notify_all();
-        }
+        ++m_workers.m_activeCount;
+        m_workers.m_activeCount.notify_all();
 
         for (;;)
         {
@@ -226,12 +220,8 @@ Workers::Worker::run()
         // Decrement the count of active workers, and if we
         // are the last one then signal the "all paused" event.
         //
-        {
-            std::lock_guard lk{m_workers.m_mut};
-
-            --m_workers.m_activeCount;
-            m_workers.m_cv.notify_all();
-        }
+        --m_workers.m_activeCount;
+        m_workers.m_activeCount.notify_all();
 
         // Set inactive thread name.
         beast::setCurrentThreadName("(" + threadName_ + ")");
