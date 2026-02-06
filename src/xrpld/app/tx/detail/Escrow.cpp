@@ -184,7 +184,21 @@ escrowCreatePreclaimHelper<Issue>(
     if (!sleIssuer)
         return tecNO_ISSUER;
     if (!sleIssuer->isFlag(lsfAllowTrustLineLocking))
-        return tecNO_PERMISSION;
+    {
+        // fixTokenEscrowV1_1: allows escrow for AMM pseudo accounts and
+        // blackholed issuers
+        if (ctx.view.rules().enabled(fixTokenEscrowV1_1))
+        {
+            bool const isAMM = isPseudoAccount(sleIssuer, {&sfAMMID});
+            bool const isBlackholedIssuer = isBlackholed(ctx.view, sleIssuer);
+            if (!isAMM && !isBlackholedIssuer)
+                return tecNO_PERMISSION;
+        }
+        else
+        {
+            return tecNO_PERMISSION;
+        }
+    }
 
     // If the account does not have a trustline to the issuer, return tecNO_LINE
     auto const sleRippleState =
@@ -478,6 +492,27 @@ EscrowCreate::doApply()
         auto const xferRate = transferRate(ctx_.view(), amount);
         if (xferRate != parityRate)
             (*slep)[sfTransferRate] = xferRate.value;
+
+        // Add lsfAllowTrustLineLocking to AMM pseudo accounts and
+        // blackholed issuers under fixTokenEscrowV1_1
+        if (ctx_.view().rules().enabled(fixTokenEscrowV1_1))
+        {
+            AccountID const issuer = amount.getIssuer();
+            auto sleIssuer = ctx_.view().peek(keylet::account(issuer));
+            if (sleIssuer && !sleIssuer->isFlag(lsfAllowTrustLineLocking))
+            {
+                bool const isAMM = isPseudoAccount(sleIssuer, {&sfAMMID});
+                bool const isBlackholedIssuer =
+                    isBlackholed(ctx_.view(), sleIssuer);
+                if (isAMM || isBlackholedIssuer)
+                {
+                    sleIssuer->setFieldU32(
+                        sfFlags,
+                        sleIssuer->getFlags() | lsfAllowTrustLineLocking);
+                    ctx_.view().update(sleIssuer);
+                }
+            }
+        }
     }
 
     ctx_.view().insert(slep);
@@ -755,6 +790,13 @@ escrowUnlockApplyHelper<Issue>(
     bool createAsset,
     beast::Journal journal)
 {
+    // fixTokenEscrowV1_1: sleDest must be an account root
+    if (view.rules().enabled(fixTokenEscrowV1_1))
+    {
+        if (!sleDest || sleDest->getType() != ltACCOUNT_ROOT)
+            return tecINTERNAL;
+    }
+
     Keylet const trustLineKey = keylet::line(receiver, amount.issue());
     bool const recvLow = issuer > receiver;
     bool const senderIssuer = issuer == sender;
@@ -888,6 +930,13 @@ escrowUnlockApplyHelper<MPTIssue>(
     bool createAsset,
     beast::Journal journal)
 {
+    // fixTokenEscrowV1_1: sleDest must be an account root
+    if (view.rules().enabled(fixTokenEscrowV1_1))
+    {
+        if (!sleDest || sleDest->getType() != ltACCOUNT_ROOT)
+            return tecINTERNAL;
+    }
+
     bool const senderIssuer = issuer == sender;
     bool const receiverIssuer = issuer == receiver;
 

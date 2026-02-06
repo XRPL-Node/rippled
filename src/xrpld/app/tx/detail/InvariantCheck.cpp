@@ -1067,9 +1067,14 @@ ValidNewAccountRoot::finalize(
 
         if (pseudoAccount)
         {
-            std::uint32_t const expected =
+            std::uint32_t const base =
                 (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
-            if (flags_ != expected)
+            bool valid = (flags_ == base);
+            // fixTokenEscrowV1_1: pseudo accounts will also have
+            // lsfAllowTrustLineLocking set at creation time.
+            if (!valid && view.rules().enabled(fixTokenEscrowV1_1))
+                valid = (flags_ == (base | lsfAllowTrustLineLocking));
+            if (!valid)
             {
                 JLOG(j.fatal())
                     << "Invariant failed: pseudo-account created with "

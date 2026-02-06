@@ -1,4 +1,5 @@
 #include <test/jtx.h>
+#include <test/jtx/AMM.h>
 
 #include <xrpld/app/tx/applySteps.h>
 
@@ -357,6 +358,97 @@ struct EscrowToken_test : public beast::unit_test::suite
                 fee(baseFee * 150),
                 ter(tecNO_PERMISSION));
             env.close();
+        }
+
+        // AMM issuer without asfAllowTrustLineLocking
+        // (succeeds under fixTokenEscrowV1_1, fails otherwise)
+        {
+            bool const withFix = features[fixTokenEscrowV1_1];
+            Env env{*this, features};
+            auto const baseFee = env.current()->fees().base;
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const carol = Account("carol");
+            auto const gw = Account{"gateway"};
+
+            env.fund(XRP(30'000), alice, bob, carol, gw);
+            env.close();
+
+            // Create an AMM pool (XRP/USD)
+            auto const USD = gw["USD"];
+            env.trust(USD(30'000), alice);
+            env.close();
+            env(pay(gw, alice, USD(10'000)));
+            env.close();
+
+            AMM ammAlice(env, alice, XRP(10'000), USD(10'000));
+            auto const ammAccount = ammAlice.ammAccount();
+            auto const lpIssue = ammAlice.lptIssue();
+
+            // Carol gets LP tokens
+            env.trust(STAmount{lpIssue, 10'000}, carol);
+            env.close();
+            env(pay(alice, carol, STAmount{lpIssue, 100}));
+            env.close();
+
+            // Try to create escrow with AMM account as issuer (LP tokens)
+            env(escrow::create(carol, bob, STAmount{lpIssue, 50}),
+                escrow::finish_time(env.now() + 1s),
+                fee(baseFee * 150),
+                ter(withFix ? TER(tesSUCCESS) : TER(tecNO_PERMISSION)));
+            env.close();
+
+            if (withFix)
+            {
+                // Verify the AMM account now has lsfAllowTrustLineLocking
+                auto const sleAMM = env.le(keylet::account(ammAccount));
+                BEAST_EXPECT(
+                    sleAMM && sleAMM->isFlag(lsfAllowTrustLineLocking));
+            }
+        }
+
+        // Blackholed issuer without asfAllowTrustLineLocking
+        // (succeeds under fixTokenEscrowV1_1, fails otherwise)
+        {
+            bool const withFix = features[fixTokenEscrowV1_1];
+            Env env{*this, features};
+            auto const baseFee = env.current()->fees().base;
+            auto const alice = Account("alice");
+            auto const bob = Account("bob");
+            auto const gw = Account{"gateway"};
+            auto const USD = gw["USD"];
+
+            env.fund(XRP(5000), alice, bob, gw);
+            env.close();
+            env.trust(USD(10'000), alice, bob);
+            env.close();
+            env(pay(gw, alice, USD(5000)));
+            env(pay(gw, bob, USD(5000)));
+            env.close();
+
+            // Blackhole the gateway: set regular key to AccountID(1)
+            // (noAccount), then disable master key. AccountID(1) is a
+            // non-functional account that nobody can sign with.
+            Account const blackhole("blackhole", AccountID(1));
+            env(regkey(gw, blackhole));
+            env.close();
+            // Disable master key (must use master key to disable it)
+            env(fset(gw, asfDisableMaster), sig(gw));
+            env.close();
+
+            // Try to create escrow with blackholed issuer
+            env(escrow::create(alice, bob, USD(100)),
+                escrow::finish_time(env.now() + 1s),
+                fee(baseFee * 150),
+                ter(withFix ? TER(tesSUCCESS) : TER(tecNO_PERMISSION)));
+            env.close();
+
+            if (withFix)
+            {
+                // Verify the gateway now has lsfAllowTrustLineLocking
+                auto const sleGW = env.le(keylet::account(gw));
+                BEAST_EXPECT(sleGW && sleGW->isFlag(lsfAllowTrustLineLocking));
+            }
         }
 
         // tecNO_LINE: account does not have a trustline to the issuer
@@ -4089,6 +4181,7 @@ public:
         testIOUWithFeats(all - fixTokenEscrowV1_1);
         testMPTWithFeats(all);
         testMPTWithFeats(all - fixTokenEscrowV1);
+        testMPTWithFeats(all - fixTokenEscrowV1 - fixTokenEscrowV1_1);
     }
 };
 

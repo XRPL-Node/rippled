@@ -202,7 +202,10 @@ applyCreate(
     auto const ammKeylet = keylet::amm(amount.issue(), amount2.issue());
 
     // Mitigate same account exists possibility
-    auto const maybeAccount = createPseudoAccount(sb, ammKeylet.key, sfAMMID);
+    std::uint32_t const additionalFlags =
+        sb.rules().enabled(fixTokenEscrowV1_1) ? lsfAllowTrustLineLocking : 0;
+    auto const maybeAccount =
+        createPseudoAccount(sb, ammKeylet.key, sfAMMID, additionalFlags);
     // AMM account already exists (should not happen)
     if (!maybeAccount)
     {

@@ -130,6 +130,48 @@ private:
         BEAST_EXPECT(
             STIssue(sfAsset, STAmount(XRP(2'000)).issue()) !=
             STIssue(sfAsset, STAmount(USD(2'000)).issue()));
+
+        // AMM account flags with fixTokenEscrowV1_1
+        // New AMM accounts should have lsfAllowTrustLineLocking set
+        {
+            Env env{*this, testable_amendments()};
+            fund(env, gw, {alice}, {USD(20'000)}, Fund::All);
+            AMM ammAlice(env, alice, XRP(10'000), USD(10'000));
+            auto const ammAccount = ammAlice.ammAccount();
+
+            // Check that AMM account has expected flags
+            auto const sleAMM = env.le(keylet::account(ammAccount));
+            BEAST_EXPECT(sleAMM);
+            if (sleAMM)
+            {
+                // Base pseudo-account flags
+                BEAST_EXPECT(sleAMM->isFlag(lsfDisableMaster));
+                BEAST_EXPECT(sleAMM->isFlag(lsfDefaultRipple));
+                BEAST_EXPECT(sleAMM->isFlag(lsfDepositAuth));
+                BEAST_EXPECT(sleAMM->isFlag(lsfAllowTrustLineLocking));
+            }
+        }
+
+        // AMM account flags without fixTokenEscrowV1_1
+        // New AMM accounts should NOT have lsfAllowTrustLineLocking
+        {
+            Env env{*this, testable_amendments() - fixTokenEscrowV1_1};
+            fund(env, gw, {alice}, {USD(20'000)}, Fund::All);
+            AMM ammAlice(env, alice, XRP(10'000), USD(10'000));
+            auto const ammAccount = ammAlice.ammAccount();
+
+            // Check that AMM account has expected flags
+            auto const sleAMM = env.le(keylet::account(ammAccount));
+            BEAST_EXPECT(sleAMM);
+            if (sleAMM)
+            {
+                // Base pseudo-account flags
+                BEAST_EXPECT(sleAMM->isFlag(lsfDisableMaster));
+                BEAST_EXPECT(sleAMM->isFlag(lsfDefaultRipple));
+                BEAST_EXPECT(sleAMM->isFlag(lsfDepositAuth));
+                BEAST_EXPECT(!sleAMM->isFlag(lsfAllowTrustLineLocking));
+            }
+        }
     }
 
     void

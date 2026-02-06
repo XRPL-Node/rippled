@@ -653,7 +653,8 @@ pseudoAccountAddress(ReadView const& view, uint256 const& pseudoOwnerKey);
 createPseudoAccount(
     ApplyView& view,
     uint256 const& pseudoOwnerKey,
-    SField const& ownerField);
+    SField const& ownerField,
+    std::uint32_t additionalFlags = 0);
 
 // Returns true iff sleAcct is a pseudo-account or specific
 // pseudo-accounts in pseudoFieldFilter.
@@ -687,6 +688,13 @@ isPseudoAccount(
     return isPseudoAccount(
         view.read(keylet::account(accountId)), pseudoFieldFilter);
 }
+
+// Returns true if the account is blackholed:
+// - lsfDisableMaster is set
+// - Regular key (if present) is AccountID(0), AccountID(1), or AccountID(2)
+// - No signer list exists
+[[nodiscard]] bool
+isBlackholed(ReadView const& view, std::shared_ptr<SLE const> const& sle);
 
 [[nodiscard]] TER
 canAddHolding(ReadView const& view, Asset const& asset);

@@ -1242,11 +1242,44 @@ isPseudoAccount(
             }) > 0;
 }
 
+[[nodiscard]] bool
+isBlackholed(ReadView const& view, std::shared_ptr<SLE const> const& sle)
+{
+    if (!sle || sle->getType() != ltACCOUNT_ROOT)
+        return false;
+
+    // If master key is not disabled, not blackholed
+    if (!sle->isFlag(lsfDisableMaster))
+        return false;
+
+    // If a regular key is set, it must be AccountID(0), AccountID(1), or
+    // AccountID(2) for the account to be blackholed
+    if (sle->isFieldPresent(sfRegularKey))
+    {
+        AccountID const rk = sle->getAccountID(sfRegularKey);
+        static AccountID const ACCOUNT_ZERO(0);
+        static AccountID const ACCOUNT_ONE(1);
+        static AccountID const ACCOUNT_TWO(2);
+
+        if (rk != ACCOUNT_ZERO && rk != ACCOUNT_ONE && rk != ACCOUNT_TWO)
+            return false;
+    }
+
+    // If a signer list is set, not blackholed
+    AccountID const account = sle->getAccountID(sfAccount);
+    if (view.exists(keylet::signers(account)))
+        return false;
+
+    // All conditions met: account is blackholed
+    return true;
+}
+
 Expected<std::shared_ptr<SLE>, TER>
 createPseudoAccount(
     ApplyView& view,
     uint256 const& pseudoOwnerKey,
-    SField const& ownerField)
+    SField const& ownerField,
+    std::uint32_t additionalFlags)
 {
     [[maybe_unused]]
     auto const& fields = getPseudoAccountFields();
@@ -1281,7 +1314,8 @@ createPseudoAccount(
     // rippling, and enable deposit authorization to prevent payments into
     // pseudo-account.
     account->setFieldU32(
-        sfFlags, lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
+        sfFlags,
+        lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth | additionalFlags);
     // Link the pseudo-account with its owner object.
     account->setFieldH256(ownerField, pseudoOwnerKey);
 
