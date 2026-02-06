@@ -9,7 +9,6 @@ Workers::Workers(Callback& callback, perf::PerfLog* perfLog, std::string const& 
     : m_callback(callback)
     , perfLog_(perfLog)
     , m_threadNames(threadNames)
-    , m_allPaused(true)
     , m_semaphore(0)
     , m_numberOfThreads(0)
     , m_activeCount(0)
@@ -93,7 +92,7 @@ Workers::stop()
     setNumberOfThreads(0);
 
     std::unique_lock<std::mutex> lk{m_mut};
-    m_cv.wait(lk, [this] { return m_allPaused; });
+    m_cv.wait(lk, [this] { return m_activeCount == 0; });
     lk.unlock();
 
     // Ensure we observe the latest value of m_runningTaskCount.
@@ -173,10 +172,10 @@ Workers::Worker::run()
         // Increment the count of active workers, and if
         // we are the first one then reset the "all paused" event
         //
-        if (++m_workers.m_activeCount == 1)
         {
             std::lock_guard lk{m_workers.m_mut};
-            m_workers.m_allPaused = false;
+            ++m_workers.m_activeCount;
+            m_workers.m_cv.notify_all();
         }
 
         for (;;)
@@ -227,15 +226,10 @@ Workers::Worker::run()
         // Decrement the count of active workers, and if we
         // are the last one then signal the "all paused" event.
         //
-        if (--m_workers.m_activeCount == 0)
         {
-            // Ensure all workers' decrements of m_runningTaskCount are visible
-            // before we signal that all workers are paused. This pairs with the
-            // acquire fence in stop().
-            std::atomic_thread_fence(std::memory_order_release);
-
             std::lock_guard lk{m_workers.m_mut};
-            m_workers.m_allPaused = true;
+
+            --m_workers.m_activeCount;
             m_workers.m_cv.notify_all();
         }
 
