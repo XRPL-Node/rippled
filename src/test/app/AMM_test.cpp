@@ -3798,17 +3798,26 @@ private:
     }
 
     void
-    testFlags()
+    testFlags(FeatureBitset features)
     {
         testcase("Flags");
         using namespace jtx;
 
-        testAMM([&](AMM& ammAlice, Env& env) {
-            auto const info = env.rpc(
-                "json", "account_info", std::string("{\"account\": \"" + to_string(ammAlice.ammAccount()) + "\"}"));
-            auto const flags = info[jss::result][jss::account_data][jss::Flags].asUInt();
-            BEAST_EXPECT(flags == (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth));
-        });
+        testAMM(
+            [&](AMM& ammAlice, Env& env) {
+                auto const info = env.rpc(
+                    "json", "account_info", std::string("{\"account\": \"" + to_string(ammAlice.ammAccount()) + "\"}"));
+                auto const flags = info[jss::result][jss::account_data][jss::Flags].asUInt();
+                if (!env.enabled(fixTokenEscrowV1_1))
+                    BEAST_EXPECT(flags == (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth));
+                else
+                    BEAST_EXPECT(
+                        flags == (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth | lsfAllowTrustLineLocking));
+            },
+            std::nullopt,
+            0,
+            std::nullopt,
+            {features});
     }
 
     void
@@ -6286,7 +6295,8 @@ private:
         testBasicPaymentEngine(all - fixAMMv1_1 - fixAMMv1_3 - fixReducedOffersV2);
         testAMMTokens();
         testAmendment();
-        testFlags();
+        testFlags(all);
+        testFlags(all - fixTokenEscrowV1_1);
         testRippling();
         testAMMAndCLOB(all);
         testAMMAndCLOB(all - fixAMMv1_1 - fixAMMv1_3);
