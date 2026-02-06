@@ -1,5 +1,4 @@
-#ifndef XRPL_TX_VAULTCLAWBACK_H_INCLUDED
-#define XRPL_TX_VAULTCLAWBACK_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
@@ -22,8 +21,14 @@ public:
 
     TER
     doApply() override;
+
+private:
+    Expected<std::pair<STAmount, STAmount>, TER>
+    assetsToClawback(
+        std::shared_ptr<SLE> const& vault,
+        std::shared_ptr<SLE const> const& sleShareIssuance,
+        AccountID const& holder,
+        STAmount const& clawbackAmount);
 };
 
 }  // namespace xrpl
-
-#endif

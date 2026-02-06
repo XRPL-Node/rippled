@@ -1,5 +1,4 @@
-#ifndef XRPL_TX_LOANBROKERSET_H_INCLUDED
-#define XRPL_TX_LOANBROKERSET_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
@@ -20,6 +19,9 @@ public:
     static NotTEC
     preflight(PreflightContext const& ctx);
 
+    static std::vector<OptionaledField<STNumber>> const&
+    getValueFields();
+
     static TER
     preclaim(PreclaimContext const& ctx);
 
@@ -30,5 +32,3 @@ public:
 //------------------------------------------------------------------------------
 
 }  // namespace xrpl
-
-#endif

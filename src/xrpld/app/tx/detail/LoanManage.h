@@ -1,5 +1,4 @@
-#ifndef XRPL_TX_LOANMANAGE_H_INCLUDED
-#define XRPL_TX_LOANMANAGE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/tx/detail/Transactor.h>
 
@@ -40,20 +39,12 @@ public:
     /** Helper function that might be needed by other transactors
      */
     static TER
-    impairLoan(
-        ApplyView& view,
-        SLE::ref loanSle,
-        SLE::ref vaultSle,
-        beast::Journal j);
+    impairLoan(ApplyView& view, SLE::ref loanSle, SLE::ref vaultSle, Asset const& vaultAsset, beast::Journal j);
 
     /** Helper function that might be needed by other transactors
      */
-    static TER
-    unimpairLoan(
-        ApplyView& view,
-        SLE::ref loanSle,
-        SLE::ref vaultSle,
-        beast::Journal j);
+    [[nodiscard]] static TER
+    unimpairLoan(ApplyView& view, SLE::ref loanSle, SLE::ref vaultSle, Asset const& vaultAsset, beast::Journal j);
 
     TER
     doApply() override;
@@ -62,5 +53,3 @@ public:
 //------------------------------------------------------------------------------
 
 }  // namespace xrpl
-
-#endif

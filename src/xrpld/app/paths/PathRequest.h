@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
-#define XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/Pathfinder.h>
@@ -103,14 +102,10 @@ private:
         std::function<bool(void)> const&);
 
     /** Finds and sets a PathSet in the JSON argument.
-        Returns false if the source currencies are inavlid.
+        Returns false if the source currencies are invalid.
     */
     bool
-    findPaths(
-        std::shared_ptr<RippleLineCache> const&,
-        int const,
-        Json::Value&,
-        std::function<bool(void)> const&);
+    findPaths(std::shared_ptr<RippleLineCache> const&, int const, Json::Value&, std::function<bool(void)> const&);
 
     int
     parseJson(Json::Value const&);
@@ -159,5 +154,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

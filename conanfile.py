@@ -23,7 +23,6 @@ class Xrpl(ConanFile):
         "shared": [True, False],
         "static": [True, False],
         "tests": [True, False],
-        "unity": [True, False],
         "xrpld": [True, False],
     }
 
@@ -32,14 +31,14 @@ class Xrpl(ConanFile):
         "grpc/1.72.0",
         "libarchive/3.8.1",
         "nudb/2.0.9",
-        "openssl/3.5.4",
-        "secp256k1/0.7.0",
+        "openssl/3.5.5",
+        "secp256k1/0.7.1",
         "soci/4.0.3",
         "zlib/1.3.1",
     ]
 
     test_requires = [
-        "doctest/2.4.12",
+        "gtest/1.17.0",
     ]
 
     tool_requires = [
@@ -55,7 +54,6 @@ class Xrpl(ConanFile):
         "shared": False,
         "static": True,
         "tests": False,
-        "unity": False,
         "xrpld": False,
         "date/*:header_only": True,
         "ed25519/*:shared": False,
@@ -87,7 +85,13 @@ class Xrpl(ConanFile):
         "libarchive/*:with_xattr": False,
         "libarchive/*:with_zlib": False,
         "lz4/*:shared": False,
+        "openssl/*:no_dtls": True,
+        "openssl/*:no_ssl": True,
+        "openssl/*:no_ssl3": True,
+        "openssl/*:no_tls1": True,
+        "openssl/*:no_tls1_1": True,
         "openssl/*:shared": False,
+        "openssl/*:tls_security_level": 2,
         "protobuf/*:shared": False,
         "protobuf/*:with_zlib": True,
         "rocksdb/*:enable_sse": False,
@@ -125,7 +129,7 @@ class Xrpl(ConanFile):
         transitive_headers_opt = (
             {"transitive_headers": True} if conan_version.split(".")[0] == "2" else {}
         )
-        self.requires("boost/1.88.0", force=True, **transitive_headers_opt)
+        self.requires("boost/1.90.0", force=True, **transitive_headers_opt)
         self.requires("date/3.0.4", **transitive_headers_opt)
         self.requires("lz4/1.10.0", force=True)
         self.requires("protobuf/6.32.1", force=True)
@@ -162,7 +166,6 @@ class Xrpl(ConanFile):
         tc.variables["rocksdb"] = self.options.rocksdb
         tc.variables["BUILD_SHARED_LIBS"] = self.options.shared
         tc.variables["static"] = self.options.static
-        tc.variables["unity"] = self.options.unity
         tc.variables["xrpld"] = self.options.xrpld
         tc.generate()
 
@@ -197,7 +200,6 @@ class Xrpl(ConanFile):
             "boost::program_options",
             "boost::process",
             "boost::regex",
-            "boost::system",
             "boost::thread",
             "date::date",
             "ed25519::ed25519",
