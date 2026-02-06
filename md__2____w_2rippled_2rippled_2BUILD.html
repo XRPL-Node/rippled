@@ -400,12 +400,15 @@ Options</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>tests</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Build tests.    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>xrpld</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Build the xrpld application, and not just the libxrpl library.    </td></tr>
+<td class="markdownTableBodyNone"><code>unity</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Configure a unity build.    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>werr</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Treat compilation warnings as errors    </td></tr>
+<td class="markdownTableBodyNone"><code>xrpld</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Build the xrpld application, and not just the libxrpl library.    </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>werr</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Treat compilation warnings as errors    </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>wextra</code>   </td><td class="markdownTableBodyNone">OFF   </td><td class="markdownTableBodyNone">Enable additional compilation warnings   </td></tr>
 </table>
+<p><a href="https://en.wikipedia.org/wiki/Unity_build">Unity builds</a> may be faster for the first build (at the cost of much more memory) since they concatenate sources into fewer translation units. Non-unity builds may be faster for incremental builds, and can be helpful for detecting <code>#include</code> omissions.</p>
 <h2><a class="anchor" id="autotoc_md71"></a>
 Troubleshooting</h2>
 <h3><a class="anchor" id="autotoc_md72"></a>
