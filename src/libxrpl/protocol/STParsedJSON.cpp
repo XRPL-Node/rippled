@@ -69,17 +69,13 @@ make_name(std::string const& object, std::string const& field)
     if (field.empty())
         return object;
 
-    return object + "." + field;
+    return {object + "." + field};
 }
 
-// Note: Store make_name() result in a local variable before string concatenation
-// to prevent stack-use-after-scope when the temporary is used in chained operations
 static inline Json::Value
 not_an_object(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' is not a JSON object.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' is not a JSON object.");
 }
 
 static inline Json::Value
@@ -97,33 +93,25 @@ not_an_array(std::string const& object)
 static inline Json::Value
 unknown_field(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' is unknown.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' is unknown.");
 }
 
 static inline Json::Value
 out_of_range(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' is out of range.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' is out of range.");
 }
 
 static inline Json::Value
 bad_type(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' has bad type.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' has bad type.");
 }
 
 static inline Json::Value
 invalid_data(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' has invalid data.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' has invalid data.");
 }
 
 static inline Json::Value
@@ -135,17 +123,13 @@ invalid_data(std::string const& object)
 static inline Json::Value
 array_expected(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' must be a JSON array.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' must be a JSON array.");
 }
 
 static inline Json::Value
 string_expected(std::string const& object, std::string const& field)
 {
-    auto const fieldName = make_name(object, field);
-    std::string const msg = "Field '" + fieldName + "' must be a string.";
-    return RPC::make_error(rpcINVALID_PARAMS, msg);
+    return RPC::make_error(rpcINVALID_PARAMS, "Field '" + make_name(object, field) + "' must be a string.");
 }
 
 static inline Json::Value

@@ -3,7 +3,6 @@
 #include <xrpl/beast/utility/instrumentation.h>
 
 #include <sstream>
-#include <string>
 
 namespace beast {
 
@@ -159,17 +158,6 @@ public:
         std::ostream&
         operator<<(T const& t) const;
 
-        /** Overload for const char* for chained operations.
-            Handles cases like: stream << "text1" << "text2"
-            Converts to std::string to prevent stack-use-after-scope issues.
-        */
-        std::ostream&
-        operator<<(char const* t) const
-        {
-            m_ostream << std::string(t);
-            return m_ostream;
-        }
-
     private:
         Sink& m_sink;
         Severity const m_level;
@@ -250,18 +238,6 @@ public:
         template <typename T>
         ScopedStream
         operator<<(T const& t) const;
-
-        /** Overload for const char* to ensure immediate copy.
-            This prevents stack-use-after-scope issues when the source
-            pointer becomes invalid due to coroutine context switches or
-            stack unwinding. Converts to std::string immediately to copy
-            the data before constructing ScopedStream.
-        */
-        ScopedStream
-        operator<<(char const* t) const
-        {
-            return t ? ScopedStream(*this, std::string(t)) : ScopedStream(*this, std::string());
-        }
         /** @} */
 
     private:
