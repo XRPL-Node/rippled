@@ -27,7 +27,7 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
               finished_ = true;
 #endif
           },
-          boost::coroutines::attributes(megabytes(2)))  // 2MB stack (increased from 1MB)
+          boost::coroutines::attributes(megabytes(4)))  // 4MB stack (increased from 1MB)
 {
 }
 
