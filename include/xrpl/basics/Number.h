@@ -543,7 +543,7 @@ private:
     // * 9223372036854775808
     // * 9223372036854775809
     // They both end up < min, but with a leftover. If they round up, everything
-    // will be fine. If they don't, well need to bring them up into range.
+    // will be fine. If they don't, we'll need to bring them up into range.
     // Guard::bringIntoRange handles this situation.
 
     // The range for the mantissa when normalized.
@@ -844,7 +844,7 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 
     // Cast mantissa to signed type first (if T is a signed type) to avoid
     // unsigned integer overflow when multiplying by negative sign
-    T signedMantissa = negative ? static_cast<T>(-mantissa) : static_cast<T>(mantissa);
+    T signedMantissa = negative ? -static_cast<T>(mantissa) : static_cast<T>(mantissa);
     return std::make_pair(signedMantissa, exponent);
 }
 
