@@ -385,8 +385,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             {
                 // Verify the AMM account now has lsfAllowTrustLineLocking
                 auto const sleAMM = env.le(keylet::account(ammAccount));
-                BEAST_EXPECT(
-                    sleAMM && sleAMM->isFlag(lsfAllowTrustLineLocking));
+                BEAST_EXPECT(sleAMM && sleAMM->isFlag(lsfAllowTrustLineLocking));
             }
         }
 
@@ -1002,8 +1001,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             env.close();
 
             // Verify trust line is gone
-            auto const trustLineKey =
-                keylet::line(alice.id(), gw.id(), USD.currency);
+            auto const trustLineKey = keylet::line(alice.id(), gw.id(), USD.currency);
             BEAST_EXPECT(!env.current()->exists(trustLineKey));
 
             // Wait for CancelAfter to pass
@@ -1012,12 +1010,8 @@ struct EscrowToken_test : public beast::unit_test::suite
 
             // Alice cancels her own escrow
             auto const expectedResult =
-                env.current()->rules().enabled(fixTokenEscrowV1_1)
-                ? ter(tesSUCCESS)
-                : ter(tefEXCEPTION);
-            env(escrow::cancel(alice, alice, seq),
-                fee(baseFee),
-                expectedResult);
+                env.current()->rules().enabled(fixTokenEscrowV1_1) ? ter(tesSUCCESS) : ter(tefEXCEPTION);
+            env(escrow::cancel(alice, alice, seq), fee(baseFee), expectedResult);
             env.close();
 
             if (env.current()->rules().enabled(fixTokenEscrowV1_1))
@@ -2912,10 +2906,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             auto const gw = Account("gw");
 
             MPTTester mptGw(env, gw, {.holders = {alice, bob}});
-            mptGw.create(
-                {.ownerCount = 1,
-                 .holderCount = 0,
-                 .flags = tfMPTCanEscrow | tfMPTCanTransfer});
+            mptGw.create({.ownerCount = 1, .holderCount = 0, .flags = tfMPTCanEscrow | tfMPTCanTransfer});
             mptGw.authorize({.account = alice});
             mptGw.authorize({.account = bob});
             auto const MPT = mptGw["MPT"];
@@ -2949,9 +2940,7 @@ struct EscrowToken_test : public beast::unit_test::suite
             env.close();
 
             // Alice cancels her own escrow
-            env(escrow::cancel(alice, alice, seq),
-                fee(baseFee),
-                ter(tesSUCCESS));
+            env(escrow::cancel(alice, alice, seq), fee(baseFee), ter(tesSUCCESS));
             env.close();
 
             // Verify the escrow was deleted

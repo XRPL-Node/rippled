@@ -979,8 +979,7 @@ ValidNewAccountRoot::finalize(
 
         if (pseudoAccount)
         {
-            std::uint32_t const base =
-                (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
+            std::uint32_t const base = (lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
             bool valid = (flags_ == base);
             // fixTokenEscrowV1_1: pseudo accounts will also have
             // lsfAllowTrustLineLocking set at creation time.

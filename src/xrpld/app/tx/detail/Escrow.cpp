@@ -464,13 +464,10 @@ EscrowCreate::doApply()
             if (sleIssuer && !sleIssuer->isFlag(lsfAllowTrustLineLocking))
             {
                 bool const isAMM = isPseudoAccount(sleIssuer, {&sfAMMID});
-                bool const isBlackholedIssuer =
-                    isBlackholed(ctx_.view(), sleIssuer);
+                bool const isBlackholedIssuer = isBlackholed(ctx_.view(), sleIssuer);
                 if (isAMM || isBlackholedIssuer)
                 {
-                    sleIssuer->setFieldU32(
-                        sfFlags,
-                        sleIssuer->getFlags() | lsfAllowTrustLineLocking);
+                    sleIssuer->setFieldU32(sfFlags, sleIssuer->getFlags() | lsfAllowTrustLineLocking);
                     ctx_.view().update(sleIssuer);
                 }
             }
@@ -1223,8 +1220,7 @@ EscrowCancel::doApply()
                         parityRate,
                         // fixTokenEscrowV1_1: Pass account SLE instead of
                         // escrow SLE
-                        ctx_.view().rules().enabled(fixTokenEscrowV1_1) ? sle
-                                                                        : slep,
+                        ctx_.view().rules().enabled(fixTokenEscrowV1_1) ? sle : slep,
                         mPriorBalance,
                         amount,
                         issuer,
