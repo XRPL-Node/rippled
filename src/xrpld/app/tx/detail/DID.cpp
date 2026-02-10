@@ -33,14 +33,9 @@ DIDSet::preflight(PreflightContext const& ctx)
         ctx.tx[sfDIDDocument].empty() && ctx.tx.isFieldPresent(sfData) && ctx.tx[sfData].empty())
         return temEMPTY_DID;
 
-    auto isTooLong = [&](auto const& sField, std::size_t length) -> bool {
-        if (auto field = ctx.tx[~sField])
-            return field->length() > length;
-        return false;
-    };
-
-    if (isTooLong(sfURI, maxDIDURILength) || isTooLong(sfDIDDocument, maxDIDDocumentLength) ||
-        isTooLong(sfData, maxDIDAttestationLength))
+    if (!validDataLength(ctx.tx[~sfURI], maxDIDURILength) ||
+        !validDataLength(ctx.tx[~sfDIDDocument], maxDIDDocumentLength) ||
+        !validDataLength(ctx.tx[~sfData], maxDIDAttestationLength))
         return temMALFORMED;
 
     return tesSUCCESS;

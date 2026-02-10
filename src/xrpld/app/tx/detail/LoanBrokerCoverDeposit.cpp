@@ -16,7 +16,7 @@ NotTEC
 LoanBrokerCoverDeposit::preflight(PreflightContext const& ctx)
 {
     if (ctx.tx[sfLoanBrokerID] == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     auto const dstAmount = ctx.tx[sfAmount];
     if (dstAmount <= beast::zero)

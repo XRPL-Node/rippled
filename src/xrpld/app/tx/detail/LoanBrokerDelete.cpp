@@ -16,7 +16,7 @@ NotTEC
 LoanBrokerDelete::preflight(PreflightContext const& ctx)
 {
     if (ctx.tx[sfLoanBrokerID] == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     return tesSUCCESS;
 }

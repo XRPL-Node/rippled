@@ -28,7 +28,7 @@ NotTEC
 LoanPay::preflight(PreflightContext const& ctx)
 {
     if (ctx.tx[sfLoanID] == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (ctx.tx[sfAmount] <= beast::zero)
         return temBAD_AMOUNT;

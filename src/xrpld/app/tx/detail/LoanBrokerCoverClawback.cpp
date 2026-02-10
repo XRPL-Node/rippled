@@ -19,10 +19,10 @@ LoanBrokerCoverClawback::preflight(PreflightContext const& ctx)
     auto const amount = ctx.tx[~sfAmount];
 
     if (!brokerID && !amount)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (brokerID && *brokerID == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (amount)
     {
@@ -41,7 +41,7 @@ LoanBrokerCoverClawback::preflight(PreflightContext const& ctx)
         if (!brokerID)
         {
             if (amount->holds<MPTIssue>())
-                return temINVALID;
+                return temInvalidToMalformed(ctx);
 
             auto const account = ctx.tx[sfAccount];
             // Since we don't have a LoanBrokerID, holder _should_ be the loan
@@ -49,7 +49,7 @@ LoanBrokerCoverClawback::preflight(PreflightContext const& ctx)
             // use a generic placeholder name.
             auto const holder = amount->getIssuer();
             if (holder == account || holder == beast::zero)
-                return temINVALID;
+                return temInvalidToMalformed(ctx);
         }
     }
 

@@ -23,7 +23,7 @@ NotTEC
 LoanManage::preflight(PreflightContext const& ctx)
 {
     if (ctx.tx[sfLoanID] == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     // Flags are mutually exclusive
     if (auto const flagField = ctx.tx[~sfFlags]; flagField && *flagField)

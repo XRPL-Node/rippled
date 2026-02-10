@@ -10,6 +10,12 @@ checkLendingProtocolDependencies(PreflightContext const& ctx)
     return ctx.rules.enabled(featureSingleAssetVault) && VaultCreate::checkExtraFeatures(ctx);
 }
 
+NotTEC
+temInvalidToMalformed(PreflightContext const& ctx)
+{
+    return ctx.rules.enabled(fixLendingProtocolV1_1) ? temMALFORMED : temINVALID;
+}
+
 LoanPaymentParts&
 LoanPaymentParts::operator+=(LoanPaymentParts const& other)
 {

@@ -53,40 +53,40 @@ LoanSet::preflight(PreflightContext const& ctx)
             return ret;
     }
 
-    if (auto const data = tx[~sfData]; data && !data->empty() && !validDataLength(tx[~sfData], maxDataPayloadLength))
-        return temINVALID;
+    if (auto const data = tx[~sfData]; data && !validDataLength(tx[~sfData], maxDataPayloadLength))
+        return temInvalidToMalformed(ctx);
     for (auto const& field : {&sfLoanServiceFee, &sfLatePaymentFee, &sfClosePaymentFee})
     {
         if (!validNumericMinimum(tx[~*field]))
-            return temINVALID;
+            return temInvalidToMalformed(ctx);
     }
     // Principal Requested is required
     if (auto const p = tx[sfPrincipalRequested]; p <= 0)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     else if (!validNumericRange(tx[~sfLoanOriginationFee], p))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfInterestRate], maxInterestRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfOverpaymentFee], maxOverpaymentFee))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfLateInterestRate], maxLateInterestRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfCloseInterestRate], maxCloseInterestRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfOverpaymentInterestRate], maxOverpaymentInterestRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (auto const paymentTotal = tx[~sfPaymentTotal]; paymentTotal && *paymentTotal <= 0)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (auto const paymentInterval = tx[~sfPaymentInterval];
         !validNumericMinimum(paymentInterval, LoanSet::minPaymentInterval))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     // Grace period is between min default value and payment interval
     else if (auto const gracePeriod = tx[~sfGracePeriod];  //
              !validNumericRange(
                  gracePeriod, paymentInterval.value_or(LoanSet::defaultPaymentInterval), defaultGracePeriod))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     // Copied from preflight2
     if (counterPartySig)
@@ -96,7 +96,7 @@ LoanSet::preflight(PreflightContext const& ctx)
     }
 
     if (auto const brokerID = ctx.tx[~sfLoanBrokerID]; brokerID && *brokerID == beast::zero)
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     return tesSUCCESS;
 }

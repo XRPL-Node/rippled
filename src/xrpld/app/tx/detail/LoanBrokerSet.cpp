@@ -18,16 +18,16 @@ LoanBrokerSet::preflight(PreflightContext const& ctx)
     using namespace Lending;
 
     auto const& tx = ctx.tx;
-    if (auto const data = tx[~sfData]; data && !data->empty() && !validDataLength(tx[~sfData], maxDataPayloadLength))
-        return temINVALID;
+    if (auto const data = tx[~sfData]; data && !validDataLength(tx[~sfData], maxDataPayloadLength))
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfManagementFeeRate], maxManagementFeeRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfCoverRateMinimum], maxCoverRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfCoverRateLiquidation], maxCoverRate))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
     if (!validNumericRange(tx[~sfDebtMaximum], Number(maxMPTokenAmount), Number(0)))
-        return temINVALID;
+        return temInvalidToMalformed(ctx);
 
     if (tx.isFieldPresent(sfLoanBrokerID))
     {
@@ -35,16 +35,16 @@ LoanBrokerSet::preflight(PreflightContext const& ctx)
         // LoanBroker Object
         if (tx.isFieldPresent(sfManagementFeeRate) || tx.isFieldPresent(sfCoverRateMinimum) ||
             tx.isFieldPresent(sfCoverRateLiquidation))
-            return temINVALID;
+            return temInvalidToMalformed(ctx);
 
         if (tx[sfLoanBrokerID] == beast::zero)
-            return temINVALID;
+            return temInvalidToMalformed(ctx);
     }
 
     if (auto const vaultID = tx.at(~sfVaultID))
     {
         if (*vaultID == beast::zero)
-            return temINVALID;
+            return temInvalidToMalformed(ctx);
     }
 
     {
@@ -53,7 +53,7 @@ LoanBrokerSet::preflight(PreflightContext const& ctx)
         // Both must be zero or non-zero.
         if (minimumZero != liquidationZero)
         {
-            return temINVALID;
+            return temInvalidToMalformed(ctx);
         }
     }
 
