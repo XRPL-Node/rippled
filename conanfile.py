@@ -58,6 +58,9 @@ class Xrpl(ConanFile):
         "tests": False,
         "unity": False,
         "xrpld": False,
+        "boost/*:without_context": False,
+        "boost/*:without_coroutine": True,
+        "boost/*:without_coroutine2": False,
         "date/*:header_only": True,
         "ed25519/*:shared": False,
         "grpc/*:shared": False,
@@ -126,6 +129,9 @@ class Xrpl(ConanFile):
             self.options["boost"].visibility = "global"
         if self.settings.compiler in ["clang", "gcc"]:
             self.options["boost"].without_cobalt = True
+        self.options["boost"].without_context = False
+        self.options["boost"].without_coroutine = True
+        self.options["boost"].without_coroutine2 = False
         # Check if environment variable exists
         if "SANITIZERS" in os.environ:
             sanitizers = os.environ["SANITIZERS"]
@@ -202,7 +208,8 @@ class Xrpl(ConanFile):
             "boost::headers",
             "boost::chrono",
             "boost::container",
-            "boost::coroutine",
+            "boost::context",
+            "boost::coroutine2",
             "boost::date_time",
             "boost::filesystem",
             "boost::json",

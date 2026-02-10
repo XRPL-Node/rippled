@@ -16,12 +16,12 @@ find_dependency(Boost
                 COMPONENTS
                 chrono
                 container
-                coroutine
+                context
+                coroutine2
                 date_time
                 filesystem
                 program_options
                 regex
-                system
                 thread)
 #[=========================================================[
   OpenSSL

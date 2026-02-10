@@ -4,13 +4,12 @@ include(XrplSanitizers)
 find_package(Boost REQUIRED
              COMPONENTS chrono
                         container
-                        coroutine
+                        context
                         date_time
                         filesystem
                         json
                         program_options
                         regex
-                        system
                         thread)
 
 add_library(xrpl_boost INTERFACE)
@@ -21,7 +20,7 @@ target_link_libraries(
     INTERFACE Boost::headers
               Boost::chrono
               Boost::container
-              Boost::coroutine
+              Boost::context
               Boost::date_time
               Boost::filesystem
               Boost::json
