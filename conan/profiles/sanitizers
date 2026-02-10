@@ -13,6 +13,8 @@ include(default)
             {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
                 {% set model_code = "-mcmodel=large" %}
+                {% set _ = extra_cxxflags.append("-DBOOST_USE_ASAN") %}
+                {% set _ = extra_cxxflags.append("-DBOOST_USE_UCONTEXT") %}
             {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
                 {% set model_code = "-mcmodel=medium" %}
@@ -37,6 +39,8 @@ include(default)
 
             {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
+                {% set _ = extra_cxxflags.append("-DBOOST_USE_ASAN") %}
+                {% set _ = extra_cxxflags.append("-DBOOST_USE_UCONTEXT") %}
             {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
             {% endif %}

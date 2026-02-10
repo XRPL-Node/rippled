@@ -16,8 +16,7 @@ find_dependency(Boost
                 COMPONENTS
                 chrono
                 container
-                context
-                coroutine2
+                coroutine
                 date_time
                 filesystem
                 program_options
