@@ -879,11 +879,19 @@ class ValidVault
         Shares static make(SLE const&);
     };
 
+public:
+    struct DeltaInfo final
+    {
+        Number delta = numZero;
+        std::optional<int> scale;
+    };
+
+private:
     std::vector<Vault> afterVault_ = {};
     std::vector<Shares> afterMPTs_ = {};
     std::vector<Vault> beforeVault_ = {};
     std::vector<Shares> beforeMPTs_ = {};
-    std::unordered_map<uint256, Number> deltas_ = {};
+    std::unordered_map<uint256, DeltaInfo> deltas_ = {};
 
 public:
     void
@@ -899,6 +907,10 @@ public:
         XRPAmount const,
         ReadView const&,
         beast::Journal const&);
+
+    // Compute the coarsest scale required to represent all numbers
+    [[nodiscard]] static std::int32_t
+    computeMinScale(Asset const& asset, std::vector<DeltaInfo> const& numbers);
 };
 
 // additional invariant checks can be declared above and then added to this
