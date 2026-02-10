@@ -129,8 +129,6 @@ class Xrpl(ConanFile):
             sanitizers = os.environ["SANITIZERS"]
             if "address" in sanitizers.lower():
                 self.default_options["fPIC"] = False
-                # Boost stacktrace fails to build with some sanitizers
-                self.options["boost"].without_stacktrace = True
 
     def requirements(self):
         # Conan 2 requires transitive headers to be specified

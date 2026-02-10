@@ -61,3 +61,15 @@ include(default)
 {% endif %}
 
 tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
+
+[options]
+{% if sanitizers %}
+    {% if "address" in sanitizers %}
+# Build Boost.Context with ucontext backend (not fcontext) so that
+# ASAN fiber-switching annotations (__sanitizer_start/finish_switch_fiber)
+# are compiled into the library. fcontext (assembly) has no ASAN support.
+boost/*:extra_b2_flags=context-impl=ucontext address-sanitizer=norecover
+# Boost stacktrace fails to build with some sanitizers
+boost/*:without_stacktrace=True
+    {% endif %}
+{% endif %}
