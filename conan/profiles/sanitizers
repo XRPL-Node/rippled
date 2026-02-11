@@ -39,6 +39,7 @@ include(default)
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
+            {% set defines = [] %}
             {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1"] %}
 
             {% if "address" in sanitizers %}
