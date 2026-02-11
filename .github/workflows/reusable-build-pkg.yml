@@ -21,7 +21,7 @@ jobs:
   build:
     name: Build ${{ inputs.pkg_type }} ${{ inputs.arch }} package
     runs-on: heavy${{ inputs.arch == 'arm64' && '-arm64' || '' }}
-    container: ghcr.io/xrplf/ci/${{ inputs.pkg_type == 'rpm' && 'rhel-9' || 'debian-bookworm' }}:gcc-12
+    container: ghcr.io/xrplf/ci/${{ inputs.pkg_type == 'rpm' && 'rhel-9' || 'ubuntu-jammy' }}:gcc-12
     steps:
       - name: Checkout repository
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -29,25 +29,29 @@ jobs:
       - name: Build packages
         run: |
           ./pkgs/build.sh
-          # cp pkgs/rippled-3.0.0-1.x86_64.rpm rippled-3.0.0-1.amd64.rpm
-          find . -name "*.rpm"
-          printf '%s\n' \
-              "rpm_md5sum=$(rpm -q --queryformat '%{SIGMD5}\n' -p ./rippled-[0-9]*.rpm 2>/dev/null)" \
-              "rpm_sha256=$(sha256sum ./rippled-[0-9]*.rpm | awk '{ print $1 }')" \
-              > build_vars
           cat build_vars >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.pkg_type }}-${{ inputs.arch }}
+          path: |
+            *.deb
+            *.ddeb
+          if-no-files-found: error
+        if: inputs.pkg_type == 'deb'
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pkg_type }}-${{ inputs.arch }}
           path: "*${{ inputs.arch }}.${{ inputs.pkg_type }}"
           if-no-files-found: error
+        if: inputs.pkg_type == 'rpm'
 
   test:
     name: Test ${{ inputs.pkg_type }} ${{ inputs.arch }} package
     needs: build
     runs-on: heavy${{ inputs.arch == 'arm64' && '-arm64' || '' }}
-    container: ghcr.io/xrplf/ci/${{ inputs.pkg_type == 'rpm' && 'rhel-9' || 'debian-bookworm' }}:gcc-12
+    container: ghcr.io/xrplf/ci/${{ inputs.pkg_type == 'rpm' && 'rhel-9' || 'ubuntu-jammy' }}:gcc-12
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -72,28 +76,73 @@ jobs:
         with:
           name: ${{ inputs.pkg_type }}-${{ inputs.arch }}
 
-      ## Also possibility
-      # - name: Write passphrase file securely
-      #   run: |
-      #     install -m 600 /dev/null "$RUNNER_TEMP/gpg-pass"
-      #     # newline OK; gpg reads to EOF
-      #     printf '%s\n' "${{ secrets.GPG_PASSPHRASE }}" > "$RUNNER_TEMP/gpg-pass"
       - name: Sign
         env:
           PYTHONUNBUFFERED: 1
           GPG_KEY_B64: ${{ secrets.GPG_KEY_B64 }}
           GPG_KEY_PASS_B64: ${{ secrets.GPG_KEY_PASS_B64 }}
         run: |
-          for i in $(find . -maxdepth 1 -type f -name "rippled-[0-9]*.rpm"); do
-            echo "found $i"
-            ./pkgs/sign_packages.py $i
-          done
-          # find . -name "*.${{ inputs.pkg_type }}" -print0 | xargs -0 -I{} ./pkgs/sign_packages.py "{}"
-          #find . -maxdepth 1 -name "*.rpm" -print0 | xargs -0 -I{} ./pkgs/sign_packages.py "{}"
-          #find . -maxdepth 1 -name "*.rpm" -print0 | xargs -0 -I{} echo "found-{}"
+          if [ "${{ inputs.pkg_type }}" = "rpm" ]; then
+            for i in $(find . -maxdepth 1 -type f -name "rippled-[0-9]*.rpm"); do
+              echo "found $i"
+              ./pkgs/sign_packages.py "$i"
+            done
+          elif [ "${{ inputs.pkg_type }}" = "deb" ]; then
+            for i in $(find . -maxdepth 1 -type f -name "rippled_*.deb"); do
+              echo "found $i"
+              ./pkgs/sign_packages.py "$i"
+            done
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signed-rippled-${{ inputs.pkg_type }}-${{ inputs.arch }}
+          path: |
+            *.deb
+            *.ddeb
+          if-no-files-found: error
+        if: inputs.pkg_type == 'deb'
 
       - uses: actions/upload-artifact@v4
         with:
           name: signed-rippled-${{ inputs.pkg_type }}-${{ inputs.arch }}
           path: "*${{ inputs.arch }}.${{ inputs.pkg_type }}"
           if-no-files-found: error
+        if: inputs.pkg_type == 'rpm'
+
+  docker:
+    name: Build Docker image
+    if: inputs.pkg_type == 'deb'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb-${{ inputs.arch }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/rippled
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: pkgs/docker/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

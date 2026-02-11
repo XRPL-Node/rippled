@@ -18,7 +18,7 @@ export RIPPLE_REMOTE_URL = https://conan.ripplex.io
 
 # ## CMake Configure args
 # export DEB_CMAKE_GENERATOR = Ninja
-export DEB_CMAKE_BUILD_TYPE = Release
+export DEB_CMAKE_BUILD_TYPE = RelWithDebInfo
 
 NPROC := $(shell nproc --ignore=2)
 export DEB_BUILD_OPTIONS += parallel=$(NPROC)

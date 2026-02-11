@@ -168,7 +168,7 @@ CHANGELOG
 
     printf '%s\n' \
         "deb_sha256=$(sha "rippled_${full_version}_amd64.deb")" \
-        "dbg_sha256=$(sha "rippled-dbgsym_${full_version}_amd64.deb")" \
+        "dbg_sha256=$(sha "rippled-dbgsym_${full_version}_amd64")" \
         "rippled_version=${xrpl_version}" \
         "rippled_git_hash=${commit}" \
         "dpkg_version=${dpkg_version}" \
@@ -199,4 +199,6 @@ fi
 #     "rippled_version=3.0.0" \
 #     "rippled_git_hash=deadbeef" \
 #     > build_vars
-cp "${build_dir}/"*.$PKG .
+cp "${build_dir}/"*.deb . 2>/dev/null || true
+cp "${build_dir}/"*.ddeb . 2>/dev/null || true
+cp "${build_dir}/"*.rpm . 2>/dev/null || true
