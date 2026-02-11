@@ -244,7 +244,8 @@ message TMGetObjectByHash {
 
 message TMLedgerNode {
   required bytes nodedata = 1;
-  optional bytes nodeid = 2;  // missing for ledger base data
+  optional bytes nodeid = 2 [deprecated = true];
+  optional uint32 nodedepth = 3;  // missing for ledger base data
 }
 
 enum TMLedgerInfoType {

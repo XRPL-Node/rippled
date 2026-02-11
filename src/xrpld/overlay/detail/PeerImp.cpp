@@ -3,6 +3,7 @@
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
+#include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/HashRouter.h>
 #include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/NetworkOPs.h>
@@ -3152,8 +3153,11 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                         if (ledgerData.nodes_size() >= Tuning::hardMaxReplyNodes)
                             break;
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
-                        node->set_nodeid(d.first.getRawString());
                         node->set_nodedata(d.second.data(), d.second.size());
+                        if (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth))
+                            node->set_nodedepth(d.first.getDepth());
+                        else
+                            node->set_nodeid(d.first.getRawString());
                     }
                 }
                 else

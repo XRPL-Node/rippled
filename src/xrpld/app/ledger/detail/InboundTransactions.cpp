@@ -2,6 +2,7 @@
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/detail/TransactionAcquire.h>
 #include <xrpld/app/main/Application.h>
+#include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/Log.h>
@@ -130,23 +131,57 @@ public:
         std::vector<std::pair<SHAMapNodeID, Slice>> data;
         data.reserve(packet.nodes().size());
 
-        for (auto const& node : packet.nodes())
+        for (auto const& ledgerNode : packet.nodes())
         {
-            if (!node.has_nodeid() || !node.has_nodedata())
+            if (!ledgerNode.has_nodedata() ||
+                (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                (!app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
             {
-                peer->charge(Resource::feeMalformedRequest, "ledger_data");
+                JLOG(j_.warn()) << "Got malformed ledger node";
+                peer->charge(Resource::feeMalformedRequest, "ledger_node");
                 return;
             }
 
-            auto const id = deserializeSHAMapNodeID(node.nodeid());
-
-            if (!id)
+            auto nodeSlice = makeSlice(ledgerNode.nodedata());
+            auto treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
+            if (!treeNode)
             {
+                JLOG(j_.warn()) << "Got invalid node data";
                 peer->charge(Resource::feeInvalidData, "ledger_data");
                 return;
             }
+            auto const nodeKey = static_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
 
-            data.emplace_back(std::make_pair(*id, makeSlice(node.nodedata())));
+            SHAMapNodeID nodeID;
+            if (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth))
+            {
+                nodeID = SHAMapNodeID::createID(ledgerNode.nodedepth(), nodeKey);
+            }
+            else
+            {
+                auto const nid = deserializeSHAMapNodeID(ledgerNode.nodeid());
+                if (!nid)
+                {
+                    peer->charge(Resource::feeInvalidData, "ledger_id");
+                    return;
+                }
+                nodeID = *nid;
+
+                // For leaf nodes, verify that the passed-in node ID is actually
+                // the same as what the node ID should be, given the position of
+                // the node in the SHAMap.
+                if (treeNode->isLeaf())
+                {
+                    auto const expectedID = SHAMapNodeID::createID(nodeID.getDepth(), nodeKey);
+                    if (nodeID.getNodeID() != expectedID.getNodeID())
+                    {
+                        peer->charge(Resource::feeInvalidData, "ledger_id");
+                        return;
+                    }
+                }
+            }
+
+            data.emplace_back(std::make_pair(nodeID, nodeSlice));
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

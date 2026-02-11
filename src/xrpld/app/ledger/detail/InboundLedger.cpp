@@ -4,6 +4,7 @@
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionStateSF.h>
 #include <xrpld/app/main/Application.h>
+#include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/overlay/Overlay.h>
 
 #include <xrpl/basics/Log.h>
@@ -819,21 +820,53 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
     {
         auto const f = filter.get();
 
-        for (auto const& node : packet.nodes())
+        for (auto const& ledgerNode : packet.nodes())
         {
-            auto const nodeID = deserializeSHAMapNodeID(node.nodeid());
-
-            if (!nodeID)
-                throw std::runtime_error("data does not properly deserialize");
-
-            if (nodeID->isRoot())
+            auto nodeSlice = makeSlice(ledgerNode.nodedata());
+            auto treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
+            if (!treeNode)
             {
-                san += map.addRootNode(rootHash, makeSlice(node.nodedata()), f);
+                JLOG(journal_.warn()) << "Got invalid node data";
+                san.incInvalid();
+                return;
+            }
+            auto const nodeKey = static_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+
+            SHAMapNodeID nodeID;
+            if (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth))
+            {
+                nodeID = SHAMapNodeID::createID(ledgerNode.nodedepth(), nodeKey);
             }
             else
             {
-                san += map.addKnownNode(*nodeID, makeSlice(node.nodedata()), f);
+                auto const nid = deserializeSHAMapNodeID(ledgerNode.nodeid());
+                if (!nid)
+                {
+                    JLOG(journal_.warn()) << "Got invalid node id";
+                    san.incInvalid();
+                    return;
+                }
+                nodeID = *nid;
+
+                // For leaf nodes, verify that the passed-in node ID is actually
+                // the same as what the node ID should be, given the position of
+                // the node in the SHAMap.
+                if (treeNode->isLeaf())
+                {
+                    auto const expectedID = SHAMapNodeID::createID(nodeID.getDepth(), nodeKey);
+                    if (nodeID.getNodeID() != expectedID.getNodeID())
+                    {
+                        JLOG(journal_.warn()) << "Got invalid node id";
+                        san.incInvalid();
+                        return;
+                    }
+                }
             }
+
+            if (nodeID.isRoot())
+                san += map.addRootNode(rootHash, nodeSlice, f);
+            else
+                san += map.addKnownNode(nodeID, nodeSlice, f);
 
             if (!san.isGood())
             {
@@ -1044,13 +1077,15 @@ InboundLedger::processData(std::shared_ptr<Peer> peer, protocol::TMLedgerData& p
 
         ScopedLockType sl(mtx_);
 
-        // Verify node IDs and data are complete
-        for (auto const& node : packet.nodes())
+        // Verify nodes are complete
+        for (auto const& ledgerNode : packet.nodes())
         {
-            if (!node.has_nodeid() || !node.has_nodedata())
+            if (!ledgerNode.has_nodedata() ||
+                (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                (!app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
             {
-                JLOG(journal_.warn()) << "Got bad node";
-                peer->charge(Resource::feeMalformedRequest, "ledger_data bad node");
+                JLOG(journal_.warn()) << "Got malformed ledger node";
+                peer->charge(Resource::feeMalformedRequest, "ledger_node");
                 return -1;
             }
         }

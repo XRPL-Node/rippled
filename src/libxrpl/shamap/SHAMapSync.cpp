@@ -547,25 +547,6 @@ SHAMap::addKnownNode(SHAMapNodeID const& node, Slice const& rawNode, SHAMapSyncF
             return SHAMapAddNode::invalid();
         }
 
-        // In rare cases, a node can still be corrupt even after hash
-        // validation. For leaf nodes, we perform an additional check to
-        // ensure the node's position in the tree is consistent with its
-        // content to prevent inconsistencies that could
-        // propagate further down the line.
-        if (newNode->isLeaf())
-        {
-            auto const& actualKey = static_cast<SHAMapLeafNode const*>(newNode.get())->peekItem()->key();
-
-            // Validate that this leaf belongs at the target position
-            auto const expectedNodeID = SHAMapNodeID::createID(node.getDepth(), actualKey);
-            if (expectedNodeID.getNodeID() != node.getNodeID())
-            {
-                JLOG(journal_.debug()) << "Leaf node position mismatch: "
-                                       << "expected=" << expectedNodeID.getNodeID() << ", actual=" << node.getNodeID();
-                return SHAMapAddNode::invalid();
-            }
-        }
-
         // Inner nodes must be at a level strictly less than 64
         // but leaf nodes (while notionally at level 64) can be
         // at any depth up to and including 64:

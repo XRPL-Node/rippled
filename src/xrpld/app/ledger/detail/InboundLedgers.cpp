@@ -1,6 +1,7 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/main/Application.h>
+#include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/DecayingSample.h>
@@ -217,21 +218,22 @@ public:
         {
             for (int i = 0; i < packet_ptr->nodes().size(); ++i)
             {
-                auto const& node = packet_ptr->nodes(i);
+                auto const& ledgerNode = packet_ptr->nodes(i);
 
-                if (!node.has_nodeid() || !node.has_nodedata())
+                if (!ledgerNode.has_nodedata() ||
+                    (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                    (!app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
                     return;
 
-                auto newNode = SHAMapTreeNode::makeFromWire(makeSlice(node.nodedata()));
-
-                if (!newNode)
+                auto treeNode = SHAMapTreeNode::makeFromWire(makeSlice(ledgerNode.nodedata()));
+                if (!treeNode)
                     return;
 
                 s.erase();
-                newNode->serializeWithPrefix(s);
+                treeNode->serializeWithPrefix(s);
 
                 app_.getLedgerMaster().addFetchPack(
-                    newNode->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
+                    treeNode->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
             }
         }
         catch (std::exception const&)
