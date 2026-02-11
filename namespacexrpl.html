@@ -1231,8 +1231,6 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1SQLiteDatabaseImp.html">SQLiteDatabaseImp</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1SSLHTTPPeer.html">SSLHTTPPeer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1SSLWSPeer.html">SSLWSPeer</a></td></tr>
@@ -1875,8 +1873,6 @@ Typedefs</h2></td></tr>
 <tr class="separator:ab1c3fec4f76539949abfe7b02b329211"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb6edd361c581a33afea191c2877485c" id="r_aeb6edd361c581a33afea191c2877485c"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#aeb6edd361c581a33afea191c2877485c">AccountTxResult</a> = <a class="el" href="structxrpl_1_1RelationalDatabase_1_1AccountTxResult.html">RelationalDatabase::AccountTxResult</a></td></tr>
 <tr class="separator:aeb6edd361c581a33afea191c2877485c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec41ec68344a9f96e3379410f41aa0bd" id="r_aec41ec68344a9f96e3379410f41aa0bd"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#aec41ec68344a9f96e3379410f41aa0bd">LedgerShortcut</a> = <a class="el" href="namespacexrpl_1_1RPC.html#a3d2ee3ee191de81e32550c09d5806afd">RelationalDatabase::LedgerShortcut</a></td></tr>
-<tr class="separator:aec41ec68344a9f96e3379410f41aa0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6788c762c06db25a1247f4e4d70184c7" id="r_a6788c762c06db25a1247f4e4d70184c7"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a6788c762c06db25a1247f4e4d70184c7">LedgerSpecifier</a> = <a class="el" href="classxrpl_1_1RelationalDatabase.html#ae1dac4d549042891e41d08df480c9fcb">RelationalDatabase::LedgerSpecifier</a></td></tr>
 <tr class="separator:a6788c762c06db25a1247f4e4d70184c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac674be35d853e8557412da6d492f16b" id="r_aac674be35d853e8557412da6d492f16b"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#aac674be35d853e8557412da6d492f16b">Prices</a> = bimap&lt; multiset_of&lt; <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/functional/greater.html">std::greater</a>&lt; <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> &gt; &gt;, multiset_of&lt; <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> &gt; &gt;</td></tr>
@@ -2271,6 +2267,12 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:ada4805619214865518ed8c0b54a71bc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a709d0628574726b9aa3968d867c2991a" id="r_a709d0628574726b9aa3968d867c2991a"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991a">LedgerShortcut</a> { <a class="el" href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991aa222a267cc5778206b253be35ee3ddab5">Current</a>
+, <a class="el" href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991aa03f4a47830f97377a35321051685071e">Closed</a>
+, <a class="el" href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991aa5364259abab90e94890f2ed2481b9824">Validated</a>
+ }</td></tr>
+<tr class="memdesc:a709d0628574726b9aa3968d867c2991a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of ledger shortcuts for specifying which ledger to use.  <a href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991a">More...</a><br /></td></tr>
+<tr class="separator:a709d0628574726b9aa3968d867c2991a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a748d5f3500038734c2e091fbcafe1ce6" id="r_a748d5f3500038734c2e091fbcafe1ce6"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a748d5f3500038734c2e091fbcafe1ce6">GranularPermissionType</a> : std::uint32_t </td></tr>
 <tr class="memdesc:a748d5f3500038734c2e091fbcafe1ce6"><td class="mdescLeft">&#160;</td><td class="mdescRight">We have both transaction type permissions and granular type permissions.  <a href="namespacexrpl.html#a748d5f3500038734c2e091fbcafe1ce6">More...</a><br /></td></tr>
 <tr class="separator:a748d5f3500038734c2e091fbcafe1ce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -2584,6 +2586,11 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a2302c0748b98cd689ea7eea653eda396"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transaction type identifiers.  <a href="namespacexrpl.html#a2302c0748b98cd689ea7eea653eda396">More...</a><br /></td></tr>
 <tr class="separator:a2302c0748b98cd689ea7eea653eda396"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2fee6d98c0fcdead09c04e35ab453a6" id="r_ab2fee6d98c0fcdead09c04e35ab453a6"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6">TxSearched</a> { <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51">all</a>
+, <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a">some</a>
+, <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a">unknown</a>
+ }</td></tr>
+<tr class="separator:ab2fee6d98c0fcdead09c04e35ab453a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e76848ae49f7d4f94a0648e437ea6c1" id="r_a1e76848ae49f7d4f94a0648e437ea6c1"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a1e76848ae49f7d4f94a0648e437ea6c1">AttestationMatch</a> { <a class="el" href="namespacexrpl.html#a1e76848ae49f7d4f94a0648e437ea6c1a22d63280ca4e6a3750c08d476969417e">nonDstMismatch</a>
 , <a class="el" href="namespacexrpl.html#a1e76848ae49f7d4f94a0648e437ea6c1a7585f3c231c95ecb89584d30acbca582">matchExceptDst</a>
 , <a class="el" href="namespacexrpl.html#a1e76848ae49f7d4f94a0648e437ea6c1ae3cc92c14a5e6dd1a7d94b6ff634d7fc">match</a>
@@ -2750,11 +2757,6 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:a34f062517383bad9ba777508d31ac1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2fee6d98c0fcdead09c04e35ab453a6" id="r_ab2fee6d98c0fcdead09c04e35ab453a6"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6">TxSearched</a> { <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51">all</a>
-, <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a">some</a>
-, <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a">unknown</a>
- }</td></tr>
-<tr class="separator:ab2fee6d98c0fcdead09c04e35ab453a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46feb2a3d6afe415003984673a6a8648" id="r_a46feb2a3d6afe415003984673a6a8648"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a46feb2a3d6afe415003984673a6a8648">ListDisposition</a> { <br />
 &#160;&#160;<a class="el" href="namespacexrpl.html#a46feb2a3d6afe415003984673a6a8648a3e4d891a5df3d6d0d7dd9432a1bc6470">accepted</a> = 0
 , <a class="el" href="namespacexrpl.html#a46feb2a3d6afe415003984673a6a8648ac4bfb2a0bab0e91bc7dcfbe3bbec246e">expired</a>
@@ -4106,6 +4108,9 @@ requires requires(T const&amp; t) { { t.getJson(<a class="el" href="structxrpl_1
 <tr class="separator:af8d07b91ce9f6a9b7e07c78e39a7dd8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4f196f069ff9f99b123ae48d09b3e2e" id="r_af4f196f069ff9f99b123ae48d09b3e2e"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a>&lt; <a class="el" href="classxrpl_1_1Checkpointer.html">Checkpointer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af4f196f069ff9f99b123ae48d09b3e2e">checkpointerFromId</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uintptr_t</a> id)</td></tr>
 <tr class="separator:af4f196f069ff9f99b123ae48d09b3e2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8f2f83f2f5784d6fa64d27af1b1c4aa" id="r_af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memTemplParams" colspan="2">template&lt;class T , class C &gt; </td></tr>
+<tr class="memitem:af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af8f2f83f2f5784d6fa64d27af1b1c4aa">rangeCheckedCast</a> (C c)</td></tr>
+<tr class="separator:af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e5117739e6644834c344a0158856a40" id="r_a7e5117739e6644834c344a0158856a40"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a7e5117739e6644834c344a0158856a40">open</a> (soci::session &amp;s, <a class="el" href="classxrpl_1_1BasicConfig.html">BasicConfig</a> const &amp;config, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> const &amp;dbName)</td></tr>
 <tr class="memdesc:a7e5117739e6644834c344a0158856a40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a soci session.  <br /></td></tr>
 <tr class="separator:a7e5117739e6644834c344a0158856a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -5031,8 +5036,9 @@ requires ( <a class="elRef" href="http://en.cppreference.com/w/cpp/types/is_same
 <tr class="separator:a66fedf49909212d8894fa5b041b8014f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab676835389ce2c4147653ac75bf4d152" id="r_ab676835389ce2c4147653ac75bf4d152"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab676835389ce2c4147653ac75bf4d152">addUniquePath</a> (<a class="el" href="classxrpl_1_1STPathSet.html">STPathSet</a> &amp;pathSet, <a class="el" href="classxrpl_1_1STPath.html">STPath</a> const &amp;path)</td></tr>
 <tr class="separator:ab676835389ce2c4147653ac75bf4d152"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0874cc9fdc571b8e520215e2514e84a0" id="r_a0874cc9fdc571b8e520215e2514e84a0"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a0874cc9fdc571b8e520215e2514e84a0">getSQLiteDatabase</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;config, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;jobQueue)</td></tr>
-<tr class="separator:a0874cc9fdc571b8e520215e2514e84a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2a8824aae46874c1c2b45645a36e034" id="r_af2a8824aae46874c1c2b45645a36e034"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af2a8824aae46874c1c2b45645a36e034">setup_RelationalDatabase</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1Config.html">Config</a> const  &amp;config, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;jobQueue)</td></tr>
+<tr class="memdesc:af2a8824aae46874c1c2b45645a36e034"><td class="mdescLeft">&#160;</td><td class="mdescRight">setup_RelationalDatabase Creates and returns a <a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> instance based on configuration.  <br /></td></tr>
+<tr class="separator:af2a8824aae46874c1c2b45645a36e034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f6a78b8df0ccd10054cecc844520c9c" id="r_a5f6a78b8df0ccd10054cecc844520c9c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a5f6a78b8df0ccd10054cecc844520c9c">initPeerFinderDB</a> (soci::session &amp;session, <a class="el" href="classxrpl_1_1BasicConfig.html">BasicConfig</a> const  &amp;config, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
 <tr class="memdesc:a5f6a78b8df0ccd10054cecc844520c9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">initPeerFinderDB Opens a session with the peer finder database.  <br /></td></tr>
 <tr class="separator:a5f6a78b8df0ccd10054cecc844520c9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -5045,9 +5051,6 @@ requires ( <a class="elRef" href="http://en.cppreference.com/w/cpp/types/is_same
 <tr class="memitem:a7e83f932c28e34ef6dc26701bd9796de" id="r_a7e83f932c28e34ef6dc26701bd9796de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a7e83f932c28e34ef6dc26701bd9796de">savePeerFinderDB</a> (soci::session &amp;session, <a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="structxrpl_1_1PeerFinder_1_1Store_1_1Entry.html">PeerFinder::Store::Entry</a> &gt; const  &amp;v)</td></tr>
 <tr class="memdesc:a7e83f932c28e34ef6dc26701bd9796de"><td class="mdescLeft">&#160;</td><td class="mdescRight">savePeerFinderDB Saves a new entry to the peer finder database.  <br /></td></tr>
 <tr class="separator:a7e83f932c28e34ef6dc26701bd9796de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8f2f83f2f5784d6fa64d27af1b1c4aa" id="r_af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memTemplParams" colspan="2">template&lt;class T , class C &gt; </td></tr>
-<tr class="memitem:af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af8f2f83f2f5784d6fa64d27af1b1c4aa">rangeCheckedCast</a> (C c)</td></tr>
-<tr class="separator:af8f2f83f2f5784d6fa64d27af1b1c4aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7f888d175b43e5240a918418ffd5bb7" id="r_ab7f888d175b43e5240a918418ffd5bb7"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51">Validity</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab7f888d175b43e5240a918418ffd5bb7">checkValidity</a> (<a class="el" href="classxrpl_1_1HashRouter.html">HashRouter</a> &amp;router, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;config)</td></tr>
 <tr class="memdesc:ab7f888d175b43e5240a918418ffd5bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks transaction signature and local checks.  <br /></td></tr>
 <tr class="separator:ab7f888d175b43e5240a918418ffd5bb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -8655,7 +8658,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00024">24</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00025">25</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -8671,7 +8674,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00025">25</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00026">26</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -8687,7 +8690,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00026">26</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00027">27</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -8703,7 +8706,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00027">27</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00028">28</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -8719,23 +8722,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00028">28</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
-
-</div>
-</div>
-<a id="aec41ec68344a9f96e3379410f41aa0bd" name="aec41ec68344a9f96e3379410f41aa0bd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aec41ec68344a9f96e3379410f41aa0bd">&#9670;&#160;</a></span>LedgerShortcut</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">using <a class="el" href="namespacexrpl_1_1RPC.html#a3d2ee3ee191de81e32550c09d5806afd">xrpl::LedgerShortcut</a> = typedef <a class="el" href="namespacexrpl_1_1RPC.html#a3d2ee3ee191de81e32550c09d5806afd">RelationalDatabase::LedgerShortcut</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00030">30</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00029">29</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -8751,7 +8738,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00031">31</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00030">30</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -9631,6 +9618,41 @@ ledger.
 
 </div>
 </div>
+<a id="a709d0628574726b9aa3968d867c2991a" name="a709d0628574726b9aa3968d867c2991a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a709d0628574726b9aa3968d867c2991a">&#9670;&#160;</a></span>LedgerShortcut</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="namespacexrpl.html#a709d0628574726b9aa3968d867c2991a">xrpl::LedgerShortcut</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Enumeration of ledger shortcuts for specifying which ledger to use. </p>
+<p>These shortcuts provide a convenient way to reference commonly used ledgers without needing to specify their exact hash or sequence number. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a709d0628574726b9aa3968d867c2991aa222a267cc5778206b253be35ee3ddab5" name="a709d0628574726b9aa3968d867c2991aa222a267cc5778206b253be35ee3ddab5"></a>Current&#160;</td><td class="fielddoc"><p>The current working ledger (open, not yet closed) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a709d0628574726b9aa3968d867c2991aa03f4a47830f97377a35321051685071e" name="a709d0628574726b9aa3968d867c2991aa03f4a47830f97377a35321051685071e"></a>Closed&#160;</td><td class="fielddoc"><p>The most recently closed ledger (may not be validated) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a709d0628574726b9aa3968d867c2991aa5364259abab90e94890f2ed2481b9824" name="a709d0628574726b9aa3968d867c2991aa5364259abab90e94890f2ed2481b9824"></a>Validated&#160;</td><td class="fielddoc"><p>The most recently validated ledger. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="LedgerShortcut_8h_source.html#l00011">11</a> of file <a class="el" href="LedgerShortcut_8h_source.html">LedgerShortcut.h</a>.</p>
+
+</div>
+</div>
 <a id="a748d5f3500038734c2e091fbcafe1ce6" name="a748d5f3500038734c2e091fbcafe1ce6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a748d5f3500038734c2e091fbcafe1ce6">&#9670;&#160;</a></span>GranularPermissionType</h2>
 
@@ -10151,6 +10173,35 @@ ledger.
 
 </div>
 </div>
+<a id="ab2fee6d98c0fcdead09c04e35ab453a6" name="ab2fee6d98c0fcdead09c04e35ab453a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2fee6d98c0fcdead09c04e35ab453a6">&#9670;&#160;</a></span>TxSearched</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6">xrpl::TxSearched</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51" name="ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51"></a>all&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a" name="ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a"></a>some&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a" name="ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a"></a>unknown&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="TxSearched_8h_source.html#l00005">5</a> of file <a class="el" href="TxSearched_8h_source.html">TxSearched.h</a>.</p>
+
+</div>
+</div>
 <a id="a1e76848ae49f7d4f94a0648e437ea6c1" name="a1e76848ae49f7d4f94a0648e437ea6c1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1e76848ae49f7d4f94a0648e437ea6c1">&#9670;&#160;</a></span>AttestationMatch</h2>
 
@@ -10664,36 +10715,7 @@ ledger.
 <tr><td class="fieldname"><a id="a34f062517383bad9ba777508d31ac1e2a9007b5c042c4e96abaf89d5755dc5b3d" name="a34f062517383bad9ba777508d31ac1e2a9007b5c042c4e96abaf89d5755dc5b3d"></a>INCOMPLETE&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="Transaction_8h_source.html#l00026">26</a> of file <a class="el" href="Transaction_8h_source.html">Transaction.h</a>.</p>
-
-</div>
-</div>
-<a id="ab2fee6d98c0fcdead09c04e35ab453a6" name="ab2fee6d98c0fcdead09c04e35ab453a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab2fee6d98c0fcdead09c04e35ab453a6">&#9670;&#160;</a></span>TxSearched</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum class <a class="el" href="namespacexrpl.html#ab2fee6d98c0fcdead09c04e35ab453a6">xrpl::TxSearched</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51" name="ab2fee6d98c0fcdead09c04e35ab453a6aa181a603769c1f98ad927e7367c7aa51"></a>all&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a" name="ab2fee6d98c0fcdead09c04e35ab453a6a03d59e663c1af9ac33a9949d1193505a"></a>some&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a" name="ab2fee6d98c0fcdead09c04e35ab453a6aad921d60486366258809553a3db49a4a"></a>unknown&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="Transaction_8h_source.html#l00038">38</a> of file <a class="el" href="Transaction_8h_source.html">Transaction.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transaction_8h_source.html#l00027">27</a> of file <a class="el" href="Transaction_8h_source.html">Transaction.h</a>.</p>
 
 </div>
 </div>
@@ -28059,6 +28081,28 @@ template&lt;class Char , class Traits &gt; </div>
 
 </div>
 </div>
+<a id="af8f2f83f2f5784d6fa64d27af1b1c4aa" name="af8f2f83f2f5784d6fa64d27af1b1c4aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8f2f83f2f5784d6fa64d27af1b1c4aa">&#9670;&#160;</a></span>rangeCheckedCast()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T , class C &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">T xrpl::rangeCheckedCast </td>
+          <td>(</td>
+          <td class="paramtype">C&#160;</td>
+          <td class="paramname"><em>c</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="RelationalDatabase_8h_source.html#l00457">457</a> of file <a class="el" href="RelationalDatabase_8h_source.html">RelationalDatabase.h</a>.</p>
+
+</div>
+</div>
 <a id="a7e5117739e6644834c344a0158856a40" name="a7e5117739e6644834c344a0158856a40"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7e5117739e6644834c344a0158856a40">&#9670;&#160;</a></span>open() <span class="overload">[1/2]</span></h2>
 
@@ -37058,7 +37102,7 @@ template&lt;class ApplyTxs &gt; </div>
 
 <p>Save, or arrange to save, a fully-validated ledger Returns false on error. </p>
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l00923">923</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l00921">921</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37094,7 +37138,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l00987">987</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l00985">985</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37138,7 +37182,7 @@ template&lt;class ApplyTxs &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01000">1000</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l00998">998</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37158,7 +37202,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01016">1016</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01014">1014</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37194,7 +37238,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01025">1025</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01023">1023</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37230,7 +37274,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01037">1037</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Ledger_8cpp_source.html#l01035">1035</a> of file <a class="el" href="Ledger_8cpp_source.html">Ledger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37396,7 +37440,7 @@ template&lt;class ApplyTxs &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02007">2007</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02008">2008</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
 
 </div>
 </div>
@@ -37432,7 +37476,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02001">2001</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02002">2002</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
 
 </div>
 </div>
@@ -41192,7 +41236,7 @@ template&lt;class NumberProxy &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="SHAMapStoreImp_8cpp_source.html#l00591">591</a> of file <a class="el" href="SHAMapStoreImp_8cpp_source.html">SHAMapStoreImp.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="SHAMapStoreImp_8cpp_source.html#l00588">588</a> of file <a class="el" href="SHAMapStoreImp_8cpp_source.html">SHAMapStoreImp.cpp</a>.</p>
 
 </div>
 </div>
@@ -43223,14 +43267,14 @@ template&lt;class FlowResult &gt; </div>
 
 </div>
 </div>
-<a id="a0874cc9fdc571b8e520215e2514e84a0" name="a0874cc9fdc571b8e520215e2514e84a0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0874cc9fdc571b8e520215e2514e84a0">&#9670;&#160;</a></span>getSQLiteDatabase()</h2>
+<a id="af2a8824aae46874c1c2b45645a36e034" name="af2a8824aae46874c1c2b45645a36e034"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2a8824aae46874c1c2b45645a36e034">&#9670;&#160;</a></span>setup_RelationalDatabase()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> &gt; xrpl::getSQLiteDatabase </td>
+          <td class="memname"><a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> xrpl::setup_RelationalDatabase </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
           <td class="paramname"><em>registry</em>, </td>
@@ -43255,7 +43299,18 @@ template&lt;class FlowResult &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="SQLiteDatabase_8cpp_source.html#l00770">770</a> of file <a class="el" href="SQLiteDatabase_8cpp_source.html">SQLiteDatabase.cpp</a>.</p>
+<p>setup_RelationalDatabase Creates and returns a <a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> instance based on configuration. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">registry</td><td>The service registry. </td></tr>
+    <tr><td class="paramname">config</td><td><a class="el" href="classxrpl_1_1Config.html">Config</a> object. </td></tr>
+    <tr><td class="paramname">jobQueue</td><td><a class="el" href="classxrpl_1_1JobQueue.html" title="A pool of threads to perform work.">JobQueue</a> object. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> instance. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="SQLiteDatabase_8cpp_source.html#l00600">600</a> of file <a class="el" href="SQLiteDatabase_8cpp_source.html">SQLiteDatabase.cpp</a>.</p>
 
 </div>
 </div>
@@ -43426,28 +43481,6 @@ template&lt;class FlowResult &gt; </div>
 </dl>
 
 <p class="definition">Definition at line <a class="el" href="PeerFinder_8cpp_source.html#l00207">207</a> of file <a class="el" href="PeerFinder_8cpp_source.html">PeerFinder.cpp</a>.</p>
-
-</div>
-</div>
-<a id="af8f2f83f2f5784d6fa64d27af1b1c4aa" name="af8f2f83f2f5784d6fa64d27af1b1c4aa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af8f2f83f2f5784d6fa64d27af1b1c4aa">&#9670;&#160;</a></span>rangeCheckedCast()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T , class C &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">T xrpl::rangeCheckedCast </td>
-          <td>(</td>
-          <td class="paramtype">C&#160;</td>
-          <td class="paramname"><em>c</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="RelationalDatabase_8h_source.html#l00208">208</a> of file <a class="el" href="RelationalDatabase_8h_source.html">RelationalDatabase.h</a>.</p>
 
 </div>
 </div>
@@ -50807,7 +50840,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00035">35</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00034">34</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -50837,7 +50870,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00108">108</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00107">107</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -50867,7 +50900,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00186">186</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00185">185</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -50903,7 +50936,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00254">254</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00250">250</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -50923,7 +50956,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00361">361</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTx_8cpp_source.html#l00357">357</a> of file <a class="el" href="AccountTx_8cpp_source.html">AccountTx.cpp</a>.</p>
 
 </div>
 </div>
@@ -51440,7 +51473,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="GetCounts_8cpp_source.html#l00110">110</a> of file <a class="el" href="GetCounts_8cpp_source.html">GetCounts.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="GetCounts_8cpp_source.html#l00107">107</a> of file <a class="el" href="GetCounts_8cpp_source.html">GetCounts.cpp</a>.</p>
 
 </div>
 </div>
@@ -52216,7 +52249,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00242">242</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00243">243</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54184,7 +54217,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00024">24</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00025">25</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54214,7 +54247,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00055">55</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00056">56</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54250,7 +54283,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00160">160</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00161">161</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
