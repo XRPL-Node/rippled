@@ -34,7 +34,7 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
-            tools.build:defines+=['{{defines}}']
+            tools.build:defines+={{defines}}
         {% endif %}
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
@@ -63,7 +63,7 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
-            tools.build:defines+=['{{defines}}']
+            tools.build:defines+={{defines}}
         {% endif %}
     {% endif %}
 {% endif %}
