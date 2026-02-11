@@ -8,7 +8,7 @@
  * To ease maintenance, you may replace any unneeded values with "..."
  * e.g. #define TRANSACTION(tag, value, name, ...)
  *
- * You must define a transactor class in the `ripple` namespace named `name`,
+ * You must define a transactor class in the `xrpl` namespace named `name`,
  * and include its header alongside the TRANSACTOR definition using this
  * format:
  * #if TRANSACTION_INCLUDE
