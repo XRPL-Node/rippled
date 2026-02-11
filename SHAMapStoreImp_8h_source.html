@@ -85,11 +85,11 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;xrpld/app/ledger/LedgerMaster.h&gt;</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;xrpld/app/misc/SHAMapStore.h&gt;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;xrpld/app/rdb/State.h&gt;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;xrpld/core/DatabaseCon.h&gt;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;xrpl/nodestore/DatabaseRotating.h&gt;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpl/nodestore/Scheduler.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;xrpl/nodestore/DatabaseRotating.h&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;xrpl/nodestore/Scheduler.h&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;xrpl/rdb/DatabaseCon.h&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpl/server/State.h&gt;</span></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
 <div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;<a class="codeRef" href="http://en.cppreference.com/w/cpp/header/atomic.html">atomic</a>&gt;</span></div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;<a class="codeRef" href="http://en.cppreference.com/w/cpp/header/chrono.html">chrono</a>&gt;</span></div>
@@ -397,8 +397,8 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacexrpl_html"><div class="ttname"><a href="namespacexrpl.html">xrpl</a></div><div class="ttdoc">Use hash_* containers for keys that do not need a cryptographically secure hashing algorithm.</div><div class="ttdef"><b>Definition</b> <a href="algorithm_8h_source.html#l00005">algorithm.h:5</a></div></div>
 <div class="ttc" id="aoptional_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/optional.html">std::optional</a></div></div>
 <div class="ttc" id="ashared_ptr_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/memory/shared_ptr.html">std::shared_ptr</a></div></div>
-<div class="ttc" id="astructxrpl_1_1SavedState_html"><div class="ttname"><a href="structxrpl_1_1SavedState.html">xrpl::SavedState</a></div><div class="ttdef"><b>Definition</b> <a href="State_8h_source.html#l00013">State.h:14</a></div></div>
-<div class="ttc" id="astructxrpl_1_1SavedState_html_ad6297658f3de6e9f578ed0ab8e0952c1"><div class="ttname"><a href="structxrpl_1_1SavedState.html#ad6297658f3de6e9f578ed0ab8e0952c1">xrpl::SavedState::lastRotated</a></div><div class="ttdeci">LedgerIndex lastRotated</div><div class="ttdef"><b>Definition</b> <a href="State_8h_source.html#l00017">State.h:17</a></div></div>
+<div class="ttc" id="astructxrpl_1_1SavedState_html"><div class="ttname"><a href="structxrpl_1_1SavedState.html">xrpl::SavedState</a></div><div class="ttdef"><b>Definition</b> <a href="State_8h_source.html#l00011">State.h:12</a></div></div>
+<div class="ttc" id="astructxrpl_1_1SavedState_html_ad6297658f3de6e9f578ed0ab8e0952c1"><div class="ttname"><a href="structxrpl_1_1SavedState.html#ad6297658f3de6e9f578ed0ab8e0952c1">xrpl::SavedState::lastRotated</a></div><div class="ttdeci">LedgerIndex lastRotated</div><div class="ttdef"><b>Definition</b> <a href="State_8h_source.html#l00015">State.h:15</a></div></div>
 <div class="ttc" id="athread_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/header/thread.html">thread</a></div></div>
 <div class="ttc" id="aunique_ptr_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a></div></div>
 </div><!-- fragment --></div><!-- contents -->

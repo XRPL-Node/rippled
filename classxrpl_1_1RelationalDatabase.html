@@ -171,9 +171,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a3c901750a932fd04993f7d18dfd5e248" id="r_a3c901750a932fd04993f7d18dfd5e248"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1RelationalDatabase.html#a3c901750a932fd04993f7d18dfd5e248">init</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;config, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;jobQueue)</td></tr>
-<tr class="memdesc:a3c901750a932fd04993f7d18dfd5e248"><td class="mdescLeft">&#160;</td><td class="mdescRight">init Creates and returns an appropriate <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> instance based on configuration.  <br /></td></tr>
-<tr class="separator:a3c901750a932fd04993f7d18dfd5e248"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d3e2ce1e9d7b37afb6f221fcf785677" id="r_a0d3e2ce1e9d7b37afb6f221fcf785677"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1RelationalDatabase.html#a0d3e2ce1e9d7b37afb6f221fcf785677">init</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;config, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;jobQueue)</td></tr>
+<tr class="memdesc:a0d3e2ce1e9d7b37afb6f221fcf785677"><td class="mdescLeft">&#160;</td><td class="mdescRight">init Creates and returns an appropriate <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> instance based on configuration.  <br /></td></tr>
+<tr class="separator:a0d3e2ce1e9d7b37afb6f221fcf785677"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
@@ -334,8 +334,8 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a3c901750a932fd04993f7d18dfd5e248" name="a3c901750a932fd04993f7d18dfd5e248"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c901750a932fd04993f7d18dfd5e248">&#9670;&#160;</a></span>init()</h2>
+<a id="a0d3e2ce1e9d7b37afb6f221fcf785677" name="a0d3e2ce1e9d7b37afb6f221fcf785677"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d3e2ce1e9d7b37afb6f221fcf785677">&#9670;&#160;</a></span>init()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -346,8 +346,8 @@ Static Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> &gt; xrpl::RelationalDatabase::init </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -377,7 +377,7 @@ Static Public Member Functions</h2></td></tr>
 <p>init Creates and returns an appropriate <a class="el" href="classxrpl_1_1RelationalDatabase.html">RelationalDatabase</a> instance based on configuration. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">app</td><td><a class="el" href="classxrpl_1_1Application.html">Application</a> object. </td></tr>
+    <tr><td class="paramname">registry</td><td>The service registry. </td></tr>
     <tr><td class="paramname">config</td><td><a class="el" href="classxrpl_1_1Config.html">Config</a> object. </td></tr>
     <tr><td class="paramname">jobQueue</td><td><a class="el" href="classxrpl_1_1JobQueue.html" title="A pool of threads to perform work.">JobQueue</a> object. </td></tr>
   </table>
@@ -385,7 +385,7 @@ Static Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Unique pointer to the interface. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="RelationalDatabase_8cpp_source.html#l00011">11</a> of file <a class="el" href="RelationalDatabase_8cpp_source.html">RelationalDatabase.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="RelationalDatabase_8cpp_source.html#l00010">10</a> of file <a class="el" href="RelationalDatabase_8cpp_source.html">RelationalDatabase.cpp</a>.</p>
 
 </div>
 </div>
