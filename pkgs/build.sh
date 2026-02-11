@@ -73,7 +73,6 @@ if [ "${PKG}" = 'rpm' ]; then
     build_dir="build/${PKG}/packages"
     rm -rf ${build_dir}
     mkdir -p ${build_dir}/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-    cp "${pkgs_dir}/rippled.patch" ${build_dir}/rpmbuild/SOURCES/
     git archive \
         --remote "${repo_dir}" HEAD \
         --prefix ${repo_name}/ \

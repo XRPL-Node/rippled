@@ -28,7 +28,6 @@ Summary:        %{name} XRPL daemon
 License:        ISC
 URL:            https://github.com/XRPLF/rippled
 Source0:        rippled.tar.gz
-Patch0:         rippled.patch
 %{warn:name=%{name}}
 %{warn:version=%{version}}
 %{warn:ver_base=%{ver_base}}
