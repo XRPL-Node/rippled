@@ -127,6 +127,18 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  upload-artifactory:
+    needs:
+      - should-run
+      - build-test
+    if: ${{ needs.should-run.outputs.go == 'true' }}
+    uses: ./.github/workflows/reusable-upload-artifactory.yml
+    with:
+      artifactory_repo: generic-local
+    secrets:
+      ARTIFACTORY_HOST: ${{ secrets.ARTIFACTORY_HOST }}
+      ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+
   upload-recipe:
     needs:
       - should-run
@@ -159,6 +171,7 @@ jobs:
     if: failure() || cancelled()
     needs:
       - build-test
+      - upload-artifactory
       - upload-recipe
       - notify-clio
     runs-on: ubuntu-latest

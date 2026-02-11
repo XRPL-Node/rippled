@@ -1,0 +1,81 @@
+name: Upload artifacts to Artifactory
+
+on:
+  workflow_call:
+    inputs:
+      artifact_pattern:
+        description: "Glob pattern to match GitHub artifacts to download."
+        required: false
+        type: string
+        default: "xrpld-*"
+
+      artifactory_repo:
+        description: "Artifactory repository name."
+        required: false
+        type: string
+        default: "xrpl-dev-local"
+
+      artifact_prefix:
+        description: "Top-level directory in Artifactory under which artifacts are stored."
+        required: false
+        type: string
+        default: "xrpld"
+
+    secrets:
+      ARTIFACTORY_HOST:
+        description: "Artifactory base URL (e.g. https://xrpl.jfrog.io/artifactory)."
+        required: true
+      ARTIFACTORY_TOKEN:
+        description: "Artifactory API token."
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Generate version
+        id: version
+        uses: ./.github/actions/generate-version
+
+      - name: Download artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: ${{ inputs.artifact_pattern }}
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: ls -lR artifacts
+
+      - name: Upload to Artifactory
+        env:
+          ARTIFACTORY_HOST: ${{ secrets.ARTIFACTORY_HOST }}
+          ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+          REPO: ${{ inputs.artifactory_repo }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for config_dir in artifacts/*/; do
+            config_name="$(basename "${config_dir}")"
+            for file in "${config_dir}"*; do
+              [ -f "${file}" ] || continue
+              filename="$(basename "${file}")"
+              url="${ARTIFACTORY_HOST}/${REPO}/${PREFIX}/${VERSION}/${config_name}/${filename}"
+              echo "Uploading ${file} -> ${url}"
+              status=$(curl -s -o /dev/null -w "%{http_code}" \
+                -T "${file}" \
+                -H "Authorization: Bearer ${ARTIFACTORY_TOKEN}" \
+                "${url}")
+              if [[ "${status}" != 2* ]]; then
+                echo "::error::Upload failed for ${file} with HTTP status ${status}"
+                exit 1
+              fi
+              echo "Upload succeeded (HTTP ${status})"
+            done
+          done
