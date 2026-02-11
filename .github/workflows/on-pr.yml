@@ -8,7 +8,7 @@ name: PR
 on:
   push:
     branches:
-      - art_upload
+      - legleux/art_upload
   merge_group:
     types:
       - checks_requested
