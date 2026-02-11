@@ -7,18 +7,21 @@ include(default)
     {% if compiler == "gcc" %}
         {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
             {% set sanitizer_list = [] %}
+            {% set defines = [] %}
             {% set model_code = "" %}
             {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1", "-Wno-stringop-overflow"] %}
 
             {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
                 {% set model_code = "-mcmodel=large" %}
-                {% set _ = extra_cxxflags.append("-DBOOST_USE_ASAN") %}
-                {% set _ = extra_cxxflags.append("-DBOOST_USE_UCONTEXT") %}
+                {% set _ = defines.append("BOOST_USE_ASAN")%}
+                {% set _ = defines.append("BOOST_USE_UCONTEXT")%}
             {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
                 {% set model_code = "-mcmodel=medium" %}
                 {% set _ = extra_cxxflags.append("-Wno-tsan") %}
+                {% set _ = defines.append("BOOST_USE_TSAN")%}
+                {% set _ = defines.append("BOOST_USE_UCONTEXT")%}
             {% endif %}
 
             {% if "undefinedbehavior" in sanitizers %}
@@ -31,6 +34,7 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
+            tools.build:defines+=['{{defines}}']
         {% endif %}
     {% elif compiler == "apple-clang" or compiler == "clang" %}
         {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
@@ -39,10 +43,12 @@ include(default)
 
             {% if "address" in sanitizers %}
                 {% set _ = sanitizer_list.append("address") %}
-                {% set _ = extra_cxxflags.append("-DBOOST_USE_ASAN") %}
-                {% set _ = extra_cxxflags.append("-DBOOST_USE_UCONTEXT") %}
+                {% set _ = defines.append("BOOST_USE_ASAN")%}
+                {% set _ = defines.append("BOOST_USE_UCONTEXT")%}
             {% elif "thread" in sanitizers %}
                 {% set _ = sanitizer_list.append("thread") %}
+                {% set _ = defines.append("BOOST_USE_TSAN")%}
+                {% set _ = defines.append("BOOST_USE_UCONTEXT")%}
             {% endif %}
 
             {% if "undefinedbehavior" in sanitizers %}
@@ -56,11 +62,12 @@ include(default)
             tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
             tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
             tools.build:exelinkflags+=['{{sanitizer_flags}}']
+            tools.build:defines+=['{{defines}}']
         {% endif %}
     {% endif %}
 {% endif %}
 
-tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags"]
+tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags", "tools.build:defines"]
 
 [options]
 {% if sanitizers %}
