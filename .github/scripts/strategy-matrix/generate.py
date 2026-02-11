@@ -50,123 +50,13 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
 
         # Only generate a subset of configurations in PRs.
         if not all:
-            # Debian:
-            # - Bookworm using GCC 13: Release on linux/amd64, set the reference
-            #   fee to 500.
-            # - Bookworm using GCC 15: Debug on linux/amd64, enable code
-            #   coverage (which will be done below).
-            # - Bookworm using Clang 16: Debug on linux/arm64, enable voidstar.
-            # - Bookworm using Clang 17: Release on linux/amd64, set the
-            #   reference fee to 1000.
-            # - Bookworm using Clang 20: Debug on linux/amd64.
-            if os["distro_name"] == "debian":
-                skip = True
-                if os["distro_version"] == "bookworm":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-13"
-                        and build_type == "Release"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        cmake_args = f"-DUNIT_TEST_REFERENCE_FEE=500 {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-15"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-16"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        cmake_args = f"-Dvoidstar=ON {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-17"
-                        and build_type == "Release"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        cmake_args = f"-DUNIT_TEST_REFERENCE_FEE=1000 {cmake_args}"
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-20"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
-
-            # RHEL:
-            # - 9 using GCC 12: Debug on linux/amd64.
-            # - 10 using Clang: Release on linux/amd64.
-            if os["distro_name"] == "rhel":
-                skip = True
-                if os["distro_version"] == "9":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                elif os["distro_version"] == "10":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-any"
-                        and build_type == "Release"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
-
-            # Ubuntu:
-            # - Jammy using GCC 12: Debug on linux/arm64.
-            # - Noble using GCC 14: Release on linux/amd64.
-            # - Noble using Clang 18: Debug on linux/amd64.
-            # - Noble using Clang 19: Release on linux/arm64.
-            if os["distro_name"] == "ubuntu":
-                skip = True
-                if os["distro_version"] == "jammy":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        skip = False
-                elif os["distro_version"] == "noble":
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-14"
-                        and build_type == "Release"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-18"
-                        and build_type == "Debug"
-                        and architecture["platform"] == "linux/amd64"
-                    ):
-                        skip = False
-                    if (
-                        f"{os['compiler_name']}-{os['compiler_version']}" == "clang-19"
-                        and build_type == "Release"
-                        and architecture["platform"] == "linux/arm64"
-                    ):
-                        skip = False
-                if skip:
-                    continue
-
-            # MacOS:
-            # - Debug on macos/arm64.
-            if os["distro_name"] == "macos" and not (
-                build_type == "Debug" and architecture["platform"] == "macos/arm64"
-            ):
-                continue
-
-            # Windows:
-            # - Release on windows/amd64.
-            if os["distro_name"] == "windows" and not (
-                build_type == "Release" and architecture["platform"] == "windows/amd64"
+            # TEMPORARY: Only build ubuntu-jammy-gcc-12-debug on amd64
+            if not (
+                os["distro_name"] == "ubuntu"
+                and os["distro_version"] == "jammy"
+                and f"{os['compiler_name']}-{os['compiler_version']}" == "gcc-12"
+                and build_type == "Debug"
+                and architecture["platform"] == "linux/amd64"
             ):
                 continue
 

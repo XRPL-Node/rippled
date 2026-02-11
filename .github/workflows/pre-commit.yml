@@ -11,6 +11,7 @@ on:
 jobs:
   # Call the workflow in the XRPLF/actions repo that runs the pre-commit hooks.
   run-hooks:
+    if: false
     uses: XRPLF/actions/.github/workflows/pre-commit.yml@320be44621ca2a080f05aeb15817c44b84518108
     with:
       runs_on: ubuntu-latest

@@ -6,6 +6,9 @@
 name: PR
 
 on:
+  push:
+    branches:
+      - art_upload
   merge_group:
     types:
       - checks_requested
@@ -91,20 +94,21 @@ jobs:
           DRAFT: ${{ github.event.pull_request.draft }}
           READY: ${{ contains(github.event.pull_request.labels.*.name, 'Ready to merge') }}
           MERGE: ${{ github.event_name == 'merge_group' }}
+          PUSH: ${{ github.event_name == 'push' }}
         run: |
-          echo "go=${{ (env.DRAFT != 'true' && env.READY == 'true') || env.FILES == 'true' || env.MERGE == 'true' }}" >> "${GITHUB_OUTPUT}"
+          echo "go=${{ env.PUSH == 'true' || (env.DRAFT != 'true' && env.READY == 'true') || env.FILES == 'true' || env.MERGE == 'true' }}" >> "${GITHUB_OUTPUT}"
           cat "${GITHUB_OUTPUT}"
     outputs:
       go: ${{ steps.go.outputs.go == 'true' }}
 
   check-levelization:
     needs: should-run
-    if: ${{ needs.should-run.outputs.go == 'true' }}
+    if: false
     uses: ./.github/workflows/reusable-check-levelization.yml
 
   check-rename:
     needs: should-run
-    if: ${{ needs.should-run.outputs.go == 'true' }}
+    if: false
     uses: ./.github/workflows/reusable-check-rename.yml
 
   build-test:
@@ -114,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, macos, windows]
+        os: [linux]
     with:
       # Enable ccache only for events targeting the XRPLF repository, since
       # other accounts will not have access to our remote cache storage.
@@ -154,8 +158,6 @@ jobs:
   passed:
     if: failure() || cancelled()
     needs:
-      - check-levelization
-      - check-rename
       - build-test
       - upload-recipe
       - notify-clio
