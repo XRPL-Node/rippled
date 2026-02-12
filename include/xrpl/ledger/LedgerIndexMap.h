@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
+#include <utility>
 
 namespace xrpl {
 
@@ -23,45 +25,19 @@ public:
     LedgerIndexMap&
     operator=(LedgerIndexMap&&) = delete;
 
-    Mapped&
-    operator[](Key const& k)
-    {
-        std::lock_guard lock(mutex_);
-        return data_[k];
-    }
-
-    Mapped&
-    operator[](Key&& k)
-    {
-        std::lock_guard lock(mutex_);
-        return data_[std::move(k)];
-    }
-
-    [[nodiscard]] Mapped*
-    get(Key const& k)
-    {
-        std::lock_guard lock(mutex_);
-        auto it = data_.find(k);
-        return it == data_.end() ? nullptr : &it->second;
-    }
-
-    [[nodiscard]] Mapped const*
+    [[nodiscard]] std::optional<Mapped>
     get(Key const& k) const
     {
         std::lock_guard lock(mutex_);
         auto it = data_.find(k);
-        return it == data_.end() ? nullptr : &it->second;
+        return it == data_.end() ? std::nullopt : std::optional<Mapped>{it->second};
     }
 
-    template <class... Args>
-    Mapped&
-    put(Key const& k, Args&&... args)
+    bool
+    put(Key const& k, Mapped value)
     {
         std::lock_guard lock(mutex_);
-        auto [it, inserted] = data_.try_emplace(k, std::forward<Args>(args)...);
-        if (!inserted)
-            it->second = Mapped(std::forward<Args>(args)...);
-        return it->second;
+        return data_.insert_or_assign(k, std::move(value)).second;
     }
 
     bool
@@ -72,14 +48,14 @@ public:
     }
 
     std::size_t
-    size() const noexcept
+    size() const
     {
         std::lock_guard lock(mutex_);
         return data_.size();
     }
 
     bool
-    empty() const noexcept
+    empty() const
     {
         std::lock_guard lock(mutex_);
         return data_.empty();

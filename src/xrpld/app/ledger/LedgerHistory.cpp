@@ -34,7 +34,7 @@ LedgerHistory::insert(std::shared_ptr<Ledger const> const& ledger, bool validate
 
     bool const alreadyHad = m_ledgers_by_hash.canonicalize_replace_cache(ledger->header().hash, ledger);
     if (validated)
-        mLedgersByIndex[ledger->header().seq] = ledger->header().hash;
+        mLedgersByIndex.put(ledger->header().seq, ledger->header().hash);
 
     return alreadyHad;
 }
@@ -67,7 +67,7 @@ LedgerHistory::getLedgerBySeq(LedgerIndex index)
         // Add this ledger to the local tracking by index
         XRPL_ASSERT(ret->isImmutable(), "xrpl::LedgerHistory::getLedgerBySeq : immutable result ledger");
         m_ledgers_by_hash.canonicalize_replace_client(ret->header().hash, ret);
-        mLedgersByIndex[ret->header().seq] = ret->header().hash;
+        mLedgersByIndex.put(ret->header().seq, ret->header().hash);
         return (ret->header().seq == index) ? ret : nullptr;
     }
 }

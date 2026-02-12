@@ -15,38 +15,40 @@ TEST(LedgerIndexMap, DefaultEmpty)
     TestMap m;
     EXPECT_EQ(m.size(), 0);
     EXPECT_TRUE(m.empty());
-    EXPECT_EQ(m.get(42), nullptr);
+    EXPECT_FALSE(m.get(42).has_value());
     EXPECT_FALSE(m.contains(42));
 }
 
-TEST(LedgerIndexMap, OperatorBracketInsertsDefault)
+TEST(LedgerIndexMap, PutInsertsValue)
 {
     TestMap m;
-    auto& v = m[10];
+    bool inserted = m.put(10, "");
+    EXPECT_TRUE(inserted);
     EXPECT_EQ(m.size(), 1);
     EXPECT_TRUE(m.contains(10));
-    EXPECT_TRUE(v.empty());
+    auto got = m.get(10);
+    ASSERT_TRUE(got.has_value());
+    EXPECT_TRUE(got->empty());
 }
 
-TEST(LedgerIndexMap, OperatorBracketRvalueKey)
+TEST(LedgerIndexMap, PutWithValue)
 {
     TestMap m;
-    int k = 7;
-    auto& v1 = m[std::move(k)];
-    v1 = "seven";
+    bool inserted = m.put(7, "seven");
+    EXPECT_TRUE(inserted);
     EXPECT_EQ(m.size(), 1);
-    auto* got = m.get(7);
-    ASSERT_NE(got, nullptr);
+    auto got = m.get(7);
+    ASSERT_TRUE(got.has_value());
     EXPECT_EQ(*got, "seven");
 }
 
 TEST(LedgerIndexMap, InsertThroughPut)
 {
     TestMap m;
-    auto& v = m.put(20, "twenty");
-    EXPECT_EQ(v, "twenty");
-    auto* got = m.get(20);
-    ASSERT_NE(got, nullptr);
+    bool inserted = m.put(20, "twenty");
+    EXPECT_TRUE(inserted);
+    auto got = m.get(20);
+    ASSERT_TRUE(got.has_value());
     EXPECT_EQ(*got, "twenty");
     EXPECT_EQ(m.size(), 1);
 }
@@ -54,12 +56,14 @@ TEST(LedgerIndexMap, InsertThroughPut)
 TEST(LedgerIndexMap, OverwriteExistingKeyWithPut)
 {
     TestMap m;
-    m.put(5, "five");
+    bool inserted1 = m.put(5, "five");
+    EXPECT_TRUE(inserted1);
     EXPECT_EQ(m.size(), 1);
-    m.put(5, "FIVE");
+    bool inserted2 = m.put(5, "FIVE");
+    EXPECT_FALSE(inserted2);  // Not a new insertion, it's an update
     EXPECT_EQ(m.size(), 1);
-    auto* got = m.get(5);
-    ASSERT_NE(got, nullptr);
+    auto got = m.get(5);
+    ASSERT_TRUE(got.has_value());
     EXPECT_EQ(*got, "FIVE");
 }
 
@@ -67,8 +71,8 @@ TEST(LedgerIndexMap, OnceFoundOneNotFound)
 {
     TestMap m;
     m.put(1, "one");
-    EXPECT_NE(m.get(1), nullptr);
-    EXPECT_EQ(m.get(2), nullptr);
+    EXPECT_TRUE(m.get(1).has_value());
+    EXPECT_FALSE(m.get(2).has_value());
 }
 
 TEST(LedgerIndexMap, TryEraseBeforeNothingToDo)
@@ -174,8 +178,8 @@ TEST(LedgerIndexMap, RehashDoesNotLoseEntries)
 
     for (int k = 0; k < 16; ++k)
     {
-        auto* v = m.get(k);
-        ASSERT_NE(v, nullptr);
+        auto v = m.get(k);
+        ASSERT_TRUE(v.has_value());
         EXPECT_EQ(*v, "v" + std::to_string(k));
     }
 
