@@ -62,6 +62,10 @@ ApplyViewBase::read(Keylet const& k) const
             return current->base_->read(k);
         current = next;
     }
+    // Unreachable: current starts as `this` (non-null) and the loop
+    // always returns before current could become null.
+    UNREACHABLE("xrpl::ApplyViewBase::read : unreachable");
+    return nullptr;
 }
 
 auto
