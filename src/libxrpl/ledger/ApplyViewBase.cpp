@@ -48,7 +48,20 @@ ApplyViewBase::succ(key_type const& key, std::optional<key_type> const& last) co
 std::shared_ptr<SLE const>
 ApplyViewBase::read(Keylet const& k) const
 {
-    return items_.read(*base_, k);
+    // Iteratively walk up the chain of ApplyViewBase layers
+    // instead of recursing through items_.read(*base_, k).
+    auto const* current = this;
+    while (current)
+    {
+        if (auto result = current->items_.readLocal(k))
+            return *result;
+
+        // Check if the base is another ApplyViewBase layer
+        auto const* next = dynamic_cast<ApplyViewBase const*>(current->base_);
+        if (!next)
+            return current->base_->read(k);
+        current = next;
+    }
 }
 
 auto
