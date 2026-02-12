@@ -2606,6 +2606,17 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="separator:afffd688695495d7f6784ea568c6d41c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adebbd563d92733955373201c839cf664" id="r_adebbd563d92733955373201c839cf664"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664">OperatingMode</a> { <br />
+&#160;&#160;<a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3">DISCONNECTED</a> = 0
+, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858">CONNECTED</a> = 1
+, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109">SYNCING</a> = 2
+, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4">TRACKING</a> = 3
+, <br />
+&#160;&#160;<a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1">FULL</a> = 4
+<br />
+ }</td></tr>
+<tr class="memdesc:adebbd563d92733955373201c839cf664"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies the mode under which the server believes it's operating.  <a href="namespacexrpl.html#adebbd563d92733955373201c839cf664">More...</a><br /></td></tr>
+<tr class="separator:adebbd563d92733955373201c839cf664"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9f5a92c06f220c2265bfba42d919874" id="r_ab9f5a92c06f220c2265bfba42d919874"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab9f5a92c06f220c2265bfba42d919874">AmendmentVote</a> : int { <a class="el" href="namespacexrpl.html#ab9f5a92c06f220c2265bfba42d919874a28a39c5d0e09f2b9f423c9864ecf1db8">obsolete</a> = -1
 , <a class="el" href="namespacexrpl.html#ab9f5a92c06f220c2265bfba42d919874a46c48bec0d282018b9d167eef7711b2c">up</a> = 0
 , <a class="el" href="namespacexrpl.html#ab9f5a92c06f220c2265bfba42d919874a74e8333ad11685ff3bdae589c8f6e34d">down</a> = 1
@@ -2731,17 +2742,6 @@ Enumerations</h2></td></tr>
 , <a class="el" href="namespacexrpl.html#a18040b3096f725088b176428273a6e6ca0b5398b7cf60888ad8de87df87e7c1e9">overpayment</a>
  }</td></tr>
 <tr class="separator:a18040b3096f725088b176428273a6e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adebbd563d92733955373201c839cf664" id="r_adebbd563d92733955373201c839cf664"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664">OperatingMode</a> { <br />
-&#160;&#160;<a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3">DISCONNECTED</a> = 0
-, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858">CONNECTED</a> = 1
-, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109">SYNCING</a> = 2
-, <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4">TRACKING</a> = 3
-, <br />
-&#160;&#160;<a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1">FULL</a> = 4
-<br />
- }</td></tr>
-<tr class="memdesc:adebbd563d92733955373201c839cf664"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies the mode under which the server believes it's operating.  <a href="namespacexrpl.html#adebbd563d92733955373201c839cf664">More...</a><br /></td></tr>
-<tr class="separator:adebbd563d92733955373201c839cf664"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34f062517383bad9ba777508d31ac1e2" id="r_a34f062517383bad9ba777508d31ac1e2"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a34f062517383bad9ba777508d31ac1e2">TransStatus</a> { <br />
 &#160;&#160;<a class="el" href="namespacexrpl.html#a34f062517383bad9ba777508d31ac1e2a74a3513c636c575570bcdcedd574e278">NEW</a> = 0
 , <a class="el" href="namespacexrpl.html#a34f062517383bad9ba777508d31ac1e2a46535f038d28c3340f03cca00ebaeb7b">INVALID</a> = 1
@@ -4897,10 +4897,10 @@ requires ( <a class="elRef" href="http://en.cppreference.com/w/cpp/types/is_same
 <tr class="separator:a46c08bc932d6f6f79ccbf36a21cf2d97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45a752d036373d0d2e26aacd2ca9bdad" id="r_a45a752d036373d0d2e26aacd2ca9bdad"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a45a752d036373d0d2e26aacd2ca9bdad">getAssetsTotalScale</a> (<a class="el" href="classxrpl_1_1STLedgerEntry.html#abfe1dfb5d52d41d0f04b38097d14f16f">SLE::const_ref</a> vaultSle)</td></tr>
 <tr class="separator:a45a752d036373d0d2e26aacd2ca9bdad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74b8915c06d35c8b0a2a6b8974b56802" id="r_a74b8915c06d35c8b0a2a6b8974b56802"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1NetworkOPs.html">NetworkOPs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a74b8915c06d35c8b0a2a6b8974b56802">make_NetworkOPs</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1NetworkOPs.html#a2fe967fcad72bc845b61751f000069b9">NetworkOPs::clock_type</a> &amp;clock, bool standalone, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> minPeerCount, bool start_valid, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;job_queue, <a class="el" href="classxrpl_1_1LedgerMaster.html">LedgerMaster</a> &amp;<a class="el" href="namespacexrpl.html#ac599741e6d4066bada11df4c7e8ad30aa7fa2267e9b1bf739a70bb1860ab2a99c">ledgerMaster</a>, <a class="el" href="classxrpl_1_1ValidatorKeys.html">ValidatorKeys</a> const &amp;validatorKeys, boost::asio::io_context &amp;io_svc, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal, <a class="el" href="classbeast_1_1insight_1_1Collector.html#ad1677ecd39a09b6a8bb8f2e073266bc4">beast::insight::Collector::ptr</a> const &amp;collector)</td></tr>
+<tr class="separator:a74b8915c06d35c8b0a2a6b8974b56802"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acaf1b5acd04708044506c2a9b9f3f326" id="r_acaf1b5acd04708044506c2a9b9f3f326"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#acaf1b5acd04708044506c2a9b9f3f326">trunc32</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a> v)</td></tr>
 <tr class="separator:acaf1b5acd04708044506c2a9b9f3f326"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c8ff5a74417f483e7421de4073ed6fb" id="r_a5c8ff5a74417f483e7421de4073ed6fb"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1NetworkOPs.html">NetworkOPs</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a5c8ff5a74417f483e7421de4073ed6fb">make_NetworkOPs</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1NetworkOPs.html#a2fe967fcad72bc845b61751f000069b9">NetworkOPs::clock_type</a> &amp;clock, bool standalone, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> minPeerCount, bool startvalid, <a class="el" href="classxrpl_1_1JobQueue.html">JobQueue</a> &amp;job_queue, <a class="el" href="classxrpl_1_1LedgerMaster.html">LedgerMaster</a> &amp;<a class="el" href="namespacexrpl.html#ac599741e6d4066bada11df4c7e8ad30aa7fa2267e9b1bf739a70bb1860ab2a99c">ledgerMaster</a>, <a class="el" href="classxrpl_1_1ValidatorKeys.html">ValidatorKeys</a> const &amp;validatorKeys, boost::asio::io_context &amp;io_svc, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal, <a class="el" href="classbeast_1_1insight_1_1Collector.html#ad1677ecd39a09b6a8bb8f2e073266bc4">beast::insight::Collector::ptr</a> const &amp;collector)</td></tr>
-<tr class="separator:a5c8ff5a74417f483e7421de4073ed6fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62c697fa526f08836a644ad8b6ff5e79" id="r_a62c697fa526f08836a644ad8b6ff5e79"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1SHAMapStore.html">SHAMapStore</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a62c697fa526f08836a644ad8b6ff5e79">make_SHAMapStore</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1NodeStore_1_1Scheduler.html">NodeStore::Scheduler</a> &amp;scheduler, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal)</td></tr>
 <tr class="separator:a62c697fa526f08836a644ad8b6ff5e79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52d90971ceac9336aa101727ea0eb054" id="r_a52d90971ceac9336aa101727ea0eb054"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
@@ -10267,6 +10267,46 @@ ledger.
 
 </div>
 </div>
+<a id="adebbd563d92733955373201c839cf664" name="adebbd563d92733955373201c839cf664"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adebbd563d92733955373201c839cf664">&#9670;&#160;</a></span>OperatingMode</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664">xrpl::OperatingMode</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Specifies the mode under which the server believes it's operating. </p>
+<p>This has implications about how the server processes transactions and how it responds to requests (e.g. account balance request).</p>
+<dl class="section note"><dt>Note</dt><dd>Other code relies on the numerical values of these constants; do not change them without verifying each use and ensuring that it is not a breaking change. </dd></dl>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3" name="adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3"></a>DISCONNECTED&#160;</td><td class="fielddoc"><p>not ready to process requests </p>
+</td></tr>
+<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858" name="adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858"></a>CONNECTED&#160;</td><td class="fielddoc"><p>convinced we are talking to the network </p>
+</td></tr>
+<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109" name="adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109"></a>SYNCING&#160;</td><td class="fielddoc"><p>fallen slightly behind </p>
+</td></tr>
+<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4" name="adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4"></a>TRACKING&#160;</td><td class="fielddoc"><p>convinced we agree with the network </p>
+</td></tr>
+<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1" name="adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1"></a>FULL&#160;</td><td class="fielddoc"><p>we have the ledger and can even validate </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8h_source.html#l00049">49</a> of file <a class="el" href="NetworkOPs_8h_source.html">NetworkOPs.h</a>.</p>
+
+</div>
+</div>
 <a id="ab9f5a92c06f220c2265bfba42d919874" name="ab9f5a92c06f220c2265bfba42d919874"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab9f5a92c06f220c2265bfba42d919874">&#9670;&#160;</a></span>AmendmentVote</h2>
 
@@ -10553,7 +10593,7 @@ ledger.
 <tr><td class="fieldname"><a id="aebb8809071647c939a34479537299e1fa1102ffba8da15c025e939ba02a6b40d3" name="aebb8809071647c939a34479537299e1fa1102ffba8da15c025e939ba02a6b40d3"></a>MAX_TIMEOUTS&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="TransactionAcquire_8cpp_source.html#l00017">17</a> of file <a class="el" href="TransactionAcquire_8cpp_source.html">TransactionAcquire.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="TransactionAcquire_8cpp_source.html#l00018">18</a> of file <a class="el" href="TransactionAcquire_8cpp_source.html">TransactionAcquire.cpp</a>.</p>
 
 </div>
 </div>
@@ -10649,46 +10689,6 @@ ledger.
 </table>
 
 <p class="definition">Definition at line <a class="el" href="LendingHelpers_8h_source.html#l00455">455</a> of file <a class="el" href="LendingHelpers_8h_source.html">LendingHelpers.h</a>.</p>
-
-</div>
-</div>
-<a id="adebbd563d92733955373201c839cf664" name="adebbd563d92733955373201c839cf664"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adebbd563d92733955373201c839cf664">&#9670;&#160;</a></span>OperatingMode</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum class <a class="el" href="namespacexrpl.html#adebbd563d92733955373201c839cf664">xrpl::OperatingMode</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Specifies the mode under which the server believes it's operating. </p>
-<p>This has implications about how the server processes transactions and how it responds to requests (e.g. account balance request).</p>
-<dl class="section note"><dt>Note</dt><dd>Other code relies on the numerical values of these constants; do not change them without verifying each use and ensuring that it is not a breaking change. </dd></dl>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3" name="adebbd563d92733955373201c839cf664a99c8ce56e7ab246445d3b134724428f3"></a>DISCONNECTED&#160;</td><td class="fielddoc"><p>not ready to process requests </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858" name="adebbd563d92733955373201c839cf664aa5afd6edd5336d91316964e493936858"></a>CONNECTED&#160;</td><td class="fielddoc"><p>convinced we are talking to the network </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109" name="adebbd563d92733955373201c839cf664af0be1f77b2d12fe3d6424fbf9eecc109"></a>SYNCING&#160;</td><td class="fielddoc"><p>fallen slightly behind </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4" name="adebbd563d92733955373201c839cf664a8728801b2a11ad95c8ecf855bfd484e4"></a>TRACKING&#160;</td><td class="fielddoc"><p>convinced we agree with the network </p>
-</td></tr>
-<tr><td class="fieldname"><a id="adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1" name="adebbd563d92733955373201c839cf664aba7de5bc6888294e5884b024a4c894f1"></a>FULL&#160;</td><td class="fielddoc"><p>we have the ledger and can even validate </p>
-</td></tr>
-</table>
-
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8h_source.html#l00048">48</a> of file <a class="el" href="NetworkOPs_8h_source.html">NetworkOPs.h</a>.</p>
 
 </div>
 </div>
@@ -41092,36 +41092,8 @@ template&lt;class NumberProxy &gt; </div>
 
 </div>
 </div>
-<a id="acaf1b5acd04708044506c2a9b9f3f326" name="acaf1b5acd04708044506c2a9b9f3f326"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acaf1b5acd04708044506c2a9b9f3f326">&#9670;&#160;</a></span>trunc32()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> xrpl::trunc32 </td>
-          <td>(</td>
-          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a>&#160;</td>
-          <td class="paramname"><em>v</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l02078">2078</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
-
-</div>
-</div>
-<a id="a5c8ff5a74417f483e7421de4073ed6fb" name="a5c8ff5a74417f483e7421de4073ed6fb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c8ff5a74417f483e7421de4073ed6fb">&#9670;&#160;</a></span>make_NetworkOPs()</h2>
+<a id="a74b8915c06d35c8b0a2a6b8974b56802" name="a74b8915c06d35c8b0a2a6b8974b56802"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74b8915c06d35c8b0a2a6b8974b56802">&#9670;&#160;</a></span>make_NetworkOPs()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -41129,8 +41101,8 @@ template&lt;class NumberProxy &gt; </div>
         <tr>
           <td class="memname"><a class="elRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a>&lt; <a class="el" href="classxrpl_1_1NetworkOPs.html">NetworkOPs</a> &gt; xrpl::make_NetworkOPs </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -41154,7 +41126,7 @@ template&lt;class NumberProxy &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>startvalid</em>, </td>
+          <td class="paramname"><em>start_valid</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -41200,7 +41172,35 @@ template&lt;class NumberProxy &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l04415">4415</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l04423">4423</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+
+</div>
+</div>
+<a id="acaf1b5acd04708044506c2a9b9f3f326" name="acaf1b5acd04708044506c2a9b9f3f326"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acaf1b5acd04708044506c2a9b9f3f326">&#9670;&#160;</a></span>trunc32()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> xrpl::trunc32 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a>&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l02084">2084</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
 
 </div>
 </div>
@@ -43300,7 +43300,7 @@ template&lt;class FlowResult &gt; </div>
 </div><div class="memdoc">
 
 <p>setup_RelationalDatabase Creates and returns a <a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> instance based on configuration. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>It's recommended to use it as a singleton, but it's not enforced (e.g. if you have more than one database). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">registry</td><td>The service registry. </td></tr>
     <tr><td class="paramname">config</td><td><a class="el" href="classxrpl_1_1Config.html">Config</a> object. </td></tr>
@@ -43310,7 +43310,7 @@ template&lt;class FlowResult &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classxrpl_1_1SQLiteDatabase.html">SQLiteDatabase</a> instance. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="SQLiteDatabase_8cpp_source.html#l00600">600</a> of file <a class="el" href="SQLiteDatabase_8cpp_source.html">SQLiteDatabase.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="SQLiteDatabase_8cpp_source.html#l00598">598</a> of file <a class="el" href="SQLiteDatabase_8cpp_source.html">SQLiteDatabase.cpp</a>.</p>
 
 </div>
 </div>
@@ -60551,7 +60551,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="TransactionAcquire_8cpp_source.html#l00015">15</a> of file <a class="el" href="TransactionAcquire_8cpp_source.html">TransactionAcquire.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="TransactionAcquire_8cpp_source.html#l00016">16</a> of file <a class="el" href="TransactionAcquire_8cpp_source.html">TransactionAcquire.cpp</a>.</p>
 
 </div>
 </div>
@@ -60783,7 +60783,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00782">782</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00785">785</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
 
 </div>
 </div>
@@ -60812,7 +60812,7 @@ template&lt;class T &gt; </div>
 <div class="ttc" id="anamespacexrpl_html_a6b687dd3d02cbeece0e7487fd7aed97c"><div class="ttname"><a href="namespacexrpl.html#a6b687dd3d02cbeece0e7487fd7aed97c">xrpl::generateKeyPair</a></div><div class="ttdeci">std::pair&lt; PublicKey, SecretKey &gt; generateKeyPair(KeyType type, Seed const &amp;seed)</div><div class="ttdoc">Generate a key pair deterministically.</div><div class="ttdef"><b>Definition</b> <a href="SecretKey_8cpp_source.html#l00330">SecretKey.cpp:330</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ab093a644b3a32b6d19551d5d5eec17cf"><div class="ttname"><a href="namespacexrpl.html#ab093a644b3a32b6d19551d5d5eec17cf">xrpl::calcAccountID</a></div><div class="ttdeci">AccountID calcAccountID(PublicKey const &amp;pk)</div><div class="ttdef"><b>Definition</b> <a href="AccountID_8cpp_source.html#l00146">AccountID.cpp:146</a></div></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00793">793</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00796">796</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
 
 </div>
 </div>
