@@ -1,8 +1,6 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/AmendmentTable.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
@@ -11,6 +9,7 @@
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/core/PerfLog.h>
 #include <xrpl/protocol/jss.h>
+#include <xrpl/server/NetworkOPs.h>
 
 #include <exception>
 #include <memory>

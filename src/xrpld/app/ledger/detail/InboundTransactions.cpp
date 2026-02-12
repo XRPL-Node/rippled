@@ -3,12 +3,12 @@
 #include <xrpld/app/ledger/detail/TransactionAcquire.h>
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/misc/AmendmentTable.h>
-#include <xrpld/app/misc/NetworkOPs.h>
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
 #include <xrpl/resource/Fees.h>
+#include <xrpl/server/NetworkOPs.h>
 
 #include <memory>
 #include <mutex>
@@ -182,6 +182,7 @@ public:
             }
 
             data.emplace_back(std::make_pair(nodeID, nodeSlice));
+#include <xrpl/server/NetworkOPs.h>
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

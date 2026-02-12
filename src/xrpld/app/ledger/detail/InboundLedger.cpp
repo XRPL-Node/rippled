@@ -830,12 +830,22 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
                 san.incInvalid();
                 return;
             }
-            auto const nodeKey = static_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+
+            uint256 nodeKey;
+            if (treeNode->isInner())
+                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+            else if (treeNode->isLeaf())
+                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+            san += map.addRootNode(rootHash, nodeSlice, f);
+
+            uint256 nodeKey;
+            if (treeNode->isLeaf())
+                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
 
             SHAMapNodeID nodeID;
             if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
             {
-                nodeID = SHAMapNodeID::createID(ledgerNode.nodedepth(), nodeKey);
+                nodeID = SHAMapNodeID::createID(static_cast<int>(ledgerNode.nodedepth()), nodeKey);
             }
             else
             {
@@ -853,7 +863,7 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
                 // the node in the SHAMap.
                 if (treeNode->isLeaf())
                 {
-                    auto const expectedID = SHAMapNodeID::createID(nodeID.getDepth(), nodeKey);
+                    auto const expectedID = SHAMapNodeID::createID(static_cast<int>(nodeID.getDepth()), nodeKey);
                     if (nodeID.getNodeID() != expectedID.getNodeID())
                     {
                         JLOG(journal_.warn()) << "Got invalid node id";
