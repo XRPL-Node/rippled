@@ -134,8 +134,8 @@ public:
         for (auto const& ledgerNode : packet.nodes())
         {
             if (!ledgerNode.has_nodedata() ||
-                (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
-                (!app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+                (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
             {
                 JLOG(j_.warn()) << "Got malformed ledger node";
                 peer->charge(Resource::feeMalformedRequest, "ledger_node");
@@ -153,7 +153,7 @@ public:
             auto const nodeKey = static_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
 
             SHAMapNodeID nodeID;
-            if (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth))
+            if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
             {
                 nodeID = SHAMapNodeID::createID(ledgerNode.nodedepth(), nodeKey);
             }

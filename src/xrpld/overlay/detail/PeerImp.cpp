@@ -3154,7 +3154,7 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                             break;
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
                         node->set_nodedata(d.second.data(), d.second.size());
-                        if (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth))
+                        if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
                             node->set_nodedepth(d.first.getDepth());
                         else
                             node->set_nodeid(d.first.getRawString());

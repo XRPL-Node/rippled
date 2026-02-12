@@ -219,10 +219,7 @@ public:
             for (int i = 0; i < packet_ptr->nodes().size(); ++i)
             {
                 auto const& ledgerNode = packet_ptr->nodes(i);
-
-                if (!ledgerNode.has_nodedata() ||
-                    (app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
-                    (!app_.getAmendmentTable().isSupported(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+                if (!ledgerNode.has_nodedata())
                     return;
 
                 auto treeNode = SHAMapTreeNode::makeFromWire(makeSlice(ledgerNode.nodedata()));
