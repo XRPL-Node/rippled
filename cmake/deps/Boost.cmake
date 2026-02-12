@@ -51,4 +51,3 @@ endif ()
 #     target_compile_options(opts INTERFACE # ignore boost headers for sanitizing
 #                                           -fsanitize-blacklist=${CMAKE_CURRENT_BINARY_DIR}/san_bl.txt)
 # endif ()
-target_compile_options(opts INTERFACE -flarge-source-files)
