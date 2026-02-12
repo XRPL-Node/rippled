@@ -4990,6 +4990,97 @@ class Vault_test : public beast::unit_test::suite
         }
     }
 
+    void
+    testVaultSetVaultDepositFlagValidation()
+    {
+        using namespace test::jtx;
+
+        auto const all = testable_amendments();
+
+        {
+            testcase("VaultSet VaultDepositBlock fixLendingProtocolV1_1 disabled");
+            Env env{*this, all - fixLendingProtocolV1_1};
+
+            Account owner{"owner"};
+            env.fund(XRP(1'000'000), owner);
+            env.close();
+
+            PrettyAsset asset = xrpIssue();
+            Vault vault{env};
+
+            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset, .flags = tfVaultPrivate});
+            env(tx, ter(tesSUCCESS), THISLINE);
+            env.close();
+
+            env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock}),
+                ter(temDISABLED),
+                THISLINE);
+            env.close();
+        }
+
+        {
+            std::string const prefix = "VaultSet(VaultDepositBlock): ";
+            Env env{*this, all | fixLendingProtocolV1_1};
+
+            Account owner{"owner"};
+            env.fund(XRP(1'000'000), owner);
+            env.close();
+
+            PrettyAsset asset = xrpIssue();
+            Vault vault{env};
+
+            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset, .flags = tfVaultPrivate});
+            env(tx, ter(tesSUCCESS), THISLINE);
+            env.close();
+
+            {
+                testcase(prefix + "invalid flags");
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock | tfVaultDepositUnblock}),
+                    ter(temMALFORMED),
+                    THISLINE);
+                env.close();
+            }
+
+            {
+                testcase(prefix + "unblock already unblocked vault");
+                // Cannot unblock an already unblocked vault
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock}),
+                    ter(tecNO_PERMISSION),
+                    THISLINE);
+            }
+
+            {
+                testcase(prefix + "set and clear vault flag");
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock}),
+                    ter(tesSUCCESS),
+                    THISLINE);
+
+                auto sleVault = env.le(keylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                if (!BEAST_EXPECT(sleVault->isFlag(lsfVaultDepositBlocked)))
+                    return;
+
+                // Cannot block an already blocked vault
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock}),
+                    ter(tecNO_PERMISSION),
+                    THISLINE);
+
+                // Cannot unblock an already unblocked vault
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock}),
+                    ter(tesSUCCESS),
+                    THISLINE);
+
+                sleVault = env.le(keylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                BEAST_EXPECT(!sleVault->isFlag(lsfVaultDepositBlocked));
+            }
+        }
+    }
+
 public:
     void
     run() override
@@ -5011,6 +5102,7 @@ public:
         testVaultClawbackBurnShares();
         testVaultClawbackAssets();
         testAssetsMaximum();
+        testVaultSetVaultDepositFlagValidation();
     }
 };
 

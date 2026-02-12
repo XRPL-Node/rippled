@@ -296,7 +296,7 @@ constexpr std::uint32_t const tfLoanManageMask = ~(tfUniversal | tfLoanDefault |
 // VaultSet flags:
 constexpr std::uint32_t const tfVaultDepositBlock = 0x00010000;
 constexpr std::uint32_t const tfVaultDepositUnblock = 0x00020000;
-constexpr std::uint32_t const tfVaultManageMask = ~(tfUniversal | tfVaultDepositBlock | tfVaultDepositUnblock);
+constexpr std::uint32_t const tfVaultSetMask = ~(tfUniversal | tfVaultDepositBlock | tfVaultDepositUnblock);
 
 // clang-format on
 
