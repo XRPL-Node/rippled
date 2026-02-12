@@ -264,7 +264,9 @@ class FeeVote_test : public beast::unit_test::suite
                  "extension_compute_limit = -100",
                  "extension_size_limit = -200",
                  "gas_price = -300"});
-            // Illegal values are ignored, and the defaults left unchanged
+            // Negative values wrap to large positive uint32_t values.
+            // reference_fee is uint64_t and has bounds checking, so it keeps
+            // the default.
             auto setup = setup_FeeVote(config);
             BEAST_EXPECT(setup.reference_fee == defaultSetup.reference_fee);
             BEAST_EXPECT(setup.account_reserve == static_cast<std::uint32_t>(-1234567));
