@@ -1,6 +1,7 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/main/Application.h>
+#include <xrpld/app/misc/AmendmentTable.h>
 
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
@@ -218,10 +219,12 @@ public:
             for (int i = 0; i < packet_ptr->nodes().size(); ++i)
             {
                 auto const& ledgerNode = packet_ptr->nodes(i);
-                if (!ledgerNode.has_nodedata())
+                if (!ledgerNode.has_nodedata() ||
+                    (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                    (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
                     return;
 
-                auto treeNode = SHAMapTreeNode::makeFromWire(makeSlice(ledgerNode.nodedata()));
+                auto const treeNode = SHAMapTreeNode::makeFromWire(makeSlice(ledgerNode.nodedata()));
                 if (!treeNode)
                     return;
 

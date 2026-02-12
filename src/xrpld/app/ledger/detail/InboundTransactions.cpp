@@ -142,47 +142,47 @@ public:
                 return;
             }
 
-            auto nodeSlice = makeSlice(ledgerNode.nodedata());
-            auto treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
+            auto const nodeSlice = makeSlice(ledgerNode.nodedata());
+            auto const treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
             if (!treeNode)
             {
                 JLOG(j_.warn()) << "Got invalid node data";
-                peer->charge(Resource::feeInvalidData, "ledger_data");
+                peer->charge(Resource::feeInvalidData, "node_data");
                 return;
             }
-            auto const nodeKey = static_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
 
             SHAMapNodeID nodeID;
             if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
             {
-                nodeID = SHAMapNodeID::createID(ledgerNode.nodedepth(), nodeKey);
+                nodeID = SHAMapNodeID(ledgerNode.nodedepth(), treeNode->getHash().as_uint256());
             }
             else
             {
                 auto const nid = deserializeSHAMapNodeID(ledgerNode.nodeid());
                 if (!nid)
                 {
-                    peer->charge(Resource::feeInvalidData, "ledger_id");
+                    JLOG(j_.warn()) << "Got invalid node id";
+                    peer->charge(Resource::feeInvalidData, "node_id");
                     return;
                 }
                 nodeID = *nid;
+            }
 
-                // For leaf nodes, verify that the passed-in node ID is actually
-                // the same as what the node ID should be, given the position of
-                // the node in the SHAMap.
-                if (treeNode->isLeaf())
+            // For leaf nodes, verify that the node ID is actually the same as what the node ID
+            // should be, given the position of the node in the SHAMap.
+            if (treeNode->isLeaf())
+            {
+                auto const nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+                auto const expectedID = SHAMapNodeID::createID(static_cast<int>(nodeID.getDepth()), nodeKey);
+                if (nodeID.getNodeID() != expectedID.getNodeID())
                 {
-                    auto const expectedID = SHAMapNodeID::createID(nodeID.getDepth(), nodeKey);
-                    if (nodeID.getNodeID() != expectedID.getNodeID())
-                    {
-                        peer->charge(Resource::feeInvalidData, "ledger_id");
-                        return;
-                    }
+                    JLOG(j_.warn()) << "Got unexpected node id";
+                    peer->charge(Resource::feeInvalidData, "node_id");
+                    return;
                 }
             }
 
             data.emplace_back(std::make_pair(nodeID, nodeSlice));
-#include <xrpl/server/NetworkOPs.h>
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

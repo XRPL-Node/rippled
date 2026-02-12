@@ -822,8 +822,16 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
 
         for (auto const& ledgerNode : packet.nodes())
         {
-            auto nodeSlice = makeSlice(ledgerNode.nodedata());
-            auto treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
+            if (!ledgerNode.has_nodedata() ||
+                (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
+                (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+            {
+                JLOG(journal_.warn()) << "Got malformed ledger node";
+                return;
+            }
+
+            auto const nodeSlice = makeSlice(ledgerNode.nodedata());
+            auto const treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
             if (!treeNode)
             {
                 JLOG(journal_.warn()) << "Got invalid node data";
@@ -831,45 +839,34 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
                 return;
             }
 
-            uint256 nodeKey;
-            if (treeNode->isInner())
-                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
-            else if (treeNode->isLeaf())
-                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
-            san += map.addRootNode(rootHash, nodeSlice, f);
-
-            uint256 nodeKey;
-            if (treeNode->isLeaf())
-                nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
-
             SHAMapNodeID nodeID;
             if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
             {
-                nodeID = SHAMapNodeID::createID(static_cast<int>(ledgerNode.nodedepth()), nodeKey);
+                nodeID = SHAMapNodeID(ledgerNode.nodedepth(), treeNode->getHash().as_uint256());
             }
             else
             {
                 auto const nid = deserializeSHAMapNodeID(ledgerNode.nodeid());
                 if (!nid)
                 {
-                    JLOG(journal_.warn()) << "Got invalid node id";
+                    JLOG(journal_.warn()) << "Got unexpected node id";
                     san.incInvalid();
                     return;
                 }
                 nodeID = *nid;
+            }
 
-                // For leaf nodes, verify that the passed-in node ID is actually
-                // the same as what the node ID should be, given the position of
-                // the node in the SHAMap.
-                if (treeNode->isLeaf())
+            // For leaf nodes, verify that the node ID is actually the same as what the node ID
+            // should be, given the position of the node in the SHAMap.
+            if (treeNode->isLeaf())
+            {
+                auto const nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
+                auto const expectedID = SHAMapNodeID::createID(static_cast<int>(nodeID.getDepth()), nodeKey);
+                if (nodeID.getNodeID() != expectedID.getNodeID())
                 {
-                    auto const expectedID = SHAMapNodeID::createID(static_cast<int>(nodeID.getDepth()), nodeKey);
-                    if (nodeID.getNodeID() != expectedID.getNodeID())
-                    {
-                        JLOG(journal_.warn()) << "Got invalid node id";
-                        san.incInvalid();
-                        return;
-                    }
+                    JLOG(journal_.warn()) << "Got invalid node id";
+                    san.incInvalid();
+                    return;
                 }
             }
 
