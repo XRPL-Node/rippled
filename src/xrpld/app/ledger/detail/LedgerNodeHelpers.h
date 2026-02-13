@@ -22,6 +22,19 @@ validateLedgerNode(Application& app, protocol::TMLedgerNode const& ledger_node)
     return ledger_node.has_nodeid();
 }
 
+inline std::optional<intr_ptr::SharedPtr<SHAMapTreeNode>>
+getTreeNode(Slice const& node_slice)
+{
+    try
+    {
+        return SHAMapTreeNode::makeFromWire(node_slice);
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+}
+
 inline std::optional<SHAMapNodeID>
 getSHAMapNodeID(
     Application& app,

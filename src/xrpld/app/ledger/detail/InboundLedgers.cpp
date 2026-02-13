@@ -222,9 +222,10 @@ public:
                     return;
 
                 auto const node_slice = makeSlice(ledger_node.nodedata());
-                auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice);
-                if (!tree_node)
+                auto const tree_node_opt = getTreeNode(node_slice);
+                if (!tree_node_opt)
                     return;
+                auto const tree_node = *tree_node_opt;
 
                 s.erase();
                 tree_node->serializeWithPrefix(s);

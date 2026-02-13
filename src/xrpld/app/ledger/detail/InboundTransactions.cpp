@@ -141,23 +141,25 @@ public:
             }
 
             auto const node_slice = makeSlice(ledger_node.nodedata());
-            auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice);
-            if (!tree_node)
+            auto const tree_node_opt = getTreeNode(node_slice);
+            if (!tree_node_opt)
             {
                 JLOG(j_.warn()) << "Got invalid node data";
                 peer->charge(Resource::feeInvalidData, "node_data");
                 return;
             }
+            auto const tree_node = *tree_node_opt;
 
-            auto const& node_id = getSHAMapNodeID(app_, ledger_node, tree_node);
-            if (!node_id)
+            auto const node_id_opt = getSHAMapNodeID(app_, ledger_node, tree_node);
+            if (!node_id_opt)
             {
                 JLOG(j_.warn()) << "Got invalid node id";
                 peer->charge(Resource::feeInvalidData, "node_id");
                 return;
             }
+            auto const& node_id = *node_id_opt;
 
-            data.emplace_back(std::make_pair(*node_id, node_slice));
+            data.emplace_back(std::make_pair(node_id, node_slice));
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

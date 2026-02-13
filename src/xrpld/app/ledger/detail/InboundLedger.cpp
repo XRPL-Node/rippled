@@ -825,30 +825,33 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
             if (!validateLedgerNode(app_, ledger_node))
             {
                 JLOG(journal_.warn()) << "Got malformed ledger node";
+                san.incInvalid();
                 return;
             }
 
             auto const node_slice = makeSlice(ledger_node.nodedata());
-            auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice);
-            if (!tree_node)
+            auto const tree_node_opt = getTreeNode(node_slice);
+            if (!tree_node_opt)
             {
                 JLOG(journal_.warn()) << "Got invalid node data";
                 san.incInvalid();
                 return;
             }
+            auto const tree_node = *tree_node_opt;
 
-            auto const& node_id = getSHAMapNodeID(app_, ledger_node, tree_node);
-            if (!node_id)
+            auto const node_id_opt = getSHAMapNodeID(app_, ledger_node, tree_node);
+            if (!node_id_opt)
             {
                 JLOG(journal_.warn()) << "Got invalid node id";
                 san.incInvalid();
                 return;
             }
+            auto const& node_id = *node_id_opt;
 
-            if (node_id->isRoot())
+            if (node_id.isRoot())
                 san += map.addRootNode(rootHash, node_slice, f);
             else
-                san += map.addKnownNode(*node_id, node_slice, f);
+                san += map.addKnownNode(node_id, node_slice, f);
 
             if (!san.isGood())
             {
