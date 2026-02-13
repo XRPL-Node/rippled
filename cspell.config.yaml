@@ -101,6 +101,7 @@ words:
   - fcontext
   - finalizers
   - firewalled
+  - flackiness
   - fmtdur
   - fsanitize
   - funclets
