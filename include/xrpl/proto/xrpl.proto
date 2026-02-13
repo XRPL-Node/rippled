@@ -244,8 +244,7 @@ message TMGetObjectByHash {
 
 message TMLedgerNode {
   required bytes nodedata = 1;
-  optional bytes nodeid = 2;      // Used when fixLedgerNodeDepth is not active.
-  optional uint32 nodedepth = 3;  // Used when fixLedgerNodeDepth is active.
+  optional bytes nodeid = 2;  // missing for ledger base data
 }
 
 enum TMLedgerInfoType {

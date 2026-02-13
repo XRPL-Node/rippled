@@ -222,16 +222,16 @@ public:
                     return;
 
                 auto const node_slice = makeSlice(ledger_node.nodedata());
-                auto const tree_node_opt = getTreeNode(node_slice);
-                if (!tree_node_opt)
+                auto const tree_node = getTreeNode(node_slice);
+                if (!tree_node)
                     return;
-                auto const tree_node = *tree_node_opt;
+                auto const& tn = *tree_node;
 
                 s.erase();
-                tree_node->serializeWithPrefix(s);
+                tn->serializeWithPrefix(s);
 
                 app_.getLedgerMaster().addFetchPack(
-                    tree_node->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
+                    tn->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
             }
         }
         catch (std::exception const&)

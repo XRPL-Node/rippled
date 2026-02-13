@@ -113,7 +113,7 @@ selectBranch(SHAMapNodeID const& id, uint256 const& hash)
 SHAMapNodeID
 SHAMapNodeID::createID(int depth, uint256 const& key)
 {
-    XRPL_ASSERT((depth >= 0) && (depth < 65), "xrpl::SHAMapNodeID::createID : valid branch input");
+    XRPL_ASSERT(depth >= 0 && depth <= SHAMap::leafDepth, "xrpl::SHAMapNodeID::createID : valid branch input");
     return SHAMapNodeID(depth, key & depthMask(depth));
 }
 

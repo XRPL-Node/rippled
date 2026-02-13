@@ -3154,9 +3154,12 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                             break;
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
                         node->set_nodedata(d.second.data(), d.second.size());
-                        if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
-                            node->set_nodedepth(d.first.getDepth());
-                        else
+                        // When the amendment is enabled, we only include the node ID in the ledger node for inner
+                        // nodes, while we do not include it for leaf nodes as it can be calculated from the data. When
+                        // the amendment is disabled, we always need to include the node ID in the ledger node.
+                        if ((app_.getAmendmentTable().isEnabled(fixLedgerNodeID) &&
+                             d.first.getDepth() != SHAMap::leafDepth) ||
+                            !app_.getAmendmentTable().isEnabled(fixLedgerNodeID))
                             node->set_nodeid(d.first.getRawString());
                     }
                 }
