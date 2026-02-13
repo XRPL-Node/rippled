@@ -129,68 +129,78 @@ unsigned-integer-overflow:__chrono/duration.h
 # These are by design and mathematically correct for their use cases
 
 # base_uint.h: Increment/decrement operators intentionally wrap around
-unsigned-integer-overflow:xrpl/basics/base_uint.h
+# unsigned-integer-overflow:xrpl/basics/base_uint.h
 
 # Safe loop patterns that trigger UBSAN (e.g., while(len-- && ...))
 # These are mathematically sound patterns where underflow is handled correctly
-unsigned-integer-overflow:src/libxrpl/basics/base64.cpp
-unsigned-integer-overflow:src/libxrpl/basics/Number.cpp
-unsigned-integer-overflow:src/libxrpl/crypto/RFC1751.cpp
-unsigned-integer-overflow:src/libxrpl/json/json_value.cpp
-unsigned-integer-overflow:src/libxrpl/ledger/ApplyView.cpp
-unsigned-integer-overflow:src/libxrpl/ledger/View.cpp
-unsigned-integer-overflow:src/libxrpl/protocol/Permissions.cpp
-unsigned-integer-overflow:src/libxrpl/protocol/STPathSet.cpp
-unsigned-integer-overflow:src/libxrpl/protocol/tokens.cpp
-unsigned-integer-overflow:src/libxrpl/shamap/SHAMap.cpp
-unsigned-integer-overflow:src/test/app/Batch_test.cpp
-unsigned-integer-overflow:src/test/app/Invariants_test.cpp
-unsigned-integer-overflow:src/test/app/NFToken_test.cpp
-unsigned-integer-overflow:src/test/app/Offer_test.cpp
-unsigned-integer-overflow:src/test/app/Path_test.cpp
-unsigned-integer-overflow:src/test/jtx/impl/acctdelete.cpp
-unsigned-integer-overflow:src/test/ledger/SkipList_test.cpp
-unsigned-integer-overflow:src/test/rpc/Subscribe_test.cpp
-unsigned-integer-overflow:src/tests/libxrpl/basics/RangeSet.cpp
-unsigned-integer-overflow:src/xrpld/app/misc/detail/AmendmentTable.cpp
-unsigned-integer-overflow:src/xrpld/app/misc/NetworkOPs.cpp
-unsigned-integer-overflow:src/xrpld/app/paths/detail/StrandFlow.h
-unsigned-integer-overflow:src/xrpld/app/tx/detail/NFTokenMint.cpp
-unsigned-integer-overflow:src/xrpld/app/tx/detail/SetOracle.cpp
-unsigned-integer-overflow:src/xrpld/rpc/detail/Role.cpp
-unsigned-integer-overflow:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
-unsigned-integer-overflow:xrpl/beast/xor_shift_engine.h
+# unsigned-integer-overflow:src/libxrpl/basics/base64.cpp
+# unsigned-integer-overflow:src/libxrpl/basics/Number.cpp
+# unsigned-integer-overflow:src/libxrpl/crypto/RFC1751.cpp
+# unsigned-integer-overflow:src/libxrpl/json/json_value.cpp
+# unsigned-integer-overflow:src/libxrpl/ledger/ApplyView.cpp
+# unsigned-integer-overflow:src/libxrpl/ledger/View.cpp
+# unsigned-integer-overflow:src/libxrpl/protocol/Permissions.cpp
+# unsigned-integer-overflow:src/libxrpl/protocol/STPathSet.cpp
+# unsigned-integer-overflow:src/libxrpl/protocol/tokens.cpp
+# unsigned-integer-overflow:src/libxrpl/shamap/SHAMap.cpp
+# unsigned-integer-overflow:src/test/app/Batch_test.cpp
+# unsigned-integer-overflow:src/test/app/Invariants_test.cpp
+# unsigned-integer-overflow:src/test/app/NFToken_test.cpp
+# unsigned-integer-overflow:src/test/app/Offer_test.cpp
+# unsigned-integer-overflow:src/test/app/Path_test.cpp
+# unsigned-integer-overflow:src/test/jtx/impl/acctdelete.cpp
+# unsigned-integer-overflow:src/test/ledger/SkipList_test.cpp
+# unsigned-integer-overflow:src/test/rpc/Subscribe_test.cpp
+# unsigned-integer-overflow:src/tests/libxrpl/basics/RangeSet.cpp
+# unsigned-integer-overflow:src/xrpld/app/misc/detail/AmendmentTable.cpp
+# unsigned-integer-overflow:src/xrpld/app/misc/NetworkOPs.cpp
+# unsigned-integer-overflow:src/xrpld/app/paths/detail/StrandFlow.h
+# unsigned-integer-overflow:src/xrpld/app/tx/detail/NFTokenMint.cpp
+# unsigned-integer-overflow:src/xrpld/app/tx/detail/SetOracle.cpp
+# unsigned-integer-overflow:src/xrpld/rpc/detail/Role.cpp
+# unsigned-integer-overflow:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
+# unsigned-integer-overflow:xrpl/beast/xor_shift_engine.h
+
+# STAmount uses intentional negation of INT64_MIN and overflow in arithmetic
+signed-integer-overflow:src/libxrpl/protocol/STAmount.cpp
+unsigned-integer-overflow:src/libxrpl/protocol/STAmount.cpp
+
+# The multiplication is intentionally allowed to overflow
+unsigned-integer-overflow:include/xrpl/protocol/nft.h
+
+# MPTAmount uses intentional negation of INT64_MIN and overflow in arithmetic
+signed-integer-overflow:src/libxrpl/protocol/MPTAmount.cpp
 
 # General undefined behavior suppressions for rippled code
 # These files have patterns that UBSAN flags but are safe in context
-undefined:src/libxrpl/basics/base64.cpp
-undefined:src/libxrpl/basics/Number.cpp
-undefined:src/libxrpl/beast/utility/beast_Journal.cpp
-undefined:src/libxrpl/crypto/RFC1751.cpp
-undefined:src/libxrpl/json/json_value.cpp
-undefined:src/libxrpl/ledger/ApplyView.cpp
-undefined:src/libxrpl/ledger/View.cpp
-undefined:src/libxrpl/protocol/Permissions.cpp
-undefined:src/libxrpl/protocol/STPathSet.cpp
-undefined:src/libxrpl/protocol/tokens.cpp
-undefined:src/libxrpl/shamap/SHAMap.cpp
-undefined:src/test/app/Batch_test.cpp
-undefined:src/test/app/Invariants_test.cpp
-undefined:src/test/app/NFToken_test.cpp
-undefined:src/test/app/Offer_test.cpp
-undefined:src/test/app/Path_test.cpp
-undefined:src/test/jtx/impl/acctdelete.cpp
-undefined:src/test/ledger/SkipList_test.cpp
-undefined:src/test/rpc/Subscribe_test.cpp
-undefined:src/tests/libxrpl/basics/RangeSet.cpp
-undefined:src/xrpld/app/misc/detail/AmendmentTable.cpp
-undefined:src/xrpld/app/misc/NetworkOPs.cpp
-undefined:src/xrpld/app/paths/detail/StrandFlow.h
-undefined:src/xrpld/app/tx/detail/NFTokenMint.cpp
-undefined:src/xrpld/app/tx/detail/SetOracle.cpp
-undefined:src/xrpld/core/detail/JobQueue.cpp
-undefined:src/xrpld/core/detail/Workers.cpp
-undefined:src/xrpld/rpc/detail/Role.cpp
-undefined:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
-undefined:xrpl/basics/base_uint.h
-undefined:xrpl/beast/xor_shift_engine.h
+# undefined:src/libxrpl/basics/base64.cpp
+# undefined:src/libxrpl/basics/Number.cpp
+# undefined:src/libxrpl/beast/utility/beast_Journal.cpp
+# undefined:src/libxrpl/crypto/RFC1751.cpp
+# undefined:src/libxrpl/json/json_value.cpp
+# undefined:src/libxrpl/ledger/ApplyView.cpp
+# undefined:src/libxrpl/ledger/View.cpp
+# undefined:src/libxrpl/protocol/Permissions.cpp
+# undefined:src/libxrpl/protocol/STPathSet.cpp
+# undefined:src/libxrpl/protocol/tokens.cpp
+# undefined:src/libxrpl/shamap/SHAMap.cpp
+# undefined:src/test/app/Batch_test.cpp
+# undefined:src/test/app/Invariants_test.cpp
+# undefined:src/test/app/NFToken_test.cpp
+# undefined:src/test/app/Offer_test.cpp
+# undefined:src/test/app/Path_test.cpp
+# undefined:src/test/jtx/impl/acctdelete.cpp
+# undefined:src/test/ledger/SkipList_test.cpp
+# undefined:src/test/rpc/Subscribe_test.cpp
+# undefined:src/tests/libxrpl/basics/RangeSet.cpp
+# undefined:src/xrpld/app/misc/detail/AmendmentTable.cpp
+# undefined:src/xrpld/app/misc/NetworkOPs.cpp
+# undefined:src/xrpld/app/paths/detail/StrandFlow.h
+# undefined:src/xrpld/app/tx/detail/NFTokenMint.cpp
+# undefined:src/xrpld/app/tx/detail/SetOracle.cpp
+# undefined:src/xrpld/core/detail/JobQueue.cpp
+# undefined:src/xrpld/core/detail/Workers.cpp
+# undefined:src/xrpld/rpc/detail/Role.cpp
+# undefined:src/xrpld/rpc/handlers/GetAggregatePrice.cpp
+# undefined:xrpl/basics/base_uint.h
+# undefined:xrpl/beast/xor_shift_engine.h

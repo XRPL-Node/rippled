@@ -19,10 +19,7 @@ MPTAmount::operator-=(MPTAmount const& other)
 MPTAmount
 MPTAmount::operator-() const
 {
-    // Cast to unsigned before negating to avoid undefined behavior
-    // when value_ == INT64_MIN
-    return MPTAmount{
-        static_cast<value_type>(-static_cast<std::uint64_t>(value_))};
+    return MPTAmount{static_cast<value_type>(-value_)};
 }
 
 bool

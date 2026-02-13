@@ -225,7 +225,6 @@ jobs:
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
-          PREFIX: ${{ (runner.arch == 'X64' && env.ENABLED_SANITIZERS == 'true') && 'setarch x86_64 -R' || '' }}
         run: |
           ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
