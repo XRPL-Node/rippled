@@ -24,7 +24,12 @@ VaultSet::checkExtraFeatures(PreflightContext const& ctx)
 std::uint32_t
 VaultSet::getFlagsMask(PreflightContext const& ctx)
 {
-    return tfVaultSetMask;
+    // VaultSet mask is built assuming fixLendingProtocolV1_1 is enabled
+    if (ctx.rules.enabled(fixLendingProtocolV1_1))
+        return tfVaultSetMask;
+
+    // Add tfVaultDepositBlock and tfVaultDepositUnblock flags to indicate they are disabled
+    return tfVaultSetMask | tfVaultDepositBlock | tfVaultDepositUnblock;
 }
 
 static bool
@@ -82,7 +87,7 @@ VaultSet::preflight(PreflightContext const& ctx)
     if (ctx.tx.isFlag(tfVaultDepositBlock) && ctx.tx.isFlag(tfVaultDepositUnblock))
     {
         JLOG(ctx.j.debug()) << "VaultSet: cannot set tfVaultDepositBlock and tfVaultDepositUnblock simultaneously.";
-        return temMALFORMED;
+        return temINVALID_FLAG;
     }
 
     return tesSUCCESS;
