@@ -233,7 +233,7 @@ jobs:
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
-          PARALLELISM: ${{ env.SANITIZERS_ENABLED == 'true' && '1' || steps.nproc.outputs.nproc }}
+          PARALLELISM: ${{ env.SANITIZERS_ENABLED == 'true' && steps.nproc.outputs.nproc || steps.nproc.outputs.nproc }}
         run: |
           ./xrpld --unittest --unittest-jobs "${PARALLELISM}"
 
