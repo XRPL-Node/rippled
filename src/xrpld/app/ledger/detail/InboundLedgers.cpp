@@ -1,7 +1,7 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
+#include <xrpld/app/ledger/detail/LedgerNodeHelpers.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/AmendmentTable.h>
 
 #include <xrpl/basics/DecayingSample.h>
 #include <xrpl/basics/Log.h>
@@ -216,23 +216,21 @@ public:
         Serializer s;
         try
         {
-            for (int i = 0; i < packet_ptr->nodes().size(); ++i)
+            for (auto const& ledger_node : packet_ptr->nodes())
             {
-                auto const& ledgerNode = packet_ptr->nodes(i);
-                if (!ledgerNode.has_nodedata() ||
-                    (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
-                    (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+                if (!validateLedgerNode(app_, ledger_node))
                     return;
 
-                auto const treeNode = SHAMapTreeNode::makeFromWire(makeSlice(ledgerNode.nodedata()));
-                if (!treeNode)
+                auto const node_slice = makeSlice(ledger_node.nodedata());
+                auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice);
+                if (!tree_node)
                     return;
 
                 s.erase();
-                treeNode->serializeWithPrefix(s);
+                tree_node->serializeWithPrefix(s);
 
                 app_.getLedgerMaster().addFetchPack(
-                    treeNode->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
+                    tree_node->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
             }
         }
         catch (std::exception const&)

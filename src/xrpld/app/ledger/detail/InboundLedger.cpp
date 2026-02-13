@@ -3,8 +3,8 @@
 #include <xrpld/app/ledger/InboundLedgers.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionStateSF.h>
+#include <xrpld/app/ledger/detail/LedgerNodeHelpers.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/AmendmentTable.h>
 #include <xrpld/overlay/Overlay.h>
 
 #include <xrpl/basics/Log.h>
@@ -820,60 +820,35 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
     {
         auto const f = filter.get();
 
-        for (auto const& ledgerNode : packet.nodes())
+        for (auto const& ledger_node : packet.nodes())
         {
-            if (!ledgerNode.has_nodedata() ||
-                (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
-                (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+            if (!validateLedgerNode(app_, ledger_node))
             {
                 JLOG(journal_.warn()) << "Got malformed ledger node";
                 return;
             }
 
-            auto const nodeSlice = makeSlice(ledgerNode.nodedata());
-            auto const treeNode = SHAMapTreeNode::makeFromWire(nodeSlice);
-            if (!treeNode)
+            auto const node_slice = makeSlice(ledger_node.nodedata());
+            auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice);
+            if (!tree_node)
             {
                 JLOG(journal_.warn()) << "Got invalid node data";
                 san.incInvalid();
                 return;
             }
 
-            SHAMapNodeID nodeID;
-            if (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth))
+            auto const& node_id = getSHAMapNodeID(app_, ledger_node, tree_node);
+            if (!node_id)
             {
-                nodeID = SHAMapNodeID(ledgerNode.nodedepth(), treeNode->getHash().as_uint256());
-            }
-            else
-            {
-                auto const nid = deserializeSHAMapNodeID(ledgerNode.nodeid());
-                if (!nid)
-                {
-                    JLOG(journal_.warn()) << "Got unexpected node id";
-                    san.incInvalid();
-                    return;
-                }
-                nodeID = *nid;
+                JLOG(journal_.warn()) << "Got invalid node id";
+                san.incInvalid();
+                return;
             }
 
-            // For leaf nodes, verify that the node ID is actually the same as what the node ID
-            // should be, given the position of the node in the SHAMap.
-            if (treeNode->isLeaf())
-            {
-                auto const nodeKey = dynamic_cast<SHAMapLeafNode const*>(treeNode.get())->peekItem()->key();
-                auto const expectedID = SHAMapNodeID::createID(static_cast<int>(nodeID.getDepth()), nodeKey);
-                if (nodeID.getNodeID() != expectedID.getNodeID())
-                {
-                    JLOG(journal_.warn()) << "Got invalid node id";
-                    san.incInvalid();
-                    return;
-                }
-            }
-
-            if (nodeID.isRoot())
-                san += map.addRootNode(rootHash, nodeSlice, f);
+            if (node_id->isRoot())
+                san += map.addRootNode(rootHash, node_slice, f);
             else
-                san += map.addKnownNode(nodeID, nodeSlice, f);
+                san += map.addKnownNode(*node_id, node_slice, f);
 
             if (!san.isGood())
             {
@@ -1085,11 +1060,9 @@ InboundLedger::processData(std::shared_ptr<Peer> peer, protocol::TMLedgerData& p
         ScopedLockType sl(mtx_);
 
         // Verify nodes are complete
-        for (auto const& ledgerNode : packet.nodes())
+        for (auto const& ledger_node : packet.nodes())
         {
-            if (!ledgerNode.has_nodedata() ||
-                (app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodedepth()) ||
-                (!app_.getAmendmentTable().isEnabled(fixLedgerNodeDepth) && !ledgerNode.has_nodeid()))
+            if (!validateLedgerNode(app_, ledger_node))
             {
                 JLOG(journal_.warn()) << "Got malformed ledger node";
                 peer->charge(Resource::feeMalformedRequest, "ledger_node");
