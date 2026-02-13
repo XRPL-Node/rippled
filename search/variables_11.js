@@ -61,7 +61,7 @@ var searchData=
   ['refreshed_58',['refreshed',['../structxrpl_1_1ValidatorSite_1_1Site_1_1Status.html#a2e122b22d9c740e14c771a31c0b5d425',1,'xrpl::ValidatorSite::Site::Status']]],
   ['refreshinterval_59',['refreshInterval',['../structxrpl_1_1ValidatorSite_1_1Site.html#a79eda834c7d466fc2ad13853f5169682',1,'xrpl::ValidatorSite::Site']]],
   ['region_5f_60',['region_',['../classxrpl_1_1detail_1_1multi__runner__base.html#aa6cc8251672565c04a54d0b13b197f69',1,'xrpl::detail::multi_runner_base']]],
-  ['registry_5f_61',['registry_',['../classxrpl_1_1SQLiteDatabase.html#ac1214895bca8cb9c29bec2b900f232a5',1,'xrpl::SQLiteDatabase::registry_'],['../classxrpl_1_1NetworkOPsImp.html#aa7bb642dd410e1a6ad03a41c0f40ceb6',1,'xrpl::NetworkOPsImp::registry_']]],
+  ['registry_5f_61',['registry_',['../classxrpl_1_1SQLiteDatabase.html#ac1214895bca8cb9c29bec2b900f232a5',1,'xrpl::SQLiteDatabase::registry_'],['../classxrpl_1_1NetworkOPsImp.html#aa7bb642dd410e1a6ad03a41c0f40ceb6',1,'xrpl::NetworkOPsImp::registry_'],['../classxrpl_1_1OrderBookDBImpl.html#ad16d6458de1ae80518c53bae2b5e553c',1,'xrpl::OrderBookDBImpl::registry_']]],
   ['regularoffers_5f_62',['regularOffers_',['../classxrpl_1_1ValidPermissionedDEX.html#a9a974fb0d9cbb5f395da40723326eb03',1,'xrpl::ValidPermissionedDEX']]],
   ['relationaldatabase_5f_63',['relationalDatabase_',['../classxrpl_1_1ApplicationImp.html#a92646db9f92a2b6e77cb96fbc9548574',1,'xrpl::ApplicationImp']]],
   ['relay_5funtrusted_5fproposals_64',['RELAY_UNTRUSTED_PROPOSALS',['../classxrpl_1_1Config.html#af0aa7de27dc6fb10ed37becbc5ceda5e',1,'xrpl::Config']]],
