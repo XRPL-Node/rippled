@@ -1,11 +1,9 @@
-#ifndef XRPL_APP_DATA_DATABASECON_H_INCLUDED
-#define XRPL_APP_DATA_DATABASECON_H_INCLUDED
-
-#include <xrpld/app/main/DBInit.h>
-#include <xrpld/core/Config.h>
-#include <xrpld/core/SociDB.h>
+#pragma once
 
 #include <xrpl/core/PerfLog.h>
+#include <xrpl/core/StartUpType.h>
+#include <xrpl/rdb/DBInit.h>
+#include <xrpl/rdb/SociDB.h>
 
 #include <boost/filesystem/path.hpp>
 
@@ -29,12 +27,10 @@ private:
     std::unique_lock<mutex> lock_;
 
 public:
-    LockedSociSession(std::shared_ptr<soci::session> it, mutex& m)
-        : session_(std::move(it)), lock_(m)
+    LockedSociSession(std::shared_ptr<soci::session> it, mutex& m) : session_(std::move(it)), lock_(m)
     {
     }
-    LockedSociSession(LockedSociSession&& rhs) noexcept
-        : session_(std::move(rhs.session_)), lock_(std::move(rhs.lock_))
+    LockedSociSession(LockedSociSession&& rhs) noexcept : session_(std::move(rhs.session_)), lock_(std::move(rhs.lock_))
     {
     }
     LockedSociSession() = delete;
@@ -71,7 +67,7 @@ public:
     {
         explicit Setup() = default;
 
-        Config::StartUpType startUp = Config::NORMAL;
+        StartUpType startUp = StartUpType::NORMAL;
         bool standAlone = false;
         boost::filesystem::path dataDir;
         // Indicates whether or not to return the `globalPragma`
@@ -85,8 +81,7 @@ public:
                 !useGlobalPragma || globalPragma,
                 "xrpl::DatabaseCon::Setup::commonPragma : consistent global "
                 "pragma");
-            return useGlobalPragma && globalPragma ? globalPragma.get()
-                                                   : nullptr;
+            return useGlobalPragma && globalPragma ? globalPragma.get() : nullptr;
         }
 
         static std::unique_ptr<std::vector<std::string> const> globalPragma;
@@ -109,9 +104,8 @@ public:
         beast::Journal journal)
         // Use temporary files or regular DB files?
         : DatabaseCon(
-              setup.standAlone && setup.startUp != Config::LOAD &&
-                      setup.startUp != Config::LOAD_FILE &&
-                      setup.startUp != Config::REPLAY
+              setup.standAlone && setup.startUp != StartUpType::LOAD && setup.startUp != StartUpType::LOAD_FILE &&
+                      setup.startUp != StartUpType::REPLAY
                   ? ""
                   : (setup.dataDir / dbName),
               setup.commonPragma(),
@@ -172,11 +166,8 @@ public:
     checkoutDb()
     {
         using namespace std::chrono_literals;
-        LockedSociSession session = perf::measureDurationAndLog(
-            [&]() { return LockedSociSession(session_, lock_); },
-            "checkoutDb",
-            10ms,
-            j_);
+        LockedSociSession session =
+            perf::measureDurationAndLog([&]() { return LockedSociSession(session_, lock_); }, "checkoutDb", 10ms, j_);
 
         return session;
     }
@@ -237,11 +228,4 @@ private:
 std::shared_ptr<Checkpointer>
 checkpointerFromId(std::uintptr_t id);
 
-DatabaseCon::Setup
-setup_DatabaseCon(
-    Config const& c,
-    std::optional<beast::Journal> j = std::nullopt);
-
 }  // namespace xrpl
-
-#endif

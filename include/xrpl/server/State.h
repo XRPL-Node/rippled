@@ -1,11 +1,8 @@
-#ifndef XRPL_APP_RDB_STATE_H_INCLUDED
-#define XRPL_APP_RDB_STATE_H_INCLUDED
+#pragma once
 
-#include <xrpld/app/ledger/Ledger.h>
-#include <xrpld/app/misc/Manifest.h>
-#include <xrpld/core/Config.h>
-#include <xrpld/core/DatabaseCon.h>
-#include <xrpld/peerfinder/detail/Store.h>
+#include <xrpl/protocol/Protocol.h>
+#include <xrpl/rdb/DatabaseCon.h>
+#include <xrpl/server/Manifest.h>
 
 #include <boost/filesystem.hpp>
 
@@ -25,10 +22,7 @@ struct SavedState
  * @param dbName Name of the database.
  */
 void
-initStateDB(
-    soci::session& session,
-    BasicConfig const& config,
-    std::string const& dbName);
+initStateDB(soci::session& session, BasicConfig const& config, std::string const& dbName);
 
 /**
  * @brief getCanDelete Returns the ledger sequence which can be deleted.
@@ -75,5 +69,3 @@ void
 setLastRotated(soci::session& session, LedgerIndex seq);
 
 }  // namespace xrpl
-
-#endif

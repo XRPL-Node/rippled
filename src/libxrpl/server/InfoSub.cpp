@@ -1,4 +1,4 @@
-#include <xrpld/rpc/InfoSub.h>
+#include <xrpl/server/InfoSub.h>
 
 namespace xrpl {
 
@@ -17,8 +17,7 @@ InfoSub::InfoSub(Source& source) : m_source(source), mSeq(assign_id())
 {
 }
 
-InfoSub::InfoSub(Source& source, Consumer consumer)
-    : m_consumer(consumer), m_source(source), mSeq(assign_id())
+InfoSub::InfoSub(Source& source, Consumer consumer) : m_consumer(consumer), m_source(source), mSeq(assign_id())
 {
 }
 
@@ -125,8 +124,7 @@ InfoSub::setApiVersion(unsigned int apiVersion)
 unsigned int
 InfoSub::getApiVersion() const noexcept
 {
-    XRPL_ASSERT(
-        apiVersion_ > 0, "xrpl::InfoSub::getApiVersion : valid API version");
+    XRPL_ASSERT(apiVersion_ > 0, "xrpl::InfoSub::getApiVersion : valid API version");
     return apiVersion_;
 }
 

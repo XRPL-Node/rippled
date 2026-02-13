@@ -1,13 +1,11 @@
-#ifndef XRPL_NET_INFOSUB_H_INCLUDED
-#define XRPL_NET_INFOSUB_H_INCLUDED
-
-#include <xrpld/app/misc/Manifest.h>
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/Book.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/resource/Consumer.h>
+#include <xrpl/server/Manifest.h>
 
 namespace xrpl {
 
@@ -55,25 +53,16 @@ public:
         // you get transactions as they occur or once their
         // results are confirmed
         virtual void
-        subAccount(
-            ref ispListener,
-            hash_set<AccountID> const& vnaAccountIDs,
-            bool realTime) = 0;
+        subAccount(ref ispListener, hash_set<AccountID> const& vnaAccountIDs, bool realTime) = 0;
 
         // for normal use, removes from InfoSub and server
         virtual void
-        unsubAccount(
-            ref isplistener,
-            hash_set<AccountID> const& vnaAccountIDs,
-            bool realTime) = 0;
+        unsubAccount(ref isplistener, hash_set<AccountID> const& vnaAccountIDs, bool realTime) = 0;
 
         // for use during InfoSub destruction
         // Removes only from the server
         virtual void
-        unsubAccountInternal(
-            std::uint64_t uListener,
-            hash_set<AccountID> const& vnaAccountIDs,
-            bool realTime) = 0;
+        unsubAccountInternal(std::uint64_t uListener, hash_set<AccountID> const& vnaAccountIDs, bool realTime) = 0;
 
         /**
          * subscribe an account's new transactions and retrieve the account's
@@ -92,16 +81,10 @@ public:
          * transactions.
          */
         virtual void
-        unsubAccountHistory(
-            ref ispListener,
-            AccountID const& account,
-            bool historyOnly) = 0;
+        unsubAccountHistory(ref ispListener, AccountID const& account, bool historyOnly) = 0;
 
         virtual void
-        unsubAccountHistoryInternal(
-            std::uint64_t uListener,
-            AccountID const& account,
-            bool historyOnly) = 0;
+        unsubAccountHistoryInternal(std::uint64_t uListener, AccountID const& account, bool historyOnly) = 0;
 
         // VFALCO TODO Document the bool return value
         virtual bool
@@ -148,6 +131,7 @@ public:
 
         virtual bool
         subPeerStatus(ref ispListener) = 0;
+
         virtual bool
         unsubPeerStatus(std::uint64_t uListener) = 0;
         virtual void
@@ -238,5 +222,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif
