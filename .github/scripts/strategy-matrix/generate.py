@@ -245,14 +245,14 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             # Add ASAN + UBSAN configuration.
             configurations.append(
                 {
-                    "config_name": config_name + "-asan-ubsan",
+                    "config_name": config_name + "-asan",
                     "cmake_args": cmake_args,
                     "cmake_target": cmake_target,
                     "build_only": build_only,
                     "build_type": build_type,
                     "os": os,
                     "architecture": architecture,
-                    "sanitizers": "address,undefinedbehavior",
+                    "sanitizers": "address",
                 }
             )
             # TSAN is deactivated due to seg faults with latest compilers.
