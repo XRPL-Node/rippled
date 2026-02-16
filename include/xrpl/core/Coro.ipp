@@ -9,7 +9,7 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
     , name_(name)
     , running_(false)
     , coro_(
-          boost::context::fixedsize_stack(4 * 1024 * 1024),
+          boost::context::fixedsize_stack(2 * 1024 * 1024),
           [this, fn = std::forward<F>(f)](boost::coroutines2::coroutine<void>::push_type& do_yield) {
               yield_ = &do_yield;
               yield();
