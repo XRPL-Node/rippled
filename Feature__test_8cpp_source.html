@@ -253,9 +253,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        BEAST_EXPECTS(jrr[jss::status] == jss::success, <span class="stringliteral">&quot;status&quot;</span>);</div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>        jrr.removeMember(jss::status);</div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        BEAST_EXPECT(jrr.size() == 1);</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        BEAST_EXPECT(</div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>            jrr.isMember(<span class="stringliteral">&quot;12523DF04B553A0B1AD74F42DDB741DE8DC06A03FC089A0EF197E&quot;</span></div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                         <span class="stringliteral">&quot;2A87F1D8107&quot;</span>));</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>        BEAST_EXPECT(jrr.isMember(</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>            <span class="stringliteral">&quot;12523DF04B553A0B1AD74F42DDB741DE8DC06A03FC089A0EF197E&quot;</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>            <span class="stringliteral">&quot;2A87F1D8107&quot;</span>));</div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>        <span class="keyword">auto</span> feature = *(jrr.begin());</div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span> </div>
 <div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>        BEAST_EXPECTS(feature[jss::name] == <span class="stringliteral">&quot;fixAMMOverflowOffer&quot;</span>, <span class="stringliteral">&quot;name&quot;</span>);</div>

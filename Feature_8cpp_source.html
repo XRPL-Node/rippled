@@ -174,7 +174,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    };</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <span class="comment">// Intermediate types to help with readability</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> tag, <span class="keyword">typename</span> Type, Type Feature::*PtrToMember&gt;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> tag, <span class="keyword">typename</span> Type, Type Feature::* PtrToMember&gt;</div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <span class="keyword">using </span>feature_hashed_unique = boost::multi_index::</div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        hashed_unique&lt;boost::multi_index::tag&lt;tag&gt;, boost::multi_index::member&lt;Feature, Type, PtrToMember&gt;&gt;;</div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>

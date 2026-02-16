@@ -919,329 +919,330 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span> </div>
 <div class="foldopen" id="foldopen00776" data-start="{" data-end="}">
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a26f0b9ae0cd8c2dfcc37371fa46336f1">  776</a></span>Number::operator <a class="code hl_typedef" href="classxrpl_1_1Number.html#a3e899a2315bdca222c4f12e8a244c281">rep</a>()<span class="keyword"> const</span></div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">rep</a> drops = <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>();</div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>    <span class="keywordtype">int</span> offset = <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>();</div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>    <a class="code hl_class" href="classxrpl_1_1Number_1_1Guard.html">Guard</a> g;</div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>    <span class="keywordflow">if</span> (drops != 0)</div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>    {</div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="classxrpl_1_1Number.html#ae6da4d1edef20960bc7d37aa0a731fe0">negative_</a>)</div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>        {</div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>            g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#a81424a2e84074c3ecd4cb454f359c3ee">set_negative</a>();</div>
-<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>            drops = -drops;</div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>        }</div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>        <span class="keywordflow">for</span> (; offset &lt; 0; ++offset)</div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>        {</div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>            g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#aeeb29d02bbadd5bf87e04a4d1d203363">push</a>(drops % 10);</div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>            drops /= 10;</div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>        }</div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span>        <span class="keywordflow">for</span> (; offset &gt; 0; --offset)</div>
-<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span>        {</div>
-<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>            <span class="keywordflow">if</span> (drops &gt; <a class="code hl_variable" href="classxrpl_1_1Number.html#a5b91f73f5bb83bdca17bcd2378b612f8">maxRep</a> / 10)</div>
-<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span>                <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::operator rep() overflow&quot;</span>);</div>
-<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>            drops *= 10;</div>
-<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>        }</div>
-<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span>        g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#a55bc76505e3a34a0d50baa1c7eeae19c">doRound</a>(drops, <span class="stringliteral">&quot;Number::operator rep() rounding overflow&quot;</span>);</div>
-<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>    }</div>
-<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>    <span class="keywordflow">return</span> drops;</div>
-<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span>}</div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a26f0b9ae0cd8c2dfcc37371fa46336f1">  776</a></span>Number::</div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>operator <a class="code hl_typedef" href="classxrpl_1_1Number.html#a3e899a2315bdca222c4f12e8a244c281">rep</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">rep</a> drops = <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>();</div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>    <span class="keywordtype">int</span> offset = <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>();</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>    <a class="code hl_class" href="classxrpl_1_1Number_1_1Guard.html">Guard</a> g;</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>    <span class="keywordflow">if</span> (drops != 0)</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>    {</div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="classxrpl_1_1Number.html#ae6da4d1edef20960bc7d37aa0a731fe0">negative_</a>)</div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>        {</div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>            g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#a81424a2e84074c3ecd4cb454f359c3ee">set_negative</a>();</div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>            drops = -drops;</div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>        }</div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>        <span class="keywordflow">for</span> (; offset &lt; 0; ++offset)</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>        {</div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>            g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#aeeb29d02bbadd5bf87e04a4d1d203363">push</a>(drops % 10);</div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>            drops /= 10;</div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span>        }</div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span>        <span class="keywordflow">for</span> (; offset &gt; 0; --offset)</div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>        {</div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span>            <span class="keywordflow">if</span> (drops &gt; <a class="code hl_variable" href="classxrpl_1_1Number.html#a5b91f73f5bb83bdca17bcd2378b612f8">maxRep</a> / 10)</div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>                <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::operator rep() overflow&quot;</span>);</div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>            drops *= 10;</div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span>        }</div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>        g.<a class="code hl_function" href="classxrpl_1_1Number_1_1Guard.html#a55bc76505e3a34a0d50baa1c7eeae19c">doRound</a>(drops, <span class="stringliteral">&quot;Number::operator rep() rounding overflow&quot;</span>);</div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>    }</div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span>    <span class="keywordflow">return</span> drops;</div>
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span>}</div>
 </div>
-<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span> </div>
-<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
-<div class="foldopen" id="foldopen00805" data-start="{" data-end="}">
-<div class="line"><a id="l00805" name="l00805"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">  805</a></span><a class="code hl_function" href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">Number::truncate</a>() const noexcept</div>
-<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span>{</div>
-<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> &gt;= 0 || <a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> == 0)</div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span> </div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> ret = *<span class="keyword">this</span>;</div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>    <span class="keywordflow">while</span> (ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> &lt; 0 &amp;&amp; ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> != 0)</div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>    {</div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>        ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> += 1;</div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>        ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> /= <a class="code hl_typedef" href="classxrpl_1_1Number.html#a3e899a2315bdca222c4f12e8a244c281">rep</a>(10);</div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>    }</div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>    <span class="comment">// We are guaranteed that normalize() will never throw an exception</span></div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>    <span class="comment">// because exponent is either negative or zero at this point.</span></div>
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>    ret.<a class="code hl_function" href="classxrpl_1_1Number.html#ad471bfbafa5464af9c8b498e125d9873">normalize</a>();</div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>}</div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span> </div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
+<div class="foldopen" id="foldopen00806" data-start="{" data-end="}">
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">  806</a></span><a class="code hl_function" href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">Number::truncate</a>() const noexcept</div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>{</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> &gt;= 0 || <a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> == 0)</div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span> </div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> ret = *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>    <span class="keywordflow">while</span> (ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> &lt; 0 &amp;&amp; ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> != 0)</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>    {</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>        ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> += 1;</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>        ret.<a class="code hl_variable" href="classxrpl_1_1Number.html#a10e51120e8e4f1f3a08d5211069658f6">mantissa_</a> /= <a class="code hl_typedef" href="classxrpl_1_1Number.html#a3e899a2315bdca222c4f12e8a244c281">rep</a>(10);</div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>    }</div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>    <span class="comment">// We are guaranteed that normalize() will never throw an exception</span></div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>    <span class="comment">// because exponent is either negative or zero at this point.</span></div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>    ret.<a class="code hl_function" href="classxrpl_1_1Number.html#ad471bfbafa5464af9c8b498e125d9873">normalize</a>();</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>}</div>
 </div>
-<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span> </div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div>
-<div class="foldopen" id="foldopen00823" data-start="{" data-end="};">
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">  823</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">to_string</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; amount)</div>
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span>{</div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>    <span class="comment">// keep full internal accuracy, but make more human friendly if possible</span></div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>    <span class="keywordflow">if</span> (amount == zero)</div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>        <span class="keywordflow">return</span> <span class="stringliteral">&quot;0&quot;</span>;</div>
-<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span> </div>
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>    <span class="keyword">auto</span> <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> = amount.exponent_;</div>
-<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>    <span class="keyword">auto</span> <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> = amount.mantissa_;</div>
-<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>    <span class="keywordtype">bool</span> <span class="keyword">const</span> negative = amount.negative_;</div>
-<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span> </div>
-<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>    <span class="comment">// Use scientific notation for exponents that are too small or too large</span></div>
-<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>    <span class="keyword">auto</span> <span class="keyword">const</span> rangeLog = <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>();</div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>    <span class="keywordflow">if</span> (((<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> != 0) &amp;&amp; ((<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &lt; -(rangeLog + 10)) || (<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &gt; -(rangeLog - 10)))))</div>
-<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>    {</div>
-<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>        <span class="keywordflow">while</span> (<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> != 0 &amp;&amp; <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> % 10 == 0 &amp;&amp; <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &lt; <a class="code hl_variable" href="classxrpl_1_1Number.html#aa41a4f7784291ffd76634c7fc567f6fb">Number::maxExponent</a>)</div>
-<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>        {</div>
-<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span>            <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> /= 10;</div>
-<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>            ++<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>;</div>
-<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>        }</div>
-<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> ret = negative ? <span class="stringliteral">&quot;-&quot;</span> : <span class="stringliteral">&quot;&quot;</span>;</div>
-<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>));</div>
-<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;e&#39;</span>);</div>
-<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>));</div>
-<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>        <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>    }</div>
-<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span> </div>
-<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>    XRPL_ASSERT(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> + 43 &gt; 0, <span class="stringliteral">&quot;xrpl::to_string(Number) : minimum exponent&quot;</span>);</div>
-<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span> </div>
-<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>    ptrdiff_t <span class="keyword">const</span> pad_prefix = rangeLog + 12;</div>
-<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>    ptrdiff_t <span class="keyword">const</span> pad_suffix = rangeLog + 8;</div>
-<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span> </div>
-<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> <span class="keyword">const</span> raw_value(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>));</div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> val;</div>
-<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span> </div>
-<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/reserve.html">reserve</a>(raw_value.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/size.html">length</a>() + pad_prefix + pad_suffix);</div>
-<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pad_prefix, <span class="charliteral">&#39;0&#39;</span>);</div>
-<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(raw_value);</div>
-<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pad_suffix, <span class="charliteral">&#39;0&#39;</span>);</div>
-<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span> </div>
-<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>    ptrdiff_t <span class="keyword">const</span> offset(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> + pad_prefix + rangeLog + 1);</div>
-<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span> </div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>    <span class="keyword">auto</span> pre_from(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>());</div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>    <span class="keyword">auto</span> <span class="keyword">const</span> pre_to(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>() + offset);</div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span> </div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>    <span class="keyword">auto</span> <span class="keyword">const</span> post_from(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>() + offset);</div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>    <span class="keyword">auto</span> post_to(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/end.html">end</a>());</div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span> </div>
-<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>    <span class="comment">// Crop leading zeroes. Take advantage of the fact that there&#39;s always a</span></div>
-<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>    <span class="comment">// fixed amount of leading zeroes and skip them.</span></div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span>    <span class="keywordflow">if</span> (<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/distance.html">std::distance</a>(pre_from, pre_to) &gt; pad_prefix)</div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>        pre_from += pad_prefix;</div>
-<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span> </div>
-<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>    XRPL_ASSERT(post_to &gt;= post_from, <span class="stringliteral">&quot;xrpl::to_string(Number) : first distance check&quot;</span>);</div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span> </div>
-<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>    pre_from = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a>(pre_from, pre_to, [](<span class="keywordtype">char</span> c) { <span class="keywordflow">return</span> c != <span class="charliteral">&#39;0&#39;</span>; });</div>
-<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span> </div>
-<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span>    <span class="comment">// Crop trailing zeroes. Take advantage of the fact that there&#39;s always a</span></div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>    <span class="comment">// fixed amount of trailing zeroes and skip them.</span></div>
-<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>    <span class="keywordflow">if</span> (<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/distance.html">std::distance</a>(post_from, post_to) &gt; pad_suffix)</div>
-<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>        post_to -= pad_suffix;</div>
-<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span> </div>
-<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>    XRPL_ASSERT(post_to &gt;= post_from, <span class="stringliteral">&quot;xrpl::to_string(Number) : second distance check&quot;</span>);</div>
-<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span> </div>
-<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span>    post_to = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/make_reverse_iterator.html">std::make_reverse_iterator</a>(post_to), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/make_reverse_iterator.html">std::make_reverse_iterator</a>(post_from), [](<span class="keywordtype">char</span> c) {</div>
-<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>                  <span class="keywordflow">return</span> c != <span class="charliteral">&#39;0&#39;</span>;</div>
-<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>              }).base();</div>
-<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span> </div>
-<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> ret;</div>
-<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span> </div>
-<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>    <span class="keywordflow">if</span> (negative)</div>
-<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;-&#39;</span>);</div>
-<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span> </div>
-<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>    <span class="comment">// Assemble the output:</span></div>
-<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    <span class="keywordflow">if</span> (pre_from == pre_to)</div>
-<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;0&#39;</span>);</div>
-<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span>    <span class="keywordflow">else</span></div>
-<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pre_from, pre_to);</div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span> </div>
-<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span>    <span class="keywordflow">if</span> (post_to != post_from)</div>
-<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>    {</div>
-<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;.&#39;</span>);</div>
-<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(post_from, post_to);</div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>    }</div>
-<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span> </div>
-<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>    <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>}</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span> </div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div>
+<div class="foldopen" id="foldopen00824" data-start="{" data-end="};">
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">  824</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">to_string</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; amount)</div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>{</div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>    <span class="comment">// keep full internal accuracy, but make more human friendly if possible</span></div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>    <span class="keywordflow">if</span> (amount == zero)</div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>        <span class="keywordflow">return</span> <span class="stringliteral">&quot;0&quot;</span>;</div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span> </div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>    <span class="keyword">auto</span> <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> = amount.exponent_;</div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>    <span class="keyword">auto</span> <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> = amount.mantissa_;</div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>    <span class="keywordtype">bool</span> <span class="keyword">const</span> negative = amount.negative_;</div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span> </div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>    <span class="comment">// Use scientific notation for exponents that are too small or too large</span></div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>    <span class="keyword">auto</span> <span class="keyword">const</span> rangeLog = <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>();</div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>    <span class="keywordflow">if</span> (((<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> != 0) &amp;&amp; ((<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &lt; -(rangeLog + 10)) || (<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &gt; -(rangeLog - 10)))))</div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>    {</div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>        <span class="keywordflow">while</span> (<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> != 0 &amp;&amp; <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> % 10 == 0 &amp;&amp; <a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> &lt; <a class="code hl_variable" href="classxrpl_1_1Number.html#aa41a4f7784291ffd76634c7fc567f6fb">Number::maxExponent</a>)</div>
+<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span>        {</div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>            <a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a> /= 10;</div>
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>            ++<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>;</div>
+<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>        }</div>
+<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> ret = negative ? <span class="stringliteral">&quot;-&quot;</span> : <span class="stringliteral">&quot;&quot;</span>;</div>
+<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>));</div>
+<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;e&#39;</span>);</div>
+<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a>));</div>
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>        <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span>    }</div>
+<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span> </div>
+<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>    XRPL_ASSERT(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> + 43 &gt; 0, <span class="stringliteral">&quot;xrpl::to_string(Number) : minimum exponent&quot;</span>);</div>
+<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span> </div>
+<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>    ptrdiff_t <span class="keyword">const</span> pad_prefix = rangeLog + 12;</div>
+<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>    ptrdiff_t <span class="keyword">const</span> pad_suffix = rangeLog + 8;</div>
+<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span> </div>
+<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> <span class="keyword">const</span> raw_value(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/to_string.html">std::to_string</a>(<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>));</div>
+<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> val;</div>
+<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span> </div>
+<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/reserve.html">reserve</a>(raw_value.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/size.html">length</a>() + pad_prefix + pad_suffix);</div>
+<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pad_prefix, <span class="charliteral">&#39;0&#39;</span>);</div>
+<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(raw_value);</div>
+<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>    val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pad_suffix, <span class="charliteral">&#39;0&#39;</span>);</div>
+<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span> </div>
+<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>    ptrdiff_t <span class="keyword">const</span> offset(<a class="code hl_function" href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">exponent</a> + pad_prefix + rangeLog + 1);</div>
+<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span> </div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>    <span class="keyword">auto</span> pre_from(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>());</div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>    <span class="keyword">auto</span> <span class="keyword">const</span> pre_to(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>() + offset);</div>
+<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span> </div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>    <span class="keyword">auto</span> <span class="keyword">const</span> post_from(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/begin.html">begin</a>() + offset);</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>    <span class="keyword">auto</span> post_to(val.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/end.html">end</a>());</div>
+<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span> </div>
+<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>    <span class="comment">// Crop leading zeroes. Take advantage of the fact that there&#39;s always a</span></div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span>    <span class="comment">// fixed amount of leading zeroes and skip them.</span></div>
+<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>    <span class="keywordflow">if</span> (<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/distance.html">std::distance</a>(pre_from, pre_to) &gt; pad_prefix)</div>
+<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>        pre_from += pad_prefix;</div>
+<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span> </div>
+<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>    XRPL_ASSERT(post_to &gt;= post_from, <span class="stringliteral">&quot;xrpl::to_string(Number) : first distance check&quot;</span>);</div>
+<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span> </div>
+<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span>    pre_from = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a>(pre_from, pre_to, [](<span class="keywordtype">char</span> c) { <span class="keywordflow">return</span> c != <span class="charliteral">&#39;0&#39;</span>; });</div>
+<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span> </div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>    <span class="comment">// Crop trailing zeroes. Take advantage of the fact that there&#39;s always a</span></div>
+<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span>    <span class="comment">// fixed amount of trailing zeroes and skip them.</span></div>
+<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>    <span class="keywordflow">if</span> (<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/distance.html">std::distance</a>(post_from, post_to) &gt; pad_suffix)</div>
+<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>        post_to -= pad_suffix;</div>
+<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span> </div>
+<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>    XRPL_ASSERT(post_to &gt;= post_from, <span class="stringliteral">&quot;xrpl::to_string(Number) : second distance check&quot;</span>);</div>
+<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span> </div>
+<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>    post_to = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/find.html">std::find_if</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/make_reverse_iterator.html">std::make_reverse_iterator</a>(post_to), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/make_reverse_iterator.html">std::make_reverse_iterator</a>(post_from), [](<span class="keywordtype">char</span> c) {</div>
+<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span>                  <span class="keywordflow">return</span> c != <span class="charliteral">&#39;0&#39;</span>;</div>
+<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>              }).base();</div>
+<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span> </div>
+<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> ret;</div>
+<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span> </div>
+<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>    <span class="keywordflow">if</span> (negative)</div>
+<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;-&#39;</span>);</div>
+<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span> </div>
+<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    <span class="comment">// Assemble the output:</span></div>
+<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>    <span class="keywordflow">if</span> (pre_from == pre_to)</div>
+<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;0&#39;</span>);</div>
+<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>    <span class="keywordflow">else</span></div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(pre_from, pre_to);</div>
+<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span> </div>
+<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>    <span class="keywordflow">if</span> (post_to != post_from)</div>
+<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>    {</div>
+<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(1, <span class="charliteral">&#39;.&#39;</span>);</div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>        ret.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">append</a>(post_from, post_to);</div>
+<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>    }</div>
+<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span> </div>
+<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>    <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>}</div>
 </div>
-<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span> </div>
-<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span><span class="comment">// Returns f^n</span></div>
-<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span><span class="comment">// Uses a log_2(n) number of multiplications</span></div>
-<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span> </div>
-<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
-<div class="foldopen" id="foldopen00915" data-start="{" data-end="}">
-<div class="line"><a id="l00915" name="l00915"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">  915</a></span><a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; f, <span class="keywordtype">unsigned</span> n)</div>
-<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span>{</div>
-<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>    <span class="keywordflow">if</span> (n == 0)</div>
-<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
-<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>    <span class="keywordflow">if</span> (n == 1)</div>
-<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    <span class="keyword">auto</span> r = <a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(f, n / 2);</div>
-<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span>    r *= r;</div>
-<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>    <span class="keywordflow">if</span> (n % 2 != 0)</div>
-<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span>        r *= f;</div>
-<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    <span class="keywordflow">return</span> r;</div>
-<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span>}</div>
+<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span> </div>
+<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span><span class="comment">// Returns f^n</span></div>
+<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span><span class="comment">// Uses a log_2(n) number of multiplications</span></div>
+<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span> </div>
+<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
+<div class="foldopen" id="foldopen00916" data-start="{" data-end="}">
+<div class="line"><a id="l00916" name="l00916"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">  916</a></span><a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; f, <span class="keywordtype">unsigned</span> n)</div>
+<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>{</div>
+<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span>    <span class="keywordflow">if</span> (n == 0)</div>
+<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
+<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span>    <span class="keywordflow">if</span> (n == 1)</div>
+<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span>    <span class="keyword">auto</span> r = <a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(f, n / 2);</div>
+<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>    r *= r;</div>
+<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span>    <span class="keywordflow">if</span> (n % 2 != 0)</div>
+<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>        r *= f;</div>
+<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span>    <span class="keywordflow">return</span> r;</div>
+<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span>}</div>
 </div>
-<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span> </div>
-<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span><span class="comment">// Returns f^(1/d)</span></div>
-<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span><span class="comment">// Uses Newton–Raphson iterations until the result stops changing</span></div>
-<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span><span class="comment">// to find the non-negative root of the polynomial g(x) = x^d - f</span></div>
-<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span> </div>
-<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span><span class="comment">// This function, and power(Number f, unsigned n, unsigned d)</span></div>
-<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span><span class="comment">// treat corner cases such as 0 roots as advised by Annex F of</span></div>
-<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span><span class="comment">// the C standard, which itself is consistent with the IEEE</span></div>
-<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span><span class="comment">// floating point standards.</span></div>
-<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span> </div>
-<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span><a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a></div>
-<div class="foldopen" id="foldopen00938" data-start="{" data-end="};">
-<div class="line"><a id="l00938" name="l00938"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">  938</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">root</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> f, <span class="keywordtype">unsigned</span> d)</div>
-<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>{</div>
-<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
-<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
-<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span> </div>
-<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> || d == 1)</div>
-<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span>    <span class="keywordflow">if</span> (d == 0)</div>
-<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span>    {</div>
-<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span>        <span class="keywordflow">if</span> (f == -<a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
-<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="namespacexrpl.html#ab8c3ab80a860de11f3803c7da500418a">abs</a>(f) &lt; <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span>            <span class="keywordflow">return</span> zero;</div>
-<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root infinity&quot;</span>);</div>
-<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span>    }</div>
-<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span>    <span class="keywordflow">if</span> (f &lt; zero &amp;&amp; d % 2 == 0)</div>
-<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root nan&quot;</span>);</div>
-<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span>    <span class="keywordflow">if</span> (f == zero)</div>
-<div class="line"><a id="l00956" name="l00956"></a><span class="lineno">  956</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span> </div>
-<div class="line"><a id="l00958" name="l00958"></a><span class="lineno">  958</span>    <span class="comment">// Scale f into the range (0, 1) such that f&#39;s exponent is a multiple of d</span></div>
-<div class="line"><a id="l00959" name="l00959"></a><span class="lineno">  959</span>    <span class="keyword">auto</span> e = f.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> + <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>() + 1;</div>
-<div class="line"><a id="l00960" name="l00960"></a><span class="lineno">  960</span>    <span class="keyword">auto</span> <span class="keyword">const</span> di = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(d);</div>
-<div class="line"><a id="l00961" name="l00961"></a><span class="lineno">  961</span>    <span class="keyword">auto</span> ex = [e = e, di = di]()  <span class="comment">// Euclidean remainder of e/d</span></div>
-<div class="line"><a id="l00962" name="l00962"></a><span class="lineno">  962</span>    {</div>
-<div class="line"><a id="l00963" name="l00963"></a><span class="lineno">  963</span>        <span class="keywordtype">int</span> k = (e &gt;= 0 ? e : e - (di - 1)) / di;</div>
-<div class="line"><a id="l00964" name="l00964"></a><span class="lineno">  964</span>        <span class="keywordtype">int</span> k2 = e - k * di;</div>
-<div class="line"><a id="l00965" name="l00965"></a><span class="lineno">  965</span>        <span class="keywordflow">if</span> (k2 == 0)</div>
-<div class="line"><a id="l00966" name="l00966"></a><span class="lineno">  966</span>            <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a id="l00967" name="l00967"></a><span class="lineno">  967</span>        <span class="keywordflow">return</span> di - k2;</div>
-<div class="line"><a id="l00968" name="l00968"></a><span class="lineno">  968</span>    }();</div>
-<div class="line"><a id="l00969" name="l00969"></a><span class="lineno">  969</span>    e += ex;</div>
-<div class="line"><a id="l00970" name="l00970"></a><span class="lineno">  970</span>    f = f.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(-e);  <span class="comment">// f /= 10^e;</span></div>
-<div class="line"><a id="l00971" name="l00971"></a><span class="lineno">  971</span> </div>
-<div class="line"><a id="l00972" name="l00972"></a><span class="lineno">  972</span>    XRPL_ASSERT_PARTS(f.<a class="code hl_function" href="classxrpl_1_1Number.html#aa164f49489cb861950f4477b1f19a211">isnormal</a>(), <span class="stringliteral">&quot;xrpl::root(Number, unsigned)&quot;</span>, <span class="stringliteral">&quot;f is normalized&quot;</span>);</div>
-<div class="line"><a id="l00973" name="l00973"></a><span class="lineno">  973</span>    <span class="keywordtype">bool</span> neg = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00974" name="l00974"></a><span class="lineno">  974</span>    <span class="keywordflow">if</span> (f &lt; zero)</div>
-<div class="line"><a id="l00975" name="l00975"></a><span class="lineno">  975</span>    {</div>
-<div class="line"><a id="l00976" name="l00976"></a><span class="lineno">  976</span>        neg = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00977" name="l00977"></a><span class="lineno">  977</span>        f = -f;</div>
-<div class="line"><a id="l00978" name="l00978"></a><span class="lineno">  978</span>    }</div>
-<div class="line"><a id="l00979" name="l00979"></a><span class="lineno">  979</span> </div>
-<div class="line"><a id="l00980" name="l00980"></a><span class="lineno">  980</span>    <span class="comment">// Quadratic least squares curve fit of f^(1/d) in the range [0, 1]</span></div>
-<div class="line"><a id="l00981" name="l00981"></a><span class="lineno">  981</span>    <span class="keyword">auto</span> <span class="keyword">const</span> D = ((6 * di + 11) * di + 6) * di + 1;</div>
-<div class="line"><a id="l00982" name="l00982"></a><span class="lineno">  982</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a0 = 3 * di * ((2 * di - 3) * di + 1);</div>
-<div class="line"><a id="l00983" name="l00983"></a><span class="lineno">  983</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a1 = 24 * di * (2 * di - 1);</div>
-<div class="line"><a id="l00984" name="l00984"></a><span class="lineno">  984</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a2 = -30 * (di - 1) * di;</div>
-<div class="line"><a id="l00985" name="l00985"></a><span class="lineno">  985</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> r = ((<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a2} * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a1}) * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a0}) / <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{D};</div>
-<div class="line"><a id="l00986" name="l00986"></a><span class="lineno">  986</span>    <span class="keywordflow">if</span> (neg)</div>
-<div class="line"><a id="l00987" name="l00987"></a><span class="lineno">  987</span>    {</div>
-<div class="line"><a id="l00988" name="l00988"></a><span class="lineno">  988</span>        f = -f;</div>
-<div class="line"><a id="l00989" name="l00989"></a><span class="lineno">  989</span>        r = -r;</div>
-<div class="line"><a id="l00990" name="l00990"></a><span class="lineno">  990</span>    }</div>
-<div class="line"><a id="l00991" name="l00991"></a><span class="lineno">  991</span> </div>
-<div class="line"><a id="l00992" name="l00992"></a><span class="lineno">  992</span>    <span class="comment">//  Newton–Raphson iteration of f^(1/d) with initial guess r</span></div>
-<div class="line"><a id="l00993" name="l00993"></a><span class="lineno">  993</span>    <span class="comment">//  halt when r stops changing, checking for bouncing on the last iteration</span></div>
-<div class="line"><a id="l00994" name="l00994"></a><span class="lineno">  994</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm1{};</div>
-<div class="line"><a id="l00995" name="l00995"></a><span class="lineno">  995</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm2{};</div>
-<div class="line"><a id="l00996" name="l00996"></a><span class="lineno">  996</span>    <span class="keywordflow">do</span></div>
-<div class="line"><a id="l00997" name="l00997"></a><span class="lineno">  997</span>    {</div>
-<div class="line"><a id="l00998" name="l00998"></a><span class="lineno">  998</span>        rm2 = rm1;</div>
-<div class="line"><a id="l00999" name="l00999"></a><span class="lineno">  999</span>        rm1 = r;</div>
-<div class="line"><a id="l01000" name="l01000"></a><span class="lineno"> 1000</span>        r = (<a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(d - 1) * r + f / <a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(r, d - 1)) / <a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(d);</div>
-<div class="line"><a id="l01001" name="l01001"></a><span class="lineno"> 1001</span>    } <span class="keywordflow">while</span> (r != rm1 &amp;&amp; r != rm2);</div>
-<div class="line"><a id="l01002" name="l01002"></a><span class="lineno"> 1002</span> </div>
-<div class="line"><a id="l01003" name="l01003"></a><span class="lineno"> 1003</span>    <span class="comment">//  return r * 10^(e/d) to reverse scaling</span></div>
-<div class="line"><a id="l01004" name="l01004"></a><span class="lineno"> 1004</span>    <span class="keyword">auto</span> <span class="keyword">const</span> result = r.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(e / di);</div>
-<div class="line"><a id="l01005" name="l01005"></a><span class="lineno"> 1005</span>    XRPL_ASSERT_PARTS(result.isnormal(), <span class="stringliteral">&quot;xrpl::root(Number, unsigned)&quot;</span>, <span class="stringliteral">&quot;result is normalized&quot;</span>);</div>
-<div class="line"><a id="l01006" name="l01006"></a><span class="lineno"> 1006</span>    <span class="keywordflow">return</span> result;</div>
-<div class="line"><a id="l01007" name="l01007"></a><span class="lineno"> 1007</span>}</div>
+<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span> </div>
+<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span><span class="comment">// Returns f^(1/d)</span></div>
+<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span><span class="comment">// Uses Newton–Raphson iterations until the result stops changing</span></div>
+<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span><span class="comment">// to find the non-negative root of the polynomial g(x) = x^d - f</span></div>
+<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span> </div>
+<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span><span class="comment">// This function, and power(Number f, unsigned n, unsigned d)</span></div>
+<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span><span class="comment">// treat corner cases such as 0 roots as advised by Annex F of</span></div>
+<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span><span class="comment">// the C standard, which itself is consistent with the IEEE</span></div>
+<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span><span class="comment">// floating point standards.</span></div>
+<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span> </div>
+<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span><a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a></div>
+<div class="foldopen" id="foldopen00939" data-start="{" data-end="};">
+<div class="line"><a id="l00939" name="l00939"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">  939</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">root</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> f, <span class="keywordtype">unsigned</span> d)</div>
+<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span>{</div>
+<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
+<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
+<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span> </div>
+<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> || d == 1)</div>
+<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span>    <span class="keywordflow">if</span> (d == 0)</div>
+<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span>    {</div>
+<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span>        <span class="keywordflow">if</span> (f == -<a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
+<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="namespacexrpl.html#ab8c3ab80a860de11f3803c7da500418a">abs</a>(f) &lt; <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span>            <span class="keywordflow">return</span> zero;</div>
+<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root infinity&quot;</span>);</div>
+<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span>    }</div>
+<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span>    <span class="keywordflow">if</span> (f &lt; zero &amp;&amp; d % 2 == 0)</div>
+<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root nan&quot;</span>);</div>
+<div class="line"><a id="l00956" name="l00956"></a><span class="lineno">  956</span>    <span class="keywordflow">if</span> (f == zero)</div>
+<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l00958" name="l00958"></a><span class="lineno">  958</span> </div>
+<div class="line"><a id="l00959" name="l00959"></a><span class="lineno">  959</span>    <span class="comment">// Scale f into the range (0, 1) such that f&#39;s exponent is a multiple of d</span></div>
+<div class="line"><a id="l00960" name="l00960"></a><span class="lineno">  960</span>    <span class="keyword">auto</span> e = f.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> + <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>() + 1;</div>
+<div class="line"><a id="l00961" name="l00961"></a><span class="lineno">  961</span>    <span class="keyword">auto</span> <span class="keyword">const</span> di = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(d);</div>
+<div class="line"><a id="l00962" name="l00962"></a><span class="lineno">  962</span>    <span class="keyword">auto</span> ex = [e = e, di = di]()  <span class="comment">// Euclidean remainder of e/d</span></div>
+<div class="line"><a id="l00963" name="l00963"></a><span class="lineno">  963</span>    {</div>
+<div class="line"><a id="l00964" name="l00964"></a><span class="lineno">  964</span>        <span class="keywordtype">int</span> k = (e &gt;= 0 ? e : e - (di - 1)) / di;</div>
+<div class="line"><a id="l00965" name="l00965"></a><span class="lineno">  965</span>        <span class="keywordtype">int</span> k2 = e - k * di;</div>
+<div class="line"><a id="l00966" name="l00966"></a><span class="lineno">  966</span>        <span class="keywordflow">if</span> (k2 == 0)</div>
+<div class="line"><a id="l00967" name="l00967"></a><span class="lineno">  967</span>            <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a id="l00968" name="l00968"></a><span class="lineno">  968</span>        <span class="keywordflow">return</span> di - k2;</div>
+<div class="line"><a id="l00969" name="l00969"></a><span class="lineno">  969</span>    }();</div>
+<div class="line"><a id="l00970" name="l00970"></a><span class="lineno">  970</span>    e += ex;</div>
+<div class="line"><a id="l00971" name="l00971"></a><span class="lineno">  971</span>    f = f.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(-e);  <span class="comment">// f /= 10^e;</span></div>
+<div class="line"><a id="l00972" name="l00972"></a><span class="lineno">  972</span> </div>
+<div class="line"><a id="l00973" name="l00973"></a><span class="lineno">  973</span>    XRPL_ASSERT_PARTS(f.<a class="code hl_function" href="classxrpl_1_1Number.html#aa164f49489cb861950f4477b1f19a211">isnormal</a>(), <span class="stringliteral">&quot;xrpl::root(Number, unsigned)&quot;</span>, <span class="stringliteral">&quot;f is normalized&quot;</span>);</div>
+<div class="line"><a id="l00974" name="l00974"></a><span class="lineno">  974</span>    <span class="keywordtype">bool</span> neg = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00975" name="l00975"></a><span class="lineno">  975</span>    <span class="keywordflow">if</span> (f &lt; zero)</div>
+<div class="line"><a id="l00976" name="l00976"></a><span class="lineno">  976</span>    {</div>
+<div class="line"><a id="l00977" name="l00977"></a><span class="lineno">  977</span>        neg = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00978" name="l00978"></a><span class="lineno">  978</span>        f = -f;</div>
+<div class="line"><a id="l00979" name="l00979"></a><span class="lineno">  979</span>    }</div>
+<div class="line"><a id="l00980" name="l00980"></a><span class="lineno">  980</span> </div>
+<div class="line"><a id="l00981" name="l00981"></a><span class="lineno">  981</span>    <span class="comment">// Quadratic least squares curve fit of f^(1/d) in the range [0, 1]</span></div>
+<div class="line"><a id="l00982" name="l00982"></a><span class="lineno">  982</span>    <span class="keyword">auto</span> <span class="keyword">const</span> D = ((6 * di + 11) * di + 6) * di + 1;</div>
+<div class="line"><a id="l00983" name="l00983"></a><span class="lineno">  983</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a0 = 3 * di * ((2 * di - 3) * di + 1);</div>
+<div class="line"><a id="l00984" name="l00984"></a><span class="lineno">  984</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a1 = 24 * di * (2 * di - 1);</div>
+<div class="line"><a id="l00985" name="l00985"></a><span class="lineno">  985</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a2 = -30 * (di - 1) * di;</div>
+<div class="line"><a id="l00986" name="l00986"></a><span class="lineno">  986</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> r = ((<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a2} * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a1}) * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a0}) / <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{D};</div>
+<div class="line"><a id="l00987" name="l00987"></a><span class="lineno">  987</span>    <span class="keywordflow">if</span> (neg)</div>
+<div class="line"><a id="l00988" name="l00988"></a><span class="lineno">  988</span>    {</div>
+<div class="line"><a id="l00989" name="l00989"></a><span class="lineno">  989</span>        f = -f;</div>
+<div class="line"><a id="l00990" name="l00990"></a><span class="lineno">  990</span>        r = -r;</div>
+<div class="line"><a id="l00991" name="l00991"></a><span class="lineno">  991</span>    }</div>
+<div class="line"><a id="l00992" name="l00992"></a><span class="lineno">  992</span> </div>
+<div class="line"><a id="l00993" name="l00993"></a><span class="lineno">  993</span>    <span class="comment">//  Newton–Raphson iteration of f^(1/d) with initial guess r</span></div>
+<div class="line"><a id="l00994" name="l00994"></a><span class="lineno">  994</span>    <span class="comment">//  halt when r stops changing, checking for bouncing on the last iteration</span></div>
+<div class="line"><a id="l00995" name="l00995"></a><span class="lineno">  995</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm1{};</div>
+<div class="line"><a id="l00996" name="l00996"></a><span class="lineno">  996</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm2{};</div>
+<div class="line"><a id="l00997" name="l00997"></a><span class="lineno">  997</span>    <span class="keywordflow">do</span></div>
+<div class="line"><a id="l00998" name="l00998"></a><span class="lineno">  998</span>    {</div>
+<div class="line"><a id="l00999" name="l00999"></a><span class="lineno">  999</span>        rm2 = rm1;</div>
+<div class="line"><a id="l01000" name="l01000"></a><span class="lineno"> 1000</span>        rm1 = r;</div>
+<div class="line"><a id="l01001" name="l01001"></a><span class="lineno"> 1001</span>        r = (<a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(d - 1) * r + f / <a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(r, d - 1)) / <a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(d);</div>
+<div class="line"><a id="l01002" name="l01002"></a><span class="lineno"> 1002</span>    } <span class="keywordflow">while</span> (r != rm1 &amp;&amp; r != rm2);</div>
+<div class="line"><a id="l01003" name="l01003"></a><span class="lineno"> 1003</span> </div>
+<div class="line"><a id="l01004" name="l01004"></a><span class="lineno"> 1004</span>    <span class="comment">//  return r * 10^(e/d) to reverse scaling</span></div>
+<div class="line"><a id="l01005" name="l01005"></a><span class="lineno"> 1005</span>    <span class="keyword">auto</span> <span class="keyword">const</span> result = r.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(e / di);</div>
+<div class="line"><a id="l01006" name="l01006"></a><span class="lineno"> 1006</span>    XRPL_ASSERT_PARTS(result.isnormal(), <span class="stringliteral">&quot;xrpl::root(Number, unsigned)&quot;</span>, <span class="stringliteral">&quot;result is normalized&quot;</span>);</div>
+<div class="line"><a id="l01007" name="l01007"></a><span class="lineno"> 1007</span>    <span class="keywordflow">return</span> result;</div>
+<div class="line"><a id="l01008" name="l01008"></a><span class="lineno"> 1008</span>}</div>
 </div>
-<div class="line"><a id="l01008" name="l01008"></a><span class="lineno"> 1008</span> </div>
-<div class="line"><a id="l01009" name="l01009"></a><span class="lineno"> 1009</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
-<div class="foldopen" id="foldopen01010" data-start="{" data-end="};">
-<div class="line"><a id="l01010" name="l01010"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236"> 1010</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236">root2</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> f)</div>
-<div class="line"><a id="l01011" name="l01011"></a><span class="lineno"> 1011</span>{</div>
-<div class="line"><a id="l01012" name="l01012"></a><span class="lineno"> 1012</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
-<div class="line"><a id="l01013" name="l01013"></a><span class="lineno"> 1013</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
-<div class="line"><a id="l01014" name="l01014"></a><span class="lineno"> 1014</span> </div>
-<div class="line"><a id="l01015" name="l01015"></a><span class="lineno"> 1015</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l01016" name="l01016"></a><span class="lineno"> 1016</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l01017" name="l01017"></a><span class="lineno"> 1017</span>    <span class="keywordflow">if</span> (f &lt; zero)</div>
-<div class="line"><a id="l01018" name="l01018"></a><span class="lineno"> 1018</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root nan&quot;</span>);</div>
-<div class="line"><a id="l01019" name="l01019"></a><span class="lineno"> 1019</span>    <span class="keywordflow">if</span> (f == zero)</div>
-<div class="line"><a id="l01020" name="l01020"></a><span class="lineno"> 1020</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l01021" name="l01021"></a><span class="lineno"> 1021</span> </div>
-<div class="line"><a id="l01022" name="l01022"></a><span class="lineno"> 1022</span>    <span class="comment">// Scale f into the range (0, 1) such that f&#39;s exponent is a multiple of d</span></div>
-<div class="line"><a id="l01023" name="l01023"></a><span class="lineno"> 1023</span>    <span class="keyword">auto</span> e = f.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> + <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>() + 1;</div>
-<div class="line"><a id="l01024" name="l01024"></a><span class="lineno"> 1024</span>    <span class="keywordflow">if</span> (e % 2 != 0)</div>
-<div class="line"><a id="l01025" name="l01025"></a><span class="lineno"> 1025</span>        ++e;</div>
-<div class="line"><a id="l01026" name="l01026"></a><span class="lineno"> 1026</span>    f = f.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(-e);  <span class="comment">// f /= 10^e;</span></div>
-<div class="line"><a id="l01027" name="l01027"></a><span class="lineno"> 1027</span>    XRPL_ASSERT_PARTS(f.<a class="code hl_function" href="classxrpl_1_1Number.html#aa164f49489cb861950f4477b1f19a211">isnormal</a>(), <span class="stringliteral">&quot;xrpl::root2(Number)&quot;</span>, <span class="stringliteral">&quot;f is normalized&quot;</span>);</div>
-<div class="line"><a id="l01028" name="l01028"></a><span class="lineno"> 1028</span> </div>
-<div class="line"><a id="l01029" name="l01029"></a><span class="lineno"> 1029</span>    <span class="comment">// Quadratic least squares curve fit of f^(1/d) in the range [0, 1]</span></div>
-<div class="line"><a id="l01030" name="l01030"></a><span class="lineno"> 1030</span>    <span class="keyword">auto</span> <span class="keyword">const</span> D = 105;</div>
-<div class="line"><a id="l01031" name="l01031"></a><span class="lineno"> 1031</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a0 = 18;</div>
-<div class="line"><a id="l01032" name="l01032"></a><span class="lineno"> 1032</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a1 = 144;</div>
-<div class="line"><a id="l01033" name="l01033"></a><span class="lineno"> 1033</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a2 = -60;</div>
-<div class="line"><a id="l01034" name="l01034"></a><span class="lineno"> 1034</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> r = ((<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a2} * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a1}) * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a0}) / <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{D};</div>
-<div class="line"><a id="l01035" name="l01035"></a><span class="lineno"> 1035</span> </div>
-<div class="line"><a id="l01036" name="l01036"></a><span class="lineno"> 1036</span>    <span class="comment">//  Newton–Raphson iteration of f^(1/2) with initial guess r</span></div>
-<div class="line"><a id="l01037" name="l01037"></a><span class="lineno"> 1037</span>    <span class="comment">//  halt when r stops changing, checking for bouncing on the last iteration</span></div>
-<div class="line"><a id="l01038" name="l01038"></a><span class="lineno"> 1038</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm1{};</div>
-<div class="line"><a id="l01039" name="l01039"></a><span class="lineno"> 1039</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm2{};</div>
-<div class="line"><a id="l01040" name="l01040"></a><span class="lineno"> 1040</span>    <span class="keywordflow">do</span></div>
-<div class="line"><a id="l01041" name="l01041"></a><span class="lineno"> 1041</span>    {</div>
-<div class="line"><a id="l01042" name="l01042"></a><span class="lineno"> 1042</span>        rm2 = rm1;</div>
-<div class="line"><a id="l01043" name="l01043"></a><span class="lineno"> 1043</span>        rm1 = r;</div>
-<div class="line"><a id="l01044" name="l01044"></a><span class="lineno"> 1044</span>        r = (r + f / r) / <a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(2);</div>
-<div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span>    } <span class="keywordflow">while</span> (r != rm1 &amp;&amp; r != rm2);</div>
-<div class="line"><a id="l01046" name="l01046"></a><span class="lineno"> 1046</span> </div>
-<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span>    <span class="comment">//  return r * 10^(e/2) to reverse scaling</span></div>
-<div class="line"><a id="l01048" name="l01048"></a><span class="lineno"> 1048</span>    <span class="keyword">auto</span> <span class="keyword">const</span> result = r.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(e / 2);</div>
-<div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span>    XRPL_ASSERT_PARTS(result.isnormal(), <span class="stringliteral">&quot;xrpl::root2(Number)&quot;</span>, <span class="stringliteral">&quot;result is normalized&quot;</span>);</div>
-<div class="line"><a id="l01050" name="l01050"></a><span class="lineno"> 1050</span> </div>
-<div class="line"><a id="l01051" name="l01051"></a><span class="lineno"> 1051</span>    <span class="keywordflow">return</span> result;</div>
-<div class="line"><a id="l01052" name="l01052"></a><span class="lineno"> 1052</span>}</div>
+<div class="line"><a id="l01009" name="l01009"></a><span class="lineno"> 1009</span> </div>
+<div class="line"><a id="l01010" name="l01010"></a><span class="lineno"> 1010</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
+<div class="foldopen" id="foldopen01011" data-start="{" data-end="};">
+<div class="line"><a id="l01011" name="l01011"></a><span class="lineno"><a class="line" href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236"> 1011</a></span><a class="code hl_friend" href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236">root2</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> f)</div>
+<div class="line"><a id="l01012" name="l01012"></a><span class="lineno"> 1012</span>{</div>
+<div class="line"><a id="l01013" name="l01013"></a><span class="lineno"> 1013</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
+<div class="line"><a id="l01014" name="l01014"></a><span class="lineno"> 1014</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
+<div class="line"><a id="l01015" name="l01015"></a><span class="lineno"> 1015</span> </div>
+<div class="line"><a id="l01016" name="l01016"></a><span class="lineno"> 1016</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l01017" name="l01017"></a><span class="lineno"> 1017</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l01018" name="l01018"></a><span class="lineno"> 1018</span>    <span class="keywordflow">if</span> (f &lt; zero)</div>
+<div class="line"><a id="l01019" name="l01019"></a><span class="lineno"> 1019</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::root nan&quot;</span>);</div>
+<div class="line"><a id="l01020" name="l01020"></a><span class="lineno"> 1020</span>    <span class="keywordflow">if</span> (f == zero)</div>
+<div class="line"><a id="l01021" name="l01021"></a><span class="lineno"> 1021</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l01022" name="l01022"></a><span class="lineno"> 1022</span> </div>
+<div class="line"><a id="l01023" name="l01023"></a><span class="lineno"> 1023</span>    <span class="comment">// Scale f into the range (0, 1) such that f&#39;s exponent is a multiple of d</span></div>
+<div class="line"><a id="l01024" name="l01024"></a><span class="lineno"> 1024</span>    <span class="keyword">auto</span> e = f.<a class="code hl_variable" href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">exponent_</a> + <a class="code hl_function" href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">Number::mantissaLog</a>() + 1;</div>
+<div class="line"><a id="l01025" name="l01025"></a><span class="lineno"> 1025</span>    <span class="keywordflow">if</span> (e % 2 != 0)</div>
+<div class="line"><a id="l01026" name="l01026"></a><span class="lineno"> 1026</span>        ++e;</div>
+<div class="line"><a id="l01027" name="l01027"></a><span class="lineno"> 1027</span>    f = f.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(-e);  <span class="comment">// f /= 10^e;</span></div>
+<div class="line"><a id="l01028" name="l01028"></a><span class="lineno"> 1028</span>    XRPL_ASSERT_PARTS(f.<a class="code hl_function" href="classxrpl_1_1Number.html#aa164f49489cb861950f4477b1f19a211">isnormal</a>(), <span class="stringliteral">&quot;xrpl::root2(Number)&quot;</span>, <span class="stringliteral">&quot;f is normalized&quot;</span>);</div>
+<div class="line"><a id="l01029" name="l01029"></a><span class="lineno"> 1029</span> </div>
+<div class="line"><a id="l01030" name="l01030"></a><span class="lineno"> 1030</span>    <span class="comment">// Quadratic least squares curve fit of f^(1/d) in the range [0, 1]</span></div>
+<div class="line"><a id="l01031" name="l01031"></a><span class="lineno"> 1031</span>    <span class="keyword">auto</span> <span class="keyword">const</span> D = 105;</div>
+<div class="line"><a id="l01032" name="l01032"></a><span class="lineno"> 1032</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a0 = 18;</div>
+<div class="line"><a id="l01033" name="l01033"></a><span class="lineno"> 1033</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a1 = 144;</div>
+<div class="line"><a id="l01034" name="l01034"></a><span class="lineno"> 1034</span>    <span class="keyword">auto</span> <span class="keyword">const</span> a2 = -60;</div>
+<div class="line"><a id="l01035" name="l01035"></a><span class="lineno"> 1035</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> r = ((<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a2} * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a1}) * f + <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{a0}) / <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{D};</div>
+<div class="line"><a id="l01036" name="l01036"></a><span class="lineno"> 1036</span> </div>
+<div class="line"><a id="l01037" name="l01037"></a><span class="lineno"> 1037</span>    <span class="comment">//  Newton–Raphson iteration of f^(1/2) with initial guess r</span></div>
+<div class="line"><a id="l01038" name="l01038"></a><span class="lineno"> 1038</span>    <span class="comment">//  halt when r stops changing, checking for bouncing on the last iteration</span></div>
+<div class="line"><a id="l01039" name="l01039"></a><span class="lineno"> 1039</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm1{};</div>
+<div class="line"><a id="l01040" name="l01040"></a><span class="lineno"> 1040</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> rm2{};</div>
+<div class="line"><a id="l01041" name="l01041"></a><span class="lineno"> 1041</span>    <span class="keywordflow">do</span></div>
+<div class="line"><a id="l01042" name="l01042"></a><span class="lineno"> 1042</span>    {</div>
+<div class="line"><a id="l01043" name="l01043"></a><span class="lineno"> 1043</span>        rm2 = rm1;</div>
+<div class="line"><a id="l01044" name="l01044"></a><span class="lineno"> 1044</span>        rm1 = r;</div>
+<div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span>        r = (r + f / r) / <a class="code hl_function" href="classxrpl_1_1Number.html#adbf347c98a775ae3c4bde68d36d6e36c">Number</a>(2);</div>
+<div class="line"><a id="l01046" name="l01046"></a><span class="lineno"> 1046</span>    } <span class="keywordflow">while</span> (r != rm1 &amp;&amp; r != rm2);</div>
+<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span> </div>
+<div class="line"><a id="l01048" name="l01048"></a><span class="lineno"> 1048</span>    <span class="comment">//  return r * 10^(e/2) to reverse scaling</span></div>
+<div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span>    <span class="keyword">auto</span> <span class="keyword">const</span> result = r.<a class="code hl_function" href="classxrpl_1_1Number.html#a80f5761398748f4d740631511d344701">shiftExponent</a>(e / 2);</div>
+<div class="line"><a id="l01050" name="l01050"></a><span class="lineno"> 1050</span>    XRPL_ASSERT_PARTS(result.isnormal(), <span class="stringliteral">&quot;xrpl::root2(Number)&quot;</span>, <span class="stringliteral">&quot;result is normalized&quot;</span>);</div>
+<div class="line"><a id="l01051" name="l01051"></a><span class="lineno"> 1051</span> </div>
+<div class="line"><a id="l01052" name="l01052"></a><span class="lineno"> 1052</span>    <span class="keywordflow">return</span> result;</div>
+<div class="line"><a id="l01053" name="l01053"></a><span class="lineno"> 1053</span>}</div>
 </div>
-<div class="line"><a id="l01053" name="l01053"></a><span class="lineno"> 1053</span> </div>
-<div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span><span class="comment">// Returns f^(n/d)</span></div>
-<div class="line"><a id="l01055" name="l01055"></a><span class="lineno"> 1055</span> </div>
-<div class="line"><a id="l01056" name="l01056"></a><span class="lineno"> 1056</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
-<div class="foldopen" id="foldopen01057" data-start="{" data-end="}">
-<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a15adee4e180b37ba01edb25ac6d17ff6"> 1057</a></span><a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; f, <span class="keywordtype">unsigned</span> n, <span class="keywordtype">unsigned</span> d)</div>
-<div class="line"><a id="l01058" name="l01058"></a><span class="lineno"> 1058</span>{</div>
-<div class="line"><a id="l01059" name="l01059"></a><span class="lineno"> 1059</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
-<div class="line"><a id="l01060" name="l01060"></a><span class="lineno"> 1060</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
-<div class="line"><a id="l01061" name="l01061"></a><span class="lineno"> 1061</span> </div>
-<div class="line"><a id="l01062" name="l01062"></a><span class="lineno"> 1062</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l01063" name="l01063"></a><span class="lineno"> 1063</span>        <span class="keywordflow">return</span> f;</div>
-<div class="line"><a id="l01064" name="l01064"></a><span class="lineno"> 1064</span>    <span class="keyword">auto</span> g = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/numeric/gcd.html">std::gcd</a>(n, d);</div>
-<div class="line"><a id="l01065" name="l01065"></a><span class="lineno"> 1065</span>    <span class="keywordflow">if</span> (g == 0)</div>
-<div class="line"><a id="l01066" name="l01066"></a><span class="lineno"> 1066</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power nan&quot;</span>);</div>
-<div class="line"><a id="l01067" name="l01067"></a><span class="lineno"> 1067</span>    <span class="keywordflow">if</span> (d == 0)</div>
-<div class="line"><a id="l01068" name="l01068"></a><span class="lineno"> 1068</span>    {</div>
-<div class="line"><a id="l01069" name="l01069"></a><span class="lineno"> 1069</span>        <span class="keywordflow">if</span> (f == -<a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l01070" name="l01070"></a><span class="lineno"> 1070</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
-<div class="line"><a id="l01071" name="l01071"></a><span class="lineno"> 1071</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="namespacexrpl.html#ab8c3ab80a860de11f3803c7da500418a">abs</a>(f) &lt; <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
-<div class="line"><a id="l01072" name="l01072"></a><span class="lineno"> 1072</span>            <span class="keywordflow">return</span> zero;</div>
-<div class="line"><a id="l01073" name="l01073"></a><span class="lineno"> 1073</span>        <span class="comment">// abs(f) &gt; one</span></div>
-<div class="line"><a id="l01074" name="l01074"></a><span class="lineno"> 1074</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power infinity&quot;</span>);</div>
-<div class="line"><a id="l01075" name="l01075"></a><span class="lineno"> 1075</span>    }</div>
-<div class="line"><a id="l01076" name="l01076"></a><span class="lineno"> 1076</span>    <span class="keywordflow">if</span> (n == 0)</div>
-<div class="line"><a id="l01077" name="l01077"></a><span class="lineno"> 1077</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
-<div class="line"><a id="l01078" name="l01078"></a><span class="lineno"> 1078</span>    n /= g;</div>
-<div class="line"><a id="l01079" name="l01079"></a><span class="lineno"> 1079</span>    d /= g;</div>
-<div class="line"><a id="l01080" name="l01080"></a><span class="lineno"> 1080</span>    <span class="keywordflow">if</span> ((n % 2) == 1 &amp;&amp; (d % 2) == 0 &amp;&amp; f &lt; zero)</div>
-<div class="line"><a id="l01081" name="l01081"></a><span class="lineno"> 1081</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power nan&quot;</span>);</div>
-<div class="line"><a id="l01082" name="l01082"></a><span class="lineno"> 1082</span>    <span class="keywordflow">return</span> <a class="code hl_friend" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">root</a>(<a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(f, n), d);</div>
-<div class="line"><a id="l01083" name="l01083"></a><span class="lineno"> 1083</span>}</div>
+<div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span> </div>
+<div class="line"><a id="l01055" name="l01055"></a><span class="lineno"> 1055</span><span class="comment">// Returns f^(n/d)</span></div>
+<div class="line"><a id="l01056" name="l01056"></a><span class="lineno"> 1056</span> </div>
+<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span><a class="code hl_class" href="classxrpl_1_1Number.html">Number</a></div>
+<div class="foldopen" id="foldopen01058" data-start="{" data-end="}">
+<div class="line"><a id="l01058" name="l01058"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a15adee4e180b37ba01edb25ac6d17ff6"> 1058</a></span><a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(<a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; f, <span class="keywordtype">unsigned</span> n, <span class="keywordtype">unsigned</span> d)</div>
+<div class="line"><a id="l01059" name="l01059"></a><span class="lineno"> 1059</span>{</div>
+<div class="line"><a id="l01060" name="l01060"></a><span class="lineno"> 1060</span>    <span class="keyword">constexpr</span> <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> zero = <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>{};</div>
+<div class="line"><a id="l01061" name="l01061"></a><span class="lineno"> 1061</span>    <span class="keyword">auto</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a> = <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">Number::one</a>();</div>
+<div class="line"><a id="l01062" name="l01062"></a><span class="lineno"> 1062</span> </div>
+<div class="line"><a id="l01063" name="l01063"></a><span class="lineno"> 1063</span>    <span class="keywordflow">if</span> (f == <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l01064" name="l01064"></a><span class="lineno"> 1064</span>        <span class="keywordflow">return</span> f;</div>
+<div class="line"><a id="l01065" name="l01065"></a><span class="lineno"> 1065</span>    <span class="keyword">auto</span> g = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/numeric/gcd.html">std::gcd</a>(n, d);</div>
+<div class="line"><a id="l01066" name="l01066"></a><span class="lineno"> 1066</span>    <span class="keywordflow">if</span> (g == 0)</div>
+<div class="line"><a id="l01067" name="l01067"></a><span class="lineno"> 1067</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power nan&quot;</span>);</div>
+<div class="line"><a id="l01068" name="l01068"></a><span class="lineno"> 1068</span>    <span class="keywordflow">if</span> (d == 0)</div>
+<div class="line"><a id="l01069" name="l01069"></a><span class="lineno"> 1069</span>    {</div>
+<div class="line"><a id="l01070" name="l01070"></a><span class="lineno"> 1070</span>        <span class="keywordflow">if</span> (f == -<a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l01071" name="l01071"></a><span class="lineno"> 1071</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
+<div class="line"><a id="l01072" name="l01072"></a><span class="lineno"> 1072</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="namespacexrpl.html#ab8c3ab80a860de11f3803c7da500418a">abs</a>(f) &lt; <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>)</div>
+<div class="line"><a id="l01073" name="l01073"></a><span class="lineno"> 1073</span>            <span class="keywordflow">return</span> zero;</div>
+<div class="line"><a id="l01074" name="l01074"></a><span class="lineno"> 1074</span>        <span class="comment">// abs(f) &gt; one</span></div>
+<div class="line"><a id="l01075" name="l01075"></a><span class="lineno"> 1075</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power infinity&quot;</span>);</div>
+<div class="line"><a id="l01076" name="l01076"></a><span class="lineno"> 1076</span>    }</div>
+<div class="line"><a id="l01077" name="l01077"></a><span class="lineno"> 1077</span>    <span class="keywordflow">if</span> (n == 0)</div>
+<div class="line"><a id="l01078" name="l01078"></a><span class="lineno"> 1078</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="classxrpl_1_1Number.html#ad7b3dcf0314ef5327550516bdb1fa7d2">one</a>;</div>
+<div class="line"><a id="l01079" name="l01079"></a><span class="lineno"> 1079</span>    n /= g;</div>
+<div class="line"><a id="l01080" name="l01080"></a><span class="lineno"> 1080</span>    d /= g;</div>
+<div class="line"><a id="l01081" name="l01081"></a><span class="lineno"> 1081</span>    <span class="keywordflow">if</span> ((n % 2) == 1 &amp;&amp; (d % 2) == 0 &amp;&amp; f &lt; zero)</div>
+<div class="line"><a id="l01082" name="l01082"></a><span class="lineno"> 1082</span>        <span class="keywordflow">throw</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a>(<span class="stringliteral">&quot;Number::power nan&quot;</span>);</div>
+<div class="line"><a id="l01083" name="l01083"></a><span class="lineno"> 1083</span>    <span class="keywordflow">return</span> <a class="code hl_friend" href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">root</a>(<a class="code hl_function" href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">power</a>(f, n), d);</div>
+<div class="line"><a id="l01084" name="l01084"></a><span class="lineno"> 1084</span>}</div>
 </div>
-<div class="line"><a id="l01084" name="l01084"></a><span class="lineno"> 1084</span> </div>
-<div class="line"><a id="l01085" name="l01085"></a><span class="lineno"> 1085</span>}  <span class="comment">// namespace xrpl</span></div>
+<div class="line"><a id="l01085" name="l01085"></a><span class="lineno"> 1085</span> </div>
+<div class="line"><a id="l01086" name="l01086"></a><span class="lineno"> 1086</span>}  <span class="comment">// namespace xrpl</span></div>
 <div class="ttc" id="aalgorithm_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/header/algorithm.html">algorithm</a></div></div>
 <div class="ttc" id="aappend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string/append.html">std::string::append</a></div><div class="ttdeci">T append(T... args)</div></div>
 <div class="ttc" id="abasic_string_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
@@ -1271,9 +1272,9 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1Number_html_a274b459d7478df80795caed8a56d4f00"><div class="ttname"><a href="classxrpl_1_1Number.html#a274b459d7478df80795caed8a56d4f00">xrpl::Number::setround</a></div><div class="ttdeci">static rounding_mode setround(rounding_mode mode)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00039">Number.cpp:39</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a2c584da7e74e5b5bb6770ad27d0ac546"><div class="ttname"><a href="classxrpl_1_1Number.html#a2c584da7e74e5b5bb6770ad27d0ac546">xrpl::Number::operator/=</a></div><div class="ttdeci">Number &amp; operator/=(Number const &amp;x)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00682">Number.cpp:682</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a32c28029a3fb2ed76e3151f626be8966"><div class="ttname"><a href="classxrpl_1_1Number.html#a32c28029a3fb2ed76e3151f626be8966">xrpl::Number::operator+=</a></div><div class="ttdeci">Number &amp; operator+=(Number const &amp;x)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00497">Number.cpp:497</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1Number_html_a3d6e8e71ee3641f8d21041d3ade5aed0"><div class="ttname"><a href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">xrpl::Number::truncate</a></div><div class="ttdeci">Number truncate() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00805">Number.cpp:805</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1Number_html_a3d6e8e71ee3641f8d21041d3ade5aed0"><div class="ttname"><a href="classxrpl_1_1Number.html#a3d6e8e71ee3641f8d21041d3ade5aed0">xrpl::Number::truncate</a></div><div class="ttdeci">Number truncate() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00806">Number.cpp:806</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a3e899a2315bdca222c4f12e8a244c281"><div class="ttname"><a href="classxrpl_1_1Number.html#a3e899a2315bdca222c4f12e8a244c281">xrpl::Number::rep</a></div><div class="ttdeci">std::int64_t rep</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00208">Number.h:208</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1Number_html_a3f93a0fd9a95f114e3ab7d12ea0a1f7d"><div class="ttname"><a href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">xrpl::Number::to_string</a></div><div class="ttdeci">friend std::string to_string(Number const &amp;amount)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00823">Number.cpp:823</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1Number_html_a3f93a0fd9a95f114e3ab7d12ea0a1f7d"><div class="ttname"><a href="classxrpl_1_1Number.html#a3f93a0fd9a95f114e3ab7d12ea0a1f7d">xrpl::Number::to_string</a></div><div class="ttdeci">friend std::string to_string(Number const &amp;amount)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00824">Number.cpp:824</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a40e08f75077897215c66d102b5b75f95"><div class="ttname"><a href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95">xrpl::Number::rounding_mode</a></div><div class="ttdeci">rounding_mode</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00380">Number.h:380</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a40e08f75077897215c66d102b5b75f95aa0120ec63f8c549bc0bf1c945e36e779"><div class="ttname"><a href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95aa0120ec63f8c549bc0bf1c945e36e779">xrpl::Number::towards_zero</a></div><div class="ttdeci">@ towards_zero</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00380">Number.h:380</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_a40e08f75077897215c66d102b5b75f95aa1683b7e2939668142366896b111931a"><div class="ttname"><a href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95aa1683b7e2939668142366896b111931a">xrpl::Number::to_nearest</a></div><div class="ttdeci">@ to_nearest</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00380">Number.h:380</a></div></div>
@@ -1293,7 +1294,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1Number_html_aa4058fefe18f86063240cfd2ba985358"><div class="ttname"><a href="classxrpl_1_1Number.html#aa4058fefe18f86063240cfd2ba985358">xrpl::Number::exponent</a></div><div class="ttdeci">constexpr int exponent() const noexcept</div><div class="ttdoc">Returns the exponent of the external view of the Number.</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00563">Number.h:563</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_aa41a4f7784291ffd76634c7fc567f6fb"><div class="ttname"><a href="classxrpl_1_1Number.html#aa41a4f7784291ffd76634c7fc567f6fb">xrpl::Number::maxExponent</a></div><div class="ttdeci">static constexpr int maxExponent</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00218">Number.h:218</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ab2381c12707d6e7e9a7704b4733ae3af"><div class="ttname"><a href="classxrpl_1_1Number.html#ab2381c12707d6e7e9a7704b4733ae3af">xrpl::Number::range_</a></div><div class="ttdeci">static thread_local std::reference_wrapper&lt; MantissaRange const  &gt; range_</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00457">Number.h:457</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1Number_html_ab83e07ef7e17606d7bcaeabe05ec1236"><div class="ttname"><a href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236">xrpl::Number::root2</a></div><div class="ttdeci">friend Number root2(Number f)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l01010">Number.cpp:1010</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1Number_html_ab83e07ef7e17606d7bcaeabe05ec1236"><div class="ttname"><a href="classxrpl_1_1Number.html#ab83e07ef7e17606d7bcaeabe05ec1236">xrpl::Number::root2</a></div><div class="ttdeci">friend Number root2(Number f)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l01011">Number.cpp:1011</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ac138187ff4d421f4158228642551756c"><div class="ttname"><a href="classxrpl_1_1Number.html#ac138187ff4d421f4158228642551756c">xrpl::Number::getMantissaScale</a></div><div class="ttdeci">static MantissaRange::mantissa_scale getMantissaScale()</div><div class="ttdoc">Returns which mantissa scale is currently in use for normalization.</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00045">Number.cpp:45</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ac901dca6c4ae9b77298650a82ad606f3"><div class="ttname"><a href="classxrpl_1_1Number.html#ac901dca6c4ae9b77298650a82ad606f3">xrpl::Number::exponent_</a></div><div class="ttdeci">int exponent_</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00213">Number.h:213</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ace04e61c20eedabf3ead4454049d9126"><div class="ttname"><a href="classxrpl_1_1Number.html#ace04e61c20eedabf3ead4454049d9126">xrpl::Number::largeRange</a></div><div class="ttdeci">static constexpr MantissaRange largeRange</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00446">Number.h:446</a></div></div>
@@ -1304,7 +1305,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1Number_html_ae07fcd3fb3a2d61a8c4491e43c3d99b2"><div class="ttname"><a href="classxrpl_1_1Number.html#ae07fcd3fb3a2d61a8c4491e43c3d99b2">xrpl::Number::oneLarge</a></div><div class="ttdeci">static constexpr Number oneLarge()</div><div class="ttdoc">oneLarge is needed because the ranges are private</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00335">Number.cpp:335</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ae6da4d1edef20960bc7d37aa0a731fe0"><div class="ttname"><a href="classxrpl_1_1Number.html#ae6da4d1edef20960bc7d37aa0a731fe0">xrpl::Number::negative_</a></div><div class="ttdeci">bool negative_</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00211">Number.h:211</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Number_html_ae9df36fbc7e4a5663ce40454d30999ce"><div class="ttname"><a href="classxrpl_1_1Number.html#ae9df36fbc7e4a5663ce40454d30999ce">xrpl::Number::mantissaLog</a></div><div class="ttdeci">static int mantissaLog()</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00413">Number.h:413</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1Number_html_af59083b29186c11c2808135c5ff075b8"><div class="ttname"><a href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">xrpl::Number::root</a></div><div class="ttdeci">friend Number root(Number f, unsigned d)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00938">Number.cpp:938</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1Number_html_af59083b29186c11c2808135c5ff075b8"><div class="ttname"><a href="classxrpl_1_1Number.html#af59083b29186c11c2808135c5ff075b8">xrpl::Number::root</a></div><div class="ttdeci">friend Number root(Number f, unsigned d)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00939">Number.cpp:939</a></div></div>
 <div class="ttc" id="aconceptxrpl_1_1UnsignedMantissa_html"><div class="ttname"><a href="conceptxrpl_1_1UnsignedMantissa.html">xrpl::UnsignedMantissa</a></div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00065">Number.cpp:65</a></div></div>
 <div class="ttc" id="acstddef_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/header/cstddef.html">cstddef</a></div></div>
 <div class="ttc" id="acstdint_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/header/cstdint.html">cstdint</a></div></div>
@@ -1322,7 +1323,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacexrpl_html"><div class="ttname"><a href="namespacexrpl.html">xrpl</a></div><div class="ttdoc">Use hash_* containers for keys that do not need a cryptographically secure hashing algorithm.</div><div class="ttdef"><b>Definition</b> <a href="algorithm_8h_source.html#l00005">algorithm.h:5</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a16550239e117c441e0e17bd1c67beeba"><div class="ttname"><a href="namespacexrpl.html#a16550239e117c441e0e17bd1c67beeba">xrpl::LogicError</a></div><div class="ttdeci">void LogicError(std::string const &amp;how) noexcept</div><div class="ttdoc">Called when faulty logic causes a broken invariant.</div><div class="ttdef"><b>Definition</b> <a href="libxrpl_2basics_2contract_8cpp_source.html#l00018">libxrpl/basics/contract.cpp:18</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a34fabf5c9fc5c30e86623b6a5eb0ac7d"><div class="ttname"><a href="namespacexrpl.html#a34fabf5c9fc5c30e86623b6a5eb0ac7d">xrpl::range</a></div><div class="ttdeci">ClosedInterval&lt; T &gt; range(T low, T high)</div><div class="ttdoc">Create a closed range interval.</div><div class="ttdef"><b>Definition</b> <a href="RangeSet_8h_source.html#l00034">RangeSet.h:34</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_a5dcb604ca5c6c6fdde47b8d7c20bec54"><div class="ttname"><a href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">xrpl::power</a></div><div class="ttdeci">Number power(Number const &amp;f, unsigned n)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00915">Number.cpp:915</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_a5dcb604ca5c6c6fdde47b8d7c20bec54"><div class="ttname"><a href="namespacexrpl.html#a5dcb604ca5c6c6fdde47b8d7c20bec54">xrpl::power</a></div><div class="ttdeci">Number power(Number const &amp;f, unsigned n)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00916">Number.cpp:916</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a8b5241821c12fc02371c08f79f642801"><div class="ttname"><a href="namespacexrpl.html#a8b5241821c12fc02371c08f79f642801">xrpl::oneSml</a></div><div class="ttdeci">constexpr Number oneSml</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00332">Number.cpp:332</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ab8c3ab80a860de11f3803c7da500418a"><div class="ttname"><a href="namespacexrpl.html#ab8c3ab80a860de11f3803c7da500418a">xrpl::abs</a></div><div class="ttdeci">constexpr Number abs(Number x) noexcept</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00706">Number.h:706</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ab9b22ee3706801318e27c69e357b9a4b"><div class="ttname"><a href="namespacexrpl.html#ab9b22ee3706801318e27c69e357b9a4b">xrpl::divu10</a></div><div class="ttdeci">static unsigned divu10(uint128_t &amp;u)</div><div class="ttdef"><b>Definition</b> <a href="Number_8cpp_source.html#l00602">Number.cpp:602</a></div></div>

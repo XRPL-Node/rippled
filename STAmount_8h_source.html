@@ -614,269 +614,271 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <div class="line"><a id="l00482" name="l00482"></a><span class="lineno">  482</span> </div>
 <div class="foldopen" id="foldopen00483" data-start="{" data-end="}">
-<div class="line"><a id="l00483" name="l00483"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a6e328fe320cb323d617f9102ecf05391">  483</a></span><span class="keyword">inline</span> STAmount::operator bool() const noexcept</div>
-<div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span>{</div>
-<div class="line"><a id="l00485" name="l00485"></a><span class="lineno">  485</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span> != beast::zero;</div>
-<div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span>}</div>
+<div class="line"><a id="l00483" name="l00483"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a6e328fe320cb323d617f9102ecf05391">  483</a></span><span class="keyword">inline</span> STAmount::</div>
+<div class="line"><a id="l00484" name="l00484"></a><span class="lineno">  484</span>operator bool() const noexcept</div>
+<div class="line"><a id="l00485" name="l00485"></a><span class="lineno">  485</span>{</div>
+<div class="line"><a id="l00486" name="l00486"></a><span class="lineno">  486</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span> != beast::zero;</div>
+<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span>}</div>
 </div>
-<div class="line"><a id="l00487" name="l00487"></a><span class="lineno">  487</span> </div>
-<div class="foldopen" id="foldopen00488" data-start="{" data-end="}">
-<div class="line"><a id="l00488" name="l00488"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a844aef0c3a66d12dd79ec298d5b4f004">  488</a></span><span class="keyword">inline</span> STAmount::operator <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>()<span class="keyword"> const</span></div>
-<div class="line"><a id="l00489" name="l00489"></a><span class="lineno">  489</span><span class="keyword"></span>{</div>
-<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>    <span class="keywordflow">if</span> (native())</div>
-<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span>        <span class="keywordflow">return</span> xrp();</div>
-<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>    <span class="keywordflow">if</span> (mAsset.<a class="code hl_function" href="classxrpl_1_1Asset.html#ae7764d785dce46113d1d2be6eabc3c17">holds</a>&lt;<a class="code hl_class" href="classxrpl_1_1MPTIssue.html">MPTIssue</a>&gt;())</div>
-<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>        <span class="keywordflow">return</span> mpt();</div>
-<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>    <span class="keywordflow">return</span> iou();</div>
-<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>}</div>
+<div class="line"><a id="l00488" name="l00488"></a><span class="lineno">  488</span> </div>
+<div class="foldopen" id="foldopen00489" data-start="{" data-end="}">
+<div class="line"><a id="l00489" name="l00489"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a844aef0c3a66d12dd79ec298d5b4f004">  489</a></span><span class="keyword">inline</span> STAmount::</div>
+<div class="line"><a id="l00490" name="l00490"></a><span class="lineno">  490</span>operator <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00491" name="l00491"></a><span class="lineno">  491</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00492" name="l00492"></a><span class="lineno">  492</span>    <span class="keywordflow">if</span> (native())</div>
+<div class="line"><a id="l00493" name="l00493"></a><span class="lineno">  493</span>        <span class="keywordflow">return</span> xrp();</div>
+<div class="line"><a id="l00494" name="l00494"></a><span class="lineno">  494</span>    <span class="keywordflow">if</span> (mAsset.<a class="code hl_function" href="classxrpl_1_1Asset.html#ae7764d785dce46113d1d2be6eabc3c17">holds</a>&lt;<a class="code hl_class" href="classxrpl_1_1MPTIssue.html">MPTIssue</a>&gt;())</div>
+<div class="line"><a id="l00495" name="l00495"></a><span class="lineno">  495</span>        <span class="keywordflow">return</span> mpt();</div>
+<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span>    <span class="keywordflow">return</span> iou();</div>
+<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span>}</div>
 </div>
-<div class="line"><a id="l00496" name="l00496"></a><span class="lineno">  496</span> </div>
-<div class="line"><a id="l00497" name="l00497"></a><span class="lineno">  497</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>&amp;</div>
-<div class="foldopen" id="foldopen00498" data-start="{" data-end="}">
-<div class="line"><a id="l00498" name="l00498"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">  498</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">STAmount::operator=</a>(<a class="code hl_struct" href="structbeast_1_1Zero.html">beast::Zero</a>)</div>
-<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span>{</div>
-<div class="line"><a id="l00500" name="l00500"></a><span class="lineno">  500</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">clear</a>();</div>
-<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a id="l00502" name="l00502"></a><span class="lineno">  502</span>}</div>
+<div class="line"><a id="l00498" name="l00498"></a><span class="lineno">  498</span> </div>
+<div class="line"><a id="l00499" name="l00499"></a><span class="lineno">  499</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>&amp;</div>
+<div class="foldopen" id="foldopen00500" data-start="{" data-end="}">
+<div class="line"><a id="l00500" name="l00500"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">  500</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">STAmount::operator=</a>(<a class="code hl_struct" href="structbeast_1_1Zero.html">beast::Zero</a>)</div>
+<div class="line"><a id="l00501" name="l00501"></a><span class="lineno">  501</span>{</div>
+<div class="line"><a id="l00502" name="l00502"></a><span class="lineno">  502</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">clear</a>();</div>
+<div class="line"><a id="l00503" name="l00503"></a><span class="lineno">  503</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span>}</div>
 </div>
-<div class="line"><a id="l00503" name="l00503"></a><span class="lineno">  503</span> </div>
-<div class="line"><a id="l00504" name="l00504"></a><span class="lineno">  504</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>&amp;</div>
-<div class="foldopen" id="foldopen00505" data-start="{" data-end="}">
-<div class="line"><a id="l00505" name="l00505"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a99637d9404d0d6f78659ea75e8fa4039">  505</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">STAmount::operator=</a>(<a class="code hl_class" href="classxrpl_1_1XRPAmount.html">XRPAmount</a> <span class="keyword">const</span>&amp; amount)</div>
-<div class="line"><a id="l00506" name="l00506"></a><span class="lineno">  506</span>{</div>
-<div class="line"><a id="l00507" name="l00507"></a><span class="lineno">  507</span>    *<span class="keyword">this</span> = <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>(amount);</div>
-<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a id="l00509" name="l00509"></a><span class="lineno">  509</span>}</div>
+<div class="line"><a id="l00505" name="l00505"></a><span class="lineno">  505</span> </div>
+<div class="line"><a id="l00506" name="l00506"></a><span class="lineno">  506</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>&amp;</div>
+<div class="foldopen" id="foldopen00507" data-start="{" data-end="}">
+<div class="line"><a id="l00507" name="l00507"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a99637d9404d0d6f78659ea75e8fa4039">  507</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">STAmount::operator=</a>(<a class="code hl_class" href="classxrpl_1_1XRPAmount.html">XRPAmount</a> <span class="keyword">const</span>&amp; amount)</div>
+<div class="line"><a id="l00508" name="l00508"></a><span class="lineno">  508</span>{</div>
+<div class="line"><a id="l00509" name="l00509"></a><span class="lineno">  509</span>    *<span class="keyword">this</span> = <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>(amount);</div>
+<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span>}</div>
 </div>
-<div class="line"><a id="l00510" name="l00510"></a><span class="lineno">  510</span> </div>
-<div class="line"><a id="l00511" name="l00511"></a><span class="lineno">  511</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
-<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a></div>
-<div class="foldopen" id="foldopen00513" data-start="{" data-end="}">
-<div class="line"><a id="l00513" name="l00513"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">  513</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">STAmount::fromNumber</a>(A <span class="keyword">const</span>&amp; a, <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; number)</div>
-<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span>{</div>
-<div class="line"><a id="l00515" name="l00515"></a><span class="lineno">  515</span>    <span class="keywordtype">bool</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a> = number.<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>() &lt; 0;</div>
-<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span> working{<a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a> ? -number : number};</div>
-<div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span>    <a class="code hl_class" href="classxrpl_1_1Asset.html">Asset</a> <a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>{a};</div>
-<div class="line"><a id="l00518" name="l00518"></a><span class="lineno">  518</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>.<a class="code hl_function" href="classxrpl_1_1Asset.html#ac742b773615f4d4f3942da8f74f3048d">integral</a>())</div>
-<div class="line"><a id="l00519" name="l00519"></a><span class="lineno">  519</span>    {</div>
-<div class="line"><a id="l00520" name="l00520"></a><span class="lineno">  520</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a> <span class="keyword">const</span> intValue = <span class="keyword">static_cast&lt;</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int64_t</a><span class="keyword">&gt;</span>(working);</div>
-<div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>, intValue, 0, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a>};</div>
-<div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span>    }</div>
-<div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span> </div>
-<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>    <span class="keyword">auto</span> <span class="keyword">const</span> [<a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#acf7d1283f06e433e268f430397af38cc">exponent</a>] = working.normalizeToRange(<a class="code hl_variable" href="classxrpl_1_1STAmount.html#ab07457c482dc6379097f7de814758c27">cMinValue</a>, <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a1fad35a1709b44038645d48b85a0316d">cMaxValue</a>);</div>
+<div class="line"><a id="l00512" name="l00512"></a><span class="lineno">  512</span> </div>
+<div class="line"><a id="l00513" name="l00513"></a><span class="lineno">  513</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
+<div class="line"><a id="l00514" name="l00514"></a><span class="lineno">  514</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a></div>
+<div class="foldopen" id="foldopen00515" data-start="{" data-end="}">
+<div class="line"><a id="l00515" name="l00515"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">  515</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">STAmount::fromNumber</a>(A <span class="keyword">const</span>&amp; a, <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; number)</div>
+<div class="line"><a id="l00516" name="l00516"></a><span class="lineno">  516</span>{</div>
+<div class="line"><a id="l00517" name="l00517"></a><span class="lineno">  517</span>    <span class="keywordtype">bool</span> <span class="keyword">const</span> <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a> = number.<a class="code hl_function" href="classxrpl_1_1Number.html#a223cbe5eabe0bea1d9156f05c971e5c3">mantissa</a>() &lt; 0;</div>
+<div class="line"><a id="l00518" name="l00518"></a><span class="lineno">  518</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span> working{<a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a> ? -number : number};</div>
+<div class="line"><a id="l00519" name="l00519"></a><span class="lineno">  519</span>    <a class="code hl_class" href="classxrpl_1_1Asset.html">Asset</a> <a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>{a};</div>
+<div class="line"><a id="l00520" name="l00520"></a><span class="lineno">  520</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>.<a class="code hl_function" href="classxrpl_1_1Asset.html#ac742b773615f4d4f3942da8f74f3048d">integral</a>())</div>
+<div class="line"><a id="l00521" name="l00521"></a><span class="lineno">  521</span>    {</div>
+<div class="line"><a id="l00522" name="l00522"></a><span class="lineno">  522</span>        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a> <span class="keyword">const</span> intValue = <span class="keyword">static_cast&lt;</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int64_t</a><span class="keyword">&gt;</span>(working);</div>
+<div class="line"><a id="l00523" name="l00523"></a><span class="lineno">  523</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>, intValue, 0, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a>};</div>
+<div class="line"><a id="l00524" name="l00524"></a><span class="lineno">  524</span>    }</div>
 <div class="line"><a id="l00525" name="l00525"></a><span class="lineno">  525</span> </div>
-<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span>    <span class="keywordflow">return</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#acf7d1283f06e433e268f430397af38cc">exponent</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a>};</div>
-<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span>}</div>
+<div class="line"><a id="l00526" name="l00526"></a><span class="lineno">  526</span>    <span class="keyword">auto</span> <span class="keyword">const</span> [<a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#acf7d1283f06e433e268f430397af38cc">exponent</a>] = working.normalizeToRange(<a class="code hl_variable" href="classxrpl_1_1STAmount.html#ab07457c482dc6379097f7de814758c27">cMinValue</a>, <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a1fad35a1709b44038645d48b85a0316d">cMaxValue</a>);</div>
+<div class="line"><a id="l00527" name="l00527"></a><span class="lineno">  527</span> </div>
+<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span>    <span class="keywordflow">return</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#acf7d1283f06e433e268f430397af38cc">exponent</a>, <a class="code hl_function" href="classxrpl_1_1STAmount.html#a7f88db1fe4698567b2175cfb2e5d418b">negative</a>};</div>
+<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span>}</div>
 </div>
-<div class="line"><a id="l00528" name="l00528"></a><span class="lineno">  528</span> </div>
-<div class="line"><a id="l00529" name="l00529"></a><span class="lineno">  529</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00530" data-start="{" data-end="}">
-<div class="line"><a id="l00530" name="l00530"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">  530</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">STAmount::negate</a>()</div>
-<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span>{</div>
-<div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span>    <span class="keywordflow">if</span> (*<span class="keyword">this</span> != beast::zero)</div>
-<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>        <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a> = !<a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a>;</div>
-<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>}</div>
+<div class="line"><a id="l00530" name="l00530"></a><span class="lineno">  530</span> </div>
+<div class="line"><a id="l00531" name="l00531"></a><span class="lineno">  531</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00532" data-start="{" data-end="}">
+<div class="line"><a id="l00532" name="l00532"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">  532</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">STAmount::negate</a>()</div>
+<div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span>{</div>
+<div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span>    <span class="keywordflow">if</span> (*<span class="keyword">this</span> != beast::zero)</div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span>        <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a> = !<a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a>;</div>
+<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>}</div>
 </div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno">  535</span> </div>
-<div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00537" data-start="{" data-end="}">
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">  537</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">STAmount::clear</a>()</div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>{</div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span>    <span class="comment">// The -100 is used to allow 0 to sort less than a small positive values</span></div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>    <span class="comment">// which have a negative exponent.</span></div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a6e141207821561a32a93acd6168a0c14">mOffset</a> = <a class="code hl_function" href="classxrpl_1_1STAmount.html#a8e7cb4a104fd87e69b4907237c16ed8f">integral</a>() ? 0 : -100;</div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a92749ff0ef09a136acac9911d4ee71f8">mValue</a> = 0;</div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>}</div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span> </div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00539" data-start="{" data-end="}">
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">  539</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">STAmount::clear</a>()</div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span>{</div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span>    <span class="comment">// The -100 is used to allow 0 to sort less than a small positive values</span></div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span>    <span class="comment">// which have a negative exponent.</span></div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a6e141207821561a32a93acd6168a0c14">mOffset</a> = <a class="code hl_function" href="classxrpl_1_1STAmount.html#a8e7cb4a104fd87e69b4907237c16ed8f">integral</a>() ? 0 : -100;</div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a92749ff0ef09a136acac9911d4ee71f8">mValue</a> = 0;</div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a723d9d35af0424f57921a3fa22e5c463">mIsNegative</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span>}</div>
 </div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span> </div>
-<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00547" data-start="{" data-end="}">
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a31a2b8bc2d25c5ffb5898c0de4abeebb">  547</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">STAmount::clear</a>(<a class="code hl_class" href="classxrpl_1_1Asset.html">Asset</a> <span class="keyword">const</span>&amp; asset)</div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>{</div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#a13488bd17ebbb60fcdef8b25b54bec0c">setIssue</a>(<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>);</div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">clear</a>();</div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>}</div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span> </div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00549" data-start="{" data-end="}">
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a31a2b8bc2d25c5ffb5898c0de4abeebb">  549</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">STAmount::clear</a>(<a class="code hl_class" href="classxrpl_1_1Asset.html">Asset</a> <span class="keyword">const</span>&amp; asset)</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>{</div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#a13488bd17ebbb60fcdef8b25b54bec0c">setIssue</a>(<a class="code hl_function" href="classxrpl_1_1STAmount.html#abbc5a024839981076ce9c16fa19d3657">asset</a>);</div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span>    <a class="code hl_function" href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">clear</a>();</div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span>}</div>
 </div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span> </div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00554" data-start="{" data-end="}">
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">  554</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">STAmount::setIssuer</a>(<a class="code hl_class" href="classxrpl_1_1base__uint.html">AccountID</a> <span class="keyword">const</span>&amp; uIssuer)</div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span>{</div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a861d23224d8f54f5ddf5751fa026a765">mAsset</a>.<a class="code hl_function" href="classxrpl_1_1Asset.html#a42851afbc54def1c41085612f575ca33">get</a>&lt;<a class="code hl_class" href="classxrpl_1_1Issue.html">Issue</a>&gt;().account = uIssuer;</div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>}</div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span> </div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span><span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00556" data-start="{" data-end="}">
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">  556</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">STAmount::setIssuer</a>(<a class="code hl_class" href="classxrpl_1_1base__uint.html">AccountID</a> <span class="keyword">const</span>&amp; uIssuer)</div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span>{</div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span>    <a class="code hl_variable" href="classxrpl_1_1STAmount.html#a861d23224d8f54f5ddf5751fa026a765">mAsset</a>.<a class="code hl_function" href="classxrpl_1_1Asset.html#a42851afbc54def1c41085612f575ca33">get</a>&lt;<a class="code hl_class" href="classxrpl_1_1Issue.html">Issue</a>&gt;().account = uIssuer;</div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span>}</div>
 </div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span> </div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp;</div>
-<div class="foldopen" id="foldopen00560" data-start="{" data-end="}">
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">  560</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">STAmount::value</a>() const noexcept</div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span>{</div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>}</div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span> </div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp;</div>
+<div class="foldopen" id="foldopen00562" data-start="{" data-end="}">
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno"><a class="line" href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">  562</a></span><a class="code hl_function" href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">STAmount::value</a>() const noexcept</div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>{</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span>}</div>
 </div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span> </div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="foldopen" id="foldopen00566" data-start="{" data-end="}">
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">  566</a></span><a class="code hl_function" href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">isLegalNet</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; value)</div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span>{</div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span>    <span class="keywordflow">return</span> !value.<a class="code hl_function" href="classxrpl_1_1STAmount.html#aaf8652bbe699ee2b656e6e7f4dea28d1">native</a>() || (value.<a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>() &lt;= <a class="code hl_variable" href="classxrpl_1_1STAmount.html#ad45459b28c48681789ed58b713fa0a24">STAmount::cMaxNativeN</a>);</div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>}</div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span> </div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00568" data-start="{" data-end="}">
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">  568</a></span><a class="code hl_function" href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">isLegalNet</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; value)</div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span>{</div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span>    <span class="keywordflow">return</span> !value.<a class="code hl_function" href="classxrpl_1_1STAmount.html#aaf8652bbe699ee2b656e6e7f4dea28d1">native</a>() || (value.<a class="code hl_function" href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">mantissa</a>() &lt;= <a class="code hl_variable" href="classxrpl_1_1STAmount.html#ad45459b28c48681789ed58b713fa0a24">STAmount::cMaxNativeN</a>);</div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span>}</div>
 </div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span> </div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span><span class="comment">//------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span><span class="comment">//</span></div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span><span class="comment">// Operators</span></div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span> </div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span><span class="comment">//------------------------------------------------------------------------------</span></div>
 <div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span><span class="comment">//</span></div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment">//------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span> </div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="keywordtype">bool</span></div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span><a class="code hl_function" href="namespacexrpl.html#a6f18cc68977abb1569062f2baad2d13b">operator==</a>(STAmount <span class="keyword">const</span>&amp; lhs, STAmount <span class="keyword">const</span>&amp; rhs);</div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment">// Operators</span></div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span><span class="comment">//</span></div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="comment">//------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span> </div>
 <div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="keywordtype">bool</span></div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span><a class="code hl_function" href="namespacexrpl.html#a0a3cfcd2feb63c8382a773bc061dc7a2">operator&lt;</a>(STAmount <span class="keyword">const</span>&amp; lhs, STAmount <span class="keyword">const</span>&amp; rhs);</div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span> </div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="foldopen" id="foldopen00583" data-start="{" data-end="}">
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a98bf39005bd9df16f18eadf917278b21">  583</a></span><a class="code hl_function" href="namespacexrpl.html#aa8419010eb4abd44745c0449a31a2e16">operator!=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>{</div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span>    <span class="keywordflow">return</span> !(lhs == rhs);</div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>}</div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span><a class="code hl_function" href="namespacexrpl.html#a6f18cc68977abb1569062f2baad2d13b">operator==</a>(STAmount <span class="keyword">const</span>&amp; lhs, STAmount <span class="keyword">const</span>&amp; rhs);</div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span><span class="keywordtype">bool</span></div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span><a class="code hl_function" href="namespacexrpl.html#a0a3cfcd2feb63c8382a773bc061dc7a2">operator&lt;</a>(STAmount <span class="keyword">const</span>&amp; lhs, STAmount <span class="keyword">const</span>&amp; rhs);</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span> </div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00585" data-start="{" data-end="}">
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a98bf39005bd9df16f18eadf917278b21">  585</a></span><a class="code hl_function" href="namespacexrpl.html#aa8419010eb4abd44745c0449a31a2e16">operator!=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span>{</div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span>    <span class="keywordflow">return</span> !(lhs == rhs);</div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span>}</div>
 </div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span> </div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="foldopen" id="foldopen00589" data-start="{" data-end="}">
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno"><a class="line" href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">  589</a></span><a class="code hl_function" href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">operator&gt;</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span>{</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>    <span class="keywordflow">return</span> rhs &lt; lhs;</div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>}</div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span> </div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00591" data-start="{" data-end="}">
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno"><a class="line" href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">  591</a></span><a class="code hl_function" href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">operator&gt;</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>{</div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span>    <span class="keywordflow">return</span> rhs &lt; lhs;</div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span>}</div>
 </div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span> </div>
-<div class="foldopen" id="foldopen00594" data-start="{" data-end="}">
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno"><a class="line" href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">  594</a></span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span><a class="code hl_function" href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">operator&lt;=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span>{</div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span>    <span class="keywordflow">return</span> !(rhs &lt; lhs);</div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>}</div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span> </div>
+<div class="foldopen" id="foldopen00596" data-start="{" data-end="}">
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno"><a class="line" href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">  596</a></span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span><a class="code hl_function" href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">operator&lt;=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span>{</div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span>    <span class="keywordflow">return</span> !(rhs &lt; lhs);</div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span>}</div>
 </div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span> </div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="foldopen" id="foldopen00601" data-start="{" data-end="}">
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">  601</a></span><a class="code hl_function" href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">operator&gt;=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>{</div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>    <span class="keywordflow">return</span> !(lhs &lt; rhs);</div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>}</div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span> </div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00603" data-start="{" data-end="}">
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">  603</a></span><a class="code hl_function" href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">operator&gt;=</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; lhs, <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; rhs)</div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span>{</div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span>    <span class="keywordflow">return</span> !(lhs &lt; rhs);</div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>}</div>
 </div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span> </div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span>STAmount</div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span><a class="code hl_function" href="namespacexrpl.html#a341da9ace25260efeda15c921f1dbf90">operator-</a>(STAmount <span class="keyword">const</span>&amp; value);</div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span> </div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span><span class="comment">//------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span><span class="comment">//</span></div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span><span class="comment">// Arithmetic</span></div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span> </div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span>STAmount</div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span><a class="code hl_function" href="namespacexrpl.html#a341da9ace25260efeda15c921f1dbf90">operator-</a>(STAmount <span class="keyword">const</span>&amp; value);</div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span> </div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span><span class="comment">//------------------------------------------------------------------------------</span></div>
 <div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="comment">//</span></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="comment">//------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span> </div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span>STAmount</div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><a class="code hl_function" href="namespacexrpl.html#a2ad07fee9dccb808b0ea4d63c933b138">operator+</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2);</div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="comment">// Arithmetic</span></div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="comment">//</span></div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="comment">//------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span> </div>
 <div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span>STAmount</div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><a class="code hl_function" href="namespacexrpl.html#a341da9ace25260efeda15c921f1dbf90">operator-</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2);</div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span> </div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span>STAmount</div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><a class="code hl_function" href="namespacexrpl.html#a09e2c009495835877a485de7e8bdc7fb">divide</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset);</div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span> </div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>STAmount</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span><a class="code hl_function" href="namespacexrpl.html#a63a3223bbf81dbd09717eb04d45d58cf">multiply</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset);</div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span> </div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span><span class="comment">// multiply rounding result in specified direction</span></div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>STAmount</div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><a class="code hl_function" href="namespacexrpl.html#ac20d803edb5b286751e663c08d4a673a">mulRound</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span> </div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="comment">// multiply following the rounding directions more precisely.</span></div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span>STAmount</div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><a class="code hl_function" href="namespacexrpl.html#a3b53582cfe7eab5383806622015311c0">mulRoundStrict</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span> </div>
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><span class="comment">// divide rounding result in specified direction</span></div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span>STAmount</div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><a class="code hl_function" href="namespacexrpl.html#a5f3dd57aec484d3888c227a7fc313eef">divRound</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span> </div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment">// divide following the rounding directions more precisely.</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span>STAmount</div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><a class="code hl_function" href="namespacexrpl.html#acc332d28bfa179ef9352c0c6090f8ad5">divRoundStrict</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span> </div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="comment">// Someone is offering X for Y, what is the rate?</span></div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment">// Rate: smaller is better, the taker wants the most out: in/out</span></div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment">// VFALCO TODO Return a Quality object</span></div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a></div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><a class="code hl_function" href="namespacexrpl.html#aa06bc7c24be6a54510ae1fe4c78351c7">getRate</a>(STAmount <span class="keyword">const</span>&amp; offerOut, STAmount <span class="keyword">const</span>&amp; offerIn);</div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span> </div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>[[nodiscard]] STAmount</div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><a class="code hl_function" href="namespacexrpl.html#a6807ce1600b7179f4839a11b2e6fe046">roundToScale</a>(STAmount <span class="keyword">const</span>&amp; value, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> scale, <a class="code hl_enumeration" href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95">Number::rounding_mode</a> rounding = <a class="code hl_function" href="classxrpl_1_1Number.html#a0c71d26d6de400ed12cf3923157aca31">Number::getround</a>());</div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span> </div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="keywordtype">void</span></div>
-<div class="foldopen" id="foldopen00674" data-start="{" data-end="}">
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno"><a class="line" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">  674</a></span><a class="code hl_function" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">roundToAsset</a>(A <span class="keyword">const</span>&amp; asset, <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>&amp; value)</div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span>{</div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>    value = <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{asset, value};</div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>}</div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><a class="code hl_function" href="namespacexrpl.html#a2ad07fee9dccb808b0ea4d63c933b138">operator+</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2);</div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span>STAmount</div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><a class="code hl_function" href="namespacexrpl.html#a341da9ace25260efeda15c921f1dbf90">operator-</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2);</div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span> </div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span>STAmount</div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span><a class="code hl_function" href="namespacexrpl.html#a09e2c009495835877a485de7e8bdc7fb">divide</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset);</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span> </div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>STAmount</div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span><a class="code hl_function" href="namespacexrpl.html#a63a3223bbf81dbd09717eb04d45d58cf">multiply</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset);</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span> </div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><span class="comment">// multiply rounding result in specified direction</span></div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span>STAmount</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><a class="code hl_function" href="namespacexrpl.html#ac20d803edb5b286751e663c08d4a673a">mulRound</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span> </div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="comment">// multiply following the rounding directions more precisely.</span></div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span>STAmount</div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><a class="code hl_function" href="namespacexrpl.html#a3b53582cfe7eab5383806622015311c0">mulRoundStrict</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span> </div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="comment">// divide rounding result in specified direction</span></div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span>STAmount</div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><a class="code hl_function" href="namespacexrpl.html#a5f3dd57aec484d3888c227a7fc313eef">divRound</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span> </div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="comment">// divide following the rounding directions more precisely.</span></div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span>STAmount</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><a class="code hl_function" href="namespacexrpl.html#acc332d28bfa179ef9352c0c6090f8ad5">divRoundStrict</a>(STAmount <span class="keyword">const</span>&amp; v1, STAmount <span class="keyword">const</span>&amp; v2, Asset <span class="keyword">const</span>&amp; asset, <span class="keywordtype">bool</span> roundUp);</div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span> </div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment">// Someone is offering X for Y, what is the rate?</span></div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment">// Rate: smaller is better, the taker wants the most out: in/out</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="comment">// VFALCO TODO Return a Quality object</span></div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint64_t</a></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span><a class="code hl_function" href="namespacexrpl.html#aa06bc7c24be6a54510ae1fe4c78351c7">getRate</a>(STAmount <span class="keyword">const</span>&amp; offerOut, STAmount <span class="keyword">const</span>&amp; offerIn);</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span> </div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>[[nodiscard]] STAmount</div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><a class="code hl_function" href="namespacexrpl.html#a6807ce1600b7179f4839a11b2e6fe046">roundToScale</a>(STAmount <span class="keyword">const</span>&amp; value, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> scale, <a class="code hl_enumeration" href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95">Number::rounding_mode</a> rounding = <a class="code hl_function" href="classxrpl_1_1Number.html#a0c71d26d6de400ed12cf3923157aca31">Number::getround</a>());</div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span> </div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="keywordtype">void</span></div>
+<div class="foldopen" id="foldopen00676" data-start="{" data-end="}">
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno"><a class="line" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">  676</a></span><a class="code hl_function" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">roundToAsset</a>(A <span class="keyword">const</span>&amp; asset, <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a>&amp; value)</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>{</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>    value = <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a>{asset, value};</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>}</div>
 </div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span> </div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>[[nodiscard]] Number</div>
-<div class="foldopen" id="foldopen00692" data-start="{" data-end="}">
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a3e584bdd8572f6ff5d227bbeb9f35a85">  692</a></span><a class="code hl_function" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">roundToAsset</a>(</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>    A <span class="keyword">const</span>&amp; asset,</div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; value,</div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> scale,</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>    <a class="code hl_enumeration" href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95">Number::rounding_mode</a> rounding = <a class="code hl_function" href="classxrpl_1_1Number.html#a0c71d26d6de400ed12cf3923157aca31">Number::getround</a>())</div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>{</div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>    <a class="code hl_class" href="classxrpl_1_1NumberRoundModeGuard.html">NumberRoundModeGuard</a> mg(rounding);</div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>    <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span> ret{asset, value};</div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>    <span class="keywordflow">if</span> (ret.integral())</div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>        <span class="keywordflow">return</span> ret;</div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>    <span class="comment">// Note that the ctor will round integral types (XRP, MPT) via canonicalize,</span></div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>    <span class="comment">// so no extra work is needed for those.</span></div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="namespacexrpl.html#a6807ce1600b7179f4839a11b2e6fe046">roundToScale</a>(ret, scale);</div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>}</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span> </div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span><span class="keyword">template</span> &lt;AssetType A&gt;</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>[[nodiscard]] Number</div>
+<div class="foldopen" id="foldopen00694" data-start="{" data-end="}">
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a3e584bdd8572f6ff5d227bbeb9f35a85">  694</a></span><a class="code hl_function" href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">roundToAsset</a>(</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>    A <span class="keyword">const</span>&amp; asset,</div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>    <a class="code hl_class" href="classxrpl_1_1Number.html">Number</a> <span class="keyword">const</span>&amp; value,</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> scale,</div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>    <a class="code hl_enumeration" href="classxrpl_1_1Number.html#a40e08f75077897215c66d102b5b75f95">Number::rounding_mode</a> rounding = <a class="code hl_function" href="classxrpl_1_1Number.html#a0c71d26d6de400ed12cf3923157aca31">Number::getround</a>())</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>{</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>    <a class="code hl_class" href="classxrpl_1_1NumberRoundModeGuard.html">NumberRoundModeGuard</a> mg(rounding);</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>    <a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span> ret{asset, value};</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>    <span class="keywordflow">if</span> (ret.integral())</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>        <span class="keywordflow">return</span> ret;</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>    <span class="comment">// Note that the ctor will round integral types (XRP, MPT) via canonicalize,</span></div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>    <span class="comment">// so no extra work is needed for those.</span></div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="namespacexrpl.html#a6807ce1600b7179f4839a11b2e6fe046">roundToScale</a>(ret, scale);</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>}</div>
 </div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span> </div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span><span class="comment">//------------------------------------------------------------------------------</span></div>
 <div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span> </div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="foldopen" id="foldopen00710" data-start="{" data-end="}">
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a56f87dd5ac788d9d3434a279bbdbe51a">  710</a></span><a class="code hl_function" href="namespacexrpl.html#a255b5518870987aa13c1a924c9900ab9">isXRP</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; amount)</div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>{</div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>    <span class="keywordflow">return</span> amount.native();</div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>}</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="comment">//------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span> </div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="foldopen" id="foldopen00712" data-start="{" data-end="}">
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno"><a class="line" href="namespacexrpl.html#a56f87dd5ac788d9d3434a279bbdbe51a">  712</a></span><a class="code hl_function" href="namespacexrpl.html#a255b5518870987aa13c1a924c9900ab9">isXRP</a>(<a class="code hl_class" href="classxrpl_1_1STAmount.html">STAmount</a> <span class="keyword">const</span>&amp; amount)</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>{</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>    <span class="keywordflow">return</span> amount.native();</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>}</div>
 </div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span> </div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="keywordtype">bool</span></div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span><a class="code hl_function" href="namespacexrpl.html#a8868445e78acb914f54616f91f05d783">canAdd</a>(STAmount <span class="keyword">const</span>&amp; amt1, STAmount <span class="keyword">const</span>&amp; amt2);</div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span> </div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><span class="keywordtype">bool</span></div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span><a class="code hl_function" href="namespacexrpl.html#ac7dc9987bf2f9629ee99816b5531c01c">canSubtract</a>(STAmount <span class="keyword">const</span>&amp; amt1, STAmount <span class="keyword">const</span>&amp; amt2);</div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span> </div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>}  <span class="comment">// namespace xrpl</span></div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span> </div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span><span class="keywordtype">bool</span></div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><a class="code hl_function" href="namespacexrpl.html#a8868445e78acb914f54616f91f05d783">canAdd</a>(STAmount <span class="keyword">const</span>&amp; amt1, STAmount <span class="keyword">const</span>&amp; amt2);</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span> </div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span><span class="keywordtype">bool</span></div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span><a class="code hl_function" href="namespacexrpl.html#ac7dc9987bf2f9629ee99816b5531c01c">canSubtract</a>(STAmount <span class="keyword">const</span>&amp; amt1, STAmount <span class="keyword">const</span>&amp; amt2);</div>
 <div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span> </div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span><span class="comment">//------------------------------------------------------------------------------</span></div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceJson.html">Json</a> {</div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span><span class="keyword">template</span> &lt;&gt;</div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">xrpl::STAmount</a></div>
-<div class="foldopen" id="foldopen00727" data-start="{" data-end="}">
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno"><a class="line" href="namespaceJson.html#a62a1f71b3f076e4329b2ed09981f2f37">  727</a></span><a class="code hl_function" href="namespaceJson.html#a72557c5e4a15ee1af56a1ed270f852e8">getOrThrow</a>(<a class="code hl_class" href="classJson_1_1Value.html">Json::Value</a> <span class="keyword">const</span>&amp; v, <a class="code hl_class" href="classxrpl_1_1SField.html">xrpl::SField</a> <span class="keyword">const</span>&amp; field)</div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>{</div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>    <span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacexrpl.html">xrpl</a>;</div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>    <a class="code hl_class" href="classJson_1_1StaticString.html">Json::StaticString</a> <span class="keyword">const</span>&amp; key = field.getJsonName();</div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>    <span class="keywordflow">if</span> (!v.<a class="code hl_function" href="classJson_1_1Value.html#abfa90c81f6aee7877bd5fb4c8445994f">isMember</a>(key))</div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>        Throw&lt;JsonMissingKeyError&gt;(key);</div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>    <a class="code hl_class" href="classJson_1_1Value.html">Json::Value</a> <span class="keyword">const</span>&amp; inner = v[key];</div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>    <span class="keywordflow">return</span> amountFromJson(field, inner);</div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>}</div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>}  <span class="comment">// namespace xrpl</span></div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span> </div>
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span><span class="comment">//------------------------------------------------------------------------------</span></div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceJson.html">Json</a> {</div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span><span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span><span class="keyword">inline</span> <a class="code hl_class" href="classxrpl_1_1STAmount.html">xrpl::STAmount</a></div>
+<div class="foldopen" id="foldopen00729" data-start="{" data-end="}">
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno"><a class="line" href="namespaceJson.html#a62a1f71b3f076e4329b2ed09981f2f37">  729</a></span><a class="code hl_function" href="namespaceJson.html#a72557c5e4a15ee1af56a1ed270f852e8">getOrThrow</a>(<a class="code hl_class" href="classJson_1_1Value.html">Json::Value</a> <span class="keyword">const</span>&amp; v, <a class="code hl_class" href="classxrpl_1_1SField.html">xrpl::SField</a> <span class="keyword">const</span>&amp; field)</div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>{</div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>    <span class="keyword">using namespace </span><a class="code hl_namespace" href="namespacexrpl.html">xrpl</a>;</div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>    <a class="code hl_class" href="classJson_1_1StaticString.html">Json::StaticString</a> <span class="keyword">const</span>&amp; key = field.getJsonName();</div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>    <span class="keywordflow">if</span> (!v.<a class="code hl_function" href="classJson_1_1Value.html#abfa90c81f6aee7877bd5fb4c8445994f">isMember</a>(key))</div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>        Throw&lt;JsonMissingKeyError&gt;(key);</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>    <a class="code hl_class" href="classJson_1_1Value.html">Json::Value</a> <span class="keyword">const</span>&amp; inner = v[key];</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>    <span class="keywordflow">return</span> amountFromJson(field, inner);</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>}</div>
 </div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>}  <span class="comment">// namespace Json</span></div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>}  <span class="comment">// namespace Json</span></div>
 <div class="ttc" id="abasic_string_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
 <div class="ttc" id="aclassJson_1_1StaticString_html"><div class="ttname"><a href="classJson_1_1StaticString.html">Json::StaticString</a></div><div class="ttdoc">Lightweight wrapper to tag static string.</div><div class="ttdef"><b>Definition</b> <a href="json__value_8h_source.html#l00043">json_value.h:44</a></div></div>
 <div class="ttc" id="aclassJson_1_1Value_html"><div class="ttname"><a href="classJson_1_1Value.html">Json::Value</a></div><div class="ttdoc">Represents a JSON value.</div><div class="ttdef"><b>Definition</b> <a href="json__value_8h_source.html#l00129">json_value.h:130</a></div></div>
-<div class="ttc" id="aclassJson_1_1Value_html_abfa90c81f6aee7877bd5fb4c8445994f"><div class="ttname"><a href="classJson_1_1Value.html#abfa90c81f6aee7877bd5fb4c8445994f">Json::Value::isMember</a></div><div class="ttdeci">bool isMember(char const *key) const</div><div class="ttdoc">Return true if the object has a member named key.</div><div class="ttdef"><b>Definition</b> <a href="json__value_8cpp_source.html#l00978">json_value.cpp:978</a></div></div>
+<div class="ttc" id="aclassJson_1_1Value_html_abfa90c81f6aee7877bd5fb4c8445994f"><div class="ttname"><a href="classJson_1_1Value.html#abfa90c81f6aee7877bd5fb4c8445994f">Json::Value::isMember</a></div><div class="ttdeci">bool isMember(char const *key) const</div><div class="ttdoc">Return true if the object has a member named key.</div><div class="ttdef"><b>Definition</b> <a href="json__value_8cpp_source.html#l00979">json_value.cpp:979</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Asset_html"><div class="ttname"><a href="classxrpl_1_1Asset.html">xrpl::Asset</a></div><div class="ttdef"><b>Definition</b> <a href="Asset_8h_source.html#l00025">Asset.h:26</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Asset_html_a42851afbc54def1c41085612f575ca33"><div class="ttname"><a href="classxrpl_1_1Asset.html#a42851afbc54def1c41085612f575ca33">xrpl::Asset::get</a></div><div class="ttdeci">constexpr TIss const &amp; get() const</div></div>
 <div class="ttc" id="aclassxrpl_1_1Asset_html_aa4f3f3762baca83af905f86131bcde92"><div class="ttname"><a href="classxrpl_1_1Asset.html#aa4f3f3762baca83af905f86131bcde92">xrpl::Asset::getIssuer</a></div><div class="ttdeci">AccountID const &amp; getIssuer() const</div><div class="ttdef"><b>Definition</b> <a href="Asset_8cpp_source.html#l00017">Asset.cpp:17</a></div></div>
@@ -905,10 +907,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a1fad35a1709b44038645d48b85a0316d"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a1fad35a1709b44038645d48b85a0316d">xrpl::STAmount::cMaxValue</a></div><div class="ttdeci">static constexpr std::uint64_t cMaxValue</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00051">STAmount.h:51</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a21f103c714a972c2e3682c5f89360771"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a21f103c714a972c2e3682c5f89360771">xrpl::STAmount::issue</a></div><div class="ttdeci">Issue const &amp; issue() const</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00454">STAmount.h:454</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a2264776ce898ed1e4d158dc3bf257d44"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a2264776ce898ed1e4d158dc3bf257d44">xrpl::STAmount::uRateOne</a></div><div class="ttdeci">static std::uint64_t const uRateOne</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00062">STAmount.h:62</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_a231afbdf6a9195b303dd319f29360a3c"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">xrpl::STAmount::fromNumber</a></div><div class="ttdeci">static STAmount fromNumber(A const &amp;asset, Number const &amp;number)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00513">STAmount.h:513</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_a231afbdf6a9195b303dd319f29360a3c"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a231afbdf6a9195b303dd319f29360a3c">xrpl::STAmount::fromNumber</a></div><div class="ttdeci">static STAmount fromNumber(A const &amp;asset, Number const &amp;number)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00515">STAmount.h:515</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a25bfca714a2cf38542966e745149a75f"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a25bfca714a2cf38542966e745149a75f">xrpl::STAmount::add</a></div><div class="ttdeci">void add(Serializer &amp;s) const override</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00729">STAmount.cpp:729</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_a328da7c20fca7ac9ac783f56b1517e2c"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">xrpl::STAmount::setIssuer</a></div><div class="ttdeci">void setIssuer(AccountID const &amp;uIssuer)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00554">STAmount.h:554</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_a445c8b623829767c0b331ad183c13927"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">xrpl::STAmount::negate</a></div><div class="ttdeci">void negate()</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00530">STAmount.h:530</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_a328da7c20fca7ac9ac783f56b1517e2c"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a328da7c20fca7ac9ac783f56b1517e2c">xrpl::STAmount::setIssuer</a></div><div class="ttdeci">void setIssuer(AccountID const &amp;uIssuer)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00556">STAmount.h:556</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_a445c8b623829767c0b331ad183c13927"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a445c8b623829767c0b331ad183c13927">xrpl::STAmount::negate</a></div><div class="ttdeci">void negate()</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00532">STAmount.h:532</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a4b98c1a3fafb2439a903c17d0a5276ad"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a4b98c1a3fafb2439a903c17d0a5276ad">xrpl::STAmount::canonicalize</a></div><div class="ttdeci">void canonicalize()</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00794">STAmount.cpp:794</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a4f07351b81b2ffe40a953b1834c66b8e"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a4f07351b81b2ffe40a953b1834c66b8e">xrpl::STAmount::mantissa</a></div><div class="ttdeci">std::uint64_t mantissa() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00435">STAmount.h:435</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a54e2ce50e7de95a5a8fd67623155575d"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a54e2ce50e7de95a5a8fd67623155575d">xrpl::STAmount::signum</a></div><div class="ttdeci">int signum() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00472">STAmount.h:472</a></div></div>
@@ -929,7 +931,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a8d8d2f3401704185e7e0b1e5ec64c876"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a8d8d2f3401704185e7e0b1e5ec64c876">xrpl::STAmount::isDefault</a></div><div class="ttdeci">bool isDefault() const override</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00770">STAmount.cpp:770</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a8e7cb4a104fd87e69b4907237c16ed8f"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a8e7cb4a104fd87e69b4907237c16ed8f">xrpl::STAmount::integral</a></div><div class="ttdeci">bool integral() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00410">STAmount.h:410</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_a92749ff0ef09a136acac9911d4ee71f8"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a92749ff0ef09a136acac9911d4ee71f8">xrpl::STAmount::mValue</a></div><div class="ttdeci">mantissa_type mValue</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00038">STAmount.h:38</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_a9f8195ecf5acd9502f3883a44af9bbe7"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">xrpl::STAmount::operator=</a></div><div class="ttdeci">STAmount &amp; operator=(beast::Zero)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00498">STAmount.h:498</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_a9f8195ecf5acd9502f3883a44af9bbe7"><div class="ttname"><a href="classxrpl_1_1STAmount.html#a9f8195ecf5acd9502f3883a44af9bbe7">xrpl::STAmount::operator=</a></div><div class="ttdeci">STAmount &amp; operator=(beast::Zero)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00500">STAmount.h:500</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_aa6995239a384e8abf4efffa1b4880fd9"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aa6995239a384e8abf4efffa1b4880fd9">xrpl::STAmount::getCurrency</a></div><div class="ttdeci">Currency const &amp; getCurrency() const</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00460">STAmount.h:460</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_aa8b735991b4049e9cd13111e5c15230c"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aa8b735991b4049e9cd13111e5c15230c">xrpl::STAmount::construct</a></div><div class="ttdeci">static std::unique_ptr&lt; STAmount &gt; construct(SerialIter &amp;, SField const &amp;name)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00226">STAmount.cpp:226</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_aae09ba3401077996a068d9343aa43f13"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aae09ba3401077996a068d9343aa43f13">xrpl::STAmount::cIssuedCurrency</a></div><div class="ttdeci">static constexpr std::uint64_t cIssuedCurrency</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00057">STAmount.h:57</a></div></div>
@@ -948,10 +950,10 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_adab0955b222e21c4284cf127b7f19906"><div class="ttname"><a href="classxrpl_1_1STAmount.html#adab0955b222e21c4284cf127b7f19906">xrpl::STAmount::move</a></div><div class="ttdeci">STBase * move(std::size_t n, void *buf) override</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00238">STAmount.cpp:238</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_adda69b838f0dfb827d75ab3891d2d6cb"><div class="ttname"><a href="classxrpl_1_1STAmount.html#adda69b838f0dfb827d75ab3891d2d6cb">xrpl::STAmount::xrp</a></div><div class="ttdeci">XRPAmount xrp() const</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00249">STAmount.cpp:249</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_aebd9de2dde3e485d992a76f48e23f33f"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aebd9de2dde3e485d992a76f48e23f33f">xrpl::STAmount::cPositive</a></div><div class="ttdeci">static constexpr std::uint64_t cPositive</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00058">STAmount.h:58</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_aeef88e3d2dec1d53caba7820a9366b45"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">xrpl::STAmount::value</a></div><div class="ttdeci">STAmount const &amp; value() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00560">STAmount.h:560</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_aeef88e3d2dec1d53caba7820a9366b45"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aeef88e3d2dec1d53caba7820a9366b45">xrpl::STAmount::value</a></div><div class="ttdeci">STAmount const &amp; value() const noexcept</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00562">STAmount.h:562</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_aef4ce8842b5402d06d1716f6b419b469"><div class="ttname"><a href="classxrpl_1_1STAmount.html#aef4ce8842b5402d06d1716f6b419b469">xrpl::STAmount::STAmount</a></div><div class="ttdeci">STAmount(SerialIter &amp;sit, SField const &amp;name)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00100">STAmount.cpp:100</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STAmount_html_af604628d5433b366acd0c5434e652f36"><div class="ttname"><a href="classxrpl_1_1STAmount.html#af604628d5433b366acd0c5434e652f36">xrpl::STAmount::STAmount</a></div><div class="ttdeci">STAmount(A const &amp;asset, std::uint64_t mantissa=0, int exponent=0, bool negative=false)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00103">STAmount.h:103</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1STAmount_html_af877517bb15e98ce22e8b236652d7ca9"><div class="ttname"><a href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">xrpl::STAmount::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00537">STAmount.h:537</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1STAmount_html_af877517bb15e98ce22e8b236652d7ca9"><div class="ttname"><a href="classxrpl_1_1STAmount.html#af877517bb15e98ce22e8b236652d7ca9">xrpl::STAmount::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00539">STAmount.h:539</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1STBase_html"><div class="ttname"><a href="classxrpl_1_1STBase.html">xrpl::STBase</a></div><div class="ttdoc">A type which can be exported to a well known binary format.</div><div class="ttdef"><b>Definition</b> <a href="STBase_8h_source.html#l00114">STBase.h:115</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1SerialIter_html"><div class="ttname"><a href="classxrpl_1_1SerialIter.html">xrpl::SerialIter</a></div><div class="ttdef"><b>Definition</b> <a href="Serializer_8h_source.html#l00318">Serializer.h:319</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1Serializer_html"><div class="ttname"><a href="classxrpl_1_1Serializer.html">xrpl::Serializer</a></div><div class="ttdef"><b>Definition</b> <a href="Serializer_8h_source.html#l00020">Serializer.h:21</a></div></div>
@@ -967,14 +969,14 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacexrpl_html"><div class="ttname"><a href="namespacexrpl.html">xrpl</a></div><div class="ttdoc">Use hash_* containers for keys that do not need a cryptographically secure hashing algorithm.</div><div class="ttdef"><b>Definition</b> <a href="algorithm_8h_source.html#l00005">algorithm.h:5</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a09e2c009495835877a485de7e8bdc7fb"><div class="ttname"><a href="namespacexrpl.html#a09e2c009495835877a485de7e8bdc7fb">xrpl::divide</a></div><div class="ttdeci">STAmount divide(STAmount const &amp;amount, Rate const &amp;rate)</div><div class="ttdef"><b>Definition</b> <a href="Rate2_8cpp_source.html#l00069">Rate2.cpp:69</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a0a3cfcd2feb63c8382a773bc061dc7a2"><div class="ttname"><a href="namespacexrpl.html#a0a3cfcd2feb63c8382a773bc061dc7a2">xrpl::operator&lt;</a></div><div class="ttdeci">bool operator&lt;(Slice const &amp;lhs, Slice const &amp;rhs) noexcept</div><div class="ttdef"><b>Definition</b> <a href="Slice_8h_source.html#l00197">Slice.h:198</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_a220520a26145ea20e85386481e34c328"><div class="ttname"><a href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">xrpl::operator&gt;=</a></div><div class="ttdeci">bool operator&gt;=(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00601">STAmount.h:601</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_a220520a26145ea20e85386481e34c328"><div class="ttname"><a href="namespacexrpl.html#a220520a26145ea20e85386481e34c328">xrpl::operator&gt;=</a></div><div class="ttdeci">bool operator&gt;=(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00603">STAmount.h:603</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a255b5518870987aa13c1a924c9900ab9"><div class="ttname"><a href="namespacexrpl.html#a255b5518870987aa13c1a924c9900ab9">xrpl::isXRP</a></div><div class="ttdeci">bool isXRP(AccountID const &amp;c)</div><div class="ttdef"><b>Definition</b> <a href="AccountID_8h_source.html#l00070">AccountID.h:70</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a2ad07fee9dccb808b0ea4d63c933b138"><div class="ttname"><a href="namespacexrpl.html#a2ad07fee9dccb808b0ea4d63c933b138">xrpl::operator+</a></div><div class="ttdeci">constexpr base_uint&lt; Bits, Tag &gt; operator+(base_uint&lt; Bits, Tag &gt; const &amp;a, base_uint&lt; Bits, Tag &gt; const &amp;b)</div><div class="ttdef"><b>Definition</b> <a href="base__uint_8h_source.html#l00589">base_uint.h:589</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a341da9ace25260efeda15c921f1dbf90"><div class="ttname"><a href="namespacexrpl.html#a341da9ace25260efeda15c921f1dbf90">xrpl::operator-</a></div><div class="ttdeci">Number operator-(Number const &amp;x, Number const &amp;y)</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00638">Number.h:638</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a34fe9dbeab3256bab73d13c4a9e33184"><div class="ttname"><a href="namespacexrpl.html#a34fe9dbeab3256bab73d13c4a9e33184">xrpl::amountFromJson</a></div><div class="ttdeci">STAmount amountFromJson(SField const &amp;name, Json::Value const &amp;v)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00948">STAmount.cpp:948</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a3b53582cfe7eab5383806622015311c0"><div class="ttname"><a href="namespacexrpl.html#a3b53582cfe7eab5383806622015311c0">xrpl::mulRoundStrict</a></div><div class="ttdeci">STAmount mulRoundStrict(STAmount const &amp;v1, STAmount const &amp;v2, Asset const &amp;asset, bool roundUp)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l01552">STAmount.cpp:1552</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a40e86ef937741d6bead51310df36a89e"><div class="ttname"><a href="namespacexrpl.html#a40e86ef937741d6bead51310df36a89e">xrpl::toSTAmount</a></div><div class="ttdeci">STAmount toSTAmount(IOUAmount const &amp;iou, Issue const &amp;iss)</div><div class="ttdef"><b>Definition</b> <a href="AmountConversions_8h_source.html#l00012">AmountConversions.h:12</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_a4b4f85373c903b06cac8795afc79820e"><div class="ttname"><a href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">xrpl::isLegalNet</a></div><div class="ttdeci">bool isLegalNet(STAmount const &amp;value)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00566">STAmount.h:566</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_a4b4f85373c903b06cac8795afc79820e"><div class="ttname"><a href="namespacexrpl.html#a4b4f85373c903b06cac8795afc79820e">xrpl::isLegalNet</a></div><div class="ttdeci">bool isLegalNet(STAmount const &amp;value)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00568">STAmount.h:568</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a5854a821fb22538cde6cac46a00d2298"><div class="ttname"><a href="namespacexrpl.html#a5854a821fb22538cde6cac46a00d2298">xrpl::amountFromString</a></div><div class="ttdeci">STAmount amountFromString(Asset const &amp;asset, std::string const &amp;amount)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00939">STAmount.cpp:939</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a5f3dd57aec484d3888c227a7fc313eef"><div class="ttname"><a href="namespacexrpl.html#a5f3dd57aec484d3888c227a7fc313eef">xrpl::divRound</a></div><div class="ttdeci">STAmount divRound(STAmount const &amp;v1, STAmount const &amp;v2, Asset const &amp;asset, bool roundUp)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l01636">STAmount.cpp:1636</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_a63a3223bbf81dbd09717eb04d45d58cf"><div class="ttname"><a href="namespacexrpl.html#a63a3223bbf81dbd09717eb04d45d58cf">xrpl::multiply</a></div><div class="ttdeci">STAmount multiply(STAmount const &amp;amount, Rate const &amp;rate)</div><div class="ttdef"><b>Definition</b> <a href="Rate2_8cpp_source.html#l00034">Rate2.cpp:34</a></div></div>
@@ -987,12 +989,12 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="anamespacexrpl_html_aa06bc7c24be6a54510ae1fe4c78351c7"><div class="ttname"><a href="namespacexrpl.html#aa06bc7c24be6a54510ae1fe4c78351c7">xrpl::getRate</a></div><div class="ttdeci">std::uint64_t getRate(STAmount const &amp;offerOut, STAmount const &amp;offerIn)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00434">STAmount.cpp:434</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_aa609454f90d5eb85c622b787219d069c"><div class="ttname"><a href="namespacexrpl.html#aa609454f90d5eb85c622b787219d069c">xrpl::isPowerOfTen</a></div><div class="ttdeci">constexpr bool isPowerOfTen(T value)</div><div class="ttdef"><b>Definition</b> <a href="Number_8h_source.html#l00036">Number.h:36</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_aa8419010eb4abd44745c0449a31a2e16"><div class="ttname"><a href="namespacexrpl.html#aa8419010eb4abd44745c0449a31a2e16">xrpl::operator!=</a></div><div class="ttdeci">bool operator!=(Buffer const &amp;lhs, Buffer const &amp;rhs) noexcept</div><div class="ttdef"><b>Definition</b> <a href="Buffer_8h_source.html#l00209">Buffer.h:209</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_abb5eaa2827981084acce180d255881b1"><div class="ttname"><a href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">xrpl::roundToAsset</a></div><div class="ttdeci">void roundToAsset(A const &amp;asset, Number &amp;value)</div><div class="ttdoc">Round an arbitrary precision Number IN PLACE to the precision of a given Asset.</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00674">STAmount.h:674</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_abc5a78457eb1199a52a020d77a9e4e4d"><div class="ttname"><a href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">xrpl::operator&lt;=</a></div><div class="ttdeci">bool operator&lt;=(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00594">STAmount.h:595</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_abb5eaa2827981084acce180d255881b1"><div class="ttname"><a href="namespacexrpl.html#abb5eaa2827981084acce180d255881b1">xrpl::roundToAsset</a></div><div class="ttdeci">void roundToAsset(A const &amp;asset, Number &amp;value)</div><div class="ttdoc">Round an arbitrary precision Number IN PLACE to the precision of a given Asset.</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00676">STAmount.h:676</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_abc5a78457eb1199a52a020d77a9e4e4d"><div class="ttname"><a href="namespacexrpl.html#abc5a78457eb1199a52a020d77a9e4e4d">xrpl::operator&lt;=</a></div><div class="ttdeci">bool operator&lt;=(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00596">STAmount.h:597</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ac20d803edb5b286751e663c08d4a673a"><div class="ttname"><a href="namespacexrpl.html#ac20d803edb5b286751e663c08d4a673a">xrpl::mulRound</a></div><div class="ttdeci">STAmount mulRound(STAmount const &amp;v1, STAmount const &amp;v2, Asset const &amp;asset, bool roundUp)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l01546">STAmount.cpp:1546</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ac7dc9987bf2f9629ee99816b5531c01c"><div class="ttname"><a href="namespacexrpl.html#ac7dc9987bf2f9629ee99816b5531c01c">xrpl::canSubtract</a></div><div class="ttdeci">bool canSubtract(STAmount const &amp;amt1, STAmount const &amp;amt2)</div><div class="ttdoc">Determines if it is safe to subtract one STAmount from another.</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l00545">STAmount.cpp:545</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_acc332d28bfa179ef9352c0c6090f8ad5"><div class="ttname"><a href="namespacexrpl.html#acc332d28bfa179ef9352c0c6090f8ad5">xrpl::divRoundStrict</a></div><div class="ttdeci">STAmount divRoundStrict(STAmount const &amp;v1, STAmount const &amp;v2, Asset const &amp;asset, bool roundUp)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8cpp_source.html#l01642">STAmount.cpp:1642</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_aeba7f4e2a15deb53ae9406710d29fb23"><div class="ttname"><a href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">xrpl::operator&gt;</a></div><div class="ttdeci">bool operator&gt;(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00589">STAmount.h:589</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_aeba7f4e2a15deb53ae9406710d29fb23"><div class="ttname"><a href="namespacexrpl.html#aeba7f4e2a15deb53ae9406710d29fb23">xrpl::operator&gt;</a></div><div class="ttdeci">bool operator&gt;(STAmount const &amp;lhs, STAmount const &amp;rhs)</div><div class="ttdef"><b>Definition</b> <a href="STAmount_8h_source.html#l00591">STAmount.h:591</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_aee66cdd1d58cf6856d6f85d3c824531c"><div class="ttname"><a href="namespacexrpl.html#aee66cdd1d58cf6856d6f85d3c824531c">xrpl::safe_cast</a></div><div class="ttdeci">constexpr std::enable_if_t&lt; std::is_integral_v&lt; Dest &gt; &amp;&amp;std::is_integral_v&lt; Src &gt;, Dest &gt; safe_cast(Src s) noexcept</div><div class="ttdef"><b>Definition</b> <a href="safe__cast_8h_source.html#l00019">safe_cast.h:19</a></div></div>
 <div class="ttc" id="anumeric_limits_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/numeric_limits.html">std::numeric_limits</a></div></div>
 <div class="ttc" id="aoverflow_error_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/error/overflow_error.html">std::overflow_error</a></div></div>
