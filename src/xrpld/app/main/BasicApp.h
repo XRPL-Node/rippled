@@ -13,6 +13,7 @@ private:
     std::optional<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> work_;
     std::vector<std::thread> threads_;
     boost::asio::io_context io_context_;
+    std::size_t numberOfThreads_;
 
 public:
     BasicApp(std::size_t numberOfThreads);
@@ -23,4 +24,8 @@ public:
     {
         return io_context_;
     }
+
+protected:
+    void
+    startIOThreads();
 };

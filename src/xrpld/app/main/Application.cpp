@@ -1035,6 +1035,8 @@ private:
 bool
 ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
 {
+    startIOThreads();
+
     // We want to intercept CTRL-C and the standard termination signal SIGTERM
     // and terminate the process. This handler will NEVER be invoked twice.
     //

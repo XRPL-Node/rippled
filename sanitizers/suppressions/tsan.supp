@@ -31,7 +31,6 @@ race:src/test/jtx/impl/token.cpp
 race:src/test/rpc/Book_test.cpp
 race:src/xrpld/app/ledger/detail/InboundTransactions.cpp
 race:src/xrpld/app/main/Application.cpp
-race:src/xrpld/app/main/BasicApp.cpp
 race:src/xrpld/app/main/GRPCServer.cpp
 race:src/xrpld/app/misc/detail/AmendmentTable.cpp
 race:src/xrpld/app/misc/FeeVoteImpl.cpp
