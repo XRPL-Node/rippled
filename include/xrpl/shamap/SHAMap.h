@@ -280,9 +280,12 @@ public:
     serializeRoot(Serializer& s) const;
 
     SHAMapAddNode
-    addRootNode(SHAMapHash const& hash, Slice const& rootNode, SHAMapSyncFilter* filter);
+    addRootNode(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode> root_node, SHAMapSyncFilter const* filter);
     SHAMapAddNode
-    addKnownNode(SHAMapNodeID const& nodeID, Slice const& rawNode, SHAMapSyncFilter* filter);
+    addKnownNode(
+        SHAMapNodeID const& node_id,
+        intr_ptr::SharedPtr<SHAMapTreeNode> tree_node,
+        SHAMapSyncFilter const* filter);
 
     // status functions
     void
@@ -333,7 +336,7 @@ private:
     cacheLookup(SHAMapHash const& hash) const;
 
     void
-    canonicalize(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode>&) const;
+    canonicalize(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode>& node) const;
 
     // database operations
     intr_ptr::SharedPtr<SHAMapTreeNode>
@@ -341,11 +344,11 @@ private:
     intr_ptr::SharedPtr<SHAMapTreeNode>
     fetchNodeNT(SHAMapHash const& hash) const;
     intr_ptr::SharedPtr<SHAMapTreeNode>
-    fetchNodeNT(SHAMapHash const& hash, SHAMapSyncFilter* filter) const;
+    fetchNodeNT(SHAMapHash const& hash, SHAMapSyncFilter const* filter) const;
     intr_ptr::SharedPtr<SHAMapTreeNode>
     fetchNode(SHAMapHash const& hash) const;
     intr_ptr::SharedPtr<SHAMapTreeNode>
-    checkFilter(SHAMapHash const& hash, SHAMapSyncFilter* filter) const;
+    checkFilter(SHAMapHash const& hash, SHAMapSyncFilter const* filter) const;
 
     /** Update hashes up to the root */
     void
@@ -405,10 +408,11 @@ private:
     // If pending, callback is called as if it called fetchNodeNT
     using descendCallback = std::function<void(intr_ptr::SharedPtr<SHAMapTreeNode>, SHAMapHash const&)>;
     SHAMapTreeNode*
-    descendAsync(SHAMapInnerNode* parent, int branch, SHAMapSyncFilter* filter, bool& pending, descendCallback&&) const;
+    descendAsync(SHAMapInnerNode* parent, int branch, SHAMapSyncFilter const* filter, bool& pending, descendCallback&&)
+        const;
 
     std::pair<SHAMapTreeNode*, SHAMapNodeID>
-    descend(SHAMapInnerNode* parent, SHAMapNodeID const& parentID, int branch, SHAMapSyncFilter* filter) const;
+    descend(SHAMapInnerNode* parent, SHAMapNodeID const& parentID, int branch, SHAMapSyncFilter const* filter) const;
 
     // Non-storing
     // Does not hook the returned node to its parent

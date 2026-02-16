@@ -214,28 +214,20 @@ public:
     gotStaleData(std::shared_ptr<protocol::TMLedgerData> packet_ptr) override
     {
         Serializer s;
-        try
+        for (auto const& ledger_node : packet_ptr->nodes())
         {
-            for (auto const& ledger_node : packet_ptr->nodes())
-            {
-                if (!validateLedgerNode(app_, ledger_node))
-                    return;
+            if (!validateLedgerNode(app_, ledger_node))
+                return;
 
-                auto const node_slice = makeSlice(ledger_node.nodedata());
-                auto const tree_node = getTreeNode(node_slice);
-                if (!tree_node)
-                    return;
-                auto const& tn = *tree_node;
+            auto const tree_node = getTreeNode(ledger_node.nodedata());
+            if (!tree_node)
+                return;
+            auto const tn = *tree_node;
 
-                s.erase();
-                tn->serializeWithPrefix(s);
+            s.erase();
+            tn->serializeWithPrefix(s);
 
-                app_.getLedgerMaster().addFetchPack(
-                    tn->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
-            }
-        }
-        catch (std::exception const&)
-        {
+            app_.getLedgerMaster().addFetchPack(tn->getHash().as_uint256(), std::make_shared<Blob>(s.begin(), s.end()));
         }
     }
 

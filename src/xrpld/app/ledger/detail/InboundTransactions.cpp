@@ -128,7 +128,7 @@ public:
             return;
         }
 
-        std::vector<std::pair<SHAMapNodeID, Slice>> data;
+        std::vector<std::pair<SHAMapNodeID, intr_ptr::SharedPtr<SHAMapTreeNode>>> data;
         data.reserve(packet.nodes().size());
 
         for (auto const& ledger_node : packet.nodes())
@@ -140,8 +140,7 @@ public:
                 return;
             }
 
-            auto const node_slice = makeSlice(ledger_node.nodedata());
-            auto const tree_node = getTreeNode(node_slice);
+            auto const tree_node = getTreeNode(ledger_node.nodedata());
             if (!tree_node)
             {
                 JLOG(j_.warn()) << "Got invalid node data";
@@ -157,7 +156,7 @@ public:
                 return;
             }
 
-            data.emplace_back(std::make_pair(*node_id, node_slice));
+            data.emplace_back(std::make_pair(*node_id, *tree_node));
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

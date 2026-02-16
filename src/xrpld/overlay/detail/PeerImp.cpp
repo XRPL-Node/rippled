@@ -3152,15 +3152,25 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                     {
                         if (ledgerData.nodes_size() >= Tuning::hardMaxReplyNodes)
                             break;
+
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
                         node->set_nodedata(d.second.data(), d.second.size());
-                        // When the amendment is enabled, we only include the node ID in the ledger node for inner
-                        // nodes, while we do not include it for leaf nodes as it can be calculated from the data. When
-                        // the amendment is disabled, we always need to include the node ID in the ledger node.
-                        if ((app_.getAmendmentTable().isEnabled(fixLedgerNodeID) &&
-                             d.first.getDepth() != SHAMap::leafDepth) ||
-                            !app_.getAmendmentTable().isEnabled(fixLedgerNodeID))
+
+                        // When the amendment is disabled, we always set the node ID. However, when the amendment is
+                        // enabled, we only set it for inner nodes, while for leaf nodes we set the node depth instead.
+                        if (!app_.getAmendmentTable().isEnabled(fixLedgerNodeID))
+                        {
                             node->set_nodeid(d.first.getRawString());
+                            continue;
+                        }
+
+                        // TODO: Can we determine whether the node is an inner or leaf node without calling the
+                        // makeFromWire function?
+                        auto const node_slice = makeSlice(node->nodedata());
+                        if (auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice); tree_node->isInner())
+                            node->set_id(d.first.getRawString());
+                        else if (tree_node->isLeaf())
+                            node->set_depth(d.first.getDepth());
                     }
                 }
                 else

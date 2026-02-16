@@ -144,7 +144,7 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
 
 SHAMapAddNode
 TransactionAcquire::takeNodes(
-    std::vector<std::pair<SHAMapNodeID, Slice>> const& data,
+    std::vector<std::pair<SHAMapNodeID, intr_ptr::SharedPtr<SHAMapTreeNode>>> const& data,
     std::shared_ptr<Peer> const& peer)
 {
     ScopedLockType sl(mtx_);
@@ -170,18 +170,20 @@ TransactionAcquire::takeNodes(
 
         for (auto const& d : data)
         {
+            if (d.first.isRoot() && mHaveRoot)
+            {
+                JLOG(journal_.debug()) << "Got root TXS node, already have it";
+                continue;
+            }
+
             if (d.first.isRoot())
             {
-                if (mHaveRoot)
-                    JLOG(journal_.debug()) << "Got root TXS node, already have it";
-                else if (!mMap->addRootNode(SHAMapHash{hash_}, d.second, nullptr).isGood())
-                {
+                if (!mMap->addRootNode(SHAMapHash{hash_}, std::move(d.second), nullptr).isGood())
                     JLOG(journal_.warn()) << "TX acquire got bad root node";
-                }
                 else
                     mHaveRoot = true;
             }
-            else if (!mMap->addKnownNode(d.first, d.second, &sf).isGood())
+            else if (!mMap->addKnownNode(d.first, std::move(d.second), &sf).isGood())
             {
                 JLOG(journal_.warn()) << "TX acquire got bad non-root node";
                 return SHAMapAddNode::invalid();

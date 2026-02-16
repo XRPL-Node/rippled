@@ -172,7 +172,7 @@ SHAMap::finishFetch(SHAMapHash const& hash, std::shared_ptr<NodeObject> const& o
 
 // See if a sync filter has a node
 intr_ptr::SharedPtr<SHAMapTreeNode>
-SHAMap::checkFilter(SHAMapHash const& hash, SHAMapSyncFilter* filter) const
+SHAMap::checkFilter(SHAMapHash const& hash, SHAMapSyncFilter const* filter) const
 {
     if (auto nodeData = filter->getNode(hash))
     {
@@ -198,7 +198,7 @@ SHAMap::checkFilter(SHAMapHash const& hash, SHAMapSyncFilter* filter) const
 // Get a node without throwing
 // Used on maps where missing nodes are expected
 intr_ptr::SharedPtr<SHAMapTreeNode>
-SHAMap::fetchNodeNT(SHAMapHash const& hash, SHAMapSyncFilter* filter) const
+SHAMap::fetchNodeNT(SHAMapHash const& hash, SHAMapSyncFilter const* filter) const
 {
     auto node = cacheLookup(hash);
     if (node)
@@ -307,7 +307,7 @@ SHAMap::descendNoStore(SHAMapInnerNode& parent, int branch) const
 }
 
 std::pair<SHAMapTreeNode*, SHAMapNodeID>
-SHAMap::descend(SHAMapInnerNode* parent, SHAMapNodeID const& parentID, int branch, SHAMapSyncFilter* filter) const
+SHAMap::descend(SHAMapInnerNode* parent, SHAMapNodeID const& parentID, int branch, SHAMapSyncFilter const* filter) const
 {
     XRPL_ASSERT(parent->isInner(), "xrpl::SHAMap::descend : valid parent input");
     XRPL_ASSERT((branch >= 0) && (branch < branchFactor), "xrpl::SHAMap::descend : valid branch input");
@@ -334,7 +334,7 @@ SHAMapTreeNode*
 SHAMap::descendAsync(
     SHAMapInnerNode* parent,
     int branch,
-    SHAMapSyncFilter* filter,
+    SHAMapSyncFilter const* filter,
     bool& pending,
     descendCallback&& callback) const
 {

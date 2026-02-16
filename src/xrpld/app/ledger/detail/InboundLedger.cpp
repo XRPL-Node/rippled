@@ -816,53 +816,43 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
             std::make_unique<AccountStateSF>(mLedger->stateMap().family().db(), app_.getLedgerMaster())};
     }();
 
-    try
-    {
-        auto const f = filter.get();
+    auto const f = filter.get();
 
-        for (auto const& ledger_node : packet.nodes())
+    for (auto const& ledger_node : packet.nodes())
+    {
+        if (!validateLedgerNode(app_, ledger_node))
         {
-            if (!validateLedgerNode(app_, ledger_node))
-            {
-                JLOG(journal_.warn()) << "Got malformed ledger node";
-                san.incInvalid();
-                return;
-            }
-
-            auto const node_slice = makeSlice(ledger_node.nodedata());
-            auto const tree_node = getTreeNode(node_slice);
-            if (!tree_node)
-            {
-                JLOG(journal_.warn()) << "Got invalid node data";
-                san.incInvalid();
-                return;
-            }
-
-            auto const node_id = getSHAMapNodeID(app_, ledger_node, *tree_node);
-            if (!node_id)
-            {
-                JLOG(journal_.warn()) << "Got invalid node id";
-                san.incInvalid();
-                return;
-            }
-
-            if (node_id->isRoot())
-                san += map.addRootNode(rootHash, node_slice, f);
-            else
-                san += map.addKnownNode(*node_id, node_slice, f);
-
-            if (!san.isGood())
-            {
-                JLOG(journal_.warn()) << "Received bad node data";
-                return;
-            }
+            JLOG(journal_.warn()) << "Got malformed ledger node";
+            san.incInvalid();
+            return;
         }
-    }
-    catch (std::exception const& e)
-    {
-        JLOG(journal_.error()) << "Received bad node data: " << e.what();
-        san.incInvalid();
-        return;
+
+        auto tree_node = getTreeNode(ledger_node.nodedata());
+        if (!tree_node)
+        {
+            JLOG(journal_.warn()) << "Got invalid node data";
+            san.incInvalid();
+            return;
+        }
+
+        auto const node_id = getSHAMapNodeID(app_, ledger_node, *tree_node);
+        if (!node_id)
+        {
+            JLOG(journal_.warn()) << "Got invalid node id";
+            san.incInvalid();
+            return;
+        }
+
+        if (node_id->isRoot())
+            san += map.addRootNode(rootHash, std::move(*tree_node), f);
+        else
+            san += map.addKnownNode(*node_id, std::move(*tree_node), f);
+
+        if (!san.isGood())
+        {
+            JLOG(journal_.warn()) << "Received bad node data";
+            return;
+        }
     }
 
     if (!map.isSynching())
@@ -901,7 +891,14 @@ InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
     }
 
     AccountStateSF filter(mLedger->stateMap().family().db(), app_.getLedgerMaster());
-    san += mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, data, &filter);
+    auto node = SHAMapTreeNode::makeFromWire(data);
+    if (!node)
+    {
+        JLOG(journal_.warn()) << "Got invalid node data";
+        san.incInvalid();
+        return false;
+    }
+    san += mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, node, &filter);
     return san.isGood();
 }
 
@@ -926,7 +923,14 @@ InboundLedger::takeTxRootNode(Slice const& data, SHAMapAddNode& san)
     }
 
     TransactionStateSF filter(mLedger->txMap().family().db(), app_.getLedgerMaster());
-    san += mLedger->txMap().addRootNode(SHAMapHash{mLedger->header().txHash}, data, &filter);
+    auto node = SHAMapTreeNode::makeFromWire(data);
+    if (!node)
+    {
+        JLOG(journal_.warn()) << "Got invalid node data";
+        san.incInvalid();
+        return false;
+    }
+    san += mLedger->txMap().addRootNode(SHAMapHash{mLedger->header().txHash}, node, &filter);
     return san.isGood();
 }
 
