@@ -698,12 +698,8 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
         XRPL_ASSERT_PARTS(!negative, "xrpl::Number::normalizeToRange", "Number is non-negative for unsigned range.");
     Number::normalize(negative, mantissa, exponent, minMantissa, maxMantissa);
 
-    // Cast mantissa to signed type first to avoid unsigned integer overflow
-    // when multiplying by negative sign
-    T signedMantissa = static_cast<T>(mantissa);
-    if (negative)
-        signedMantissa = -signedMantissa;
-    return std::make_pair(signedMantissa, exponent);
+    auto const sign = negative ? -1 : 1;
+    return std::make_pair(static_cast<T>(sign * mantissa), exponent);
 }
 
 inline constexpr Number
