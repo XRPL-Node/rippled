@@ -3,6 +3,5 @@ debug=true
 halt_on_error=false
 print_stats=true
 print_legend=true
-symbolize=true
 print_cmdline=true
 print_summary=true
