@@ -26,6 +26,13 @@ public:
     }
 
 protected:
+    // Construct without starting threads. Derived classes must call
+    // startIOThreads() once construction is complete.
+    struct DeferStart
+    {
+    };
+    BasicApp(std::size_t numberOfThreads, DeferStart);
+
     void
     startIOThreads();
 };

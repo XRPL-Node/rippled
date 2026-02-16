@@ -235,7 +235,7 @@ public:
     //--------------------------------------------------------------------------
 
     ApplicationImp(std::unique_ptr<Config> config, std::unique_ptr<Logs> logs, std::unique_ptr<TimeKeeper> timeKeeper)
-        : BasicApp(numberOfThreads(*config))
+        : BasicApp(numberOfThreads(*config), DeferStart{})
         , config_(std::move(config))
         , logs_(std::move(logs))
         , timeKeeper_(std::move(timeKeeper))

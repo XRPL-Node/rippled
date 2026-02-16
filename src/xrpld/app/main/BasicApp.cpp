@@ -7,6 +7,12 @@
 BasicApp::BasicApp(std::size_t numberOfThreads) : numberOfThreads_(numberOfThreads)
 {
     work_.emplace(boost::asio::make_work_guard(io_context_));
+    startIOThreads();
+}
+
+BasicApp::BasicApp(std::size_t numberOfThreads, DeferStart) : numberOfThreads_(numberOfThreads)
+{
+    work_.emplace(boost::asio::make_work_guard(io_context_));
 }
 
 void
