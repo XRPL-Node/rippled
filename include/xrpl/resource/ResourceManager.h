@@ -22,6 +22,12 @@ protected:
 public:
     virtual ~Manager() = 0;
 
+    /** Start the manager's background thread.
+        Must be called after construction.
+    */
+    virtual void
+    start() = 0;
+
     /** Create a new endpoint keyed by inbound IP address or the forwarded
      * IP if proxied. */
     virtual Consumer

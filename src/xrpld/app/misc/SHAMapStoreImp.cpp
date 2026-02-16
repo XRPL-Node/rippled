@@ -4,7 +4,9 @@
 #include <xrpld/core/ConfigSections.h>
 
 #include <xrpl/beast/core/CurrentThreadName.h>
+#include <xrpl/nodestore/Manager.h>
 #include <xrpl/nodestore/Scheduler.h>
+#include <xrpl/nodestore/detail/DatabaseNodeImp.h>
 #include <xrpl/nodestore/detail/DatabaseRotatingImp.h>
 #include <xrpl/server/NetworkOPs.h>
 #include <xrpl/server/State.h>
@@ -159,12 +161,15 @@ SHAMapStoreImp::makeNodeStore(int readThreads)
     }
     else
     {
-        db = NodeStore::Manager::instance().make_Database(
+        auto& mgr = NodeStore::Manager::instance();
+        auto backend = mgr.make_Backend(
+            nscfg,
             megabytes(app_.config().getValueFor(SizedItem::burstSize, std::nullopt)),
             scheduler_,
-            readThreads,
-            nscfg,
             app_.logs().journal(nodeStoreName_));
+        backend->open();
+        db = std::make_unique<NodeStore::DatabaseNodeImp>(
+            scheduler_, readThreads, std::move(backend), nscfg, app_.logs().journal(nodeStoreName_));
         fdRequired_ += db->fdRequired();
     }
     return db;

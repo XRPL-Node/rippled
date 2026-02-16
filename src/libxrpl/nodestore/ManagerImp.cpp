@@ -69,7 +69,9 @@ ManagerImp::make_Database(
 {
     auto backend{make_Backend(config, burstSize, scheduler, journal)};
     backend->open();
-    return std::make_unique<DatabaseNodeImp>(scheduler, readThreads, std::move(backend), config, journal);
+    auto db = std::make_unique<DatabaseNodeImp>(scheduler, readThreads, std::move(backend), config, journal);
+    db->startReadThreads();
+    return db;
 }
 
 void

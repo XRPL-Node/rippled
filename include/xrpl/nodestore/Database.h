@@ -41,6 +41,13 @@ public:
     */
     Database(Scheduler& scheduler, int readThreads, Section const& config, beast::Journal j);
 
+    /** Start the asynchronous read threads.
+        Must be called after construction to start read threads.
+        It is safe to destroy the Database without calling this.
+    */
+    void
+    startReadThreads();
+
     /** Destroy the node store.
         All pending operations are completed, pending writes flushed,
         and files closed before this returns.
@@ -249,6 +256,7 @@ private:
     std::atomic<bool> readStopping_ = false;
     std::atomic<int> readThreads_ = 0;
     std::atomic<int> runningThreads_ = 0;
+    int const desiredReadThreads_;
 
     virtual std::shared_ptr<NodeObject>
     fetchNodeObject(uint256 const& hash, std::uint32_t ledgerSeq, FetchReport& fetchReport, bool duplicate) = 0;
