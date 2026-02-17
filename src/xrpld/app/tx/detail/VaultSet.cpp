@@ -47,13 +47,6 @@ isValidVaultUpdate(PreflightContext const& ctx)
 NotTEC
 VaultSet::preflight(PreflightContext const& ctx)
 {
-    if ((ctx.tx.isFlag(tfVaultDepositBlock) || ctx.tx.isFlag(tfVaultDepositUnblock)) &&
-        !ctx.rules.enabled(fixLendingProtocolV1_1))
-    {
-        JLOG(ctx.j.debug()) << "VaultSet: flags not supported without fixLendingProtocolV1_1.";
-        return temDISABLED;
-    }
-
     if (ctx.tx[sfVaultID] == beast::zero)
     {
         JLOG(ctx.j.debug()) << "VaultSet: zero/empty vault ID.";
