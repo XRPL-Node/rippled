@@ -625,7 +625,7 @@ class TrustAndBalance_test : public beast::unit_test::suite
                 // rippleCreditIOU returns tecINSUFFICIENT_RESERVE here since
                 // there is not enough balance for the reserve requirement on
                 // 3rd trustline. Unfortunately payment engine somehow does not
-                // propogate this error
+                // propagate this error
                 env(check::cash(ed, checkId, USD(25)));
                 env.close();
 

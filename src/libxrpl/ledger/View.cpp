@@ -1814,18 +1814,15 @@ rippleCreditIOU(
             auto const ownerCount = sleReceiver->getFieldU32(sfOwnerCount);
 
             // Trust lines use "owner count < 2" reserve exception
-            XRPAmount const reserve = (ownerCount < 2)
-                ? XRPAmount(beast::zero)
-                : view.fees().accountReserve(ownerCount + 1);
+            XRPAmount const reserve =
+                (ownerCount < 2) ? XRPAmount(beast::zero) : view.fees().accountReserve(ownerCount + 1);
 
             if (sleReceiver->getFieldAmount(sfBalance) < reserve)
                 return tecINSUFFICIENT_RESERVE;
 
             adjustOwnerCount(view, sleReceiver, 1, j);
 
-            sleRippleState->setFieldU32(
-                sfFlags,
-                uFlags | (bSenderHigh ? lsfLowReserve : lsfHighReserve));
+            sleRippleState->setFieldU32(sfFlags, uFlags | (bSenderHigh ? lsfLowReserve : lsfHighReserve));
         }
 
         if (bSenderHigh)
