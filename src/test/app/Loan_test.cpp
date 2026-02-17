@@ -6696,8 +6696,7 @@ protected:
         static constexpr std::int64_t BORROWER_INITIAL_IOU = 100'000;
         static constexpr std::int64_t DEPOSIT_AMOUNT = 5'000;
         static constexpr std::int64_t PRINCIPAL_AMOUNT = 99;
-        static constexpr std::uint64_t EXPECTED_SHARES_PER_DEPOSITOR =
-            5'000'000'000;
+        static constexpr std::uint64_t EXPECTED_SHARES_PER_DEPOSITOR = 5'000'000'000;
         static constexpr std::uint32_t PAYMENT_INTERVAL = 600;
         static constexpr std::uint32_t PAYMENT_TOTAL = 2;
 
@@ -6710,13 +6709,7 @@ protected:
         Account const depositorB{"lpB"};
         Account const borrower{"borrowerA"};
 
-        env.fund(
-            XRP(INITIAL_FUNDING),
-            issuer,
-            lender,
-            depositorA,
-            depositorB,
-            borrower);
+        env.fund(XRP(INITIAL_FUNDING), issuer, lender, depositorA, depositorB, borrower);
         env.close();
 
         // Setup trust lines
@@ -6757,8 +6750,7 @@ protected:
         if (!BEAST_EXPECT(sleBroker))
             return;
 
-        auto const loanKeylet =
-            keylet::loan(broker.brokerID, sleBroker->at(sfLoanSequence));
+        auto const loanKeylet = keylet::loan(broker.brokerID, sleBroker->at(sfLoanSequence));
 
         env(set(borrower, broker.brokerID, PRINCIPAL_AMOUNT),
             sig(sfCounterpartySignature, lender),
@@ -6777,16 +6769,12 @@ protected:
         if (!BEAST_EXPECT(vaultAfterImpair))
             return;
 
-        BEAST_EXPECT(
-            vaultAfterImpair->at(sfLossUnrealized) ==
-            broker.asset(PRINCIPAL_AMOUNT).value());
+        BEAST_EXPECT(vaultAfterImpair->at(sfLossUnrealized) == broker.asset(PRINCIPAL_AMOUNT).value());
 
         // Helper to get share balance for a depositor
         auto const shareAsset = vaultAfterImpair->at(sfShareMPTID);
-        auto const getShareBalance =
-            [&](Account const& depositor) -> std::uint64_t {
-            auto const token =
-                env.le(keylet::mptoken(shareAsset, depositor.id()));
+        auto const getShareBalance = [&](Account const& depositor) -> std::uint64_t {
+            auto const token = env.le(keylet::mptoken(shareAsset, depositor.id()));
             return token ? token->getFieldU64(sfMPTAmount) : 0;
         };
 
@@ -6798,14 +6786,9 @@ protected:
         BEAST_EXPECT(sharesLpA == sharesLpB);
 
         // Helper to attempt withdrawal
-        auto const attemptWithdrawShares = [&](Account const& depositor,
-                                               std::uint64_t shareAmount,
-                                               TER expected) {
+        auto const attemptWithdrawShares = [&](Account const& depositor, std::uint64_t shareAmount, TER expected) {
             STAmount const shareAmt{MPTIssue{shareAsset}, Number(shareAmount)};
-            env(v.withdraw(
-                    {.depositor = depositor,
-                     .id = broker.vaultKeylet().key,
-                     .amount = shareAmt}),
+            env(v.withdraw({.depositor = depositor, .id = broker.vaultKeylet().key, .amount = shareAmt}),
                 ter(expected));
             env.close();
         };
