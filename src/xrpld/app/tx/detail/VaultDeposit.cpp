@@ -60,8 +60,8 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
         // LCOV_EXCL_STOP
     }
 
-    auto const sleIssuance = ctx.view.read(keylet::mptIssuance(mptIssuanceID));
-    if (!sleIssuance)
+    auto const sleShareIssuance = ctx.view.read(keylet::mptIssuance(mptIssuanceID));
+    if (!sleShareIssuance)
     {
         // LCOV_EXCL_START
         JLOG(ctx.j.error()) << "VaultDeposit: missing issuance of vault shares.";
@@ -69,12 +69,30 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
         // LCOV_EXCL_STOP
     }
 
-    if (sleIssuance->isFlag(lsfMPTLocked))
+    if (sleShareIssuance->isFlag(lsfMPTLocked))
     {
         // LCOV_EXCL_START
         JLOG(ctx.j.error()) << "VaultDeposit: issuance of vault shares is locked.";
         return tefINTERNAL;
         // LCOV_EXCL_STOP
+    }
+
+    if (ctx.view.rules().enabled(fixLendingProtocolV1_1))
+    {
+        // Perform these checks early to avoid unnecessary processing
+
+        // The Vault is insolvent, deposits are not allowed
+        if (vault->at(sfAssetsTotal) == 0 && sleShareIssuance->at(sfOutstandingAmount) > 0)
+        {
+            JLOG(ctx.j.debug()) << "VaultDeposit: Vault is insolvent, deposits are not allowed";
+            return tecNO_PERMISSION;
+        }
+
+        if (vault->isFlag(lsfVaultDepositBlocked))
+        {
+            JLOG(ctx.j.debug()) << "VaultDeposit: Vault deposits are blocked";
+            return tecNO_PERMISSION;
+        }
     }
 
     // Cannot deposit inside Vault an Asset frozen for the depositor
@@ -87,7 +105,7 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
 
     if (vault->isFlag(lsfVaultPrivate) && account != vault->at(sfOwner))
     {
-        auto const maybeDomainID = sleIssuance->at(~sfDomainID);
+        auto const maybeDomainID = sleShareIssuance->at(~sfDomainID);
         // Since this is a private vault and the account is not its owner, we
         // perform authorization check based on DomainID read from sleIssuance.
         // Had the vault shares been a regular MPToken, we would allow

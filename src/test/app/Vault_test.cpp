@@ -2131,6 +2131,167 @@ class Vault_test : public beast::unit_test::suite
             // Delete vault with zero balance
             env(vault.del({.owner = owner, .id = keylet.key}));
         });
+
+        testCase([&, this](
+                     Env& env,
+                     Account const&,
+                     Account const& owner,
+                     Account const& depositor,
+                     PrettyAsset const& asset,
+                     Vault& vault,
+                     MPTTester const& mptt) {
+            testcase("lsfVaultDepositBlocked prevents deposits");
+            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
+            env(tx);
+            env.close();
+
+            // First deposit assets to later show that withdrawals are not blocked
+            {
+                auto const tx = vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Block Vault deposits
+            {
+                auto const tx = vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
+                env(tx, ter(tesSUCCESS), THISLINE);
+                env.close();
+            }
+
+            {
+                auto const tx = vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tecNO_PERMISSION}, THISLINE);
+                env.close();
+            }
+
+            {
+                auto tx = vault.withdraw({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Unblock Vault Deposits
+            {
+                auto const tx = vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
+                env(tx, ter(tesSUCCESS), THISLINE);
+                env.close();
+            }
+
+            // Deposits now succeed
+            {
+                auto const tx = vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Withdraw assets from the vault to delete it
+            {
+                auto const tx = vault.withdraw({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            env(vault.del({.owner = owner, .id = keylet.key}));
+            env.close();
+        });
+
+        testCase([&, this](
+                     Env& env,
+                     Account const&,
+                     Account const& owner,
+                     Account const& depositor,
+                     PrettyAsset const& asset,
+                     Vault& vault,
+                     MPTTester const& mptt) {
+            testcase("insolvent vault blocks deposits");
+
+            auto const depositAmount = asset(20);
+
+            auto const [tx, vaultKeylet] = vault.create({.owner = owner, .asset = asset});
+            env(tx);
+            env.close();
+
+            // First deposit assets to later show that withdrawals are not blocked
+            {
+                auto const tx = vault.deposit({.depositor = depositor, .id = vaultKeylet.key, .amount = depositAmount});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            auto const& brokerKeylet = keylet::loanbroker(owner.id(), env.seq(owner));
+            auto const& loanKeylet = keylet::loan(brokerKeylet.key, 1);
+
+            // Create a LoanBroker and a Loan, to drain the vault
+            {
+                using namespace loanBroker;
+                using namespace loan;
+
+                env(set(owner, vaultKeylet.key), THISLINE);
+                env.close();
+
+                // Create a simple Loan for the full amount of Vault assets
+                env(set(depositor, brokerKeylet.key, depositAmount.value()),
+                    loan::interestRate(TenthBips32(0)),
+                    paymentInterval(120),
+                    paymentTotal(1),
+                    sig(sfCounterpartySignature, owner),
+                    fee(env.current()->fees().base * 2),
+                    ter(tesSUCCESS),
+                    THISLINE);
+                env.close();
+
+                env.close(std::chrono::seconds{120 + 60});
+
+                env(manage(owner, loanKeylet.key, tfLoanDefault), ter(tesSUCCESS), THISLINE);
+
+                auto const sleVault = env.le(vaultKeylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                auto const sleIssuance = env.le(keylet::mptIssuance(sleVault->at(sfShareMPTID)));
+                if (!BEAST_EXPECT(sleIssuance))
+                    return;
+
+                auto const shareBalance = sleIssuance->at(sfOutstandingAmount);
+                auto const expectedShares = Number{
+                    depositAmount.number().mantissa(), depositAmount.number().exponent() + sleVault->at(sfScale)};
+
+                // verify that the vault is insolvent
+                if (!BEAST_EXPECT(
+                        sleVault->at(sfAssetsTotal) == 0 && sleVault->at(sfAssetsAvailable) == 0 &&
+                        shareBalance == expectedShares))
+                    return;
+            }
+
+            // The vault is insolvent, deposit must fail
+            {
+                auto const tx = vault.deposit({.depositor = depositor, .id = vaultKeylet.key, .amount = asset(20)});
+                env(tx, ter{tecNO_PERMISSION}, THISLINE);
+                env.close();
+            }
+
+            // Clean up the vault to delete it
+            {
+                auto const sleVault = env.le(vaultKeylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                Asset share = sleVault->at(sfShareMPTID);
+                env(vault.clawback(
+                        {.issuer = owner, .id = vaultKeylet.key, .holder = depositor, .amount = share(0).value()}),
+                    ter(tesSUCCESS),
+                    THISLINE);
+                env.close();
+            }
+
+            {
+                env(loan::del(owner, loanKeylet.key), ter(tesSUCCESS), THISLINE);
+                env(loanBroker::del(owner, brokerKeylet.key), ter(tesSUCCESS), THISLINE);
+                env(vault.del({.owner = owner, .id = vaultKeylet.key}));
+                env.close();
+            }
+        });
     }
 
     void
@@ -2799,6 +2960,169 @@ class Vault_test : public beast::unit_test::suite
 
             env(vault.del({.owner = owner, .id = keylet.key}));
             env.close();
+        });
+
+        testCase([&, this](
+                     Env& env,
+                     Account const& owner,
+                     Account const& issuer,
+                     Account const&,
+                     auto vaultAccount,
+                     Vault& vault,
+                     PrettyAsset const& asset,
+                     auto&&...) {
+            testcase("lsfVaultDepositBlocked prevents deposits");
+            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
+            env(tx);
+            env.close();
+
+            // First deposit assets to later show that withdrawals are not blocked
+            {
+                auto const tx = vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Block Vault deposits
+            {
+                auto const tx = vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
+                env(tx, ter(tesSUCCESS), THISLINE);
+                env.close();
+            }
+
+            {
+                auto const tx = vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tecNO_PERMISSION}, THISLINE);
+                env.close();
+            }
+
+            {
+                auto tx = vault.withdraw({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Unblock Vault Deposits
+            {
+                auto const tx = vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
+                env(tx, ter(tesSUCCESS), THISLINE);
+                env.close();
+            }
+
+            // Deposits now succeed
+            {
+                auto const tx = vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            // Withdraw assets from the vault to delete it
+            {
+                auto const tx = vault.withdraw({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            env(vault.del({.owner = owner, .id = keylet.key}));
+            env.close();
+        });
+
+        testCase([&, this](
+                     Env& env,
+                     Account const& owner,
+                     Account const& issuer,
+                     Account const&,
+                     auto vaultAccount,
+                     Vault& vault,
+                     PrettyAsset const& asset,
+                     auto&&...) {
+            testcase("insolvent vault blocks deposits");
+
+            auto const depositAmount = asset(20);
+
+            auto const [tx, vaultKeylet] = vault.create({.owner = owner, .asset = asset});
+            env(tx);
+            env.close();
+
+            // First deposit assets to later show that withdrawals are not blocked
+            {
+                auto const tx = vault.deposit({.depositor = issuer, .id = vaultKeylet.key, .amount = depositAmount});
+                env(tx, ter{tesSUCCESS}, THISLINE);
+                env.close();
+            }
+
+            auto const& brokerKeylet = keylet::loanbroker(owner.id(), env.seq(owner));
+            auto const& loanKeylet = keylet::loan(brokerKeylet.key, 1);
+
+            // Create a LoanBroker and a Loan, to drain the vault
+            {
+                using namespace loanBroker;
+                using namespace loan;
+
+                env(set(owner, vaultKeylet.key), THISLINE);
+                env.close();
+
+                // Create a simple Loan for the full amount of Vault assets
+                env(set(issuer, brokerKeylet.key, depositAmount.value()),
+                    loan::interestRate(TenthBips32(0)),
+                    paymentInterval(120),
+                    paymentTotal(1),
+                    sig(sfCounterpartySignature, owner),
+                    fee(env.current()->fees().base * 2),
+                    ter(tesSUCCESS),
+                    THISLINE);
+                env.close();
+
+                env.close(std::chrono::seconds{120 + 60});
+
+                env(manage(owner, loanKeylet.key, tfLoanDefault), ter(tesSUCCESS), THISLINE);
+
+                auto const sleVault = env.le(vaultKeylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                auto const sleIssuance = env.le(keylet::mptIssuance(sleVault->at(sfShareMPTID)));
+                if (!BEAST_EXPECT(sleIssuance))
+                    return;
+
+                auto const shareBalance = sleIssuance->at(sfOutstandingAmount);
+                auto const expectedShares = Number{
+                    depositAmount.number().mantissa(), depositAmount.number().exponent() + sleVault->at(sfScale)};
+
+                // verify that the vault is insolvent
+                if (!BEAST_EXPECT(
+                        sleVault->at(sfAssetsTotal) == 0 && sleVault->at(sfAssetsAvailable) == 0 &&
+                        shareBalance == expectedShares))
+                    return;
+            }
+
+            // The vault is insolvent, deposit must fail
+            {
+                auto const tx = vault.deposit({.depositor = issuer, .id = vaultKeylet.key, .amount = asset(20)});
+                env(tx, ter{tecNO_PERMISSION}, THISLINE);
+                env.close();
+            }
+
+            // Clean up the vault to delete it
+            {
+                auto const sleVault = env.le(vaultKeylet);
+                if (!BEAST_EXPECT(sleVault))
+                    return;
+
+                Asset share = sleVault->at(sfShareMPTID);
+                env(vault.clawback(
+                        {.issuer = owner, .id = vaultKeylet.key, .holder = issuer, .amount = share(0).value()}),
+                    ter(tesSUCCESS),
+                    THISLINE);
+                env.close();
+            }
+
+            {
+                env(loan::del(owner, loanKeylet.key), ter(tesSUCCESS), THISLINE);
+                env(loanBroker::del(owner, brokerKeylet.key), ter(tesSUCCESS), THISLINE);
+                env(vault.del({.owner = owner, .id = vaultKeylet.key}));
+                env.close();
+            }
         });
     }
 
