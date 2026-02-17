@@ -106,8 +106,7 @@ template <class T>
 concept Integral64 = std::is_same_v<T, std::int64_t> || std::is_same_v<T, std::uint64_t>;
 
 template <class STAmount, class Asset>
-concept CanUseAsScale = requires(Asset a, Number n) { STAmount(a, n); } &&
-    requires(STAmount s) { s.exponent(); };
+concept CanUseAsScale = requires(Asset a, Number n) { STAmount(a, n); } && requires(STAmount s) { s.exponent(); };
 
 /** Number is a floating point type that can represent a wide range of values.
  *
