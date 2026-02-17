@@ -919,8 +919,9 @@ class Vault_test : public beast::unit_test::suite
 
             {
                 env.disableFeature(fixLendingProtocolV1_1);
-                auto tx = vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
-                env(tx, ter(temINVALID_FLAG));
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock}), ter(temINVALID_FLAG));
+                env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock}),
+                    ter(temINVALID_FLAG));
                 env.enableFeature(fixLendingProtocolV1_1);
             }
         });
