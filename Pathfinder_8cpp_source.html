@@ -83,16 +83,16 @@ $(document).ready(function() { init_codefold(0); });
 <div class="contents">
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &lt;xrpld/app/main/Application.h&gt;</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;xrpld/app/paths/Pathfinder.h&gt;</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;xrpld/app/paths/RippleCalc.h&gt;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;xrpld/app/paths/RippleLineCache.h&gt;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;xrpld/app/paths/detail/PathfinderUtils.h&gt;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;xrpl/basics/Log.h&gt;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;xrpl/basics/join.h&gt;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpl/core/JobQueue.h&gt;</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;xrpl/json/to_string.h&gt;</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;xrpl/ledger/OrderBookDB.h&gt;</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;xrpl/ledger/PaymentSandbox.h&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;xrpld/app/paths/RippleLineCache.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;xrpld/app/paths/detail/PathfinderUtils.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;xrpl/basics/Log.h&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;xrpl/basics/join.h&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;xrpl/core/JobQueue.h&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpl/json/to_string.h&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;xrpl/ledger/OrderBookDB.h&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;xrpl/ledger/PaymentSandbox.h&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;xrpl/tx/paths/RippleCalc.h&gt;</span></div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
 <div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;<a class="codeRef" href="http://en.cppreference.com/w/cpp/header/tuple.html">tuple</a>&gt;</span></div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
@@ -139,7 +139,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="keyword">struct </span>AccountCandidate</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>{</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="keywordtype">int</span> priority;</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <a class="code hl_typedef" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> <a class="code hl_function" href="namespacexrpl_1_1keylet.html#ac5d7a88f7cef6ac1ddf06020da8ded16">account</a>;</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <a class="code hl_typedef" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> account;</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> <span class="keyword">const</span> highPriority = 10000;</div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>};</div>
@@ -1445,7 +1445,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1TERSubset_html"><div class="ttname"><a href="classxrpl_1_1TERSubset.html">xrpl::TERSubset&lt; CanCvtToTER &gt;</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1base__uint_html"><div class="ttname"><a href="classxrpl_1_1base__uint.html">xrpl::base_uint&lt; 160, detail::AccountIDTag &gt;</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1base__uint_html_a40a5f51871ce3fc0d1124a2386cd3410"><div class="ttname"><a href="classxrpl_1_1base__uint.html#a40a5f51871ce3fc0d1124a2386cd3410">xrpl::base_uint::isZero</a></div><div class="ttdeci">bool isZero() const</div><div class="ttdef"><b>Definition</b> <a href="base__uint_8h_source.html#l00508">base_uint.h:508</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1path_1_1RippleCalc_html_a18faa5f80b076a35df7b00c5fc79d833"><div class="ttname"><a href="classxrpl_1_1path_1_1RippleCalc.html#a18faa5f80b076a35df7b00c5fc79d833">xrpl::path::RippleCalc::rippleCalculate</a></div><div class="ttdeci">static Output rippleCalculate(PaymentSandbox &amp;view, STAmount const &amp;saMaxAmountReq, STAmount const &amp;saDstAmountReq, AccountID const &amp;uDstAccountID, AccountID const &amp;uSrcAccountID, STPathSet const &amp;spsPaths, std::optional&lt; uint256 &gt; const &amp;domainID, Logs &amp;l, Input const *const pInputs=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="RippleCalc_8cpp_source.html#l00013">RippleCalc.cpp:13</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1path_1_1RippleCalc_html_a18faa5f80b076a35df7b00c5fc79d833"><div class="ttname"><a href="classxrpl_1_1path_1_1RippleCalc.html#a18faa5f80b076a35df7b00c5fc79d833">xrpl::path::RippleCalc::rippleCalculate</a></div><div class="ttdeci">static Output rippleCalculate(PaymentSandbox &amp;view, STAmount const &amp;saMaxAmountReq, STAmount const &amp;saDstAmountReq, AccountID const &amp;uDstAccountID, AccountID const &amp;uSrcAccountID, STPathSet const &amp;spsPaths, std::optional&lt; uint256 &gt; const &amp;domainID, Logs &amp;l, Input const *const pInputs=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="RippleCalc_8cpp_source.html#l00012">RippleCalc.cpp:12</a></div></div>
 <div class="ttc" id="aclear_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/clear.html">std::vector::clear</a></div><div class="ttdeci">T clear(T... args)</div></div>
 <div class="ttc" id="aempty_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/empty.html">std::vector::empty</a></div><div class="ttdeci">T empty(T... args)</div></div>
 <div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/end.html">std::vector::end</a></div><div class="ttdeci">T end(T... args)</div></div>

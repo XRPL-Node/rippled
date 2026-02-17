@@ -82,21 +82,21 @@ $(document).ready(function() { init_codefold(0); });
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &lt;xrpld/app/main/Application.h&gt;</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;xrpld/app/misc/LoadFeeTrack.h&gt;</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;xrpld/app/paths/AccountCurrencies.h&gt;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;xrpld/app/paths/PathRequest.h&gt;</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;xrpld/app/paths/PathRequests.h&gt;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;xrpld/app/paths/RippleCalc.h&gt;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;xrpld/app/paths/detail/PathfinderUtils.h&gt;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;xrpld/core/Config.h&gt;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpld/rpc/detail/Tuning.h&gt;</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;xrpl/basics/Log.h&gt;</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;xrpl/beast/core/LexicalCast.h&gt;</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;xrpl/protocol/ErrorCodes.h&gt;</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;xrpl/protocol/RPCErr.h&gt;</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &lt;xrpl/protocol/UintTypes.h&gt;</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &lt;xrpl/server/NetworkOPs.h&gt;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &lt;xrpld/app/paths/AccountCurrencies.h&gt;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;xrpld/app/paths/PathRequest.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;xrpld/app/paths/PathRequests.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;xrpld/app/paths/detail/PathfinderUtils.h&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;xrpld/core/Config.h&gt;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;xrpld/rpc/detail/Tuning.h&gt;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;xrpl/basics/Log.h&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;xrpl/beast/core/LexicalCast.h&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;xrpl/protocol/ErrorCodes.h&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;xrpl/protocol/RPCErr.h&gt;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;xrpl/protocol/UintTypes.h&gt;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#include &lt;xrpl/server/LoadFeeTrack.h&gt;</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#include &lt;xrpl/server/NetworkOPs.h&gt;</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#include &lt;xrpl/tx/paths/RippleCalc.h&gt;</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &lt;<a class="codeRef" href="http://en.cppreference.com/w/cpp/header/optional.html">optional</a>&gt;</span></div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#include &lt;<a class="codeRef" href="http://en.cppreference.com/w/cpp/header/tuple.html">tuple</a>&gt;</span></div>
@@ -903,7 +903,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="ttc" id="aclassxrpl_1_1base__uint_html_a341fd439f9a09990fd34c6005d87f2ea"><div class="ttname"><a href="classxrpl_1_1base__uint.html#a341fd439f9a09990fd34c6005d87f2ea">xrpl::base_uint::parseHex</a></div><div class="ttdeci">constexpr bool parseHex(std::string_view sv)</div><div class="ttdoc">Parse a hex string into a base_uint.</div><div class="ttdef"><b>Definition</b> <a href="base__uint_8h_source.html#l00471">base_uint.h:471</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1base__uint_html_a40a5f51871ce3fc0d1124a2386cd3410"><div class="ttname"><a href="classxrpl_1_1base__uint.html#a40a5f51871ce3fc0d1124a2386cd3410">xrpl::base_uint::isZero</a></div><div class="ttdeci">bool isZero() const</div><div class="ttdef"><b>Definition</b> <a href="base__uint_8h_source.html#l00508">base_uint.h:508</a></div></div>
 <div class="ttc" id="aclassxrpl_1_1base__uint_html_af76ea93fed56865d439a1d226b868e84"><div class="ttname"><a href="classxrpl_1_1base__uint.html#af76ea93fed56865d439a1d226b868e84">xrpl::base_uint::isNonZero</a></div><div class="ttdeci">bool isNonZero() const</div><div class="ttdef"><b>Definition</b> <a href="base__uint_8h_source.html#l00513">base_uint.h:513</a></div></div>
-<div class="ttc" id="aclassxrpl_1_1path_1_1RippleCalc_html_a18faa5f80b076a35df7b00c5fc79d833"><div class="ttname"><a href="classxrpl_1_1path_1_1RippleCalc.html#a18faa5f80b076a35df7b00c5fc79d833">xrpl::path::RippleCalc::rippleCalculate</a></div><div class="ttdeci">static Output rippleCalculate(PaymentSandbox &amp;view, STAmount const &amp;saMaxAmountReq, STAmount const &amp;saDstAmountReq, AccountID const &amp;uDstAccountID, AccountID const &amp;uSrcAccountID, STPathSet const &amp;spsPaths, std::optional&lt; uint256 &gt; const &amp;domainID, Logs &amp;l, Input const *const pInputs=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="RippleCalc_8cpp_source.html#l00013">RippleCalc.cpp:13</a></div></div>
+<div class="ttc" id="aclassxrpl_1_1path_1_1RippleCalc_html_a18faa5f80b076a35df7b00c5fc79d833"><div class="ttname"><a href="classxrpl_1_1path_1_1RippleCalc.html#a18faa5f80b076a35df7b00c5fc79d833">xrpl::path::RippleCalc::rippleCalculate</a></div><div class="ttdeci">static Output rippleCalculate(PaymentSandbox &amp;view, STAmount const &amp;saMaxAmountReq, STAmount const &amp;saDstAmountReq, AccountID const &amp;uDstAccountID, AccountID const &amp;uSrcAccountID, STPathSet const &amp;spsPaths, std::optional&lt; uint256 &gt; const &amp;domainID, Logs &amp;l, Input const *const pInputs=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="RippleCalc_8cpp_source.html#l00012">RippleCalc.cpp:12</a></div></div>
 <div class="ttc" id="aemplace_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/optional/emplace.html">std::optional::emplace</a></div><div class="ttdeci">T emplace(T... args)</div></div>
 <div class="ttc" id="afunction_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/functional/function.html">std::function</a></div></div>
 <div class="ttc" id="ainteger_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a></div></div>
