@@ -425,22 +425,16 @@ class TrustAndBalance_test : public beast::unit_test::suite
                                    std::uint32_t expectedOwnerCount,
                                    bool expectedReserveSet,
                                    STAmount expectedUsdBalance) {
-            BEAST_EXPECT(
-                env.le(acc)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
+            BEAST_EXPECT(env.le(acc)->getFieldU32(sfOwnerCount) == expectedOwnerCount);
             auto const line = env.le(keylet::line(acc, gw, to_currency("USD")));
-            BEAST_EXPECT(
-                line &&
-                line->isFlag(accHigh ? lsfHighReserve : lsfLowReserve) ==
-                    expectedReserveSet);
+            BEAST_EXPECT(line && line->isFlag(accHigh ? lsfHighReserve : lsfLowReserve) == expectedReserveSet);
             BEAST_EXPECT(env.balance(acc, USD) == expectedUsdBalance);
         };
 
         // Setup: fund account, create trust line with balance, clear default
         // ripple, set limit to 0, clear balance. Results in owner count 0 with
         // reserve flag cleared.
-        auto setupAccount = [&](Account const& acc,
-                                bool const accHigh,
-                                STAmount const& fundAmount) {
+        auto setupAccount = [&](Account const& acc, bool const accHigh, STAmount const& fundAmount) {
             env.fund(fundAmount, acc);
             env.close();
 
@@ -470,8 +464,7 @@ class TrustAndBalance_test : public beast::unit_test::suite
             Account alice{"alice"};
             bool const aliceHigh = alice.id() > gw.id();
 
-            setupAccount(
-                alice, aliceHigh, acctReserve + incReserve + fee * 4 + XRP(25));
+            setupAccount(alice, aliceHigh, acctReserve + incReserve + fee * 4 + XRP(25));
 
             // Making a limit order to match against later
             env(offer(gw, XRP(100), USD(100)));
@@ -510,8 +503,7 @@ class TrustAndBalance_test : public beast::unit_test::suite
             Account bob{"bob"};
             bool const bobHigh = bob.id() > gw.id();
 
-            setupAccount(
-                bob, bobHigh, acctReserve + incReserve + fee * 4 + XRP(10));
+            setupAccount(bob, bobHigh, acctReserve + incReserve + fee * 4 + XRP(10));
 
             // Making a limit order to match against later
             env(offer(gw, XRP(100), USD(100)));
@@ -657,27 +649,27 @@ public:
     void
     run() override
     {
-        // testTrustNonexistent();
-        // testCreditLimit();
+        testTrustNonexistent();
+        testCreditLimit();
 
         auto testWithFeatures = [this](FeatureBitset features) {
-            // testPayNonexistent(features);
-            // testDirectRipple(features);
-            // testWithTransferFee(false, false, features);
-            // testWithTransferFee(false, true, features);
-            // testWithTransferFee(true, false, features);
-            // testWithTransferFee(true, true, features);
-            // testWithPath(features);
-            // testIndirect(features);
-            // testIndirectMultiPath(true, features);
-            // testIndirectMultiPath(false, features);
-            // testInvoiceID(features);
+            testPayNonexistent(features);
+            testDirectRipple(features);
+            testWithTransferFee(false, false, features);
+            testWithTransferFee(false, true, features);
+            testWithTransferFee(true, false, features);
+            testWithTransferFee(true, true, features);
+            testWithPath(features);
+            testIndirect(features);
+            testIndirectMultiPath(true, features);
+            testIndirectMultiPath(false, features);
+            testInvoiceID(features);
             testOwnerCountOnBalanceChange(features);
         };
 
         using namespace test::jtx;
         auto const sa = testable_amendments();
-        // testWithFeatures(sa - featurePermissionedDEX);
+        testWithFeatures(sa - featurePermissionedDEX);
         testWithFeatures(sa - fixTrustLineOwnerCount);
         testWithFeatures(sa);
     }
