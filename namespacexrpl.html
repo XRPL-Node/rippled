@@ -782,6 +782,12 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1NetClock.html">NetClock</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1NetworkIDService.html">NetworkIDService</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Service that provides access to the network ID.  <a href="classxrpl_1_1NetworkIDService.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1NetworkIDServiceImpl.html">NetworkIDServiceImpl</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implementation of <a class="el" href="classxrpl_1_1NetworkIDService.html" title="Service that provides access to the network ID.">NetworkIDService</a> that reads from <a class="el" href="classxrpl_1_1Config.html">Config</a>.  <a href="classxrpl_1_1NetworkIDServiceImpl.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classxrpl_1_1NetworkOPs.html">NetworkOPs</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides server functionality for clients.  <a href="classxrpl_1_1NetworkOPs.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -5061,33 +5067,33 @@ requires ( <a class="elRef" href="http://en.cppreference.com/w/cpp/types/is_same
 <tr class="memitem:a7e83f932c28e34ef6dc26701bd9796de" id="r_a7e83f932c28e34ef6dc26701bd9796de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a7e83f932c28e34ef6dc26701bd9796de">savePeerFinderDB</a> (soci::session &amp;session, <a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt; <a class="el" href="structxrpl_1_1PeerFinder_1_1Store_1_1Entry.html">PeerFinder::Store::Entry</a> &gt; const  &amp;v)</td></tr>
 <tr class="memdesc:a7e83f932c28e34ef6dc26701bd9796de"><td class="mdescLeft">&#160;</td><td class="mdescRight">savePeerFinderDB Saves a new entry to the peer finder database.  <br /></td></tr>
 <tr class="separator:a7e83f932c28e34ef6dc26701bd9796de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7f888d175b43e5240a918418ffd5bb7" id="r_ab7f888d175b43e5240a918418ffd5bb7"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51">Validity</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab7f888d175b43e5240a918418ffd5bb7">checkValidity</a> (<a class="el" href="classxrpl_1_1HashRouter.html">HashRouter</a> &amp;router, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;config)</td></tr>
-<tr class="memdesc:ab7f888d175b43e5240a918418ffd5bb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks transaction signature and local checks.  <br /></td></tr>
-<tr class="separator:ab7f888d175b43e5240a918418ffd5bb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39c35e5d53d22e30012bcc438287e987" id="r_a39c35e5d53d22e30012bcc438287e987"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51">Validity</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a39c35e5d53d22e30012bcc438287e987">checkValidity</a> (<a class="el" href="classxrpl_1_1HashRouter.html">HashRouter</a> &amp;router, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules)</td></tr>
+<tr class="memdesc:a39c35e5d53d22e30012bcc438287e987"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks transaction signature and local checks.  <br /></td></tr>
+<tr class="separator:a39c35e5d53d22e30012bcc438287e987"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc7af7b42998ca2c58721ada3326f709" id="r_adc7af7b42998ca2c58721ada3326f709"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#adc7af7b42998ca2c58721ada3326f709">forceValidity</a> (<a class="el" href="classxrpl_1_1HashRouter.html">HashRouter</a> &amp;router, <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> const &amp;txid, <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51">Validity</a> validity)</td></tr>
 <tr class="memdesc:adc7af7b42998ca2c58721ada3326f709"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the validity of a given transaction in the cache.  <br /></td></tr>
 <tr class="separator:adc7af7b42998ca2c58721ada3326f709"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2865f3dcffed48449f79d264e63cdac1" id="r_a2865f3dcffed48449f79d264e63cdac1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a2865f3dcffed48449f79d264e63cdac1">apply</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal)</td></tr>
-<tr class="memdesc:a2865f3dcffed48449f79d264e63cdac1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply a transaction to an <code><a class="el" href="classxrpl_1_1OpenView.html" title="Writable ledger view that accumulates state and tx changes.">OpenView</a></code>.  <br /></td></tr>
-<tr class="separator:a2865f3dcffed48449f79d264e63cdac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d5f489c3893ed5beccbd915e0e36add" id="r_a3d5f489c3893ed5beccbd915e0e36add"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacexrpl.html#a4cbb7567b1f1ba856f834eb7657cf049">ApplyTransactionResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a3d5f489c3893ed5beccbd915e0e36add">applyTransaction</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, bool retryAssured, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal)</td></tr>
-<tr class="memdesc:a3d5f489c3893ed5beccbd915e0e36add"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classxrpl_1_1Transaction.html">Transaction</a> application helper.  <br /></td></tr>
-<tr class="separator:a3d5f489c3893ed5beccbd915e0e36add"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c318c5aec1ecc88400ec2df847d184a" id="r_a2c318c5aec1ecc88400ec2df847d184a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a2c318c5aec1ecc88400ec2df847d184a">apply</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal)</td></tr>
+<tr class="memdesc:a2c318c5aec1ecc88400ec2df847d184a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply a transaction to an <code><a class="el" href="classxrpl_1_1OpenView.html" title="Writable ledger view that accumulates state and tx changes.">OpenView</a></code>.  <br /></td></tr>
+<tr class="separator:a2c318c5aec1ecc88400ec2df847d184a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a374a3876e33e8ecf8bfc40946acc41c0" id="r_a374a3876e33e8ecf8bfc40946acc41c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacexrpl.html#a4cbb7567b1f1ba856f834eb7657cf049">ApplyTransactionResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a374a3876e33e8ecf8bfc40946acc41c0">applyTransaction</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, bool retryAssured, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> journal)</td></tr>
+<tr class="memdesc:a374a3876e33e8ecf8bfc40946acc41c0"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classxrpl_1_1Transaction.html">Transaction</a> application helper.  <br /></td></tr>
+<tr class="separator:a374a3876e33e8ecf8bfc40946acc41c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a383cabfd6f002db1baf8c9ea4e12cda1" id="r_a383cabfd6f002db1baf8c9ea4e12cda1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a383cabfd6f002db1baf8c9ea4e12cda1">isTecClaimHardFail</a> (<a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a> ter, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags)</td></tr>
 <tr class="memdesc:a383cabfd6f002db1baf8c9ea4e12cda1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return true if the transaction can claim a fee (tec), and the <code>ApplyFlags</code> do not allow soft failures.  <br /></td></tr>
 <tr class="separator:a383cabfd6f002db1baf8c9ea4e12cda1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb93b94d268f91feb3070b53f8ac42d1" id="r_acb93b94d268f91feb3070b53f8ac42d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreclaimResult.html">PreclaimResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1">preclaim</a> (<a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a> const &amp;preflightResult, <a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> const &amp;view)</td></tr>
-<tr class="memdesc:acb93b94d268f91feb3070b53f8ac42d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gate a transaction based on static ledger information.  <br /></td></tr>
-<tr class="separator:acb93b94d268f91feb3070b53f8ac42d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26bed69a9cae2c41a932fc29c07ccf5c" id="r_a26bed69a9cae2c41a932fc29c07ccf5c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreclaimResult.html">PreclaimResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c">preclaim</a> (<a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a> const &amp;preflightResult, <a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> const &amp;view)</td></tr>
+<tr class="memdesc:a26bed69a9cae2c41a932fc29c07ccf5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gate a transaction based on static ledger information.  <br /></td></tr>
+<tr class="separator:a26bed69a9cae2c41a932fc29c07ccf5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7947f131eff6412fed02a27b932f15c" id="r_ad7947f131eff6412fed02a27b932f15c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1XRPAmount.html">XRPAmount</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ad7947f131eff6412fed02a27b932f15c">calculateBaseFee</a> (<a class="el" href="classxrpl_1_1ReadView.html">ReadView</a> const &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx)</td></tr>
 <tr class="memdesc:ad7947f131eff6412fed02a27b932f15c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute only the expected base fee for a transaction.  <br /></td></tr>
 <tr class="separator:ad7947f131eff6412fed02a27b932f15c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7e7857ea11d74649d6469e902efd655" id="r_ab7e7857ea11d74649d6469e902efd655"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1XRPAmount.html">XRPAmount</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab7e7857ea11d74649d6469e902efd655">calculateDefaultBaseFee</a> (<a class="el" href="classxrpl_1_1ReadView.html">ReadView</a> const &amp;view, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx)</td></tr>
 <tr class="memdesc:ab7e7857ea11d74649d6469e902efd655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the minimum fee that an "ordinary" transaction would pay.  <br /></td></tr>
 <tr class="separator:ab7e7857ea11d74649d6469e902efd655"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5ea11300fb9863c37c3408ece861096" id="r_ab5ea11300fb9863c37c3408ece861096"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096">doApply</a> (<a class="el" href="structxrpl_1_1PreclaimResult.html">PreclaimResult</a> const &amp;preclaimResult, <a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view)</td></tr>
-<tr class="memdesc:ab5ea11300fb9863c37c3408ece861096"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply a prechecked transaction to an <a class="el" href="classxrpl_1_1OpenView.html" title="Writable ledger view that accumulates state and tx changes.">OpenView</a>.  <br /></td></tr>
-<tr class="separator:ab5ea11300fb9863c37c3408ece861096"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae433e0d2afa8c5e0d2ceb2e931db6c57" id="r_ae433e0d2afa8c5e0d2ceb2e931db6c57"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57">doApply</a> (<a class="el" href="structxrpl_1_1PreclaimResult.html">PreclaimResult</a> const &amp;preclaimResult, <a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view)</td></tr>
+<tr class="memdesc:ae433e0d2afa8c5e0d2ceb2e931db6c57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply a prechecked transaction to an <a class="el" href="classxrpl_1_1OpenView.html" title="Writable ledger view that accumulates state and tx changes.">OpenView</a>.  <br /></td></tr>
+<tr class="separator:ae433e0d2afa8c5e0d2ceb2e931db6c57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b32c21ea376dbc74265e52ac9e67d8e" id="r_a7b32c21ea376dbc74265e52ac9e67d8e"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a>, bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a7b32c21ea376dbc74265e52ac9e67d8e">applyBid</a> (<a class="el" href="classxrpl_1_1ApplyContext.html">ApplyContext</a> &amp;ctx_, <a class="el" href="classxrpl_1_1Sandbox.html">Sandbox</a> &amp;sb, <a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;account_, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j_)</td></tr>
 <tr class="separator:a7b32c21ea376dbc74265e52ac9e67d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd55c680c6ca20698ba705a2a7487472" id="r_afd55c680c6ca20698ba705a2a7487472"><td class="memItemLeft" align="right" valign="top">static <a class="elRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a>&lt; <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a>, bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#afd55c680c6ca20698ba705a2a7487472">applyCreate</a> (<a class="el" href="classxrpl_1_1ApplyContext.html">ApplyContext</a> &amp;ctx_, <a class="el" href="classxrpl_1_1Sandbox.html">Sandbox</a> &amp;sb, <a class="el" href="namespacexrpl.html#a645fcf7e35dc370816f6dd8e2fd7f146">AccountID</a> const &amp;account_, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j_)</td></tr>
@@ -5100,13 +5106,13 @@ requires ( <a class="elRef" href="http://en.cppreference.com/w/cpp/types/is_same
 <tr class="separator:a54e4e2b57f11f7d823e0c051af3a4d5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a820d01cf4769d676b89ea7a3351ce5ab" id="r_a820d01cf4769d676b89ea7a3351ce5ab"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a820d01cf4769d676b89ea7a3351ce5ab">adjustLPTokensIn</a> (<a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> const &amp;lptAMMBalance, <a class="el" href="classxrpl_1_1STAmount.html">STAmount</a> const &amp;lpTokensWithdraw, <a class="el" href="namespacexrpl.html#a177f7e4b1df6ee8f4d1e11e3cd0b183c">WithdrawAll</a> withdrawAll)</td></tr>
 <tr class="separator:a820d01cf4769d676b89ea7a3351ce5ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a705cf813e260526f7af5a38171b515c9" id="r_a705cf813e260526f7af5a38171b515c9"><td class="memTemplParams" colspan="2">template&lt;typename PreflightChecks &gt; </td></tr>
-<tr class="memitem:a705cf813e260526f7af5a38171b515c9"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a705cf813e260526f7af5a38171b515c9">apply</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, PreflightChecks &amp;&amp;preflightChecks)</td></tr>
-<tr class="separator:a705cf813e260526f7af5a38171b515c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab402f45260ac0df9c30f66a1d1a4f65f" id="r_ab402f45260ac0df9c30f66a1d1a4f65f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab402f45260ac0df9c30f66a1d1a4f65f">apply</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> const &amp;parentBatchId, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
-<tr class="separator:ab402f45260ac0df9c30f66a1d1a4f65f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac667a5945a45c47dbc03ec78a25bc9be" id="r_ac667a5945a45c47dbc03ec78a25bc9be"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ac667a5945a45c47dbc03ec78a25bc9be">applyBatchTransactions</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;batchView, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;batchTxn, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
-<tr class="separator:ac667a5945a45c47dbc03ec78a25bc9be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0950852805d12317469223ddaa4e6f0a" id="r_a0950852805d12317469223ddaa4e6f0a"><td class="memTemplParams" colspan="2">template&lt;typename PreflightChecks &gt; </td></tr>
+<tr class="memitem:a0950852805d12317469223ddaa4e6f0a"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a0950852805d12317469223ddaa4e6f0a">apply</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, PreflightChecks &amp;&amp;preflightChecks)</td></tr>
+<tr class="separator:a0950852805d12317469223ddaa4e6f0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11a585700b189cbb6af4763146832352" id="r_a11a585700b189cbb6af4763146832352"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a11a585700b189cbb6af4763146832352">apply</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;view, <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> const &amp;parentBatchId, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
+<tr class="separator:a11a585700b189cbb6af4763146832352"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7df112aa8cf89f22e2691bdb02d7f24" id="r_ab7df112aa8cf89f22e2691bdb02d7f24"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab7df112aa8cf89f22e2691bdb02d7f24">applyBatchTransactions</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1OpenView.html">OpenView</a> &amp;batchView, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;batchTxn, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
+<tr class="separator:ab7df112aa8cf89f22e2691bdb02d7f24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cd38ceed9e241ff75127db500410d46" id="r_a8cd38ceed9e241ff75127db500410d46"><td class="memTemplParams" colspan="2">template&lt;class T &gt; <br />
 requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.html#a9420945fd34d224b81b68fd3dcc9fed6a325a214ee7e0a8b0a0ceb47477d57221">Transactor::Normal</a>)</td></tr>
 <tr class="memitem:a8cd38ceed9e241ff75127db500410d46"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classxrpl_1_1TxConsequences.html">TxConsequences</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a8cd38ceed9e241ff75127db500410d46">consequences_helper</a> (<a class="el" href="structxrpl_1_1PreflightContext.html">PreflightContext</a> const &amp;ctx)</td></tr>
@@ -5266,8 +5272,8 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 <tr class="separator:a8b9e84d81b7b05b5577472e289e26da7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac90a7eb2de480a0019a72604081e94a2" id="r_ac90a7eb2de480a0019a72604081e94a2"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ac90a7eb2de480a0019a72604081e94a2">signerCountBasedOwnerCountDelta</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> entryCount, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules)</td></tr>
 <tr class="separator:ac90a7eb2de480a0019a72604081e94a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6bd8b4aa30f6e1e06c854e60def4d41" id="r_ab6bd8b4aa30f6e1e06c854e60def4d41"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ab6bd8b4aa30f6e1e06c854e60def4d41">removeSignersFromLedger</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1ApplyView.html">ApplyView</a> &amp;view, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;accountKeylet, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;ownerDirKeylet, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;signerListKeylet, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
-<tr class="separator:ab6bd8b4aa30f6e1e06c854e60def4d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4766403ff3d2bb213676e84ad49fc02" id="r_af4766403ff3d2bb213676e84ad49fc02"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#af4766403ff3d2bb213676e84ad49fc02">removeSignersFromLedger</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1ApplyView.html">ApplyView</a> &amp;view, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;accountKeylet, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;ownerDirKeylet, <a class="el" href="structxrpl_1_1Keylet.html">Keylet</a> const &amp;signerListKeylet, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
+<tr class="separator:af4766403ff3d2bb213676e84ad49fc02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad77fd2d5f791aaef5ee80e4820410b7e" id="r_ad77fd2d5f791aaef5ee80e4820410b7e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacexrpl.html#aec5bc721e24f63bb2c1a542f6f456b33">NotTEC</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#ad77fd2d5f791aaef5ee80e4820410b7e">preflight0</a> (<a class="el" href="structxrpl_1_1PreflightContext.html">PreflightContext</a> const &amp;ctx, <a class="elRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::uint32_t</a> flagMask)</td></tr>
 <tr class="memdesc:ad77fd2d5f791aaef5ee80e4820410b7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs early sanity checks on the txid.  <br /></td></tr>
 <tr class="separator:ad77fd2d5f791aaef5ee80e4820410b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -5913,11 +5919,11 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 <tr class="memitem:a71bf372517343ab83898dce8f6ff59dc" id="r_a71bf372517343ab83898dce8f6ff59dc"><td class="memItemLeft" align="right" valign="top"><a class="elRef" href="http://en.cppreference.com/w/cpp/utility/optional.html">std::optional</a>&lt; <a class="el" href="classxrpl_1_1SHAMapNodeID.html">SHAMapNodeID</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a71bf372517343ab83898dce8f6ff59dc">deserializeSHAMapNodeID</a> (<a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> const &amp;s)</td></tr>
 <tr class="separator:a71bf372517343ab83898dce8f6ff59dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader"></div></td></tr>
-<tr class="memitem:a4b9cd90d78d04b423badb0d09d7861d6" id="r_a4b9cd90d78d04b423badb0d09d7861d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6">preflight</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
-<tr class="memdesc:a4b9cd90d78d04b423badb0d09d7861d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gate a transaction based on static information.  <br /></td></tr>
-<tr class="separator:a4b9cd90d78d04b423badb0d09d7861d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d29bfdd8af2b2cc1703943bfe648d5f" id="r_a8d29bfdd8af2b2cc1703943bfe648d5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a8d29bfdd8af2b2cc1703943bfe648d5f">preflight</a> (<a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;app, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> const &amp;parentBatchId, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
-<tr class="separator:a8d29bfdd8af2b2cc1703943bfe648d5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d31b57cb134b0ca7fdc966dcdf5ca80" id="r_a1d31b57cb134b0ca7fdc966dcdf5ca80"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80">preflight</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
+<tr class="memdesc:a1d31b57cb134b0ca7fdc966dcdf5ca80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gate a transaction based on static information.  <br /></td></tr>
+<tr class="separator:a1d31b57cb134b0ca7fdc966dcdf5ca80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e79a75a60ca3111d41c32764af539d4" id="r_a2e79a75a60ca3111d41c32764af539d4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacexrpl.html#a2e79a75a60ca3111d41c32764af539d4">preflight</a> (<a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;registry, <a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;rules, <a class="el" href="namespacexrpl.html#a76c892803711595bd0d3cf6fbedf028a">uint256</a> const &amp;parentBatchId, <a class="el" href="classxrpl_1_1STTx.html">STTx</a> const &amp;tx, <a class="el" href="namespacexrpl.html#abd040209899a4fb5e9c298f9156a074e">ApplyFlags</a> flags, <a class="el" href="classbeast_1_1Journal.html">beast::Journal</a> j)</td></tr>
+<tr class="separator:a2e79a75a60ca3111d41c32764af539d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -7016,7 +7022,7 @@ template&lt;class Value , class Hash  = hardened_hash&lt;strong_hash&gt;, class 
 
 <p>Alias for RCL-specific instantiation of generic <a class="el" href="classxrpl_1_1Validations.html" title="Maintains current and recent ledger validations.">Validations</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00062">62</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00063">63</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
 
 </div>
 </div>
@@ -7032,7 +7038,7 @@ template&lt;class Value , class Hash  = hardened_hash&lt;strong_hash&gt;, class 
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00064">64</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ServiceRegistry_8h_source.html#l00065">65</a> of file <a class="el" href="ServiceRegistry_8h_source.html">ServiceRegistry.h</a>.</p>
 
 </div>
 </div>
@@ -10960,7 +10966,7 @@ ledger.
 </div><div class="memdoc">
 
 <p>Describes the pre-processing validity of a transaction. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#ab7f888d175b43e5240a918418ffd5bb7" title="Checks transaction signature and local checks.">checkValidity</a>, <a class="el" href="namespacexrpl.html#adc7af7b42998ca2c58721ada3326f709" title="Sets the validity of a given transaction in the cache.">forceValidity</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a39c35e5d53d22e30012bcc438287e987" title="Checks transaction signature and local checks.">checkValidity</a>, <a class="el" href="namespacexrpl.html#adc7af7b42998ca2c58721ada3326f709" title="Sets the validity of a given transaction in the cache.">forceValidity</a> </dd></dl>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a2aa76dac53b5e6a5517ed343dd592b51a1e2ba91f36984d755d5edb5bf58ae60c" name="a2aa76dac53b5e6a5517ed343dd592b51a1e2ba91f36984d755d5edb5bf58ae60c"></a>SigBad&#160;</td><td class="fielddoc"><p>Signature is bad. Didn't do local checks. </p>
 </td></tr>
@@ -10995,7 +11001,7 @@ ledger.
 </div><div class="memdoc">
 
 <p>Enum class for return value from <code>applyTransaction</code> </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a3d5f489c3893ed5beccbd915e0e36add" title="Transaction application helper.">applyTransaction</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a374a3876e33e8ecf8bfc40946acc41c0" title="Transaction application helper.">applyTransaction</a> </dd></dl>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a4cbb7567b1f1ba856f834eb7657cf049a505a83f220c02df2f85c3810cd9ceb38" name="a4cbb7567b1f1ba856f834eb7657cf049a505a83f220c02df2f85c3810cd9ceb38"></a>Success&#160;</td><td class="fielddoc"><p>Applied to this ledger. </p>
 </td></tr>
@@ -26637,7 +26643,7 @@ template&lt;class U &gt; </div>
 
 <p>Associate an <a class="el" href="classxrpl_1_1Asset.html">Asset</a> with all sMD_NeedsAsset fields in a ledger entry. </p>
 <p>This function iterates over all fields in the given ledger entry. For each field that is set and has the <a class="el" href="classxrpl_1_1SField.html#a1adce4853839b9550840b37a4d5f96d8adba819e79787d5f50b81d01b58fbebf9">SField::sMD_NeedsAsset</a> metadata flag, it calls <code>associateAsset</code> on that field with the given <a class="el" href="classxrpl_1_1Asset.html">Asset</a>. Such field must be derived from <a class="el" href="classxrpl_1_1STTakesAsset.html" title="Intermediate class for any STBase-derived class to store an Asset.">STTakesAsset</a> - if it is not, the conversion will throw.</p>
-<p>Typically, associateAsset should be called near the end of <a class="el" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096" title="Apply a prechecked transaction to an OpenView.">doApply()</a> of any <a class="el" href="classxrpl_1_1Transactor.html">Transactor</a> classes on the SLEs of any new or modified ledger entries containing <a class="el" href="classxrpl_1_1STNumber.html" title="A serializable number.">STNumber</a> fields, after doing all of the modifications t the SLEs.</p>
+<p>Typically, associateAsset should be called near the end of <a class="el" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57" title="Apply a prechecked transaction to an OpenView.">doApply()</a> of any <a class="el" href="classxrpl_1_1Transactor.html">Transactor</a> classes on the SLEs of any new or modified ledger entries containing <a class="el" href="classxrpl_1_1STNumber.html" title="A serializable number.">STNumber</a> fields, after doing all of the modifications t the SLEs.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">sle</td><td>The ledger entry whose fields will be updated. </td></tr>
@@ -36460,7 +36466,7 @@ template&lt;class Hasher , class... Args&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The newly built ledger </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00156">156</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00157">157</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
 
 </div>
 </div>
@@ -36515,7 +36521,7 @@ template&lt;class Hasher , class... Args&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The newly built ledger </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00193">193</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00194">194</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
 
 </div>
 </div>
@@ -36577,7 +36583,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00020">20</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00021">21</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
 
 </div>
 </div>
@@ -36644,7 +36650,7 @@ template&lt;class ApplyTxs &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>number of transactions applied; transactions to retry left in txns </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00077">77</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="BuildLedger_8cpp_source.html#l00078">78</a> of file <a class="el" href="BuildLedger_8cpp_source.html">BuildLedger.cpp</a>.</p>
 
 </div>
 </div>
@@ -37670,7 +37676,7 @@ template&lt;class ApplyTxs &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02012">2012</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02022">2022</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
 
 </div>
 </div>
@@ -37706,7 +37712,7 @@ template&lt;class ApplyTxs &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02006">2006</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Application_8cpp_source.html#l02016">2016</a> of file <a class="el" href="Application_8cpp_source.html">Application.cpp</a>.</p>
 
 </div>
 </div>
@@ -39785,7 +39791,7 @@ template&lt;typename A &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTxPaging_8cpp_source.html#l00011">11</a> of file <a class="el" href="AccountTxPaging_8cpp_source.html">AccountTxPaging.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTxPaging_8cpp_source.html#l00012">12</a> of file <a class="el" href="AccountTxPaging_8cpp_source.html">AccountTxPaging.cpp</a>.</p>
 
 </div>
 </div>
@@ -39815,7 +39821,7 @@ template&lt;typename A &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="AccountTxPaging_8cpp_source.html#l00041">41</a> of file <a class="el" href="AccountTxPaging_8cpp_source.html">AccountTxPaging.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="AccountTxPaging_8cpp_source.html#l00042">42</a> of file <a class="el" href="AccountTxPaging_8cpp_source.html">AccountTxPaging.cpp</a>.</p>
 
 </div>
 </div>
@@ -43536,8 +43542,8 @@ template&lt;class FlowResult &gt; </div>
 
 </div>
 </div>
-<a id="ab7f888d175b43e5240a918418ffd5bb7" name="ab7f888d175b43e5240a918418ffd5bb7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab7f888d175b43e5240a918418ffd5bb7">&#9670;&#160;</a></span>checkValidity()</h2>
+<a id="a39c35e5d53d22e30012bcc438287e987" name="a39c35e5d53d22e30012bcc438287e987"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39c35e5d53d22e30012bcc438287e987">&#9670;&#160;</a></span>checkValidity()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43558,13 +43564,7 @@ template&lt;class FlowResult &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classxrpl_1_1Rules.html">Rules</a> const &amp;&#160;</td>
-          <td class="paramname"><em>rules</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Config.html">Config</a> const &amp;&#160;</td>
-          <td class="paramname"><em>config</em>&#160;</td>
+          <td class="paramname"><em>rules</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -43619,14 +43619,14 @@ template&lt;class FlowResult &gt; </div>
 <p>Sets the validity of a given transaction in the cache. </p>
 <dl class="section warning"><dt>Warning</dt><dd>Use with extreme care.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>Can only raise the validity to a more valid state, and can not override anything cached bad.</dd></dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#ab7f888d175b43e5240a918418ffd5bb7" title="Checks transaction signature and local checks.">checkValidity</a>, <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51" title="Describes the pre-processing validity of a transaction.">Validity</a> </dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a39c35e5d53d22e30012bcc438287e987" title="Checks transaction signature and local checks.">checkValidity</a>, <a class="el" href="namespacexrpl.html#a2aa76dac53b5e6a5517ed343dd592b51" title="Describes the pre-processing validity of a transaction.">Validity</a> </dd></dl>
 
 <p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00090">90</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a2865f3dcffed48449f79d264e63cdac1" name="a2865f3dcffed48449f79d264e63cdac1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2865f3dcffed48449f79d264e63cdac1">&#9670;&#160;</a></span>apply() <span class="overload">[1/3]</span></h2>
+<a id="a2c318c5aec1ecc88400ec2df847d184a" name="a2c318c5aec1ecc88400ec2df847d184a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c318c5aec1ecc88400ec2df847d184a">&#9670;&#160;</a></span>apply() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43634,8 +43634,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a> xrpl::apply </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -43670,10 +43670,10 @@ template&lt;class FlowResult &gt; </div>
 </div><div class="memdoc">
 
 <p>Apply a transaction to an <code><a class="el" href="classxrpl_1_1OpenView.html" title="Writable ledger view that accumulates state and tx changes.">OpenView</a></code>. </p>
-<p>This function is the canonical way to apply a transaction to a ledger. It rolls the validation and application steps into one function. To do the steps manually, the correct calling order is: </p><div class="fragment"><div class="line"><a class="code hl_function" href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6">preflight</a> -&gt; <a class="code hl_function" href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1">preclaim</a> -&gt; <a class="code hl_function" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096">doApply</a></div>
-<div class="ttc" id="anamespacexrpl_html_a4b9cd90d78d04b423badb0d09d7861d6"><div class="ttname"><a href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6">xrpl::preflight</a></div><div class="ttdeci">PreflightResult preflight(Application &amp;app, Rules const &amp;rules, STTx const &amp;tx, ApplyFlags flags, beast::Journal j)</div><div class="ttdoc">Gate a transaction based on static information.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00295">applySteps.cpp:295</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_ab5ea11300fb9863c37c3408ece861096"><div class="ttname"><a href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096">xrpl::doApply</a></div><div class="ttdeci">ApplyResult doApply(PreclaimResult const &amp;preclaimResult, Application &amp;app, OpenView &amp;view)</div><div class="ttdoc">Apply a prechecked transaction to an OpenView.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00396">applySteps.cpp:396</a></div></div>
-<div class="ttc" id="anamespacexrpl_html_acb93b94d268f91feb3070b53f8ac42d1"><div class="ttname"><a href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1">xrpl::preclaim</a></div><div class="ttdeci">PreclaimResult preclaim(PreflightResult const &amp;preflightResult, Application &amp;app, OpenView const &amp;view)</div><div class="ttdoc">Gate a transaction based on static ledger information.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00331">applySteps.cpp:331</a></div></div>
+<p>This function is the canonical way to apply a transaction to a ledger. It rolls the validation and application steps into one function. To do the steps manually, the correct calling order is: </p><div class="fragment"><div class="line"><a class="code hl_function" href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80">preflight</a> -&gt; <a class="code hl_function" href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c">preclaim</a> -&gt; <a class="code hl_function" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57">doApply</a></div>
+<div class="ttc" id="anamespacexrpl_html_a1d31b57cb134b0ca7fdc966dcdf5ca80"><div class="ttname"><a href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80">xrpl::preflight</a></div><div class="ttdeci">PreflightResult preflight(ServiceRegistry &amp;registry, Rules const &amp;rules, STTx const &amp;tx, ApplyFlags flags, beast::Journal j)</div><div class="ttdoc">Gate a transaction based on static information.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00296">applySteps.cpp:296</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_a26bed69a9cae2c41a932fc29c07ccf5c"><div class="ttname"><a href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c">xrpl::preclaim</a></div><div class="ttdeci">PreclaimResult preclaim(PreflightResult const &amp;preflightResult, ServiceRegistry &amp;registry, OpenView const &amp;view)</div><div class="ttdoc">Gate a transaction based on static ledger information.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00332">applySteps.cpp:332</a></div></div>
+<div class="ttc" id="anamespacexrpl_html_ae433e0d2afa8c5e0d2ceb2e931db6c57"><div class="ttname"><a href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57">xrpl::doApply</a></div><div class="ttdeci">ApplyResult doApply(PreclaimResult const &amp;preclaimResult, ServiceRegistry &amp;registry, OpenView &amp;view)</div><div class="ttdoc">Apply a prechecked transaction to an OpenView.</div><div class="ttdef"><b>Definition</b> <a href="applySteps_8cpp_source.html#l00397">applySteps.cpp:397</a></div></div>
 </div><!-- fragment --><p> The result of one function must be passed to the next. The <code>preflight</code> result can be safely cached and reused asynchronously, but <code>preclaim</code> and <code>doApply</code> must be called in the same thread and with the same view.</p>
 <dl class="section note"><dt>Note</dt><dd>Does not throw.</dd></dl>
 <p>For open ledgers, the <code><a class="el" href="classxrpl_1_1Transactor.html">Transactor</a></code> will catch exceptions and return <code>tefEXCEPTION</code>. For closed ledgers, the <code><a class="el" href="classxrpl_1_1Transactor.html">Transactor</a></code> will attempt to only charge a fee, and return <code>tecFAILED_PROCESSING</code>.</p>
@@ -43689,15 +43689,15 @@ template&lt;class FlowResult &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096" title="Apply a prechecked transaction to an OpenView.">doApply</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57" title="Apply a prechecked transaction to an OpenView.">doApply</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>A pair with the <code>TER</code> and a <code>bool</code> indicating whether or not the transaction was applied. </dd></dl>
 
 <p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00118">118</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a3d5f489c3893ed5beccbd915e0e36add" name="a3d5f489c3893ed5beccbd915e0e36add"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d5f489c3893ed5beccbd915e0e36add">&#9670;&#160;</a></span>applyTransaction()</h2>
+<a id="a374a3876e33e8ecf8bfc40946acc41c0" name="a374a3876e33e8ecf8bfc40946acc41c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a374a3876e33e8ecf8bfc40946acc41c0">&#9670;&#160;</a></span>applyTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43705,8 +43705,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="namespacexrpl.html#a4cbb7567b1f1ba856f834eb7657cf049">ApplyTransactionResult</a> xrpl::applyTransaction </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -43750,7 +43750,7 @@ template&lt;class FlowResult &gt; </div>
 <p>Provides more detailed logging and decodes the correct behavior based on the <code>TER</code> type</p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a4cbb7567b1f1ba856f834eb7657cf049" title="Enum class for return value from applyTransaction">ApplyTransactionResult</a> </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00191">191</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00192">192</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
 
 </div>
 </div>
@@ -43786,8 +43786,8 @@ template&lt;class FlowResult &gt; </div>
 
 </div>
 </div>
-<a id="a4b9cd90d78d04b423badb0d09d7861d6" name="a4b9cd90d78d04b423badb0d09d7861d6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b9cd90d78d04b423badb0d09d7861d6">&#9670;&#160;</a></span>preflight() <span class="overload">[1/2]</span></h2>
+<a id="a1d31b57cb134b0ca7fdc966dcdf5ca80" name="a1d31b57cb134b0ca7fdc966dcdf5ca80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d31b57cb134b0ca7fdc966dcdf5ca80">&#9670;&#160;</a></span>preflight() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43795,8 +43795,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a> xrpl::preflight </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -43842,15 +43842,15 @@ template&lt;class FlowResult &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structxrpl_1_1PreflightResult.html" title="Describes the results of the preflight check.">PreflightResult</a>, <a class="el" href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096" title="Apply a prechecked transaction to an OpenView.">doApply</a>, <a class="el" href="namespacexrpl.html#a2865f3dcffed48449f79d264e63cdac1" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structxrpl_1_1PreflightResult.html" title="Describes the results of the preflight check.">PreflightResult</a>, <a class="el" href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57" title="Apply a prechecked transaction to an OpenView.">doApply</a>, <a class="el" href="namespacexrpl.html#a2c318c5aec1ecc88400ec2df847d184a" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>A <code><a class="el" href="structxrpl_1_1PreflightResult.html" title="Describes the results of the preflight check.">PreflightResult</a></code> object containing, among other things, the <code>TER</code> code. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00295">295</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00296">296</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
-<a id="a8d29bfdd8af2b2cc1703943bfe648d5f" name="a8d29bfdd8af2b2cc1703943bfe648d5f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d29bfdd8af2b2cc1703943bfe648d5f">&#9670;&#160;</a></span>preflight() <span class="overload">[2/2]</span></h2>
+<a id="a2e79a75a60ca3111d41c32764af539d4" name="a2e79a75a60ca3111d41c32764af539d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e79a75a60ca3111d41c32764af539d4">&#9670;&#160;</a></span>preflight() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43858,8 +43858,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structxrpl_1_1PreflightResult.html">PreflightResult</a> xrpl::preflight </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -43899,12 +43899,12 @@ template&lt;class FlowResult &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00310">310</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00311">311</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
-<a id="acb93b94d268f91feb3070b53f8ac42d1" name="acb93b94d268f91feb3070b53f8ac42d1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acb93b94d268f91feb3070b53f8ac42d1">&#9670;&#160;</a></span>preclaim()</h2>
+<a id="a26bed69a9cae2c41a932fc29c07ccf5c" name="a26bed69a9cae2c41a932fc29c07ccf5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26bed69a9cae2c41a932fc29c07ccf5c">&#9670;&#160;</a></span>preclaim()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -43918,8 +43918,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -43948,10 +43948,10 @@ template&lt;class FlowResult &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structxrpl_1_1PreclaimResult.html" title="Describes the results of the preclaim check.">PreclaimResult</a>, <a class="el" href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#ab5ea11300fb9863c37c3408ece861096" title="Apply a prechecked transaction to an OpenView.">doApply</a>, <a class="el" href="namespacexrpl.html#a2865f3dcffed48449f79d264e63cdac1" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structxrpl_1_1PreclaimResult.html" title="Describes the results of the preclaim check.">PreclaimResult</a>, <a class="el" href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#ae433e0d2afa8c5e0d2ceb2e931db6c57" title="Apply a prechecked transaction to an OpenView.">doApply</a>, <a class="el" href="namespacexrpl.html#a2c318c5aec1ecc88400ec2df847d184a" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>A <code><a class="el" href="structxrpl_1_1PreclaimResult.html" title="Describes the results of the preclaim check.">PreclaimResult</a></code> object containing, among other things the <code>TER</code> code and the base fee value for this transaction. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00331">331</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00332">332</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -43994,7 +43994,7 @@ template&lt;class FlowResult &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The base fee. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00384">384</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00385">385</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44035,12 +44035,12 @@ template&lt;class FlowResult &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The base fee in <a class="el" href="classxrpl_1_1XRPAmount.html">XRPAmount</a>. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00390">390</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00391">391</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
-<a id="ab5ea11300fb9863c37c3408ece861096" name="ab5ea11300fb9863c37c3408ece861096"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5ea11300fb9863c37c3408ece861096">&#9670;&#160;</a></span>doApply()</h2>
+<a id="ae433e0d2afa8c5e0d2ceb2e931db6c57" name="ae433e0d2afa8c5e0d2ceb2e931db6c57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae433e0d2afa8c5e0d2ceb2e931db6c57">&#9670;&#160;</a></span>doApply()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -44054,8 +44054,8 @@ template&lt;class FlowResult &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -44076,15 +44076,15 @@ template&lt;class FlowResult &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">preclaimResult</td><td>The result of a previous call to <code>preclaim</code> for the transaction. </td></tr>
-    <tr><td class="paramname">app</td><td>The current running <code><a class="el" href="classxrpl_1_1Application.html">Application</a></code>. </td></tr>
+    <tr><td class="paramname">registry</td><td>The service registry. </td></tr>
     <tr><td class="paramname">view</td><td>The open ledger that the transaction will attempt to be applied to.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a4b9cd90d78d04b423badb0d09d7861d6" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#acb93b94d268f91feb3070b53f8ac42d1" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#a2865f3dcffed48449f79d264e63cdac1" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="namespacexrpl.html#a1d31b57cb134b0ca7fdc966dcdf5ca80" title="Gate a transaction based on static information.">preflight</a>, <a class="el" href="namespacexrpl.html#a26bed69a9cae2c41a932fc29c07ccf5c" title="Gate a transaction based on static ledger information.">preclaim</a>, <a class="el" href="namespacexrpl.html#a2c318c5aec1ecc88400ec2df847d184a" title="Apply a transaction to an OpenView.">apply</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>A pair with the <code>TER</code> and a <code>bool</code> indicating whether or not the transaction was applied. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00396">396</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00397">397</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44376,8 +44376,8 @@ template&lt;class FlowResult &gt; </div>
 
 </div>
 </div>
-<a id="a705cf813e260526f7af5a38171b515c9" name="a705cf813e260526f7af5a38171b515c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a705cf813e260526f7af5a38171b515c9">&#9670;&#160;</a></span>apply() <span class="overload">[2/3]</span></h2>
+<a id="a0950852805d12317469223ddaa4e6f0a" name="a0950852805d12317469223ddaa4e6f0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0950852805d12317469223ddaa4e6f0a">&#9670;&#160;</a></span>apply() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -44387,8 +44387,8 @@ template&lt;typename PreflightChecks &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a> xrpl::apply </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -44414,8 +44414,8 @@ template&lt;typename PreflightChecks &gt; </div>
 
 </div>
 </div>
-<a id="ab402f45260ac0df9c30f66a1d1a4f65f" name="ab402f45260ac0df9c30f66a1d1a4f65f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab402f45260ac0df9c30f66a1d1a4f65f">&#9670;&#160;</a></span>apply() <span class="overload">[3/3]</span></h2>
+<a id="a11a585700b189cbb6af4763146832352" name="a11a585700b189cbb6af4763146832352"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11a585700b189cbb6af4763146832352">&#9670;&#160;</a></span>apply() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -44423,8 +44423,8 @@ template&lt;typename PreflightChecks &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="structxrpl_1_1ApplyResult.html">ApplyResult</a> xrpl::apply </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -44468,8 +44468,8 @@ template&lt;typename PreflightChecks &gt; </div>
 
 </div>
 </div>
-<a id="ac667a5945a45c47dbc03ec78a25bc9be" name="ac667a5945a45c47dbc03ec78a25bc9be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac667a5945a45c47dbc03ec78a25bc9be">&#9670;&#160;</a></span>applyBatchTransactions()</h2>
+<a id="ab7df112aa8cf89f22e2691bdb02d7f24" name="ab7df112aa8cf89f22e2691bdb02d7f24"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7df112aa8cf89f22e2691bdb02d7f24">&#9670;&#160;</a></span>applyBatchTransactions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -44480,8 +44480,8 @@ template&lt;typename PreflightChecks &gt; </div>
         <tr>
           <td class="memname">static bool xrpl::applyBatchTransactions </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -44514,7 +44514,7 @@ template&lt;typename PreflightChecks &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00136">136</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="apply_8cpp_source.html#l00137">137</a> of file <a class="el" href="apply_8cpp_source.html">apply.cpp</a>.</p>
 
 </div>
 </div>
@@ -44537,7 +44537,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00102">102</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00103">103</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44560,7 +44560,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00111">111</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00112">112</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44583,7 +44583,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00120">120</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00121">121</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44611,7 +44611,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00127">127</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00128">128</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44639,7 +44639,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00148">148</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00149">149</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44694,7 +44694,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00223">223</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00224">224</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -44722,7 +44722,7 @@ requires (T::ConsequencesFactory == <a class="el" href="classxrpl_1_1Transactor.
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00274">274</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="applySteps_8cpp_source.html#l00275">275</a> of file <a class="el" href="applySteps_8cpp_source.html">applySteps.cpp</a>.</p>
 
 </div>
 </div>
@@ -46869,8 +46869,8 @@ template&lt;class TIn , class TOut &gt; </div>
 
 </div>
 </div>
-<a id="ab6bd8b4aa30f6e1e06c854e60def4d41" name="ab6bd8b4aa30f6e1e06c854e60def4d41"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6bd8b4aa30f6e1e06c854e60def4d41">&#9670;&#160;</a></span>removeSignersFromLedger()</h2>
+<a id="af4766403ff3d2bb213676e84ad49fc02" name="af4766403ff3d2bb213676e84ad49fc02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4766403ff3d2bb213676e84ad49fc02">&#9670;&#160;</a></span>removeSignersFromLedger()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -46881,8 +46881,8 @@ template&lt;class TIn , class TOut &gt; </div>
         <tr>
           <td class="memname">static <a class="el" href="namespacexrpl.html#a89ce254d202a943d2f5bad19d88787a5">TER</a> xrpl::removeSignersFromLedger </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classxrpl_1_1Application.html">Application</a> &amp;&#160;</td>
-          <td class="paramname"><em>app</em>, </td>
+          <td class="paramtype"><a class="el" href="classxrpl_1_1ServiceRegistry.html">ServiceRegistry</a> &amp;&#160;</td>
+          <td class="paramname"><em>registry</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -46960,7 +46960,7 @@ template&lt;class TIn , class TOut &gt; </div>
 <p>Performs early sanity checks on the txid. </p>
 <p>Performs early sanity checks on the txid and flags. </p>
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00024">24</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00025">25</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -47004,7 +47004,7 @@ template&lt;class TIn , class TOut &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00917">917</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00918">918</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -47048,7 +47048,7 @@ template&lt;class TIn , class TOut &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00934">934</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00935">935</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -47092,7 +47092,7 @@ template&lt;class TIn , class TOut &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00950">950</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00951">951</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -47136,7 +47136,7 @@ template&lt;class TIn , class TOut &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00960">960</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Transactor_8cpp_source.html#l00961">961</a> of file <a class="el" href="Transactor_8cpp_source.html">Transactor.cpp</a>.</p>
 
 </div>
 </div>
@@ -52181,7 +52181,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00271">271</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00272">272</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -52301,7 +52301,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00243">243</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00244">244</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54065,7 +54065,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00022">22</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00023">23</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -54093,7 +54093,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00052">52</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00053">53</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -54131,7 +54131,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00104">104</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00105">105</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -54159,7 +54159,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00140">140</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00141">141</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -54197,7 +54197,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00199">199</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Simulate_8cpp_source.html#l00200">200</a> of file <a class="el" href="Simulate_8cpp_source.html">Simulate.cpp</a>.</p>
 
 </div>
 </div>
@@ -54269,7 +54269,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00025">25</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00026">26</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54299,7 +54299,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00056">56</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00057">57</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -54335,7 +54335,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00161">161</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="Tx_8cpp_source.html#l00162">162</a> of file <a class="el" href="Tx_8cpp_source.html">Tx.cpp</a>.</p>
 
 </div>
 </div>
@@ -60835,7 +60835,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00785">785</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00786">786</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
 
 </div>
 </div>
@@ -60864,7 +60864,7 @@ template&lt;class T &gt; </div>
 <div class="ttc" id="anamespacexrpl_html_a6b687dd3d02cbeece0e7487fd7aed97c"><div class="ttname"><a href="namespacexrpl.html#a6b687dd3d02cbeece0e7487fd7aed97c">xrpl::generateKeyPair</a></div><div class="ttdeci">std::pair&lt; PublicKey, SecretKey &gt; generateKeyPair(KeyType type, Seed const &amp;seed)</div><div class="ttdoc">Generate a key pair deterministically.</div><div class="ttdef"><b>Definition</b> <a href="SecretKey_8cpp_source.html#l00330">SecretKey.cpp:330</a></div></div>
 <div class="ttc" id="anamespacexrpl_html_ab093a644b3a32b6d19551d5d5eec17cf"><div class="ttname"><a href="namespacexrpl.html#ab093a644b3a32b6d19551d5d5eec17cf">xrpl::calcAccountID</a></div><div class="ttdeci">AccountID calcAccountID(PublicKey const &amp;pk)</div><div class="ttdef"><b>Definition</b> <a href="AccountID_8cpp_source.html#l00146">AccountID.cpp:146</a></div></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00796">796</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="NetworkOPs_8cpp_source.html#l00797">797</a> of file <a class="el" href="NetworkOPs_8cpp_source.html">NetworkOPs.cpp</a>.</p>
 
 </div>
 </div>
