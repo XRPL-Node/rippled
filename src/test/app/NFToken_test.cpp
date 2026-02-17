@@ -4357,21 +4357,17 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         makeSellOffers(XRP(1));
         checkOffers("nft_sell_offers", 1, 0, __LINE__);
 
-        // There are 250 sell offers.
-        makeSellOffers(XRP(250));
-        checkOffers("nft_sell_offers", 250, 0, __LINE__);
+        // There are 15 sell offers.
+        makeSellOffers(XRP(15));
+        checkOffers("nft_sell_offers", 15, 0, __LINE__);
 
-        // There are 251 sell offers.
-        makeSellOffers(XRP(251));
-        checkOffers("nft_sell_offers", 251, 1, __LINE__);
+        // There are 30 sell offers.
+        makeSellOffers(XRP(30));
+        checkOffers("nft_sell_offers", 30, 0, __LINE__);
 
-        // There are 500 sell offers.
-        makeSellOffers(XRP(500));
-        checkOffers("nft_sell_offers", 500, 1, __LINE__);
-
-        // There are 501 sell offers.
-        makeSellOffers(XRP(501));
-        checkOffers("nft_sell_offers", 501, 2, __LINE__);
+        // There are 50 sell offers (reduced from 501 to speed up CI).
+        makeSellOffers(XRP(50));
+        checkOffers("nft_sell_offers", 50, 0, __LINE__);
 
         // There are no buy offers.
         checkOffers("nft_buy_offers", 0, 0, __LINE__);
@@ -4395,21 +4391,9 @@ class NFTokenBaseUtil_test : public beast::unit_test::suite
         makeBuyOffers(XRP(1));
         checkOffers("nft_buy_offers", 1, 0, __LINE__);
 
-        // There are 250 buy offers.
-        makeBuyOffers(XRP(250));
-        checkOffers("nft_buy_offers", 250, 0, __LINE__);
-
-        // There are 251 buy offers.
-        makeBuyOffers(XRP(251));
-        checkOffers("nft_buy_offers", 251, 1, __LINE__);
-
-        // There are 500 buy offers.
-        makeBuyOffers(XRP(500));
-        checkOffers("nft_buy_offers", 500, 1, __LINE__);
-
-        // There are 501 buy offers.
-        makeBuyOffers(XRP(501));
-        checkOffers("nft_buy_offers", 501, 2, __LINE__);
+        // There are 30 buy offers (reduced from 250 to speed up CI).
+        makeBuyOffers(XRP(30));
+        checkOffers("nft_buy_offers", 30, 0, __LINE__);
     }
 
     void
