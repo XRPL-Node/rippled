@@ -917,6 +917,8 @@ Worker::run()
 
 ## 4.6 Span Flow Visualization
 
+<div align="center">
+
 ```mermaid
 flowchart TB
     subgraph Client["External Client"]
@@ -955,12 +957,25 @@ flowchart TB
     txRecvC --> consensusC
     consensusC --> phaseC
 
-    style rpcA fill:#e3f2fd,stroke:#1976d2
-    style txRecvA fill:#e8f5e9,stroke:#388e3c
-    style txRecvB fill:#e8f5e9,stroke:#388e3c
-    style txRecvC fill:#e8f5e9,stroke:#388e3c
-    style consensusC fill:#fff3e0,stroke:#ff9800
+    style Client fill:#334155,stroke:#1e293b,color:#fff
+    style NodeA fill:#1e3a8a,stroke:#172554,color:#fff
+    style NodeB fill:#064e3b,stroke:#022c22,color:#fff
+    style NodeC fill:#78350f,stroke:#451a03,color:#fff
+    style submit fill:#e2e8f0,stroke:#cbd5e1,color:#1e293b
+    style rpcA fill:#1d4ed8,stroke:#1e40af,color:#fff
+    style cmdA fill:#1d4ed8,stroke:#1e40af,color:#fff
+    style txRecvA fill:#047857,stroke:#064e3b,color:#fff
+    style txValA fill:#047857,stroke:#064e3b,color:#fff
+    style txRelayA fill:#047857,stroke:#064e3b,color:#fff
+    style txRecvB fill:#047857,stroke:#064e3b,color:#fff
+    style txValB fill:#047857,stroke:#064e3b,color:#fff
+    style txRelayB fill:#047857,stroke:#064e3b,color:#fff
+    style txRecvC fill:#047857,stroke:#064e3b,color:#fff
+    style consensusC fill:#fef3c7,stroke:#fde68a,color:#1e293b
+    style phaseC fill:#fef3c7,stroke:#fde68a,color:#1e293b
 ```
+
+</div>
 
 ---
 

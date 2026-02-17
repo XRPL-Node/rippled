@@ -1,4 +1,4 @@
-# OpenTelemetry Distributed Tracing Implementation Plan for rippled (xrpld)
+# [OpenTelemetry](00-tracing-fundamentals.md) Distributed Tracing Implementation Plan for rippled (xrpld)
 
 ## Executive Summary
 
@@ -27,31 +27,33 @@ This document provides a comprehensive implementation plan for integrating OpenT
 
 This implementation plan is organized into modular documents for easier navigation:
 
+<div align="center">
+
 ```mermaid
 flowchart TB
     overview["📋 OpenTelemetryPlan.md<br/>(This Document)"]
-    
+
     subgraph analysis["Analysis & Design"]
         arch["01-architecture-analysis.md"]
         design["02-design-decisions.md"]
     end
-    
+
     subgraph impl["Implementation"]
         strategy["03-implementation-strategy.md"]
         code["04-code-samples.md"]
         config["05-configuration-reference.md"]
     end
-    
+
     subgraph deploy["Deployment & Planning"]
         phases["06-implementation-phases.md"]
         backends["07-observability-backends.md"]
         appendix["08-appendix.md"]
     end
-    
+
     overview --> analysis
     overview --> impl
     overview --> deploy
-    
+
     arch --> design
     design --> strategy
     strategy --> code
@@ -59,27 +61,37 @@ flowchart TB
     config --> phases
     phases --> backends
     backends --> appendix
-    
-    style overview fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style analysis fill:#e3f2fd,stroke:#1976d2
-    style impl fill:#fff3e0,stroke:#ff9800
-    style deploy fill:#f3e5f5,stroke:#7b1fa2
+
+    style overview fill:#1b5e20,stroke:#0d3d14,color:#fff,stroke-width:2px
+    style analysis fill:#0d47a1,stroke:#082f6a,color:#fff
+    style impl fill:#bf360c,stroke:#8c2809,color:#fff
+    style deploy fill:#4a148c,stroke:#2e0d57,color:#fff
+    style arch fill:#0d47a1,stroke:#082f6a,color:#fff
+    style design fill:#0d47a1,stroke:#082f6a,color:#fff
+    style strategy fill:#bf360c,stroke:#8c2809,color:#fff
+    style code fill:#bf360c,stroke:#8c2809,color:#fff
+    style config fill:#bf360c,stroke:#8c2809,color:#fff
+    style phases fill:#4a148c,stroke:#2e0d57,color:#fff
+    style backends fill:#4a148c,stroke:#2e0d57,color:#fff
+    style appendix fill:#4a148c,stroke:#2e0d57,color:#fff
 ```
+
+</div>
 
 ---
 
 ## Table of Contents
 
-| Section | Document | Description |
-| ------- | -------- | ----------- |
-| **1** | [Architecture Analysis](./01-architecture-analysis.md) | rippled component analysis, trace points, instrumentation priorities |
-| **2** | [Design Decisions](./02-design-decisions.md) | SDK selection, exporters, span naming, attributes, context propagation |
-| **3** | [Implementation Strategy](./03-implementation-strategy.md) | Directory structure, key principles, performance optimization |
-| **4** | [Code Samples](./04-code-samples.md) | Complete C++ implementation examples for all components |
-| **5** | [Configuration Reference](./05-configuration-reference.md) | rippled config, CMake integration, Collector configurations |
-| **6** | [Implementation Phases](./06-implementation-phases.md) | 5-phase timeline, tasks, risks, success metrics |
-| **7** | [Observability Backends](./07-observability-backends.md) | Backend selection guide and production architecture |
-| **8** | [Appendix](./08-appendix.md) | Glossary, references, version history |
+| Section | Document                                                   | Description                                                            |
+| ------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **1**   | [Architecture Analysis](./01-architecture-analysis.md)     | rippled component analysis, trace points, instrumentation priorities   |
+| **2**   | [Design Decisions](./02-design-decisions.md)               | SDK selection, exporters, span naming, attributes, context propagation |
+| **3**   | [Implementation Strategy](./03-implementation-strategy.md) | Directory structure, key principles, performance optimization          |
+| **4**   | [Code Samples](./04-code-samples.md)                       | Complete C++ implementation examples for all components                |
+| **5**   | [Configuration Reference](./05-configuration-reference.md) | rippled config, CMake integration, Collector configurations            |
+| **6**   | [Implementation Phases](./06-implementation-phases.md)     | 5-phase timeline, tasks, risks, success metrics                        |
+| **7**   | [Observability Backends](./07-observability-backends.md)   | Backend selection guide and production architecture                    |
+| **8**   | [Appendix](./08-appendix.md)                               | Glossary, references, version history                                  |
 
 ---
 
@@ -140,13 +152,13 @@ OpenTelemetry Collector configurations are provided for development (with Jaeger
 
 The implementation spans 9 weeks across 5 phases:
 
-| Phase | Duration | Focus | Key Deliverables |
-| ----- | -------- | ----- | ---------------- |
-| 1 | Weeks 1-2 | Core Infrastructure | SDK integration, Telemetry interface, Configuration |
-| 2 | Weeks 3-4 | RPC Tracing | HTTP context extraction, Handler instrumentation |
-| 3 | Weeks 5-6 | Transaction Tracing | Protocol Buffer context, Relay propagation |
-| 4 | Weeks 7-8 | Consensus Tracing | Round spans, Proposal/validation tracing |
-| 5 | Week 9 | Documentation | Runbook, Dashboards, Training |
+| Phase | Duration  | Focus               | Key Deliverables                                    |
+| ----- | --------- | ------------------- | --------------------------------------------------- |
+| 1     | Weeks 1-2 | Core Infrastructure | SDK integration, Telemetry interface, Configuration |
+| 2     | Weeks 3-4 | RPC Tracing         | HTTP context extraction, Handler instrumentation    |
+| 3     | Weeks 5-6 | Transaction Tracing | Protocol Buffer context, Relay propagation          |
+| 4     | Weeks 7-8 | Consensus Tracing   | Round spans, Proposal/validation tracing            |
+| 5     | Week 9    | Documentation       | Runbook, Dashboards, Training                       |
 
 **Total Effort**: 47 developer-days with 2 developers
 
@@ -173,4 +185,3 @@ The appendix contains a glossary of OpenTelemetry and rippled-specific terms, re
 ---
 
 *This document provides a comprehensive implementation plan for integrating OpenTelemetry distributed tracing into the rippled XRP Ledger node software. For detailed information on any section, follow the links to the corresponding sub-documents.*
-

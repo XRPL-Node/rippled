@@ -56,9 +56,9 @@ flowchart TB
     collector --> tempo
     collector --> elastic
 
-    style nodes fill:#e3f2fd,stroke:#1976d2
-    style backends fill:#e8f5e9,stroke:#388e3c
-    style collector fill:#fff3e0,stroke:#ff9800
+    style nodes fill:#0d47a1,stroke:#082f6a,color:#ffffff
+    style backends fill:#1b5e20,stroke:#0d3d14,color:#ffffff
+    style collector fill:#bf360c,stroke:#8c2809,color:#ffffff
 ```
 
 ### 2.2.1 OTLP/gRPC (Recommended)
@@ -245,16 +245,101 @@ flowchart TB
         job["Context captured at job creation,<br/>restored at execution<br/><br/>class Job {<br/>  opentelemetry::context::Context traceContext_;<br/>};"]
     end
 
-    style http fill:#e3f2fd,stroke:#1976d2
-    style protobuf fill:#e8f5e9,stroke:#388e3c
-    style jobqueue fill:#fff3e0,stroke:#ff9800
+    style http fill:#0d47a1,stroke:#082f6a,color:#ffffff
+    style protobuf fill:#1b5e20,stroke:#0d3d14,color:#ffffff
+    style jobqueue fill:#bf360c,stroke:#8c2809,color:#ffffff
 ```
 
 ---
 
 ## 2.6 Integration with Existing Observability
 
-### 2.6.1 Coexistence Strategy
+### 2.6.1 Existing Frameworks Comparison
+
+rippled already has two observability mechanisms. OpenTelemetry complements (not replaces) them:
+
+| Aspect                | PerfLog                       | Beast Insight (StatsD)       | OpenTelemetry             |
+| --------------------- | ----------------------------- | ---------------------------- | ------------------------- |
+| **Type**              | Logging                       | Metrics                      | Distributed Tracing       |
+| **Data**              | JSON log entries              | Counters, gauges, histograms | Spans with context        |
+| **Scope**             | Single node                   | Single node                  | **Cross-node**            |
+| **Output**            | `perf.log` file               | StatsD server                | OTLP Collector            |
+| **Question answered** | "What happened on this node?" | "How many? How fast?"        | "What was the journey?"   |
+| **Correlation**       | By timestamp                  | By metric name               | By `trace_id`             |
+| **Overhead**          | Low (file I/O)                | Low (UDP packets)            | Low-Medium (configurable) |
+
+### 2.6.2 What Each Framework Does Best
+
+#### PerfLog
+- **Purpose**: Detailed local event logging for RPC and job execution
+- **Strengths**:
+  - Rich JSON output with timing data
+  - Already integrated in RPC handlers
+  - File-based, no external dependencies
+- **Limitations**:
+  - Single-node only (no cross-node correlation)
+  - No parent-child relationships between events
+  - Manual log parsing required
+
+```json
+// Example PerfLog entry
+{
+  "time": "2024-01-15T10:30:00.123Z",
+  "method": "submit",
+  "duration_us": 1523,
+  "result": "tesSUCCESS"
+}
+```
+
+#### Beast Insight (StatsD)
+- **Purpose**: Real-time metrics for monitoring dashboards
+- **Strengths**:
+  - Aggregated metrics (counters, gauges, histograms)
+  - Low overhead (UDP, fire-and-forget)
+  - Good for alerting thresholds
+- **Limitations**:
+  - No request-level detail
+  - No causal relationships
+  - Single-node perspective
+
+```cpp
+// Example StatsD usage in rippled
+insight.increment("rpc.submit.count");
+insight.gauge("ledger.age", age);
+insight.timing("consensus.round", duration);
+```
+
+#### OpenTelemetry (NEW)
+- **Purpose**: Distributed request tracing across nodes
+- **Strengths**:
+  - **Cross-node correlation** via `trace_id`
+  - Parent-child span relationships
+  - Rich attributes per span
+  - Industry standard (CNCF)
+- **Limitations**:
+  - Requires collector infrastructure
+  - Higher complexity than logging
+
+```cpp
+// Example OpenTelemetry span
+auto span = telemetry.startSpan("tx.relay");
+span->SetAttribute("tx.hash", hash);
+span->SetAttribute("peer.id", peerId);
+// Span automatically linked to parent via context
+```
+
+### 2.6.3 When to Use Each
+
+| Scenario                                | PerfLog   | StatsD | OpenTelemetry |
+| --------------------------------------- | --------- | ------ | ------------- |
+| "How many TXs per second?"              | ❌         | ✅      | ❌             |
+| "What's the p99 RPC latency?"           | ❌         | ✅      | ✅             |
+| "Why was this specific TX slow?"        | ⚠️ partial | ❌      | ✅             |
+| "Which node delayed consensus?"         | ❌         | ❌      | ✅             |
+| "What happened on node X at time T?"    | ✅         | ❌      | ✅             |
+| "Show me the TX journey across 5 nodes" | ❌         | ❌      | ✅             |
+
+### 2.6.4 Coexistence Strategy
 
 ```mermaid
 flowchart TB
@@ -272,11 +357,11 @@ flowchart TB
     statsd --> grafana
     collector --> grafana
 
-    style rippled fill:#f5f5f5,stroke:#333
-    style grafana fill:#ff9800,stroke:#e65100
+    style rippled fill:#212121,stroke:#0a0a0a,color:#ffffff
+    style grafana fill:#bf360c,stroke:#8c2809,color:#ffffff
 ```
 
-### 2.6.2 Correlation with PerfLog
+### 2.6.5 Correlation with PerfLog
 
 Trace IDs can be correlated with existing PerfLog entries for comprehensive debugging:
 

@@ -35,36 +35,40 @@ src/xrpld/
 
 ## 3.2 Implementation Approach
 
+<div align="center">
+
 ```mermaid
-flowchart LR
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 30}}}%%
+flowchart TB
     subgraph phase1["Phase 1: Core"]
-        sdk["SDK Integration"]
-        interface["Telemetry Interface"]
-        config["Configuration"]
+        direction LR
+        sdk["SDK Integration"] ~~~ interface["Telemetry Interface"] ~~~ config["Configuration"]
     end
 
     subgraph phase2["Phase 2: RPC"]
-        http["HTTP Context"]
-        rpc["RPC Handlers"]
+        direction LR
+        http["HTTP Context"] ~~~ rpc["RPC Handlers"]
     end
 
     subgraph phase3["Phase 3: P2P"]
-        proto["Protobuf Context"]
-        tx["Transaction Relay"]
+        direction LR
+        proto["Protobuf Context"] ~~~ tx["Transaction Relay"]
     end
 
     subgraph phase4["Phase 4: Consensus"]
-        consensus["Consensus Rounds"]
-        proposals["Proposals"]
+        direction LR
+        consensus["Consensus Rounds"] ~~~ proposals["Proposals"]
     end
 
     phase1 --> phase2 --> phase3 --> phase4
 
-    style phase1 fill:#e3f2fd,stroke:#1976d2
-    style phase2 fill:#e8f5e9,stroke:#388e3c
-    style phase3 fill:#fff3e0,stroke:#ff9800
-    style phase4 fill:#fce4ec,stroke:#e91e63
+    style phase1 fill:#1565c0,stroke:#0d47a1,color:#ffffff
+    style phase2 fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    style phase3 fill:#e65100,stroke:#bf360c,color:#ffffff
+    style phase4 fill:#c2185b,stroke:#880e4f,color:#ffffff
 ```
+
+</div>
 
 ### Key Principles
 
@@ -103,13 +107,20 @@ flowchart LR
 
 ### 3.4.2 Transaction Processing Overhead
 
+<div align="center">
+
 ```mermaid
-pie title Transaction Tracing Overhead (~2.4μs total)
-    "tx.receive span" : 800
-    "tx.validate span" : 500
-    "tx.relay span" : 500
-    "Context injection (×3)" : 600
+%%{init: {'pie': {'textPosition': 0.75}}}%%
+pie showData
+    "tx.receive (800ns)" : 800
+    "tx.validate (500ns)" : 500
+    "tx.relay (500ns)" : 500
+    "Context inject (600ns)" : 600
 ```
+
+**Transaction Tracing Overhead (~2.4μs total)**
+
+</div>
 
 **Overhead percentage**: 2.4 μs / 200 μs (avg tx processing) = **~1.2%**
 
@@ -166,6 +177,12 @@ pie title Transaction Tracing Overhead (~2.4μs total)
 ### 3.5.3 Memory Growth Characteristics
 
 ```mermaid
+---
+config:
+    xyChart:
+        width: 700
+        height: 400
+---
 xychart-beta
     title "Memory Usage vs Span Rate"
     x-axis "Spans/second" [0, 200, 400, 600, 800, 1000]
@@ -325,15 +342,15 @@ pie title Code Changes by Component
 
 ### 3.9.3 Risk Assessment by Component
 
+<div align="center">
+
+**Do First** ↖ ↗ **Plan Carefully**
+
 ```mermaid
 quadrantChart
     title Code Intrusiveness Risk Matrix
     x-axis Low Risk --> High Risk
     y-axis Low Value --> High Value
-    quadrant-1 High Value, Low Risk - Do First
-    quadrant-2 High Value, High Risk - Plan Carefully
-    quadrant-3 Low Value, Low Risk - Optional
-    quadrant-4 Low Value, High Risk - Avoid
 
     RPC Tracing: [0.2, 0.8]
     Transaction Relay: [0.5, 0.9]
@@ -342,6 +359,10 @@ quadrantChart
     JobQueue Context: [0.4, 0.5]
     Ledger Acquisition: [0.5, 0.6]
 ```
+
+**Optional** ↙ ↘ **Avoid**
+
+</div>
 
 #### Risk Level Definitions
 

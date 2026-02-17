@@ -60,10 +60,17 @@ flowchart TD
     honeycomb --> final
     datadog --> final
 
-    style tempo fill:#e8f5e9,stroke:#388e3c
-    style elastic fill:#fff3e0,stroke:#ff9800
-    style honeycomb fill:#e3f2fd,stroke:#1976d2
-    style datadog fill:#f3e5f5,stroke:#7b1fa2
+    style start fill:#0f172a,stroke:#020617,color:#fff
+    style budget fill:#334155,stroke:#1e293b,color:#fff
+    style oss fill:#1e293b,stroke:#0f172a,color:#fff
+    style existing fill:#334155,stroke:#1e293b,color:#fff
+    style saas fill:#334155,stroke:#1e293b,color:#fff
+    style enterprise fill:#334155,stroke:#1e293b,color:#fff
+    style final fill:#0f172a,stroke:#020617,color:#fff
+    style tempo fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style elastic fill:#bf360c,stroke:#8c2809,color:#fff
+    style honeycomb fill:#0d47a1,stroke:#082f6a,color:#fff
+    style datadog fill:#4a148c,stroke:#2e0d57,color:#fff
 ```
 
 ---
@@ -110,11 +117,11 @@ flowchart TB
     tempo --> grafana
     elastic --> grafana
 
-    style validators fill:#ffebee,stroke:#c62828
-    style stock fill:#e3f2fd,stroke:#1976d2
-    style collector fill:#fff3e0,stroke:#ff9800
-    style backends fill:#e8f5e9,stroke:#388e3c
-    style ui fill:#f3e5f5,stroke:#7b1fa2
+    style validators fill:#b71c1c,stroke:#7f1d1d,color:#ffffff
+    style stock fill:#0d47a1,stroke:#082f6a,color:#ffffff
+    style collector fill:#bf360c,stroke:#8c2809,color:#ffffff
+    style backends fill:#1b5e20,stroke:#0d3d14,color:#ffffff
+    style ui fill:#4a148c,stroke:#2e0d57,color:#ffffff
 ```
 
 ---
@@ -153,6 +160,14 @@ flowchart LR
     ts1 --> final[Final Traces]
     ts2 --> final
     ts3 --> final
+
+    style head fill:#0d47a1,stroke:#082f6a,color:#fff
+    style tail fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style hs fill:#0d47a1,stroke:#082f6a,color:#fff
+    style ts1 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style ts2 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style ts3 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style final fill:#bf360c,stroke:#8c2809,color:#fff
 ```
 
 ### 7.4.3 Data Retention
@@ -161,7 +176,7 @@ flowchart LR
 | ----------- | ----------- | ------------ | ------------ |
 | Development | 24 hours    | N/A          | N/A          |
 | Staging     | 7 days      | N/A          | N/A          |
-| Production  | 7 days      | 30 days      | 1 year       |
+| Production  | 7 days      | 30 days      | many years   |
 
 ---
 
@@ -424,7 +439,23 @@ flowchart TB
     logs --> corr
     metrics --> corr
 
-    style corr fill:#f3e5f5,stroke:#7b1fa2
+    style rippled fill:#0d47a1,stroke:#082f6a,color:#fff
+    style collectors fill:#bf360c,stroke:#8c2809,color:#fff
+    style storage fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style grafana fill:#4a148c,stroke:#2e0d57,color:#fff
+    style otel fill:#0d47a1,stroke:#082f6a,color:#fff
+    style perflog fill:#0d47a1,stroke:#082f6a,color:#fff
+    style insight fill:#0d47a1,stroke:#082f6a,color:#fff
+    style otelc fill:#bf360c,stroke:#8c2809,color:#fff
+    style promtail fill:#bf360c,stroke:#8c2809,color:#fff
+    style statsd fill:#bf360c,stroke:#8c2809,color:#fff
+    style tempo fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style loki fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style prom fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style traces fill:#4a148c,stroke:#2e0d57,color:#fff
+    style logs fill:#4a148c,stroke:#2e0d57,color:#fff
+    style metrics fill:#4a148c,stroke:#2e0d57,color:#fff
+    style corr fill:#4a148c,stroke:#2e0d57,color:#fff
 ```
 
 ### 7.7.2 Correlation Fields

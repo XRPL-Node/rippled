@@ -228,14 +228,21 @@ quadrantChart
 
 ## 6.9 Effort Summary
 
+<div align="center">
+
 ```mermaid
-pie title Total Effort Distribution (47 developer-days)
+%%{init: {'pie': {'textPosition': 0.75}}}%%
+pie showData
     "Phase 1: Core Infrastructure" : 10
     "Phase 2: RPC Tracing" : 10
     "Phase 3: Transaction Tracing" : 11
     "Phase 4: Consensus Tracing" : 11
     "Phase 5: Documentation" : 5
 ```
+
+**Total Effort Distribution (47 developer-days)**
+
+</div>
 
 ### Resource Requirements
 
@@ -256,32 +263,42 @@ This section outlines a prioritized approach to maximize ROI with minimal initia
 
 ### 6.10.1 Crawl-Walk-Run Overview
 
+<div align="center">
+
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph crawl["🐢 CRAWL (Week 1-2)"]
-        c1[Core SDK Setup]
-        c2[RPC Tracing Only]
-        c3[Single Node]
+        direction LR
+        c1[Core SDK Setup] ~~~ c2[RPC Tracing Only] ~~~ c3[Single Node]
     end
 
     subgraph walk["🚶 WALK (Week 3-5)"]
-        w1[Transaction Tracing]
-        w2[Cross-Node Context]
-        w3[Basic Dashboards]
+        direction LR
+        w1[Transaction Tracing] ~~~ w2[Cross-Node Context] ~~~ w3[Basic Dashboards]
     end
 
     subgraph run["🏃 RUN (Week 6-9)"]
-        r1[Consensus Tracing]
-        r2[Full Correlation]
-        r3[Production Deploy]
+        direction LR
+        r1[Consensus Tracing] ~~~ r2[Full Correlation] ~~~ r3[Production Deploy]
     end
 
     crawl --> walk --> run
 
-    style crawl fill:#e8f5e9,stroke:#388e3c
-    style walk fill:#fff3e0,stroke:#ff9800
-    style run fill:#e3f2fd,stroke:#1976d2
+    style crawl fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style walk fill:#bf360c,stroke:#8c2809,color:#fff
+    style run fill:#0d47a1,stroke:#082f6a,color:#fff
+    style c1 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style c2 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style c3 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style w1 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style w2 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style w3 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style r1 fill:#0d47a1,stroke:#082f6a,color:#fff
+    style r2 fill:#0d47a1,stroke:#082f6a,color:#fff
+    style r3 fill:#0d47a1,stroke:#082f6a,color:#fff
 ```
+
+</div>
 
 ### 6.10.2 Quick Wins (Immediate Value)
 
@@ -492,13 +509,27 @@ flowchart TB
     t10 --> t11 --> t12
     t12 --> t13 --> t14
 
-    style week1 fill:#e8f5e9,stroke:#388e3c
-    style week2 fill:#e8f5e9,stroke:#388e3c
-    style week3 fill:#fff3e0,stroke:#ff9800
-    style week4 fill:#fff3e0,stroke:#ff9800
-    style week5 fill:#fff3e0,stroke:#ff9800
-    style week6_8 fill:#e3f2fd,stroke:#1976d2
-    style week9 fill:#f3e5f5,stroke:#7b1fa2
+    style week1 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style week2 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style week3 fill:#bf360c,stroke:#8c2809,color:#fff
+    style week4 fill:#bf360c,stroke:#8c2809,color:#fff
+    style week5 fill:#bf360c,stroke:#8c2809,color:#fff
+    style week6_8 fill:#0d47a1,stroke:#082f6a,color:#fff
+    style week9 fill:#4a148c,stroke:#2e0d57,color:#fff
+    style t1 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style t2 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style t3 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style t4 fill:#1b5e20,stroke:#0d3d14,color:#fff
+    style t5 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t6 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t7 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t8 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t9 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t10 fill:#ffe0b2,stroke:#ffcc80,color:#1e293b
+    style t11 fill:#0d47a1,stroke:#082f6a,color:#fff
+    style t12 fill:#0d47a1,stroke:#082f6a,color:#fff
+    style t13 fill:#4a148c,stroke:#2e0d57,color:#fff
+    style t14 fill:#4a148c,stroke:#2e0d57,color:#fff
 ```
 
 ---

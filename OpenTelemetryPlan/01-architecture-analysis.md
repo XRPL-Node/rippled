@@ -36,10 +36,10 @@ flowchart TB
         JobQueue --> processing
     end
 
-    style rippled fill:#f5f5f5,stroke:#333
-    style services fill:#e3f2fd,stroke:#1976d2
-    style processing fill:#e8f5e9,stroke:#388e3c
-    style observability fill:#fff3e0,stroke:#f57c00
+    style rippled fill:#424242,stroke:#212121,color:#ffffff
+    style services fill:#1565c0,stroke:#0d47a1,color:#ffffff
+    style processing fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    style observability fill:#e65100,stroke:#bf360c,color:#ffffff
 ```
 
 ---
@@ -136,10 +136,10 @@ flowchart TB
         establish --> accept
     end
 
-    style round fill:#fff8e1,stroke:#ffc107
-    style open fill:#e3f2fd,stroke:#1976d2
-    style establish fill:#e8f5e9,stroke:#388e3c
-    style accept fill:#fce4ec,stroke:#e91e63
+    style round fill:#f57f17,stroke:#e65100,color:#ffffff
+    style open fill:#1565c0,stroke:#0d47a1,color:#ffffff
+    style establish fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    style accept fill:#c2185b,stroke:#880e4f,color:#ffffff
 ```
 
 ---
@@ -172,9 +172,9 @@ flowchart TB
         command --> response
     end
 
-    style request fill:#e8f5e9,stroke:#388e3c
-    style enqueue fill:#e3f2fd,stroke:#1976d2
-    style command fill:#fff3e0,stroke:#ff9800
+    style request fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    style enqueue fill:#1565c0,stroke:#0d47a1,color:#ffffff
+    style command fill:#e65100,stroke:#bf360c,color:#ffffff
 ```
 
 ---
@@ -214,8 +214,8 @@ quadrantChart
     quadrant-4 Consider Later
 
     RPC Tracing: [0.3, 0.85]
-    Transaction Tracing: [0.6, 0.95]
-    Consensus Tracing: [0.75, 0.9]
+    Transaction Tracing: [0.65, 0.92]
+    Consensus Tracing: [0.75, 0.87]
     Peer Message Tracing: [0.4, 0.3]
     Ledger Acquisition: [0.5, 0.6]
     JobQueue Tracing: [0.35, 0.5]
@@ -251,9 +251,9 @@ After implementing OpenTelemetry, operators and developers will gain visibility 
 
 **Transaction Trace View (Jaeger/Tempo):**
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────────────────────────────┐
 │ Trace: abc123... (Transaction Submission)                    Duration: 847ms   │
-├─────────────────────────────────────────────────────────────────────────────────┤
+├────────────────────────────────────────────────────────────────────────────────┤
 │ ├── rpc.request [ServerHandler]                              ████░░░░░░  45ms  │
 │ │   └── rpc.command.submit [RPCHandler]                      ████░░░░░░  42ms  │
 │ │       └── tx.receive [NetworkOPs]                          ███░░░░░░░  35ms  │
@@ -266,7 +266,7 @@ After implementing OpenTelemetry, operators and developers will gain visibility 
 │     ├── consensus.phase.open                                 ██░░░░░░░░ 180ms  │
 │     ├── consensus.phase.establish                            █████░░░░░ 480ms  │
 │     └── consensus.phase.accept                               █░░░░░░░░░  60ms  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **RPC Performance Dashboard Panel:**
@@ -285,23 +285,24 @@ After implementing OpenTelemetry, operators and developers will gain visibility 
 ```
 
 **Consensus Health Dashboard Panel:**
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Consensus Round Duration (Last 24 Hours)                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  5s ┤                              *                        │
-│     │                         *   * *                       │
-│  4s ┤         *              **  *   *                      │
-│     │        * *        *   *  **     *                     │
-│  3s ┤  *    *   *      * * *          *    *                │
-│     │ * *  *     *    *                *  * *    *          │
-│  2s ┤*   **       *  *                  **   *  * *  *      │
-│     │             **                          **   **       │
-│  1s ┤──────────────────────────────────────────────────     │
-│     └────────────────────────────────────────────────────   │
-│       00:00   04:00   08:00   12:00   16:00   20:00   24:00 │
-└─────────────────────────────────────────────────────────────┘
+
+```mermaid
+---
+config:
+    xyChart:
+        width: 1200
+        height: 400
+        plotReservedSpacePercent: 50
+        chartOrientation: vertical
+    themeVariables:
+        xyChart:
+            plotColorPalette: "#3498db"
+---
+xychart-beta
+    title "Consensus Round Duration (Last 24 Hours)"
+    x-axis "Time of Day (Hours)" [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
+    y-axis "Duration (seconds)" 1 --> 5
+    line [2.1, 2.3, 2.5, 2.4, 2.8, 1.6, 3.2, 3.0, 3.5, 1.3, 3.8, 3.6, 4.0, 3.2, 4.3, 4.1, 4.5, 4.3, 4.2, 2.4, 4.8, 4.6, 4.9, 4.7, 5.0, 4.9, 4.8, 2.6, 4.7, 4.5, 4.2, 4.0, 2.5, 3.7, 3.2, 3.4, 2.9, 3.1, 2.6, 2.8, 2.3, 1.5, 2.7, 2.4, 2.5, 2.3, 2.2, 2.1, 2.0]
 ```
 
 ### 1.8.4 Operator Actionable Insights
