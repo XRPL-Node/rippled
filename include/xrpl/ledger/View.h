@@ -985,6 +985,11 @@ sharesToAssetsWithdraw(
     std::shared_ptr<SLE const> const& issuance,
     STAmount const& shares);
 
+// Determine if a vault is insolvent. A vault is considered insolvent when
+// the total assets in the vault are zero, and outstanding shares are non-zero.
+[[nodiscard]] bool
+isVaultInsolvent(std::shared_ptr<SLE const> const& vault, std::shared_ptr<SLE const> const& shareIssuance);
+
 /** Has the specified time passed?
 
     @param now  the current time

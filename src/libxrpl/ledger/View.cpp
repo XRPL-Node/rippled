@@ -3438,4 +3438,13 @@ after(NetClock::time_point now, std::uint32_t mark)
     return now.time_since_epoch().count() > mark;
 }
 
+[[nodiscard]] bool
+isVaultInsolvent(std::shared_ptr<SLE const> const& vault, std::shared_ptr<SLE const> const& shareIssuance)
+{
+    auto const assetsTotal = vault->at(sfAssetsTotal);
+    auto const sharesOutstanding = shareIssuance->at(sfOutstandingAmount);
+
+    return assetsTotal == 0 && sharesOutstanding > 0;
+}
+
 }  // namespace xrpl

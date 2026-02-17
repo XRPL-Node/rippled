@@ -82,7 +82,7 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
         // Perform these checks early to avoid unnecessary processing
 
         // The Vault is insolvent, deposits are not allowed
-        if (vault->at(sfAssetsTotal) == 0 && sleShareIssuance->at(sfOutstandingAmount) > 0)
+        if (isVaultInsolvent(vault, sleShareIssuance))
         {
             JLOG(ctx.j.debug()) << "VaultDeposit: Vault is insolvent, deposits are not allowed";
             return tecNO_PERMISSION;
