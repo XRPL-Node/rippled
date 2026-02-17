@@ -64,6 +64,11 @@ public:
     std::shared_ptr<SLE const>
     read(ReadView const& base, Keylet const& k) const;
 
+    /** Check only local items without delegating to base.
+    Returns std::nullopt if key not found locally. */
+    std::optional<std::shared_ptr<SLE const>>
+    readLocal(Keylet const& k) const;
+
     std::shared_ptr<SLE>
     peek(ReadView const& base, Keylet const& k);
 

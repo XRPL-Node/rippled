@@ -330,24 +330,12 @@ ApplyStateTable::read(ReadView const& base, Keylet const& k) const
     return sle;
 }
 
-std::shared_ptr<SLE>
-ApplyStateTable::peek(ReadView const& base, Keylet const& k)
+std::optional<std::shared_ptr<SLE const>>
+ApplyStateTable::readLocal(Keylet const& k) const
 {
-    auto iter = items_.lower_bound(k.key);
-    if (iter == items_.end() || iter->first != k.key)
-    {
-        auto const sle = base.read(k);
-        if (!sle)
-            return nullptr;
-        // Make our own copy
-        using namespace std;
-        iter = items_.emplace_hint(
-            iter,
-            piecewise_construct,
-            forward_as_tuple(sle->key()),
-            forward_as_tuple(Action::cache, make_shared<SLE>(*sle)));
-        return iter->second.second;
-    }
+    auto const iter = items_.find(k.key);
+    if (iter == items_.end())
+        return std::nullopt;
     auto const& item = iter->second;
     auto const& sle = item.second;
     switch (item.first)
@@ -361,6 +349,7 @@ ApplyStateTable::peek(ReadView const& base, Keylet const& k)
     };
     if (!k.check(*sle))
         return nullptr;
+
     return sle;
 }
 
