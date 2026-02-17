@@ -96,6 +96,7 @@ words:
   - doxyfile
   - dxrpl
   - endmacro
+  - eventfd
   - exceptioned
   - Falco
   - finalizers

@@ -1035,7 +1035,13 @@ private:
 bool
 ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
 {
-    startIOThreads();
+    // NOTE: IO threads are intentionally NOT started here.
+    // All setup work is non-blocking (it enqueues async work to the
+    // io_context but doesn't require it to be processed yet).
+    // IO threads are started at the beginning of start() to avoid
+    // data races between the main thread doing setup and IO threads
+    // processing enqueued work concurrently.
+
     m_resourceManager->start();
     m_nodeStore->startReadThreads();
 
@@ -1369,6 +1375,11 @@ void
 ApplicationImp::start(bool withTimers)
 {
     JLOG(m_journal.info()) << "Application starting. Version is " << BuildInfo::getVersionString();
+
+    // Start IO threads now that all setup is complete.
+    // This must happen before starting subsystems that post work
+    // to the io_context (resolver, overlay, etc.).
+    startIOThreads();
 
     if (withTimers)
     {
