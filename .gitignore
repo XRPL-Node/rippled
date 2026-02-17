@@ -72,5 +72,8 @@ DerivedData
 /.claude
 /CLAUDE.md
 
+# Python
+__pycache__
+
 # clangd cache
 /.cache
