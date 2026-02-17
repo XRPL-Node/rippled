@@ -601,9 +601,9 @@ class TrustAndBalance_test : public beast::unit_test::suite
                 env(offer(carol, USD(25), XRP(25)));
                 env.close();
 
-                // This is weird. The offer is unfunded, but it still ends up
-                // in the book. Carol does not get owner count due to the
-                // trustline state (it does not change), but due to the offer.
+                // The offer is unfunded, but it still ends up in the book.
+                // Carol does not get owner count due to the trustline state (it
+                // does not change), but due to the offer.
                 env.require(offers(carol, 1));
                 checkAccountUSD(carol, carolHigh, 1, false, USD(0));
             }
@@ -616,6 +616,76 @@ class TrustAndBalance_test : public beast::unit_test::suite
                 // incremented and the reserve flag is not set.
                 env.require(offers(carol, 0));
                 checkAccountUSD(carol, carolHigh, 0, false, USD(25));
+            }
+        }
+
+        // Receiving USD via CheckCash. rippleCreditIOU is reached
+        // with the receiver's balance going from 0 to positive.
+        {
+            Account dave{"dave"};
+            bool const daveHigh = dave.id() > gw.id();
+
+            setupAccount(dave, daveHigh, acctReserve + fee * 4);
+
+            uint256 const checkId{keylet::check(gw, env.seq(gw)).key};
+            env(check::create(gw, dave, USD(25)));
+            env.close();
+
+            if (features[fixTrustLineOwnerCount])
+            {
+                env(check::cash(dave, checkId, USD(25)));
+                env.close();
+
+                // rippleCreditIOU set the reserve flag and incremented
+                // owner count. No reserve requirements since it's the only
+                // object owned by this account
+                checkAccountUSD(dave, daveHigh, 1, true, USD(25));
+            }
+            else
+            {
+                env(check::cash(dave, checkId, USD(25)));
+                env.close();
+
+                // Without fix: owner count stays 0, reserve not set.
+                checkAccountUSD(dave, daveHigh, 0, false, USD(25));
+            }
+        }
+
+        // Receiving USD via CheckCash. rippleCreditIOU is reached
+        // with the receiver's balance going from 0 to positive.
+        {
+            Account ed{"ed"};
+            bool const edHigh = ed.id() > gw.id();
+
+            setupAccount(ed, edHigh, acctReserve + incReserve * 2 + fee * 4);
+            env(trust(ed, gw["EUR"](1000)));
+            env(trust(ed, gw["JPY"](1000)));
+
+            uint256 const checkId{keylet::check(gw, env.seq(gw)).key};
+            env(check::create(gw, ed, USD(25)));
+            env.close();
+
+            if (features[fixTrustLineOwnerCount])
+            {
+                // rippleCreditIOU returns tecINSUFFICIENT_RESERVE here since
+                // there is not enough balance for the reserve requirement on
+                // 3rd trustline. Unfortunately payment engine somehow does not
+                // propogate this error
+                env(check::cash(ed, checkId, USD(25)));
+                env.close();
+
+                // Check cash actually failed, no change to owner count or USD
+                // balance
+                checkAccountUSD(ed, edHigh, 2, false, USD(0));
+            }
+            else
+            {
+                env(check::cash(ed, checkId, USD(25)));
+                env.close();
+
+                // Without fix: owner count stays 2 (due to eur and jpy
+                // trustlines), reserve not set.
+                checkAccountUSD(ed, edHigh, 2, false, USD(25));
             }
         }
     }
