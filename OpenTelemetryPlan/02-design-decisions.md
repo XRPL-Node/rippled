@@ -225,6 +225,87 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 "xrpl.job.worker"        = int64    // Worker thread ID
 ```
 
+### 2.4.3 Data Collection Summary
+
+The following table summarizes what data is collected by category:
+
+| Category        | Attributes Collected                                                 | Purpose                     |
+| --------------- | -------------------------------------------------------------------- | --------------------------- |
+| **Transaction** | `tx.hash`, `tx.type`, `tx.result`, `tx.fee`, `ledger_index`          | Trace transaction lifecycle |
+| **Consensus**   | `round`, `phase`, `mode`, `proposers` (public keys), `duration_ms`   | Analyze consensus timing    |
+| **RPC**         | `command`, `version`, `status`, `duration_ms`                        | Monitor RPC performance     |
+| **Peer**        | `peer.id` (public key), `latency_ms`, `message.type`, `message.size` | Network topology analysis   |
+| **Ledger**      | `ledger.hash`, `ledger.index`, `close_time`, `tx_count`              | Ledger progression tracking |
+| **Job**         | `job.type`, `queue_ms`, `worker`                                     | JobQueue performance        |
+
+### 2.4.4 Privacy & Sensitive Data Policy
+
+OpenTelemetry instrumentation is designed to collect **operational metadata only**, never sensitive content.
+
+#### Data NOT Collected
+
+The following data is explicitly **excluded** from telemetry collection:
+
+| Excluded Data           | Reason                                    |
+| ----------------------- | ----------------------------------------- |
+| **Private Keys**        | Never exposed; not relevant to tracing    |
+| **Account Balances**    | Financial data; privacy sensitive         |
+| **Transaction Amounts** | Financial data; privacy sensitive         |
+| **Raw TX Payloads**     | May contain sensitive memo/data fields    |
+| **Personal Data**       | No PII collected                          |
+| **IP Addresses**        | Configurable; excluded by default in prod |
+
+#### Privacy Protection Mechanisms
+
+| Mechanism                     | Description                                                               |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| **Account Hashing**           | `xrpl.tx.account` is hashed at collector level before storage             |
+| **Configurable Redaction**    | Sensitive fields can be excluded via `[telemetry]` config section         |
+| **Sampling**                  | Only 10% of traces recorded by default, reducing data exposure            |
+| **Local Control**             | Node operators have full control over what gets exported                  |
+| **No Raw Payloads**           | Transaction content is never recorded, only metadata (hash, type, result) |
+| **Collector-Level Filtering** | Additional redaction/hashing can be configured at OTel Collector          |
+
+#### Collector-Level Data Protection
+
+The OpenTelemetry Collector can be configured to hash or redact sensitive attributes before export:
+
+```yaml
+processors:
+  attributes:
+    actions:
+      # Hash account addresses before storage
+      - key: xrpl.tx.account
+        action: hash
+      # Remove IP addresses entirely
+      - key: xrpl.peer.address
+        action: delete
+      # Redact specific fields
+      - key: xrpl.rpc.params
+        action: delete
+```
+
+#### Configuration Options for Privacy
+
+In `rippled.cfg`, operators can control data collection granularity:
+
+```ini
+[telemetry]
+enabled=1
+
+# Disable collection of specific components
+trace_transactions=1
+trace_consensus=1
+trace_rpc=1
+trace_peer=0          # Disable peer tracing (high volume, includes addresses)
+
+# Redact specific attributes
+redact_account=1      # Hash account addresses before export
+redact_peer_address=1 # Remove peer IP addresses
+```
+
+> **Key Principle**: Telemetry collects **operational metadata** (timing, counts, hashes) — never **sensitive content** (keys, balances, amounts, raw payloads).
+
 ---
 
 ## 2.5 Context Propagation Design
