@@ -27,3 +27,6 @@ src:core/JobQueue.cpp
 src:libxrpl/beast/utility/beast_Journal.cpp
 src:test/beast/beast_PropertyStream_test.cpp
 src:src/test/app/Invariants_test.cpp
+src:boost/context/fiber_ucontext.hpp
+src:boost/context/fixedsize_stack.hpp
+src:*boost/context*
