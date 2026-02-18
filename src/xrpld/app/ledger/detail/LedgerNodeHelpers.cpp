@@ -1,5 +1,3 @@
-#pragma once
-
 #include <xrpld/app/ledger/detail/LedgerNodeHelpers.h>
 #include <xrpld/app/main/Application.h>
 
