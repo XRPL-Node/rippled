@@ -252,7 +252,7 @@ public:
     bool
     getNodeFat(
         SHAMapNodeID const& wanted,
-        std::vector<std::pair<SHAMapNodeID, Blob>>& data,
+        std::vector<std::tuple<SHAMapNodeID, Blob, bool>>& data,
         bool fatLeaves,
         std::uint32_t depth) const;
 
@@ -280,11 +280,11 @@ public:
     serializeRoot(Serializer& s) const;
 
     SHAMapAddNode
-    addRootNode(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode> root_node, SHAMapSyncFilter const* filter);
+    addRootNode(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode> rootNode, SHAMapSyncFilter const* filter);
     SHAMapAddNode
     addKnownNode(
-        SHAMapNodeID const& node_id,
-        intr_ptr::SharedPtr<SHAMapTreeNode> tree_node,
+        SHAMapNodeID const& nodeID,
+        intr_ptr::SharedPtr<SHAMapTreeNode> treeNode,
         SHAMapSyncFilter const* filter);
 
     // status functions

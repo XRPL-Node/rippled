@@ -140,23 +140,23 @@ public:
                 return;
             }
 
-            auto const tree_node = getTreeNode(ledger_node.nodedata());
-            if (!tree_node)
+            auto const treeNode = getTreeNode(ledger_node.nodedata());
+            if (!treeNode)
             {
                 JLOG(j_.warn()) << "Got invalid node data";
                 peer->charge(Resource::feeInvalidData, "node_data");
                 return;
             }
 
-            auto const node_id = getSHAMapNodeID(app_, ledger_node, *tree_node);
-            if (!node_id)
+            auto const nodeID = getSHAMapNodeID(app_, ledger_node, *treeNode);
+            if (!nodeID)
             {
                 JLOG(j_.warn()) << "Got invalid node id";
                 peer->charge(Resource::feeInvalidData, "node_id");
                 return;
             }
 
-            data.emplace_back(std::make_pair(*node_id, *tree_node));
+            data.emplace_back(std::make_pair(*nodeID, *treeNode));
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

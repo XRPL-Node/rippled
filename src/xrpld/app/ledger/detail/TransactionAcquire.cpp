@@ -144,7 +144,7 @@ TransactionAcquire::trigger(std::shared_ptr<Peer> const& peer)
 
 SHAMapAddNode
 TransactionAcquire::takeNodes(
-    std::vector<std::pair<SHAMapNodeID, intr_ptr::SharedPtr<SHAMapTreeNode>>> const& data,
+    std::vector<std::pair<SHAMapNodeID, intr_ptr::SharedPtr<SHAMapTreeNode>>>& data,
     std::shared_ptr<Peer> const& peer)
 {
     ScopedLockType sl(mtx_);
@@ -168,7 +168,7 @@ TransactionAcquire::takeNodes(
 
         ConsensusTransSetSF sf(app_, app_.getTempNodeCache());
 
-        for (auto const& d : data)
+        for (auto& d : data)
         {
             if (d.first.isRoot() && mHaveRoot)
             {

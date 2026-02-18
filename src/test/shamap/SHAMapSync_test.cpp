@@ -103,13 +103,13 @@ public:
         destination.setSynching();
 
         {
-            std::vector<std::pair<SHAMapNodeID, Blob>> a;
+            std::vector<std::tuple<SHAMapNodeID, Blob, bool>> a;
 
             BEAST_EXPECT(source.getNodeFat(SHAMapNodeID(), a, rand_bool(eng_), rand_int(eng_, 2)));
 
             unexpected(a.size() < 1, "NodeSize");
 
-            auto node = SHAMapTreeNode::makeFromWire(makeSlice(a[0].second));
+            auto node = SHAMapTreeNode::makeFromWire(makeSlice(std::get<1>(a[0])));
             BEAST_EXPECT(destination.addRootNode(source.getHash(), std::move(node), nullptr).isGood());
         }
 
@@ -124,7 +124,7 @@ public:
                 break;
 
             // get as many nodes as possible based on this information
-            std::vector<std::pair<SHAMapNodeID, Blob>> b;
+            std::vector<std::tuple<SHAMapNodeID, Blob, bool>> b;
 
             for (auto& it : nodesMissing)
             {
@@ -146,8 +146,8 @@ public:
                 // Don't use BEAST_EXPECT here b/c it will be called a
                 // non-deterministic number of times and the number of tests run
                 // should be deterministic
-                auto node = SHAMapTreeNode::makeFromWire(makeSlice(b[i].second));
-                if (!destination.addKnownNode(b[i].first, std::move(node), nullptr).isUseful())
+                auto node = SHAMapTreeNode::makeFromWire(makeSlice(std::get<1>(b[i])));
+                if (!destination.addKnownNode(std::get<0>(b[i]), std::move(node), nullptr).isUseful())
                     fail("", __FILE__, __LINE__);
             }
         } while (true);

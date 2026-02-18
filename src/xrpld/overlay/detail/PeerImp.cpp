@@ -3133,7 +3133,7 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
     {
         auto const queryDepth{m->has_querydepth() ? m->querydepth() : (isHighLatency() ? 2 : 1)};
 
-        std::vector<std::pair<SHAMapNodeID, Blob>> data;
+        std::vector<std::tuple<SHAMapNodeID, Blob, bool>> data;
 
         for (int i = 0; i < m->nodeids_size() && ledgerData.nodes_size() < Tuning::softMaxReplyNodes; ++i)
         {
@@ -3154,23 +3154,19 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                             break;
 
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
-                        node->set_nodedata(d.second.data(), d.second.size());
+
+                        auto const& node_data = std::get<1>(d);
+                        node->set_nodedata(node_data.data(), node_data.size());
 
                         // When the amendment is disabled, we always set the node ID. However, when the amendment is
                         // enabled, we only set it for inner nodes, while for leaf nodes we set the node depth instead.
+                        auto const& nodeID = std::get<0>(d);
                         if (!app_.getAmendmentTable().isEnabled(fixLedgerNodeID))
-                        {
-                            node->set_nodeid(d.first.getRawString());
-                            continue;
-                        }
-
-                        // TODO: Can we determine whether the node is an inner or leaf node without calling the
-                        // makeFromWire function?
-                        auto const node_slice = makeSlice(node->nodedata());
-                        if (auto const tree_node = SHAMapTreeNode::makeFromWire(node_slice); tree_node->isInner())
-                            node->set_id(d.first.getRawString());
-                        else if (tree_node->isLeaf())
-                            node->set_depth(d.first.getDepth());
+                            node->set_nodeid(nodeID.getRawString());
+                        else if (std::get<2>(d))
+                            node->set_depth(nodeID.getDepth());
+                        else
+                            node->set_id(nodeID.getRawString());
                     }
                 }
                 else

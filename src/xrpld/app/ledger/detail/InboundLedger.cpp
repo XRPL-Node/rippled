@@ -827,26 +827,26 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
             return;
         }
 
-        auto tree_node = getTreeNode(ledger_node.nodedata());
-        if (!tree_node)
+        auto treeNode = getTreeNode(ledger_node.nodedata());
+        if (!treeNode)
         {
             JLOG(journal_.warn()) << "Got invalid node data";
             san.incInvalid();
             return;
         }
 
-        auto const node_id = getSHAMapNodeID(app_, ledger_node, *tree_node);
-        if (!node_id)
+        auto const nodeID = getSHAMapNodeID(app_, ledger_node, *treeNode);
+        if (!nodeID)
         {
             JLOG(journal_.warn()) << "Got invalid node id";
             san.incInvalid();
             return;
         }
 
-        if (node_id->isRoot())
-            san += map.addRootNode(rootHash, std::move(*tree_node), f);
+        if (nodeID->isRoot())
+            san += map.addRootNode(rootHash, std::move(*treeNode), f);
         else
-            san += map.addKnownNode(*node_id, std::move(*tree_node), f);
+            san += map.addKnownNode(*nodeID, std::move(*treeNode), f);
 
         if (!san.isGood())
         {
@@ -874,7 +874,7 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
     Call with a lock
 */
 bool
-InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
+InboundLedger::takeAsRootNode(std::string const& data, SHAMapAddNode& san)
 {
     if (failed_ || mHaveState)
     {
@@ -890,15 +890,16 @@ InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
         // LCOV_EXCL_STOP
     }
 
-    AccountStateSF filter(mLedger->stateMap().family().db(), app_.getLedgerMaster());
-    auto node = SHAMapTreeNode::makeFromWire(data);
-    if (!node)
+    auto treeNode = getTreeNode(data);
+    if (!treeNode)
     {
         JLOG(journal_.warn()) << "Got invalid node data";
         san.incInvalid();
         return false;
     }
-    san += mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, node, &filter);
+
+    AccountStateSF filter(mLedger->stateMap().family().db(), app_.getLedgerMaster());
+    san += mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, *treeNode, &filter);
     return san.isGood();
 }
 
@@ -906,7 +907,7 @@ InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
     Call with a lock
 */
 bool
-InboundLedger::takeTxRootNode(Slice const& data, SHAMapAddNode& san)
+InboundLedger::takeTxRootNode(std::string const& data, SHAMapAddNode& san)
 {
     if (failed_ || mHaveTransactions)
     {
@@ -922,15 +923,16 @@ InboundLedger::takeTxRootNode(Slice const& data, SHAMapAddNode& san)
         // LCOV_EXCL_STOP
     }
 
-    TransactionStateSF filter(mLedger->txMap().family().db(), app_.getLedgerMaster());
-    auto node = SHAMapTreeNode::makeFromWire(data);
-    if (!node)
+    auto treeNode = getTreeNode(data);
+    if (!treeNode)
     {
         JLOG(journal_.warn()) << "Got invalid node data";
         san.incInvalid();
         return false;
     }
-    san += mLedger->txMap().addRootNode(SHAMapHash{mLedger->header().txHash}, node, &filter);
+
+    TransactionStateSF filter(mLedger->txMap().family().db(), app_.getLedgerMaster());
+    san += mLedger->txMap().addRootNode(SHAMapHash{mLedger->header().txHash}, *treeNode, &filter);
     return san.isGood();
 }
 
@@ -1024,14 +1026,12 @@ InboundLedger::processData(std::shared_ptr<Peer> peer, protocol::TMLedgerData& p
                 san.incUseful();
             }
 
-            if (!mHaveState && (packet.nodes().size() > 1) &&
-                !takeAsRootNode(makeSlice(packet.nodes(1).nodedata()), san))
+            if (!mHaveState && (packet.nodes().size() > 1) && !takeAsRootNode(packet.nodes(1).nodedata(), san))
             {
                 JLOG(journal_.warn()) << "Included AS root invalid";
             }
 
-            if (!mHaveTransactions && (packet.nodes().size() > 2) &&
-                !takeTxRootNode(makeSlice(packet.nodes(2).nodedata()), san))
+            if (!mHaveTransactions && (packet.nodes().size() > 2) && !takeTxRootNode(packet.nodes(2).nodedata(), san))
             {
                 JLOG(journal_.warn()) << "Included TX root invalid";
             }

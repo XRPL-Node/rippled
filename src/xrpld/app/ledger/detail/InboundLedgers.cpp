@@ -219,10 +219,10 @@ public:
             if (!validateLedgerNode(app_, ledger_node))
                 return;
 
-            auto const tree_node = getTreeNode(ledger_node.nodedata());
-            if (!tree_node)
+            auto const treeNode = getTreeNode(ledger_node.nodedata());
+            if (!treeNode)
                 return;
-            auto const tn = *tree_node;
+            auto const tn = *treeNode;
 
             s.erase();
             tn->serializeWithPrefix(s);
