@@ -18,6 +18,7 @@
 #include <xrpl/protocol/STNumber.h>
 #include <xrpl/protocol/SystemParameters.h>
 #include <xrpl/protocol/TER.h>
+#include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/TxFormats.h>
 #include <xrpl/protocol/Units.h>
 #include <xrpl/protocol/nftPageMask.h>
@@ -2775,10 +2776,14 @@ ValidVault::finalize(STTx const& tx, TER const ret, XRPAmount const fee, ReadVie
         return std::nullopt;
     }();
 
-    if (!beforeShares &&
-        (tx.getTxnType() == ttVAULT_DEPOSIT ||   //
-         tx.getTxnType() == ttVAULT_WITHDRAW ||  //
-         tx.getTxnType() == ttVAULT_CLAWBACK))
+    bool const isDonate = !view.rules().enabled(fixLendingProtocolV1_1) || tx.isFlag(tfVaultDonate);
+    bool const shouldUpdateShares =
+        // Vault Asset donation is the only operation that can succeed without updating shares
+        ((tx.getTxnType() == ttVAULT_DEPOSIT && !isDonate) ||  //
+         tx.getTxnType() == ttVAULT_WITHDRAW ||                //
+         tx.getTxnType() == ttVAULT_CLAWBACK);
+
+    if (!beforeShares && shouldUpdateShares)
     {
         JLOG(j.fatal()) << "Invariant failed: vault operation succeeded "
                            "without updating shares";
@@ -2845,199 +2850,210 @@ ValidVault::finalize(STTx const& tx, TER const ret, XRPAmount const fee, ReadVie
     // convenient thanks to early "return false"; the not-so-nice
     // alternatives are several layers of nested if/else or more complex
     // (i.e. brittle) if statements.
-    result &=
-        [&]() {
-            switch (txnType)
-            {
-                case ttVAULT_CREATE: {
-                    bool result = true;
+    result &= [&]() {
+        switch (txnType)
+        {
+            case ttVAULT_CREATE: {
+                bool result = true;
 
-                    if (!beforeVault_.empty())
-                    {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: create operation must not have "
-                               "updated a vault";
-                        result = false;
-                    }
+                if (!beforeVault_.empty())
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: create operation must not have "
+                           "updated a vault";
+                    result = false;
+                }
 
-                    if (afterVault.assetsAvailable != zero || afterVault.assetsTotal != zero ||
-                        afterVault.lossUnrealized != zero || updatedShares->sharesTotal != 0)
-                    {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: created vault must be empty";
-                        result = false;
-                    }
+                if (afterVault.assetsAvailable != zero || afterVault.assetsTotal != zero ||
+                    afterVault.lossUnrealized != zero || updatedShares->sharesTotal != 0)
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: created vault must be empty";
+                    result = false;
+                }
 
-                    if (afterVault.pseudoId != updatedShares->share.getIssuer())
-                    {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: shares issuer and vault "
-                               "pseudo-account must be the same";
-                        result = false;
-                    }
+                if (afterVault.pseudoId != updatedShares->share.getIssuer())
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: shares issuer and vault "
+                           "pseudo-account must be the same";
+                    result = false;
+                }
 
-                    auto const sleSharesIssuer = view.read(keylet::account(updatedShares->share.getIssuer()));
-                    if (!sleSharesIssuer)
+                auto const sleSharesIssuer = view.read(keylet::account(updatedShares->share.getIssuer()));
+                if (!sleSharesIssuer)
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: shares issuer must exist";
+                    return false;
+                }
+
+                if (!isPseudoAccount(sleSharesIssuer))
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: shares issuer must be a pseudo-account";
+                    result = false;
+                }
+
+                if (auto const vaultId = (*sleSharesIssuer)[~sfVaultID]; !vaultId || *vaultId != afterVault.key)
+                {
+                    JLOG(j.fatal())  //
+                        << "Invariant failed: shares issuer pseudo-account must point back to the vault";
+                    result = false;
+                }
+
+                return result;
+            }
+            case ttVAULT_SET: {
+                bool result = true;
+
+                XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : set updated a vault");
+                auto const& beforeVault = beforeVault_[0];
+
+                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
+                if (vaultDeltaAssets)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: set must not change vault balance";
+                    result = false;
+                }
+
+                if (beforeVault.assetsTotal != afterVault.assetsTotal)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: set must not change assets outstanding";
+                    result = false;
+                }
+
+                if (afterVault.assetsMaximum > zero && afterVault.assetsTotal > afterVault.assetsMaximum)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: set assets outstanding must not exceed assets maximum";
+                    result = false;
+                }
+
+                if (beforeVault.assetsAvailable != afterVault.assetsAvailable)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: set must not change assets available";
+                    result = false;
+                }
+
+                if (beforeShares && updatedShares && beforeShares->sharesTotal != updatedShares->sharesTotal)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: set must not change shares outstanding";
+                    result = false;
+                }
+
+                return result;
+            }
+            case ttVAULT_DEPOSIT: {
+                bool result = true;
+
+                XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : deposit updated a vault");
+                auto const& beforeVault = beforeVault_[0];
+
+                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
+
+                if (!vaultDeltaAssets)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: deposit must change vault balance";
+                    return false;  // That's all we can do
+                }
+
+                if (*vaultDeltaAssets > tx[sfAmount])
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: deposit must not change vault "
+                        "balance by more than deposited amount";
+                    result = false;
+                }
+
+                if (*vaultDeltaAssets <= zero)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: deposit must increase vault balance";
+                    result = false;
+                }
+
+                // Any payments (including deposits) made by the issuer
+                // do not change their balance, but create funds instead.
+                bool const issuerDeposit = [&]() -> bool {
+                    if (vaultAsset.native())
+                        return false;
+                    return tx[sfAccount] == vaultAsset.getIssuer();
+                }();
+
+                if (!issuerDeposit)
+                {
+                    auto const accountDeltaAssets = deltaAssetsTxAccount();
+                    if (!accountDeltaAssets)
                     {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: shares issuer must exist";
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: deposit must change depositor "
+                            "balance";
                         return false;
                     }
 
-                    if (!isPseudoAccount(sleSharesIssuer))
+                    if (*accountDeltaAssets >= zero)
                     {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: shares issuer must be a "
-                               "pseudo-account";
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: deposit must decrease depositor "
+                            "balance";
                         result = false;
                     }
 
-                    if (auto const vaultId = (*sleSharesIssuer)[~sfVaultID]; !vaultId || *vaultId != afterVault.key)
+                    if (*accountDeltaAssets * -1 != *vaultDeltaAssets)
                     {
-                        JLOG(j.fatal())  //
-                            << "Invariant failed: shares issuer pseudo-account "
-                               "must point back to the vault";
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: deposit must change vault and "
+                            "depositor balance by equal amount";
                         result = false;
                     }
-
-                    return result;
                 }
-                case ttVAULT_SET: {
-                    bool result = true;
 
-                    XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : set updated a vault");
-                    auto const& beforeVault = beforeVault_[0];
-
-                    auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
-                    if (vaultDeltaAssets)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: set must not change vault balance";
-                        result = false;
-                    }
-
-                    if (beforeVault.assetsTotal != afterVault.assetsTotal)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: set must not change assets "
-                            "outstanding";
-                        result = false;
-                    }
-
-                    if (afterVault.assetsMaximum > zero && afterVault.assetsTotal > afterVault.assetsMaximum)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: set assets outstanding must not "
-                            "exceed assets maximum";
-                        result = false;
-                    }
-
-                    if (beforeVault.assetsAvailable != afterVault.assetsAvailable)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: set must not change assets "
-                            "available";
-                        result = false;
-                    }
-
-                    if (beforeShares && updatedShares && beforeShares->sharesTotal != updatedShares->sharesTotal)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: set must not change shares "
-                            "outstanding";
-                        result = false;
-                    }
-
-                    return result;
+                if (afterVault.assetsMaximum > zero && afterVault.assetsTotal > afterVault.assetsMaximum)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: deposit assets outstanding must not exceed assets maximum";
+                    result = false;
                 }
-                case ttVAULT_DEPOSIT: {
-                    bool result = true;
 
-                    XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : deposit updated a vault");
-                    auto const& beforeVault = beforeVault_[0];
-
-                    auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
-
-                    if (!vaultDeltaAssets)
+                // If assets are not donated, check share invariants
+                if (view.rules().enabled(fixLendingProtocolV1_1) && tx.isFlag(tfVaultDonate))
+                {
+                    auto const accountDeltaShares = deltaShares(tx[sfAccount]);
+                    if (accountDeltaShares)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must change vault balance";
+                            "Invariant failed: donation must not change depositor shares";
                         return false;  // That's all we can do
                     }
 
-                    if (*vaultDeltaAssets > tx[sfAmount])
+                    auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
+                    if (vaultDeltaShares)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must not change vault "
-                            "balance by more than deposited amount";
-                        result = false;
+                            "Invariant failed: donation must not change vault shares";
+                        return false;  // That's all we can do
                     }
-
-                    if (*vaultDeltaAssets <= zero)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must increase vault balance";
-                        result = false;
-                    }
-
-                    // Any payments (including deposits) made by the issuer
-                    // do not change their balance, but create funds instead.
-                    bool const issuerDeposit = [&]() -> bool {
-                        if (vaultAsset.native())
-                            return false;
-                        return tx[sfAccount] == vaultAsset.getIssuer();
-                    }();
-
-                    if (!issuerDeposit)
-                    {
-                        auto const accountDeltaAssets = deltaAssetsTxAccount();
-                        if (!accountDeltaAssets)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: deposit must change depositor "
-                                "balance";
-                            return false;
-                        }
-
-                        if (*accountDeltaAssets >= zero)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: deposit must decrease depositor "
-                                "balance";
-                            result = false;
-                        }
-
-                        if (*accountDeltaAssets * -1 != *vaultDeltaAssets)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: deposit must change vault and "
-                                "depositor balance by equal amount";
-                            result = false;
-                        }
-                    }
-
-                    if (afterVault.assetsMaximum > zero && afterVault.assetsTotal > afterVault.assetsMaximum)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit assets outstanding must not "
-                            "exceed assets maximum";
-                        result = false;
-                    }
-
+                }
+                else
+                {
                     auto const accountDeltaShares = deltaShares(tx[sfAccount]);
                     if (!accountDeltaShares)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must change depositor "
-                            "shares";
+                            "Invariant failed: deposit must change depositor shares";
                         return false;  // That's all we can do
                     }
 
                     if (*accountDeltaShares <= zero)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must increase depositor "
-                            "shares";
+                            "Invariant failed: deposit must increase depositor shares";
                         result = false;
                     }
 
@@ -3052,252 +3068,238 @@ ValidVault::finalize(STTx const& tx, TER const ret, XRPAmount const fee, ReadVie
                     if (*vaultDeltaShares * -1 != *accountDeltaShares)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: deposit must change depositor and "
-                            "vault shares by equal amount";
+                            "Invariant failed: deposit must change depositor and vault shares by equal amount";
                         result = false;
                     }
-
-                    if (beforeVault.assetsTotal + *vaultDeltaAssets != afterVault.assetsTotal)
-                    {
-                        JLOG(j.fatal()) << "Invariant failed: deposit and assets "
-                                           "outstanding must add up";
-                        result = false;
-                    }
-                    if (beforeVault.assetsAvailable + *vaultDeltaAssets != afterVault.assetsAvailable)
-                    {
-                        JLOG(j.fatal()) << "Invariant failed: deposit and assets "
-                                           "available must add up";
-                        result = false;
-                    }
-
-                    return result;
                 }
-                case ttVAULT_WITHDRAW: {
-                    bool result = true;
 
-                    XRPL_ASSERT(
-                        !beforeVault_.empty(),
-                        "xrpl::ValidVault::finalize : withdrawal updated a "
-                        "vault");
-                    auto const& beforeVault = beforeVault_[0];
+                if (beforeVault.assetsTotal + *vaultDeltaAssets != afterVault.assetsTotal)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: deposit and assets outstanding must add up";
+                    result = false;
+                }
+                if (beforeVault.assetsAvailable + *vaultDeltaAssets != afterVault.assetsAvailable)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: deposit and assets available must add up";
+                    result = false;
+                }
 
-                    auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
+                return result;
+            }
+            case ttVAULT_WITHDRAW: {
+                bool result = true;
 
-                    if (!vaultDeltaAssets)
-                    {
-                        JLOG(j.fatal()) << "Invariant failed: withdrawal must "
-                                           "change vault balance";
-                        return false;  // That's all we can do
-                    }
+                XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : withdrawal updated a vault");
+                auto const& beforeVault = beforeVault_[0];
 
-                    if (*vaultDeltaAssets >= zero)
-                    {
-                        JLOG(j.fatal()) << "Invariant failed: withdrawal must "
-                                           "decrease vault balance";
-                        result = false;
-                    }
+                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
 
-                    // Any payments (including withdrawal) going to the issuer
-                    // do not change their balance, but destroy funds instead.
-                    bool const issuerWithdrawal = [&]() -> bool {
-                        if (vaultAsset.native())
-                            return false;
-                        auto const destination = tx[~sfDestination].value_or(tx[sfAccount]);
-                        return destination == vaultAsset.getIssuer();
+                if (!vaultDeltaAssets)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: withdrawal must change vault balance";
+                    return false;  // That's all we can do
+                }
+
+                if (*vaultDeltaAssets >= zero)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: withdrawal must decrease vault balance";
+                    result = false;
+                }
+
+                // Any payments (including withdrawal) going to the issuer
+                // do not change their balance, but destroy funds instead.
+                bool const issuerWithdrawal = [&]() -> bool {
+                    if (vaultAsset.native())
+                        return false;
+                    auto const destination = tx[~sfDestination].value_or(tx[sfAccount]);
+                    return destination == vaultAsset.getIssuer();
+                }();
+
+                if (!issuerWithdrawal)
+                {
+                    auto const accountDeltaAssets = deltaAssetsTxAccount();
+                    auto const otherAccountDelta = [&]() -> std::optional<Number> {
+                        if (auto const destination = tx[~sfDestination]; destination && *destination != tx[sfAccount])
+                            return deltaAssets(*destination);
+                        return std::nullopt;
                     }();
 
-                    if (!issuerWithdrawal)
-                    {
-                        auto const accountDeltaAssets = deltaAssetsTxAccount();
-                        auto const otherAccountDelta = [&]() -> std::optional<Number> {
-                            if (auto const destination = tx[~sfDestination];
-                                destination && *destination != tx[sfAccount])
-                                return deltaAssets(*destination);
-                            return std::nullopt;
-                        }();
-
-                        if (accountDeltaAssets.has_value() == otherAccountDelta.has_value())
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: withdrawal must change one "
-                                "destination balance";
-                            return false;
-                        }
-
-                        auto const destinationDelta =  //
-                            accountDeltaAssets ? *accountDeltaAssets : *otherAccountDelta;
-
-                        if (destinationDelta <= zero)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: withdrawal must increase "
-                                "destination balance";
-                            result = false;
-                        }
-
-                        if (*vaultDeltaAssets * -1 != destinationDelta)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: withdrawal must change vault "
-                                "and destination balance by equal amount";
-                            result = false;
-                        }
-                    }
-
-                    auto const accountDeltaShares = deltaShares(tx[sfAccount]);
-                    if (!accountDeltaShares)
+                    if (accountDeltaAssets.has_value() == otherAccountDelta.has_value())
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: withdrawal must change depositor "
-                            "shares";
+                            "Invariant failed: withdrawal must change one destination balance";
                         return false;
                     }
 
-                    if (*accountDeltaShares >= zero)
+                    auto const destinationDelta =  //
+                        accountDeltaAssets ? *accountDeltaAssets : *otherAccountDelta;
+
+                    if (destinationDelta <= zero)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: withdrawal must decrease depositor "
-                            "shares";
+                            "Invariant failed: withdrawal must increase destination balance";
                         result = false;
                     }
 
-                    auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
-                    if (!vaultDeltaShares || *vaultDeltaShares == zero)
+                    if (*vaultDeltaAssets * -1 != destinationDelta)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: withdrawal must change vault shares";
+                            "Invariant failed: withdrawal must change vault and destination balance by equal amount";
+                        result = false;
+                    }
+                }
+
+                auto const accountDeltaShares = deltaShares(tx[sfAccount]);
+                if (!accountDeltaShares)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: withdrawal must change depositor "
+                        "shares";
+                    return false;
+                }
+
+                if (*accountDeltaShares >= zero)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: withdrawal must decrease depositor shares";
+                    result = false;
+                }
+
+                auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
+                if (!vaultDeltaShares || *vaultDeltaShares == zero)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: withdrawal must change vault shares";
+                    return false;  // That's all we can do
+                }
+
+                if (*vaultDeltaShares * -1 != *accountDeltaShares)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: withdrawal must change depositor and vault shares by equal amount";
+                    result = false;
+                }
+
+                // Note, vaultBalance is negative (see check above)
+                if (beforeVault.assetsTotal + *vaultDeltaAssets != afterVault.assetsTotal)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: withdrawal and assets outstanding must add up";
+                    result = false;
+                }
+
+                if (beforeVault.assetsAvailable + *vaultDeltaAssets != afterVault.assetsAvailable)
+                {
+                    JLOG(j.fatal()) << "Invariant failed: withdrawal and "
+                                       "assets available must add up";
+                    result = false;
+                }
+
+                return result;
+            }
+            case ttVAULT_CLAWBACK: {
+                bool result = true;
+
+                XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : clawback updated a vault");
+                auto const& beforeVault = beforeVault_[0];
+
+                if (vaultAsset.native() || vaultAsset.getIssuer() != tx[sfAccount])
+                {
+                    // The owner can use clawback to force-burn shares when the
+                    // vault is empty but there are outstanding shares
+                    if (!(beforeShares && beforeShares->sharesTotal > 0 && vaultHoldsNoAssets(beforeVault) &&
+                          beforeVault.owner == tx[sfAccount]))
+                    {
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: clawback may only be performed "
+                            "by the asset issuer, or by the vault owner of an "
+                            "empty vault";
                         return false;  // That's all we can do
                     }
+                }
 
-                    if (*vaultDeltaShares * -1 != *accountDeltaShares)
+                auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
+                if (vaultDeltaAssets)
+                {
+                    if (*vaultDeltaAssets >= zero)
                     {
                         JLOG(j.fatal()) <<  //
-                            "Invariant failed: withdrawal must change depositor "
-                            "and vault shares by equal amount";
+                            "Invariant failed: clawback must decrease vault "
+                            "balance";
                         result = false;
                     }
 
-                    // Note, vaultBalance is negative (see check above)
                     if (beforeVault.assetsTotal + *vaultDeltaAssets != afterVault.assetsTotal)
                     {
-                        JLOG(j.fatal()) << "Invariant failed: withdrawal and "
-                                           "assets outstanding must add up";
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: clawback and assets outstanding "
+                            "must add up";
                         result = false;
                     }
 
                     if (beforeVault.assetsAvailable + *vaultDeltaAssets != afterVault.assetsAvailable)
                     {
-                        JLOG(j.fatal()) << "Invariant failed: withdrawal and "
-                                           "assets available must add up";
+                        JLOG(j.fatal()) <<  //
+                            "Invariant failed: clawback and assets available "
+                            "must add up";
                         result = false;
                     }
-
-                    return result;
                 }
-                case ttVAULT_CLAWBACK: {
-                    bool result = true;
-
-                    XRPL_ASSERT(!beforeVault_.empty(), "xrpl::ValidVault::finalize : clawback updated a vault");
-                    auto const& beforeVault = beforeVault_[0];
-
-                    if (vaultAsset.native() || vaultAsset.getIssuer() != tx[sfAccount])
-                    {
-                        // The owner can use clawback to force-burn shares when the
-                        // vault is empty but there are outstanding shares
-                        if (!(beforeShares && beforeShares->sharesTotal > 0 && vaultHoldsNoAssets(beforeVault) &&
-                              beforeVault.owner == tx[sfAccount]))
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: clawback may only be performed "
-                                "by the asset issuer, or by the vault owner of an "
-                                "empty vault";
-                            return false;  // That's all we can do
-                        }
-                    }
-
-                    auto const vaultDeltaAssets = deltaAssets(afterVault.pseudoId);
-                    if (vaultDeltaAssets)
-                    {
-                        if (*vaultDeltaAssets >= zero)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: clawback must decrease vault "
-                                "balance";
-                            result = false;
-                        }
-
-                        if (beforeVault.assetsTotal + *vaultDeltaAssets != afterVault.assetsTotal)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: clawback and assets outstanding "
-                                "must add up";
-                            result = false;
-                        }
-
-                        if (beforeVault.assetsAvailable + *vaultDeltaAssets != afterVault.assetsAvailable)
-                        {
-                            JLOG(j.fatal()) <<  //
-                                "Invariant failed: clawback and assets available "
-                                "must add up";
-                            result = false;
-                        }
-                    }
-                    else if (!vaultHoldsNoAssets(beforeVault))
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: clawback must change vault balance";
-                        return false;  // That's all we can do
-                    }
-
-                    auto const accountDeltaShares = deltaShares(tx[sfHolder]);
-                    if (!accountDeltaShares)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: clawback must change holder shares";
-                        return false;  // That's all we can do
-                    }
-
-                    if (*accountDeltaShares >= zero)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: clawback must decrease holder "
-                            "shares";
-                        result = false;
-                    }
-
-                    auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
-                    if (!vaultDeltaShares || *vaultDeltaShares == zero)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: clawback must change vault shares";
-                        return false;  // That's all we can do
-                    }
-
-                    if (*vaultDeltaShares * -1 != *accountDeltaShares)
-                    {
-                        JLOG(j.fatal()) <<  //
-                            "Invariant failed: clawback must change holder and "
-                            "vault shares by equal amount";
-                        result = false;
-                    }
-
-                    return result;
+                else if (!vaultHoldsNoAssets(beforeVault))
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: clawback must change vault balance";
+                    return false;  // That's all we can do
                 }
 
-                case ttLOAN_SET:
-                case ttLOAN_MANAGE:
-                case ttLOAN_PAY: {
-                    // TBD
-                    return true;
+                auto const accountDeltaShares = deltaShares(tx[sfHolder]);
+                if (!accountDeltaShares)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: clawback must change holder shares";
+                    return false;  // That's all we can do
                 }
 
-                default:
-                    // LCOV_EXCL_START
-                    UNREACHABLE("xrpl::ValidVault::finalize : unknown transaction type");
-                    return false;
-                    // LCOV_EXCL_STOP
+                if (*accountDeltaShares >= zero)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: clawback must decrease holder "
+                        "shares";
+                    result = false;
+                }
+
+                auto const vaultDeltaShares = deltaShares(afterVault.pseudoId);
+                if (!vaultDeltaShares || *vaultDeltaShares == zero)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: clawback must change vault shares";
+                    return false;  // That's all we can do
+                }
+
+                if (*vaultDeltaShares * -1 != *accountDeltaShares)
+                {
+                    JLOG(j.fatal()) <<  //
+                        "Invariant failed: clawback must change holder and "
+                        "vault shares by equal amount";
+                    result = false;
+                }
+
+                return result;
             }
-        }();
+
+            case ttLOAN_SET:
+            case ttLOAN_MANAGE:
+            case ttLOAN_PAY: {
+                // TBD
+                return true;
+            }
+
+            default:
+                // LCOV_EXCL_START
+                UNREACHABLE("xrpl::ValidVault::finalize : unknown transaction type");
+                return false;
+                // LCOV_EXCL_STOP
+        }
+    }();
 
     if (!result)
     {

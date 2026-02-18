@@ -55,6 +55,7 @@ struct Vault
         Account depositor;
         uint256 id;
         STAmount amount;
+        std::optional<std::uint32_t> flags{};
     };
 
     Json::Value

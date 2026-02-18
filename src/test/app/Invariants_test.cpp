@@ -15,6 +15,7 @@
 #include <xrpl/protocol/STLedgerEntry.h>
 #include <xrpl/protocol/STNumber.h>
 #include <xrpl/protocol/TER.h>
+#include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/TxFormats.h>
 #include <xrpl/protocol/XRPAmount.h>
 
@@ -3371,6 +3372,45 @@ class Invariants_test : public beast::unit_test::suite
             },
             XRPAmount{},
             STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
+            precloseXrp,
+            TxAccount::A2);
+
+        doInvariantCheck(
+            {"donation must not change depositor shares"},
+            [&](Account const& A1, Account const& A2, ApplyContext& ac) {
+                auto const keylet = keylet::vault(A1.id(), ac.view().seq());
+                return adjust(ac.view(), keylet, args(A2.id(), 10, [&](Adjustments& sample) {
+                                  sample.accountShares->amount = 10;
+                              }));
+            },
+            XRPAmount{},
+            STTx{
+                ttVAULT_DEPOSIT,
+                [](STObject& tx) {
+                    tx[sfAmount] = XRPAmount(10);
+                    tx[sfFlags] = tfVaultDonate;
+                }},
+            {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
+            precloseXrp,
+            TxAccount::A2);
+
+        doInvariantCheck(
+            {"donation must not change vault shares"},
+            [&](Account const& A1, Account const& A2, ApplyContext& ac) {
+                auto const keylet = keylet::vault(A1.id(), ac.view().seq());
+                return adjust(ac.view(), keylet, args(A2.id(), 10, [&](Adjustments& sample) {
+                                  sample.sharesTotal = 10;
+                                  sample.accountShares = std::nullopt;
+                              }));
+            },
+            XRPAmount{},
+            STTx{
+                ttVAULT_DEPOSIT,
+                [](STObject& tx) {
+                    tx[sfAmount] = XRPAmount(10);
+                    tx[sfFlags] = tfVaultDonate;
+                }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             precloseXrp,
             TxAccount::A2);

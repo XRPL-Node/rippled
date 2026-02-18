@@ -15,6 +15,15 @@
 
 namespace xrpl {
 
+std::uint32_t
+VaultDeposit::getFlagsMask(PreflightContext const& ctx)
+{
+    if (ctx.rules.enabled(fixLendingProtocolV1_1))
+        return tfVaultDepositMask;
+
+    return tfVaultDepositMask | tfVaultDonate;
+}
+
 NotTEC
 VaultDeposit::preflight(PreflightContext const& ctx)
 {
@@ -67,6 +76,22 @@ VaultDeposit::preclaim(PreclaimContext const& ctx)
         JLOG(ctx.j.error()) << "VaultDeposit: missing issuance of vault shares.";
         return tefINTERNAL;
         // LCOV_EXCL_STOP
+    }
+
+    if (ctx.view.rules().enabled(fixLendingProtocolV1_1) && ctx.tx.isFlag(tfVaultDonate))
+    {
+        if (account != vault->at(sfOwner))
+        {
+            JLOG(ctx.j.debug()) << "VaultDeposit: only owner can donate to vault.";
+            return tecNO_PERMISSION;
+        }
+
+        // Cannot donate to a vault with no shares
+        if (sleIssuance->at(sfOutstandingAmount) == 0)
+        {
+            JLOG(ctx.j.debug()) << "VaultDeposit: empty vault cannot receive donations.";
+            return tecNO_PERMISSION;
+        }
     }
 
     if (sleIssuance->isFlag(lsfMPTLocked))
@@ -179,42 +204,49 @@ VaultDeposit::doApply()
                 return err;
         }
     }
-
     STAmount sharesCreated = {vault->at(sfShareMPTID)}, assetsDeposited;
-    try
+    if (view().rules().enabled(fixLendingProtocolV1_1) && ctx_.tx.isFlag(tfVaultDonate))
     {
-        // Compute exchange before transferring any amounts.
-        {
-            auto const maybeShares = assetsToSharesDeposit(vault, sleIssuance, amount);
-            if (!maybeShares)
-                return tecINTERNAL;  // LCOV_EXCL_LINE
-            sharesCreated = *maybeShares;
-        }
-        if (sharesCreated == beast::zero)
-            return tecPRECISION_LOSS;
-
-        auto const maybeAssets = sharesToAssetsDeposit(vault, sleIssuance, sharesCreated);
-        if (!maybeAssets)
-            return tecINTERNAL;  // LCOV_EXCL_LINE
-        else if (*maybeAssets > amount)
-        {
-            // LCOV_EXCL_START
-            JLOG(j_.error()) << "VaultDeposit: would take more than offered.";
-            return tecINTERNAL;
-            // LCOV_EXCL_STOP
-        }
-        assetsDeposited = *maybeAssets;
+        XRPL_ASSERT(account_ == vault->at(sfOwner), "xrpl::VaultDeposit::doApply : account is owner");
+        assetsDeposited = amount;
     }
-    catch (std::overflow_error const&)
+    else
     {
-        // It's easy to hit this exception from Number with large enough Scale
-        // so we avoid spamming the log and only use debug here.
-        JLOG(j_.debug())  //
-            << "VaultDeposit: overflow error with"
-            << " scale=" << (int)vault->at(sfScale).value()  //
-            << ", assetsTotal=" << vault->at(sfAssetsTotal).value()
-            << ", sharesTotal=" << sleIssuance->at(sfOutstandingAmount) << ", amount=" << amount;
-        return tecPATH_DRY;
+        try
+        {
+            // Compute exchange before transferring any amounts.
+            {
+                auto const maybeShares = assetsToSharesDeposit(vault, sleIssuance, amount);
+                if (!maybeShares)
+                    return tecINTERNAL;  // LCOV_EXCL_LINE
+                sharesCreated = *maybeShares;
+            }
+            if (sharesCreated == beast::zero)
+                return tecPRECISION_LOSS;
+
+            auto const maybeAssets = sharesToAssetsDeposit(vault, sleIssuance, sharesCreated);
+            if (!maybeAssets)
+                return tecINTERNAL;  // LCOV_EXCL_LINE
+            else if (*maybeAssets > amount)
+            {
+                // LCOV_EXCL_START
+                JLOG(j_.error()) << "VaultDeposit: would take more than offered.";
+                return tecINTERNAL;
+                // LCOV_EXCL_STOP
+            }
+            assetsDeposited = *maybeAssets;
+        }
+        catch (std::overflow_error const&)
+        {
+            // It's easy to hit this exception from Number with large enough Scale
+            // so we avoid spamming the log and only use debug here.
+            JLOG(j_.debug())  //
+                << "VaultDeposit: overflow error with"
+                << " scale=" << (int)vault->at(sfScale).value()  //
+                << ", assetsTotal=" << vault->at(sfAssetsTotal).value()
+                << ", sharesTotal=" << sleIssuance->at(sfOutstandingAmount) << ", amount=" << amount;
+            return tecPATH_DRY;
+        }
     }
 
     XRPL_ASSERT(
@@ -249,10 +281,17 @@ VaultDeposit::doApply()
         // LCOV_EXCL_STOP
     }
 
-    // Transfer shares from vault to depositor.
-    if (auto const ter = accountSend(view(), vaultAccount, account_, sharesCreated, j_, WaiveTransferFee::Yes);
-        !isTesSuccess(ter))
-        return ter;
+    if (view().rules().enabled(fixLendingProtocolV1_1) && ctx_.tx.isFlag(tfVaultDonate))
+    {
+        XRPL_ASSERT(sharesCreated == beast::zero, "xrpl::VaultDeposit::doApply: donation issued shares");
+    }
+    else
+    {
+        // Transfer shares from vault to depositor.
+        if (auto const ter = accountSend(view(), vaultAccount, account_, sharesCreated, j_, WaiveTransferFee::Yes);
+            !isTesSuccess(ter))
+            return ter;
+    }
 
     associateAsset(*vault, vaultAsset);
 

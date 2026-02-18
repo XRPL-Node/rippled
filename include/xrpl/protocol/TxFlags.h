@@ -291,6 +291,8 @@ constexpr std::uint32_t const tfLoanImpair = 0x00020000;
 constexpr std::uint32_t const tfLoanUnimpair = 0x00040000;
 constexpr std::uint32_t const tfLoanManageMask = ~(tfUniversal | tfLoanDefault | tfLoanImpair | tfLoanUnimpair);
 
+constexpr std::uint32_t const tfVaultDonate = 0x00010000;
+constexpr std::uint32_t const tfVaultDepositMask = ~(tfUniversal | tfVaultDonate);
 // clang-format on
 
 }  // namespace xrpl
