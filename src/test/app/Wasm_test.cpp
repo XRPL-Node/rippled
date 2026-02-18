@@ -326,9 +326,9 @@ struct Wasm_test : public beast::unit_test::suite
         }
 
         {  // fail because trying to access nonexistent field
-            struct BadTestHostFunctions : public TestHostFunctions
+            struct FieldNotFoundHostFunctions : public TestHostFunctions
             {
-                explicit BadTestHostFunctions(Env& env) : TestHostFunctions(env)
+                explicit FieldNotFoundHostFunctions(Env& env) : TestHostFunctions(env)
                 {
                 }
                 Expected<Bytes, HostFunctionError>
@@ -338,15 +338,15 @@ struct Wasm_test : public beast::unit_test::suite
                 }
             };
 
-            std::shared_ptr<HostFunctions> hfs(new BadTestHostFunctions(env));
+            std::shared_ptr<HostFunctions> hfs(new FieldNotFoundHostFunctions(env));
             auto re = runEscrowWasm(allHFWasm, hfs, ESCROW_FUNCTION_NAME, {}, 100'000);
             checkResult(re, -201, 28'965);
         }
 
         {  // fail because trying to allocate more than MAX_PAGES memory
-            struct BadTestHostFunctions : public TestHostFunctions
+            struct OversizedFieldHostFunctions : public TestHostFunctions
             {
-                explicit BadTestHostFunctions(Env& env) : TestHostFunctions(env)
+                explicit OversizedFieldHostFunctions(Env& env) : TestHostFunctions(env)
                 {
                 }
                 Expected<Bytes, HostFunctionError>
@@ -356,7 +356,7 @@ struct Wasm_test : public beast::unit_test::suite
                 }
             };
 
-            std::shared_ptr<HostFunctions> hfs(new BadTestHostFunctions(env));
+            std::shared_ptr<HostFunctions> hfs(new OversizedFieldHostFunctions(env));
             auto re = runEscrowWasm(allHFWasm, hfs, ESCROW_FUNCTION_NAME, {}, 100'000);
             checkResult(re, -201, 28'965);
         }
@@ -535,11 +535,12 @@ struct Wasm_test : public beast::unit_test::suite
             [[maybe_unused]] uint256 const nft1{token::getNextID(env, alan, 0u)};
 
             env(token::mint(alan, 0u),
-                token::uri("https://github.com/XRPLF/XRPL-Standards/discussions/"
-                           "279?id=github.com/XRPLF/XRPL-Standards/discussions/"
-                           "279&ut=github.com/XRPLF/XRPL-Standards/discussions/"
-                           "279&sid=github.com/XRPLF/XRPL-Standards/discussions/"
-                           "279&aot=github.com/XRPLF/XRPL-Standards/disc"));
+                token::uri(
+                    "https://github.com/XRPLF/XRPL-Standards/discussions/"
+                    "279?id=github.com/XRPLF/XRPL-Standards/discussions/"
+                    "279&ut=github.com/XRPLF/XRPL-Standards/discussions/"
+                    "279&sid=github.com/XRPLF/XRPL-Standards/discussions/"
+                    "279&aot=github.com/XRPLF/XRPL-Standards/disc"));
             [[maybe_unused]] uint256 const nft2{token::getNextID(env, alan, 0u)};
             env(token::mint(alan, 0u));
             env.close();
@@ -574,7 +575,7 @@ struct Wasm_test : public beast::unit_test::suite
         auto const codecovWasm = hexToBytes(codecovTestsWasmHex);
         std::shared_ptr<HostFunctions> hfs(new TestHostFunctions(env, 0));
 
-        auto const allowance = 201'503;
+        auto const allowance = 202'724;
         auto re = runEscrowWasm(codecovWasm, hfs, ESCROW_FUNCTION_NAME, {}, allowance);
 
         checkResult(re, 1, allowance);
@@ -924,6 +925,55 @@ struct Wasm_test : public beast::unit_test::suite
     }
 
     void
+    testManyParams()
+    {
+        testcase("Wasm Many params");
+
+        auto const params1k = hexToBytes(thousandParamsHex);
+        auto const params1k1 = hexToBytes(thousand1ParamsHex);
+
+        using namespace test::jtx;
+
+        Env env{*this};
+        std::shared_ptr<HostFunctions> hfs(new TestHostFunctions(env, 0));
+        auto imports = createWasmImport(*hfs);
+
+        // add 1k parameter (max that wasmi support)
+        std::vector<WasmParam> params;
+        for (int i = 0; i < 1000; ++i)
+            params.push_back({.type = WT_I32, .of = {.i32 = 2 * i}});
+
+        auto& engine = WasmEngine::instance();
+        {
+            auto re = engine.run(params1k, "test", params, imports, hfs, 1'000'000, env.journal);
+            BEAST_EXPECT(re && re->result == 999000);
+        }
+
+        // add 1 more parameter, module can't be created now
+        params.push_back({.type = WT_I32, .of = {.i32 = 2 * 1000}});
+        {
+            auto re = engine.run(params1k1, "test", params, imports, hfs, 1'000'000, env.journal);
+            BEAST_EXPECT(!re);
+        }
+
+        // function that create 10k local variables
+        auto const locals10k = hexToBytes(locals10kHex);
+        {
+            auto re = engine.run(locals10k, "test", wasmParams(0, 1), imports, hfs, 1'000'000, env.journal);
+            BEAST_EXPECT(re && re->result == 890'489'442);
+        }
+
+        // module has 5k functions
+        auto const functions5k = hexToBytes(functions5kHex);
+        {
+            auto re = engine.run(functions5k, "test0001", wasmParams(2, 3), imports, hfs, 1'000'000, env.journal);
+            BEAST_EXPECT(re && re->result == 5);
+        }
+
+        env.close();
+    }
+
+    void
     run() override
     {
         using namespace test::jtx;
@@ -956,6 +1006,7 @@ struct Wasm_test : public beast::unit_test::suite
         testBadAlign();
         testReturnType();
         testSwapBytes();
+        testManyParams();
 
         // perfTest();
     }

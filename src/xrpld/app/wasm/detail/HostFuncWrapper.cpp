@@ -1,9 +1,13 @@
-#include <xrpld/app/tx/detail/NFTokenUtils.h>
 #include <xrpld/app/wasm/HostFunc.h>
 #include <xrpld/app/wasm/HostFuncWrapper.h>
 
 #include <xrpl/protocol/Asset.h>
+#include <xrpl/protocol/KeyType.h>
+#include <xrpl/protocol/Protocol.h>
+#include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/STNumber.h>
+#include <xrpl/protocol/SecretKey.h>
+#include <xrpl/protocol/Seed.h>
 #include <xrpl/protocol/digest.h>
 
 namespace xrpl {
@@ -1354,6 +1358,10 @@ trace_wrap(void* env, wasm_val_vec_t const* params, wasm_val_vec_t* results)
     if (!asHex)
     {
         return hfResult(results, asHex.error());  // LCOV_EXCL_LINE
+    }
+    if (*asHex != 0 && *asHex != 1)
+    {
+        return hfResult(results, HostFunctionError::INVALID_PARAMS);
     }
 
     return returnResult(runtime, params, results, hf->trace(*msg, *data, *asHex), index);
