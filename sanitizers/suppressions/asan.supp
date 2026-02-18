@@ -1,7 +1,6 @@
 # The idea is to empty this file gradually by fixing the underlying issues and removing suppressions.
 #
 # ASAN_OPTIONS="print_stacktrace=1:detect_container_overflow=0:suppressions=sanitizers/suppressions/asan.supp:halt_on_error=0"
-type:boost::context
 
 
 # Leaks in Doctest tests: xrpl.test.*
