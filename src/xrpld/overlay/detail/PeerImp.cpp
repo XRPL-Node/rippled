@@ -3,11 +3,8 @@
 #include <xrpld/app/ledger/InboundTransactions.h>
 #include <xrpld/app/ledger/LedgerMaster.h>
 #include <xrpld/app/ledger/TransactionMaster.h>
-#include <xrpld/app/misc/AmendmentTable.h>
-#include <xrpld/app/misc/LoadFeeTrack.h>
 #include <xrpld/app/misc/Transaction.h>
 #include <xrpld/app/misc/ValidatorList.h>
-#include <xrpld/app/tx/apply.h>
 #include <xrpld/overlay/Cluster.h>
 #include <xrpld/overlay/detail/PeerImp.h>
 #include <xrpld/overlay/detail/Tuning.h>
@@ -18,9 +15,12 @@
 #include <xrpl/basics/safe_cast.h>
 #include <xrpl/core/HashRouter.h>
 #include <xrpl/core/PerfLog.h>
+#include <xrpl/ledger/AmendmentTable.h>
 #include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/digest.h>
+#include <xrpl/server/LoadFeeTrack.h>
 #include <xrpl/server/NetworkOPs.h>
+#include <xrpl/tx/apply.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/beast/core/ostream.hpp>
@@ -533,8 +533,7 @@ void
 PeerImp::fail(std::string const& reason)
 {
     if (!strand_.running_in_this_thread())
-        return post(
-            strand_, std::bind((void(Peer::*)(std::string const&)) & PeerImp::fail, shared_from_this(), reason));
+        return post(strand_, std::bind((void (Peer::*)(std::string const&))&PeerImp::fail, shared_from_this(), reason));
 
     if (!socket_.is_open())
         return;
@@ -2724,8 +2723,8 @@ PeerImp::checkTransaction(
         if (checkSignature)
         {
             // Check the signature before handing off to the job queue.
-            if (auto [valid, validReason] = checkValidity(
-                    app_.getHashRouter(), *stx, app_.getLedgerMaster().getValidatedRules(), app_.config());
+            if (auto [valid, validReason] =
+                    checkValidity(app_.getHashRouter(), *stx, app_.getLedgerMaster().getValidatedRules());
                 valid != Validity::Valid)
             {
                 if (!validReason.empty())

@@ -2,10 +2,10 @@
 
 #include <xrpld/app/ledger/detail/LedgerNodeHelpers.h>
 #include <xrpld/app/main/Application.h>
-#include <xrpld/app/misc/AmendmentTable.h>
 
 #include <xrpl/basics/IntrusivePointer.h>
 #include <xrpl/beast/utility/instrumentation.h>
+#include <xrpl/ledger/AmendmentTable.h>
 #include <xrpl/shamap/SHAMapLeafNode.h>
 #include <xrpl/shamap/SHAMapNodeID.h>
 #include <xrpl/shamap/SHAMapTreeNode.h>
