@@ -1861,14 +1861,31 @@ protected:
                                             ? 0
                                             : std::max(broker.vaultScale(env), state.principalOutstanding.exponent())));
                 NumberRoundModeGuard mg(Number::upward);
-                auto const defaultAmount = roundToAsset(
-                    broker.asset,
-                    std::min(
-                        tenthBipsOfValue(
-                            tenthBipsOfValue(brokerSle->at(sfDebtTotal), broker.params.coverRateMin),
-                            broker.params.coverRateLiquidation),
-                        state.totalValue - state.managementFeeOutstanding),
-                    state.loanScale);
+                auto const totalDefaultAmount = state.totalValue - state.managementFeeOutstanding;
+                auto const defaultAmount = [&] {
+                    if (env.enabled(fixDefaultCoverLogicOptimization))
+                    {
+                        // New formula: DefaultCovered = min(DefaultAmount × CoverRateMinimum, CoverAvailable)
+                        return roundToAsset(
+                            broker.asset,
+                            tenthBipsOfValue(totalDefaultAmount, broker.params.coverRateMin),
+                            state.loanScale);
+                    }
+                    else
+                    {
+                        // Old formula from XLS-66 spec, section 3.2.3.2:
+                        // DefaultCovered = min(DebtTotal × CoverRateMinimum × CoverRateLiquidation, DefaultAmount,
+                        // CoverAvailable)
+                        return roundToAsset(
+                            broker.asset,
+                            std::min(
+                                tenthBipsOfValue(
+                                    tenthBipsOfValue(brokerSle->at(sfDebtTotal), broker.params.coverRateMin),
+                                    broker.params.coverRateLiquidation),
+                                totalDefaultAmount),
+                            state.loanScale);
+                    }
+                }();
                 return std::make_pair(defaultAmount, brokerSle->at(sfOwner));
             }
             return std::make_pair(Number{}, AccountID{});

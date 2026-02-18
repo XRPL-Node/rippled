@@ -256,7 +256,7 @@ protected:
     }
 
     void
-    testLoanDefaultWithdrawAndPay()
+    testLoanDefaultWithdrawAndPay(FeatureBitset features)
     {
         testcase("LoanDefaultWithdrawAndPay");
         // Creates a loan, advances time to make it defaultable, then in a batch:
@@ -266,7 +266,7 @@ protected:
         using namespace jtx::loan;
         using namespace std::chrono_literals;
 
-        Env env(*this, all);
+        Env env(*this, features);
 
         Account const issuer{"issuer"};
         Account const broker{"broker"};
@@ -327,11 +327,21 @@ protected:
         auto const coverRateLiq = TenthBips32{brokerSle->at(sfCoverRateLiquidation)};
         auto const coverAvailable = brokerSle->at(sfCoverAvailable);
 
-        // MinimumCover = DebtTotal x CoverRateMinimum
-        Number const minimumCover = debtTotal * coverRateMin.value() / tenthBipsPerUnity.value();
-        // DefaultCovered = min(MinimumCover x CoverRateLiquidation, DefaultAmount, CoverAvailable)
-        Number const defaultCovered =
-            std::min({minimumCover * coverRateLiq.value() / tenthBipsPerUnity.value(), defaultAmount, coverAvailable});
+        Number const defaultCovered = [&] {
+            // New formula: DefaultCovered = min(DefaultAmount × CoverRateMinimum, CoverAvailable)
+            if (env.enabled(fixDefaultCoverLogicOptimization))
+            {
+                return std::min(defaultAmount * coverRateMin.value() / tenthBipsPerUnity.value(), coverAvailable);
+            }
+            else
+            {
+                // MinimumCover = DebtTotal x CoverRateMinimum
+                Number const minimumCover = debtTotal * coverRateMin.value() / tenthBipsPerUnity.value();
+                // DefaultCovered = min(MinimumCover x CoverRateLiquidation, DefaultAmount, CoverAvailable)
+                return std::min(
+                    {minimumCover * coverRateLiq.value() / tenthBipsPerUnity.value(), defaultAmount, coverAvailable});
+            }
+        }();
 
         // Get vault available before default
         auto const vaultSle = env.le(keylet::vault(brokerSle->at(sfVaultID)));
@@ -705,7 +715,8 @@ public:
         testCreateAsset();
         testLoanSetAndDelete();
         testLoanSetAndImpair();
-        testLoanDefaultWithdrawAndPay();
+        testLoanDefaultWithdrawAndPay(all - fixDefaultCoverLogicOptimization);
+        testLoanDefaultWithdrawAndPay(all);
         testRiskFreeArbitrage();
         testRiskFreeArbitrageFails();
     }
