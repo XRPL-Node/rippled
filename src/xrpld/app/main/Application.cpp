@@ -1137,20 +1137,20 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
 
     auto const startUp = config_->START_UP;
     JLOG(m_journal.debug()) << "startUp: " << startUp;
-    if (startUp == StartUpType::FRESH)
+    if (startUp == StartUpType::Fresh)
     {
         JLOG(m_journal.info()) << "Starting new Ledger";
 
         startGenesisLedger();
     }
-    else if (startUp == StartUpType::LOAD || startUp == StartUpType::LOAD_FILE || startUp == StartUpType::REPLAY)
+    else if (startUp == StartUpType::Load || startUp == StartUpType::LoadFile || startUp == StartUpType::Replay)
     {
         JLOG(m_journal.info()) << "Loading specified Ledger";
 
         if (!loadOldLedger(
                 config_->START_LEDGER,
-                startUp == StartUpType::REPLAY,
-                startUp == StartUpType::LOAD_FILE,
+                startUp == StartUpType::Replay,
+                startUp == StartUpType::LoadFile,
                 config_->TRAP_TX_HASH))
         {
             JLOG(m_journal.error()) << "The specified ledger could not be loaded.";
@@ -1166,7 +1166,7 @@ ApplicationImp::setup(boost::program_options::variables_map const& cmdline)
             }
         }
     }
-    else if (startUp == StartUpType::NETWORK)
+    else if (startUp == StartUpType::Network)
     {
         // This should probably become the default once we have a stable
         // network.
@@ -1553,7 +1553,7 @@ void
 ApplicationImp::startGenesisLedger()
 {
     std::vector<uint256> const initialAmendments =
-        (config_->START_UP == StartUpType::FRESH) ? m_amendmentTable->getDesired() : std::vector<uint256>{};
+        (config_->START_UP == StartUpType::Fresh) ? m_amendmentTable->getDesired() : std::vector<uint256>{};
 
     std::shared_ptr<Ledger> const genesis =
         std::make_shared<Ledger>(create_genesis, *config_, initialAmendments, nodeFamily_);

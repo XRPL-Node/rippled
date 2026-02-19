@@ -65,8 +65,8 @@ makeLedgerDBs(
         tx->getSession() << boost::str(
             boost::format("PRAGMA cache_size=-%d;") % kilobytes(config.getValueFor(SizedItem::txnDBCache)));
 
-        if (!setup.standAlone || setup.startUp == StartUpType::LOAD || setup.startUp == StartUpType::LOAD_FILE ||
-            setup.startUp == StartUpType::REPLAY)
+        if (!setup.standAlone || setup.startUp == StartUpType::Load || setup.startUp == StartUpType::LoadFile ||
+            setup.startUp == StartUpType::Replay)
         {
             // Check if AccountTransactions has primary key
             std::string cid, name, type;
