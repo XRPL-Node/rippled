@@ -157,9 +157,16 @@ PropertyStream::Source::Source(std::string const& name) : m_name(name), item_(th
 
 PropertyStream::Source::~Source()
 {
-    std::lock_guard _(lock_);
-    if (parent_ != nullptr)
-        parent_->remove(*this);
+    // Read parent_ under lock, then release before calling remove()
+    // to maintain consistent lock ordering (parent before child),
+    // matching the order used in find_one_deep().
+    Source* parent;
+    {
+        std::lock_guard _(lock_);
+        parent = parent_;
+    }
+    if (parent != nullptr)
+        parent->remove(*this);
     removeAll();
 }
 
@@ -197,10 +204,12 @@ void
 PropertyStream::Source::removeAll()
 {
     std::lock_guard _(lock_);
-    for (auto iter = children_.begin(); iter != children_.end();)
+    while (!children_.empty())
     {
-        std::lock_guard _cl((*iter)->lock_);
-        remove(*(*iter));
+        Source& child = children_.front().source();
+        std::lock_guard _cl(child.lock_);
+        children_.erase(children_.iterator_to(child.item_));
+        child.parent_ = nullptr;
     }
 }
 
