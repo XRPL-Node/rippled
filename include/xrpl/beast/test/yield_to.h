@@ -11,12 +11,22 @@
 #include <boost/thread/csbl/memory/allocator_arg.hpp>
 
 #include <condition_variable>
+#include <cstddef>
 #include <mutex>
 #include <thread>
 #include <vector>
 
 namespace beast {
 namespace test {
+
+// Sanitizers significantly increase stack frame sizes
+// (TSAN ~3-5x, ASAN ~2-3x), requiring larger coroutine stacks.
+#if defined(__SANITIZE_THREAD__) || defined(__SANITIZE_ADDRESS__) || \
+    (defined(__has_feature) && (__has_feature(thread_sanitizer) || __has_feature(address_sanitizer)))
+inline constexpr std::size_t yieldStackSize = 8 * 1024 * 1024;
+#else
+inline constexpr std::size_t yieldStackSize = 2 * 1024 * 1024;
+#endif
 
 /** Mix-in to support tests using asio coroutines.
 
@@ -110,7 +120,7 @@ enable_yield_to::spawn(F0&& f, FN&&... fn)
     boost::asio::spawn(
         ios_,
         boost::allocator_arg,
-        boost::context::fixedsize_stack(2 * 1024 * 1024),
+        boost::context::fixedsize_stack(yieldStackSize),
         [&](yield_context yield) {
             f(yield);
             std::lock_guard lock{m_};

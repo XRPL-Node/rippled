@@ -4,6 +4,15 @@
 
 namespace xrpl {
 
+// Sanitizers significantly increase stack frame sizes
+// (TSAN ~3-5x, ASAN ~2-3x), requiring larger coroutine stacks.
+#if defined(__SANITIZE_THREAD__) || defined(__SANITIZE_ADDRESS__) || \
+    (defined(__has_feature) && (__has_feature(thread_sanitizer) || __has_feature(address_sanitizer)))
+inline constexpr std::size_t coroStackSize = megabytes(8);
+#else
+inline constexpr std::size_t coroStackSize = megabytes(1);
+#endif
+
 template <class F>
 JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string const& name, F&& f)
     : jq_(jq)
@@ -19,7 +28,7 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
               finished_ = true;
 #endif
           },
-          boost::coroutines::attributes(megabytes(1)))
+          boost::coroutines::attributes(coroStackSize))
 {
 }
 
