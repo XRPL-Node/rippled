@@ -727,39 +727,37 @@ run(int argc, char** argv)
     else if (vm.count("verbose"))
         thresh = kTrace;
 
-    auto logs = std::make_unique<Logs>(thresh);
+    auto app = make_Application(std::move(config), std::make_unique<Logs>(thresh), std::make_unique<TimeKeeper>());
 
     // No arguments. Run server.
     if (!vm.count("parameters"))
     {
         // TODO: this comment can be removed in a future release -
         // say 1.7 or higher
-        if (config->had_trailing_comments())
+        if (app->config().had_trailing_comments())
         {
-            JLOG(logs->journal("Application").warn()) << "Trailing comments were seen in your config file. "
-                                                      << "The treatment of inline/trailing comments has changed "
-                                                         "recently. "
-                                                      << "Any `#` characters NOT intended to delimit comments should "
-                                                         "be "
-                                                      << "preceded by a \\";
+            JLOG(app->getJournal("Application").warn()) << "Trailing comments were seen in your config file. "
+                                                        << "The treatment of inline/trailing comments has changed "
+                                                           "recently. "
+                                                        << "Any `#` characters NOT intended to delimit comments should "
+                                                           "be "
+                                                        << "preceded by a \\";
         }
 
         // We want at least 1024 file descriptors. We'll
         // tweak this further.
-        if (!adjustDescriptorLimit(1024, logs->journal("Application")))
+        if (!adjustDescriptorLimit(1024, app->getJournal("Application")))
             return -1;
 
         if (vm.count("debug"))
-            setDebugLogSink(logs->makeSink("Debug", beast::severities::kTrace));
-
-        auto app = make_Application(std::move(config), std::move(logs), std::make_unique<TimeKeeper>());
+            setDebugLogSink(app->getLogs().makeSink("Debug", beast::severities::kTrace));
 
         if (!app->setup(vm))
             return -1;
 
         // With our configuration parsed, ensure we have
         // enough file descriptors available:
-        if (!adjustDescriptorLimit(app->fdRequired(), app->logs().journal("Application")))
+        if (!adjustDescriptorLimit(app->fdRequired(), app->getJournal("Application")))
             return -1;
 
         // Start the server
@@ -773,7 +771,7 @@ run(int argc, char** argv)
 
     // We have an RPC command to process:
     beast::setCurrentThreadName("rippled: rpc");
-    return RPCCall::fromCommandLine(*config, vm["parameters"].as<std::vector<std::string>>(), *logs);
+    return RPCCall::fromCommandLine(app->config(), vm["parameters"].as<std::vector<std::string>>(), *app);
     // LCOV_EXCL_STOP
 }
 

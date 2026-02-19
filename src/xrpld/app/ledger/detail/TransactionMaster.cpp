@@ -9,7 +9,8 @@
 namespace xrpl {
 
 TransactionMaster::TransactionMaster(Application& app)
-    : mApp(app), mCache("TransactionCache", 65536, std::chrono::minutes{30}, stopwatch(), mApp.journal("TaggedCache"))
+    : mApp(app)
+    , mCache("TransactionCache", 65536, std::chrono::minutes{30}, stopwatch(), mApp.getJournal("TaggedCache"))
 {
 }
 

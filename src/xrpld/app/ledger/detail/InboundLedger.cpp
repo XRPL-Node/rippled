@@ -61,7 +61,12 @@ InboundLedger::InboundLedger(
     Reason reason,
     clock_type& clock,
     std::unique_ptr<PeerSet> peerSet)
-    : TimeoutCounter(app, hash, ledgerAcquireTimeout, {jtLEDGER_DATA, "InboundLedger", 5}, app.journal("InboundLedger"))
+    : TimeoutCounter(
+          app,
+          hash,
+          ledgerAcquireTimeout,
+          {jtLEDGER_DATA, "InboundLedger", 5},
+          app.getJournal("InboundLedger"))
     , m_clock(clock)
     , mHaveHeader(false)
     , mHaveState(false)
@@ -115,8 +120,9 @@ std::size_t
 InboundLedger::getPeerCount() const
 {
     auto const& peerIds = mPeerSet->getPeerIds();
-    return std::count_if(
-        peerIds.begin(), peerIds.end(), [this](auto id) { return (app_.overlay().findPeerByShortID(id) != nullptr); });
+    return std::count_if(peerIds.begin(), peerIds.end(), [this](auto id) {
+        return (app_.getOverlay().findPeerByShortID(id) != nullptr);
+    });
 }
 
 void
@@ -507,7 +513,7 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                 auto packet = std::make_shared<Message>(tmBH, protocol::mtGET_OBJECTS);
                 auto const& peerIds = mPeerSet->getPeerIds();
                 std::for_each(peerIds.begin(), peerIds.end(), [this, &packet](auto id) {
-                    if (auto p = app_.overlay().findPeerByShortID(id))
+                    if (auto p = app_.getOverlay().findPeerByShortID(id))
                     {
                         mByHash = false;
                         p->send(packet);

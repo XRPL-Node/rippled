@@ -152,7 +152,7 @@ SHAMapStoreImp::makeNodeStore(int readThreads)
             std::move(writableBackend),
             std::move(archiveBackend),
             nscfg,
-            app_.logs().journal(nodeStoreName_));
+            app_.getJournal(nodeStoreName_));
         fdRequired_ += dbr->fdRequired();
         dbRotating_ = dbr.get();
         db.reset(dynamic_cast<NodeStore::Database*>(dbr.release()));
@@ -164,7 +164,7 @@ SHAMapStoreImp::makeNodeStore(int readThreads)
             scheduler_,
             readThreads,
             nscfg,
-            app_.logs().journal(nodeStoreName_));
+            app_.getJournal(nodeStoreName_));
         fdRequired_ += db->fdRequired();
     }
     return db;
@@ -424,7 +424,7 @@ SHAMapStoreImp::makeBackendRotating(std::string path)
         section,
         megabytes(app_.config().getValueFor(SizedItem::burstSize, std::nullopt)),
         scheduler_,
-        app_.logs().journal(nodeStoreName_))};
+        app_.getJournal(nodeStoreName_))};
     backend->open();
     return backend;
 }

@@ -37,11 +37,11 @@ getAutofillSequence(Json::Value const& tx_json, RPC::JsonContext& context)
     {
         return Unexpected(RPC::make_error(rpcSRC_ACT_MALFORMED, RPC::invalid_field_message("tx.Account")));
     }
-    std::shared_ptr<SLE const> const sle = context.app.openLedger().current()->read(keylet::account(*srcAddressID));
+    std::shared_ptr<SLE const> const sle = context.app.getOpenLedger().current()->read(keylet::account(*srcAddressID));
     if (!hasTicketSeq && !sle)
     {
-        JLOG(context.app.journal("Simulate").debug()) << "Failed to find source account "
-                                                      << "in current ledger: " << toBase58(*srcAddressID);
+        JLOG(context.app.getJournal("Simulate").debug()) << "Failed to find source account "
+                                                         << "in current ledger: " << toBase58(*srcAddressID);
 
         return Unexpected(rpcError(rpcSRC_ACT_NOT_FOUND));
     }
@@ -201,7 +201,7 @@ simulateTxn(RPC::JsonContext& context, std::shared_ptr<Transaction> transaction)
 {
     Json::Value jvResult;
     // Process the transaction
-    OpenView view = *context.app.openLedger().current();
+    OpenView view = *context.app.getOpenLedger().current();
     auto const result =
         context.app.getTxQ().apply(context.app, view, transaction->getSTransaction(), tapDRY_RUN, context.j);
 

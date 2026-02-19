@@ -472,7 +472,7 @@ public:
             section,
             megabytes(env.app().config().getValueFor(SizedItem::burstSize, std::nullopt)),
             scheduler,
-            env.app().logs().journal("NodeStoreTest"))};
+            env.app().getJournal("NodeStoreTest"))};
         backend->open();
         return backend;
     }
@@ -505,7 +505,7 @@ public:
             std::move(writableBackend),
             std::move(archiveBackend),
             nscfg,
-            env.app().logs().journal("NodeStoreTest"));
+            env.app().getJournal("NodeStoreTest"));
 
         /////////////////////////////////////////////////////////////
         // Check basic functionality

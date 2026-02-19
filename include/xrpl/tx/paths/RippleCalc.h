@@ -1,6 +1,7 @@
 #pragma once
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/ledger/PaymentSandbox.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/TER.h>
@@ -92,7 +93,7 @@ public:
         STPathSet const& spsPaths,
 
         std::optional<uint256> const& domainID,
-        Logs& l,
+        ServiceRegistry& registry,
         Input const* const pInputs = nullptr);
 
     // The view we are currently working on

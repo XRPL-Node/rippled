@@ -936,7 +936,7 @@ public:
 
             Env::ParsedResult parsed;
 
-            env.app().openLedger().modify([&](OpenView& view, beast::Journal j) {
+            env.app().getOpenLedger().modify([&](OpenView& view, beast::Journal j) {
                 auto const result = xrpl::apply(env.app(), view, *jt.stx, tapNONE, env.journal);
                 parsed.ter = result.ter;
                 return result.applied;
@@ -3741,7 +3741,7 @@ public:
         // (This requires calling directly into the open ledger,
         //  which won't work if unit tests are separated to only
         //  be callable via RPC.)
-        env.app().openLedger().modify([&](OpenView& view, beast::Journal j) {
+        env.app().getOpenLedger().modify([&](OpenView& view, beast::Journal j) {
             auto const tx = env.jt(noop(alice), seq(aliceSeq), fee(openLedgerCost(env)));
             auto const result = xrpl::apply(env.app(), view, *tx.stx, tapUNLIMITED, j);
             BEAST_EXPECT(result.ter == tesSUCCESS && result.applied);
@@ -3809,7 +3809,7 @@ public:
         // (This requires calling directly into the open ledger,
         //  which won't work if unit tests are separated to only
         //  be callable via RPC.)
-        env.app().openLedger().modify([&](OpenView& view, beast::Journal j) {
+        env.app().getOpenLedger().modify([&](OpenView& view, beast::Journal j) {
             auto const tx = env.jt(noop(alice), ticket::use(tktSeq0 + 1), fee(openLedgerCost(env)));
             auto const result = xrpl::apply(env.app(), view, *tx.stx, tapUNLIMITED, j);
             BEAST_EXPECT(result.ter == tesSUCCESS && result.applied);

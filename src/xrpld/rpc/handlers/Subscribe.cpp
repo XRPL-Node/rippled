@@ -60,7 +60,7 @@ doSubscribe(RPC::JsonContext& context)
                     strUrl,
                     strUsername,
                     strPassword,
-                    context.app.logs());
+                    context.app);
                 ispSub = context.netOps.addRpcSub(strUrl, std::dynamic_pointer_cast<InfoSub>(rspSub));
             }
             catch (std::runtime_error& ex)

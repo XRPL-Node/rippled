@@ -35,7 +35,7 @@ PathRequests::getLineCache(std::shared_ptr<ReadView const> const& ledger, bool a
         // Assign to the local before the member, because the member is a
         // weak_ptr, and will immediately discard it if there are no other
         // references.
-        lineCache_ = lineCache = std::make_shared<RippleLineCache>(ledger, app_.journal("RippleLineCache"));
+        lineCache_ = lineCache = std::make_shared<RippleLineCache>(ledger, app_.getJournal("RippleLineCache"));
     }
     return lineCache;
 }
@@ -266,7 +266,7 @@ PathRequests::doLegacyPathRequest(
     std::shared_ptr<ReadView const> const& inLedger,
     Json::Value const& request)
 {
-    auto cache = std::make_shared<RippleLineCache>(inLedger, app_.journal("RippleLineCache"));
+    auto cache = std::make_shared<RippleLineCache>(inLedger, app_.getJournal("RippleLineCache"));
 
     auto req = std::make_shared<PathRequest>(app_, [] {}, consumer, ++mLastIdentifier, *this, mJournal);
 

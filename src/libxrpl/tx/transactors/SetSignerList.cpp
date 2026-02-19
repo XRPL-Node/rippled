@@ -186,7 +186,7 @@ removeSignersFromLedger(
         // LCOV_EXCL_STOP
     }
 
-    adjustOwnerCount(view, view.peek(accountKeylet), removeFromOwnerCount, registry.journal("View"));
+    adjustOwnerCount(view, view.peek(accountKeylet), removeFromOwnerCount, registry.getJournal("View"));
 
     view.erase(signers);
 
@@ -299,7 +299,7 @@ SetSignerList::replaceSignerList()
     view().insert(signerList);
     writeSignersToSLE(signerList, flags);
 
-    auto viewJ = ctx_.registry.journal("View");
+    auto viewJ = ctx_.registry.getJournal("View");
     // Add the signer list to the account's directory.
     auto const page = ctx_.view().dirInsert(ownerDirKeylet, signerListKeylet, describeOwnerDir(account_));
 

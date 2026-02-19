@@ -111,7 +111,7 @@ GRPCServerImpl::CallData<Request, Response>::process(std::shared_ptr<JobQueue::C
     {
         auto usage = getUsage();
         bool isUnlimited = clientIsUnlimited();
-        if (!isUnlimited && usage.disconnect(app_.journal("gRPCServer")))
+        if (!isUnlimited && usage.disconnect(app_.getJournal("gRPCServer")))
         {
             grpc::Status status{grpc::StatusCode::RESOURCE_EXHAUSTED, "usage balance exceeds threshold"};
             responder_.FinishWithError(status, this);
@@ -135,11 +135,11 @@ GRPCServerImpl::CallData<Request, Response>::process(std::shared_ptr<JobQueue::C
                     toLog << user.value();
                 toLog << " isUnlimited = " << isUnlimited;
 
-                JLOG(app_.journal("GRPCServer::Calldata").debug()) << toLog.str();
+                JLOG(app_.getJournal("GRPCServer::Calldata").debug()) << toLog.str();
             }
 
             RPC::GRPCContext<Request> context{
-                {app_.journal("gRPCServer"),
+                {app_.getJournal("gRPCServer"),
                  app_,
                  loadType,
                  app_.getOPs(),
@@ -272,7 +272,7 @@ GRPCServerImpl::CallData<Request, Response>::getUsage()
     Throw<std::runtime_error>("Failed to get client endpoint");
 }
 
-GRPCServerImpl::GRPCServerImpl(Application& app) : app_(app), journal_(app_.journal("gRPC Server"))
+GRPCServerImpl::GRPCServerImpl(Application& app) : app_(app), journal_(app_.getJournal("gRPC Server"))
 {
     // if present, get endpoint from config
     if (app_.config().exists(SECTION_PORT_GRPC))

@@ -12,7 +12,7 @@
 namespace xrpl {
 
 ConsensusTransSetSF::ConsensusTransSetSF(Application& app, NodeCache& nodeCache)
-    : app_(app), m_nodeCache(nodeCache), j_(app.journal("TransactionAcquire"))
+    : app_(app), m_nodeCache(nodeCache), j_(app.getJournal("TransactionAcquire"))
 {
 }
 

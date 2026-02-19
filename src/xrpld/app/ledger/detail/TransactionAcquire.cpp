@@ -21,7 +21,7 @@ enum {
 };
 
 TransactionAcquire::TransactionAcquire(Application& app, uint256 const& hash, std::unique_ptr<PeerSet> peerSet)
-    : TimeoutCounter(app, hash, TX_ACQUIRE_TIMEOUT, {jtTXN_DATA, "TxAcq", {}}, app.journal("TransactionAcquire"))
+    : TimeoutCounter(app, hash, TX_ACQUIRE_TIMEOUT, {jtTXN_DATA, "TxAcq", {}}, app.getJournal("TransactionAcquire"))
     , mHaveRoot(false)
     , mPeerSet(std::move(peerSet))
 {

@@ -3,6 +3,7 @@
 #include <xrpld/core/Config.h>
 
 #include <xrpl/basics/Log.h>
+#include <xrpl/core/ServiceRegistry.h>
 #include <xrpl/json/json_value.h>
 
 #include <boost/asio/io_context.hpp>
@@ -24,7 +25,7 @@ namespace xrpl {
 namespace RPCCall {
 
 int
-fromCommandLine(Config const& config, std::vector<std::string> const& vCmd, Logs& logs);
+fromCommandLine(Config const& config, std::vector<std::string> const& vCmd, ServiceRegistry& registry);
 
 void
 fromNetwork(
@@ -38,7 +39,7 @@ fromNetwork(
     Json::Value const& jvParams,
     bool const bSSL,
     bool quiet,
-    Logs& logs,
+    ServiceRegistry& registry,
     std::function<void(Json::Value const& jvInput)> callbackFuncP = std::function<void(Json::Value const& jvInput)>(),
     std::unordered_map<std::string, std::string> headers = {});
 }  // namespace RPCCall
@@ -53,7 +54,7 @@ std::pair<int, Json::Value>
 rpcClient(
     std::vector<std::string> const& args,
     Config const& config,
-    Logs& logs,
+    ServiceRegistry& registry,
     unsigned int apiVersion,
     std::unordered_map<std::string, std::string> const& headers = {});
 

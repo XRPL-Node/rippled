@@ -54,7 +54,7 @@ doPeerReservationsAdd(RPC::JsonContext& context)
         return rpcError(rpcPUBLIC_MALFORMED);
     PublicKey const& nodeId = *optPk;
 
-    auto const previous = context.app.peerReservations().insert_or_assign(PeerReservation{nodeId, desc});
+    auto const previous = context.app.getPeerReservations().insert_or_assign(PeerReservation{nodeId, desc});
 
     Json::Value result{Json::objectValue};
     if (previous)
@@ -80,7 +80,7 @@ doPeerReservationsDel(RPC::JsonContext& context)
         return rpcError(rpcPUBLIC_MALFORMED);
     PublicKey const& nodeId = *optPk;
 
-    auto const previous = context.app.peerReservations().erase(nodeId);
+    auto const previous = context.app.getPeerReservations().erase(nodeId);
 
     Json::Value result{Json::objectValue};
     if (previous)
@@ -93,8 +93,8 @@ doPeerReservationsDel(RPC::JsonContext& context)
 Json::Value
 doPeerReservationsList(RPC::JsonContext& context)
 {
-    auto const& reservations = context.app.peerReservations().list();
-    // Enumerate the reservations in context.app.peerReservations()
+    auto const& reservations = context.app.getPeerReservations().list();
+    // Enumerate the reservations in context.app.getPeerReservations()
     // as a Json::Value.
     Json::Value result{Json::objectValue};
     Json::Value& jaReservations = result[jss::reservations] = Json::arrayValue;

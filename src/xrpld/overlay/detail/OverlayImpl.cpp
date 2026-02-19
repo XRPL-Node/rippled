@@ -105,14 +105,14 @@ OverlayImpl::OverlayImpl(
     , work_(std::in_place, boost::asio::make_work_guard(io_context_))
     , strand_(boost::asio::make_strand(io_context_))
     , setup_(setup)
-    , journal_(app_.journal("Overlay"))
+    , journal_(app_.getJournal("Overlay"))
     , serverHandler_(serverHandler)
     , m_resourceManager(resourceManager)
-    , m_peerFinder(PeerFinder::make_Manager(io_context, stopwatch(), app_.journal("PeerFinder"), config, collector))
+    , m_peerFinder(PeerFinder::make_Manager(io_context, stopwatch(), app_.getJournal("PeerFinder"), config, collector))
     , m_resolver(resolver)
     , next_id_(1)
     , timer_count_(0)
-    , slots_(app.logs(), *this, app.config())
+    , slots_(app, *this, app.config())
     , m_stats(std::bind(&OverlayImpl::collect_metrics, this), collector, [counts = m_traffic.getCounts(), collector]() {
         std::unordered_map<TrafficCount::category, TrafficGauges> ret;
 
@@ -132,7 +132,7 @@ OverlayImpl::onHandoff(
     endpoint_type remote_endpoint)
 {
     auto const id = next_id_++;
-    beast::WrappedSink sink(app_.logs()["Peer"], makePrefix(id));
+    beast::WrappedSink sink(app_.getJournal("Peer").sink(), makePrefix(id));
     beast::Journal journal(sink);
 
     Handoff handoff;
@@ -213,8 +213,8 @@ OverlayImpl::onHandoff(
         {
             // The node gets a reserved slot if it is in our cluster
             // or if it has a reservation.
-            bool const reserved =
-                static_cast<bool>(app_.cluster().member(publicKey)) || app_.peerReservations().contains(publicKey);
+            bool const reserved = static_cast<bool>(app_.getCluster().member(publicKey)) ||
+                app_.getPeerReservations().contains(publicKey);
             auto const result = m_peerFinder->activate(slot, publicKey, reserved);
             if (result != PeerFinder::Result::success)
             {
@@ -351,7 +351,7 @@ OverlayImpl::connect(beast::IP::Endpoint const& remote_endpoint)
         setup_.context,
         next_id_++,
         slot,
-        app_.journal("Peer"),
+        app_.getJournal("Peer"),
         *this);
 
     std::lock_guard lock(mutex_);
@@ -561,7 +561,7 @@ OverlayImpl::onManifests(std::shared_ptr<protocol::TMManifests> const& m, std::s
         {
             auto const serialized = mo->serialized;
 
-            auto const result = app_.validatorManifests().applyManifest(std::move(*mo));
+            auto const result = app_.getValidatorManifests().applyManifest(std::move(*mo));
 
             if (result == ManifestDisposition::accepted)
             {
@@ -578,7 +578,7 @@ OverlayImpl::onManifests(std::shared_ptr<protocol::TMManifests> const& m, std::s
 
                 app_.getOPs().pubManifest(*mo);
 
-                if (app_.validators().listed(mo->masterKey))
+                if (app_.getValidators().listed(mo->masterKey))
                 {
                     auto db = app_.getWalletDB().checkoutDb();
                     addValidatorManifest(*db, serialized);
@@ -704,7 +704,7 @@ OverlayImpl::getServerCounts()
 Json::Value
 OverlayImpl::getUnlInfo()
 {
-    Json::Value validators = app_.validators().getJson();
+    Json::Value validators = app_.getValidators().getJson();
 
     if (validators.isMember(jss::publisher_lists))
     {
@@ -720,7 +720,7 @@ OverlayImpl::getUnlInfo()
     validators.removeMember(jss::trusted_validator_keys);
     validators.removeMember(jss::validation_quorum);
 
-    Json::Value validatorSites = app_.validatorSites().getJson();
+    Json::Value validatorSites = app_.getValidatorSites().getJson();
 
     if (validatorSites.isMember(jss::validator_sites))
     {
@@ -821,7 +821,7 @@ OverlayImpl::processValidatorList(http_request_type const& req, Handoff& handoff
         return fail(boost::beast::http::status::bad_request);
 
     // find the list
-    auto vl = app_.validators().getAvailable(key, version);
+    auto vl = app_.getValidators().getAvailable(key, version);
 
     if (!vl)
     {
@@ -1074,11 +1074,11 @@ OverlayImpl::getManifestsMessage()
 {
     std::lock_guard g(manifestLock_);
 
-    if (auto seq = app_.validatorManifests().sequence(); seq != manifestListSeq_)
+    if (auto seq = app_.getValidatorManifests().sequence(); seq != manifestListSeq_)
     {
         protocol::TMManifests tm;
 
-        app_.validatorManifests().for_each_manifest(
+        app_.getValidatorManifests().for_each_manifest(
             [&tm](std::size_t s) { tm.mutable_list()->Reserve(s); },
             [&tm, &hr = app_.getHashRouter()](Manifest const& manifest) {
                 tm.add_list()->set_stobject(manifest.serialized.data(), manifest.serialized.size());

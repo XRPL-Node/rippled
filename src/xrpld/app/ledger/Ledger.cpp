@@ -889,9 +889,9 @@ Ledger::isVotingLedger() const
 static bool
 saveValidatedLedger(Application& app, std::shared_ptr<Ledger const> const& ledger, bool current)
 {
-    auto j = app.journal("Ledger");
+    auto j = app.getJournal("Ledger");
     auto seq = ledger->header().seq;
-    if (!app.pendingSaves().startWork(seq))
+    if (!app.getPendingSaves().startWork(seq))
     {
         // The save was completed synchronously
         JLOG(j.debug()) << "Save aborted";
@@ -904,7 +904,7 @@ saveValidatedLedger(Application& app, std::shared_ptr<Ledger const> const& ledge
 
     // Clients can now trust the database for
     // information about this ledger sequence.
-    app.pendingSaves().finishWork(seq);
+    app.getPendingSaves().finishWork(seq);
     return res;
 }
 
@@ -917,10 +917,10 @@ pendSaveValidated(Application& app, std::shared_ptr<Ledger const> const& ledger,
     if (!app.getHashRouter().setFlags(ledger->header().hash, HashRouterFlags::SAVED))
     {
         // We have tried to save this ledger recently
-        auto stream = app.journal("Ledger").debug();
+        auto stream = app.getJournal("Ledger").debug();
         JLOG(stream) << "Double pend save for " << ledger->header().seq;
 
-        if (!isSynchronous || !app.pendingSaves().pending(ledger->header().seq))
+        if (!isSynchronous || !app.getPendingSaves().pending(ledger->header().seq))
         {
             // Either we don't need it to be finished
             // or it is finished
@@ -930,9 +930,9 @@ pendSaveValidated(Application& app, std::shared_ptr<Ledger const> const& ledger,
 
     XRPL_ASSERT(ledger->isImmutable(), "xrpl::pendSaveValidated : immutable ledger");
 
-    if (!app.pendingSaves().shouldWork(ledger->header().seq, isSynchronous))
+    if (!app.getPendingSaves().shouldWork(ledger->header().seq, isSynchronous))
     {
-        auto stream = app.journal("Ledger").debug();
+        auto stream = app.getJournal("Ledger").debug();
         JLOG(stream) << "Pend save with seq in pending saves " << ledger->header().seq;
 
         return true;
@@ -980,7 +980,7 @@ loadLedgerHelper(LedgerHeader const& info, Application& app, bool acquire)
 {
     bool loaded;
     auto ledger =
-        std::make_shared<Ledger>(info, loaded, acquire, app.config(), app.getNodeFamily(), app.journal("Ledger"));
+        std::make_shared<Ledger>(info, loaded, acquire, app.config(), app.getNodeFamily(), app.getJournal("Ledger"));
 
     if (!loaded)
         ledger.reset();
@@ -1019,7 +1019,7 @@ loadByIndex(std::uint32_t ledgerIndex, Application& app, bool acquire)
     if (std::optional<LedgerHeader> info = app.getRelationalDatabase().getLedgerInfoByIndex(ledgerIndex))
     {
         std::shared_ptr<Ledger> ledger = loadLedgerHelper(*info, app, acquire);
-        finishLoadByIndexOrHash(ledger, app.config(), app.journal("Ledger"));
+        finishLoadByIndexOrHash(ledger, app.config(), app.getJournal("Ledger"));
         return ledger;
     }
     return {};
@@ -1031,7 +1031,7 @@ loadByHash(uint256 const& ledgerHash, Application& app, bool acquire)
     if (std::optional<LedgerHeader> info = app.getRelationalDatabase().getLedgerInfoByHash(ledgerHash))
     {
         std::shared_ptr<Ledger> ledger = loadLedgerHelper(*info, app, acquire);
-        finishLoadByIndexOrHash(ledger, app.config(), app.journal("Ledger"));
+        finishLoadByIndexOrHash(ledger, app.config(), app.getJournal("Ledger"));
         XRPL_ASSERT(!ledger || ledger->header().hash == ledgerHash, "xrpl::loadByHash : ledger hash match if loaded");
         return ledger;
     }

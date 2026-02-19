@@ -38,7 +38,7 @@ public:
         std::unique_ptr<PeerSetBuilder> peerSetBuilder)
         : app_(app)
         , fetchRate_(clock.now())
-        , j_(app.journal("InboundLedger"))
+        , j_(app.getJournal("InboundLedger"))
         , m_clock(clock)
         , mRecentFailures(clock)
         , mCounter(collector->make_counter("ledger_fetches"))

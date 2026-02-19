@@ -21,7 +21,7 @@ public:
         std::string const& strUrl,
         std::string const& strUsername,
         std::string const& strPassword,
-        Logs& logs)
+        ServiceRegistry& registry)
         : RPCSub(source)
         , m_io_context(io_context)
         , m_jobQueue(jobQueue)
@@ -30,8 +30,8 @@ public:
         , mUsername(strUsername)
         , mPassword(strPassword)
         , mSending(false)
-        , j_(logs.journal("RPCSub"))
-        , logs_(logs)
+        , j_(registry.getJournal("RPCSub"))
+        , registry_(registry)
     {
         parsedURL pUrl;
 
@@ -131,7 +131,7 @@ private:
                     JLOG(j_.info()) << "RPCCall::fromNetwork: " << mIp;
 
                     RPCCall::fromNetwork(
-                        m_io_context, mIp, mPort, mUsername, mPassword, mPath, "event", jvEvent, mSSL, true, logs_);
+                        m_io_context, mIp, mPort, mUsername, mPassword, mPath, "event", jvEvent, mSSL, true, registry_);
                 }
                 catch (std::exception const& e)
                 {
@@ -160,7 +160,7 @@ private:
     std::deque<std::pair<int, Json::Value>> mDeque;
 
     beast::Journal const j_;
-    Logs& logs_;
+    ServiceRegistry& registry_;
 };
 
 //------------------------------------------------------------------------------
@@ -177,10 +177,10 @@ make_RPCSub(
     std::string const& strUrl,
     std::string const& strUsername,
     std::string const& strPassword,
-    Logs& logs)
+    ServiceRegistry& registry)
 {
     return std::make_shared<RPCSubImp>(
-        std::ref(source), std::ref(io_context), std::ref(jobQueue), strUrl, strUsername, strPassword, logs);
+        std::ref(source), std::ref(io_context), std::ref(jobQueue), strUrl, strUsername, strPassword, registry);
 }
 
 }  // namespace xrpl

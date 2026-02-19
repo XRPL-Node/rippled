@@ -162,7 +162,7 @@ Pathfinder::Pathfinder(
     , mLedger(cache->getLedger())
     , mRLCache(cache)
     , app_(app)
-    , j_(app.journal("Pathfinder"))
+    , j_(app.getJournal("Pathfinder"))
 {
     XRPL_ASSERT(
         !uSrcIssuer || isXRP(uSrcCurrency) == isXRP(uSrcIssuer.value()), "xrpl::Pathfinder::Pathfinder : valid inputs");
@@ -330,7 +330,7 @@ Pathfinder::getPathLiquidity(
             rcInput.partialPaymentAllowed = true;
 
         auto rc = path::RippleCalc::rippleCalculate(
-            sandbox, mSrcAmount, minDstAmount, mDstAccount, mSrcAccount, pathSet, mDomain, app_.logs(), &rcInput);
+            sandbox, mSrcAmount, minDstAmount, mDstAccount, mSrcAccount, pathSet, mDomain, app_, &rcInput);
         // If we can't get even the minimum liquidity requested, we're done.
         if (rc.result() != tesSUCCESS)
             return rc.result();
@@ -350,7 +350,7 @@ Pathfinder::getPathLiquidity(
                 mSrcAccount,
                 pathSet,
                 mDomain,
-                app_.logs(),
+                app_,
                 &rcInput);
 
             // If we found further liquidity, add it into the result.
@@ -380,15 +380,7 @@ Pathfinder::computePathRanks(int maxPaths, std::function<bool(void)> const& cont
         path::RippleCalc::Input rcInput;
         rcInput.partialPaymentAllowed = true;
         auto rc = path::RippleCalc::rippleCalculate(
-            sandbox,
-            mSrcAmount,
-            mRemainingAmount,
-            mDstAccount,
-            mSrcAccount,
-            STPathSet(),
-            mDomain,
-            app_.logs(),
-            &rcInput);
+            sandbox, mSrcAmount, mRemainingAmount, mDstAccount, mSrcAccount, STPathSet(), mDomain, app_, &rcInput);
 
         if (rc.result() == tesSUCCESS)
         {

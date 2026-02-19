@@ -88,7 +88,7 @@ LedgerMaster::LedgerMaster(
     , fetch_depth_(app_.getSHAMapStore().clampFetchDepth(app_.config().FETCH_DEPTH))
     , ledger_history_(app_.config().LEDGER_HISTORY)
     , ledger_fetch_size_(app_.config().getValueFor(SizedItem::ledgerFetch))
-    , fetch_packs_("FetchPack", 65536, std::chrono::seconds{45}, stopwatch, app_.journal("TaggedCache"))
+    , fetch_packs_("FetchPack", 65536, std::chrono::seconds{45}, stopwatch, app_.getJournal("TaggedCache"))
     , m_stats(std::bind(&LedgerMaster::collect_metrics, this), collector)
 {
 }
@@ -96,7 +96,7 @@ LedgerMaster::LedgerMaster(
 LedgerIndex
 LedgerMaster::getCurrentLedgerIndex()
 {
-    return app_.openLedger().current()->header().seq;
+    return app_.getOpenLedger().current()->header().seq;
 }
 
 LedgerIndex
@@ -139,7 +139,7 @@ LedgerMaster::getPublishedLedgerAge()
         return weeks{2};
     }
 
-    std::chrono::seconds ret = app_.timeKeeper().closeTime().time_since_epoch();
+    std::chrono::seconds ret = app_.getTimeKeeper().closeTime().time_since_epoch();
     ret -= pubClose;
     ret = (ret > 0s) ? ret : 0s;
     static std::chrono::seconds lastRet = -1s;
@@ -164,7 +164,7 @@ LedgerMaster::getValidatedLedgerAge()
         return weeks{2};
     }
 
-    std::chrono::seconds ret = app_.timeKeeper().closeTime().time_since_epoch();
+    std::chrono::seconds ret = app_.getTimeKeeper().closeTime().time_since_epoch();
     ret -= valClose;
     ret = (ret > 0s) ? ret : 0s;
     static std::chrono::seconds lastRet = -1s;
@@ -210,7 +210,7 @@ LedgerMaster::setValidLedger(std::shared_ptr<Ledger const> const& l)
 
     if (!standalone_)
     {
-        auto validations = app_.validators().negativeUNLFilter(
+        auto validations = app_.getValidators().negativeUNLFilter(
             app_.getValidations().getTrustedForLedger(l->header().hash, l->header().seq));
         times.reserve(validations.size());
         for (auto const& val : validations)
@@ -222,7 +222,7 @@ LedgerMaster::setValidLedger(std::shared_ptr<Ledger const> const& l)
 
     NetClock::time_point signTime;
 
-    if (!times.empty() && times.size() >= app_.validators().quorum())
+    if (!times.empty() && times.size() >= app_.getValidators().quorum())
     {
         // Calculate the sample median
         std::sort(times.begin(), times.end());
@@ -321,7 +321,7 @@ LedgerMaster::canBeCurrent(std::shared_ptr<Ledger const> const& ledger)
     // we perform this check. Otherwise, we only do it if we've built a
     // few ledgers as our clock can be off when we first start up
 
-    auto closeTime = app_.timeKeeper().closeTime();
+    auto closeTime = app_.getTimeKeeper().closeTime();
     auto ledgerClose = ledger->header().parentCloseTime;
 
     using namespace std::chrono_literals;
@@ -414,7 +414,7 @@ LedgerMaster::applyHeldTransactions()
         std::lock_guard sl(m_mutex);
         // VFALCO NOTE The hash for an open ledger is undefined so we use
         // something that is a reasonable substitute.
-        CanonicalTXSet set(app_.openLedger().current()->header().parentHash);
+        CanonicalTXSet set(app_.getOpenLedger().current()->header().parentHash);
         std::swap(mHeldTransactions, set);
         return set;
     }();
@@ -530,7 +530,7 @@ LedgerMaster::getValidatedRange(std::uint32_t& minVal, std::uint32_t& maxVal)
     // Remove from the validated range any ledger sequences that may not be
     // fully updated in the database yet
 
-    auto const pendingSaves = app_.pendingSaves().getSnapshot();
+    auto const pendingSaves = app_.getPendingSaves().getSnapshot();
 
     if (!pendingSaves.empty() && ((minVal != 0) || (maxVal != 0)))
     {
@@ -661,7 +661,7 @@ LedgerMaster::getFetchPack(LedgerIndex missing, InboundLedger::Reason reason)
     std::shared_ptr<Peer> target;
     {
         int maxScore = 0;
-        auto peerList = app_.overlay().getActivePeers();
+        auto peerList = app_.getOverlay().getActivePeers();
         for (auto const& peer : peerList)
         {
             if (peer->hasRange(missing, missing + 1))
@@ -817,9 +817,9 @@ LedgerMaster::checkAccept(uint256 const& hash, std::uint32_t seq)
         if (seq < mValidLedgerSeq)
             return;
 
-        auto validations = app_.validators().negativeUNLFilter(app_.getValidations().getTrustedForLedger(hash, seq));
+        auto validations = app_.getValidators().negativeUNLFilter(app_.getValidations().getTrustedForLedger(hash, seq));
         valCount = validations.size();
-        if (valCount >= app_.validators().quorum())
+        if (valCount >= app_.getValidators().quorum())
         {
             std::lock_guard ml(m_mutex);
             if (seq > mLastValidLedger.second)
@@ -841,8 +841,8 @@ LedgerMaster::checkAccept(uint256 const& hash, std::uint32_t seq)
         if ((seq != 0) && (getValidLedgerIndex() == 0))
         {
             // Set peers converged early if we can
-            if (valCount >= app_.validators().quorum())
-                app_.overlay().checkTracking(seq);
+            if (valCount >= app_.getValidators().quorum())
+                app_.getOverlay().checkTracking(seq);
         }
 
         // FIXME: We may not want to fetch a ledger with just one
@@ -862,7 +862,7 @@ LedgerMaster::checkAccept(uint256 const& hash, std::uint32_t seq)
 std::size_t
 LedgerMaster::getNeededValidations()
 {
-    return standalone_ ? 0 : app_.validators().quorum();
+    return standalone_ ? 0 : app_.getValidators().quorum();
 }
 
 void
@@ -881,7 +881,7 @@ LedgerMaster::checkAccept(std::shared_ptr<Ledger const> const& ledger)
         return;
 
     auto const minVal = getNeededValidations();
-    auto validations = app_.validators().negativeUNLFilter(
+    auto validations = app_.getValidators().negativeUNLFilter(
         app_.getValidations().getTrustedForLedger(ledger->header().hash, ledger->header().seq));
     auto const tvc = validations.size();
     if (tvc < minVal)  // nothing we can do
@@ -945,7 +945,7 @@ LedgerMaster::checkAccept(std::shared_ptr<Ledger const> const& ledger)
         // before checking the version information to accumulate more validation
         // messages.
 
-        auto currentTime = app_.timeKeeper().now();
+        auto currentTime = app_.getTimeKeeper().now();
         bool needPrint = false;
 
         // The variable upgradeWarningPrevTime_ will be set when and only when
@@ -974,7 +974,7 @@ LedgerMaster::checkAccept(std::shared_ptr<Ledger const> const& ledger)
             {
                 constexpr std::size_t reportingPercent = 90;
                 constexpr std::size_t cutoffPercent = 60;
-                auto const unlSize{app_.validators().getQuorumKeys().second.size()};
+                auto const unlSize{app_.getValidators().getQuorumKeys().second.size()};
                 needPrint = unlSize > 0 && calculatePercent(vals.size(), unlSize) >= reportingPercent &&
                     calculatePercent(higherVersionCount, rippledCount) >= cutoffPercent;
             }
@@ -1020,7 +1020,7 @@ LedgerMaster::consensusBuilt(
 
     if (ledger->header().seq <= mValidLedgerSeq)
     {
-        auto stream = app_.journal("LedgerConsensus").info();
+        auto stream = app_.getJournal("LedgerConsensus").info();
         JLOG(stream) << "Consensus built old ledger: " << ledger->header().seq << " <= " << mValidLedgerSeq;
         return;
     }
@@ -1030,7 +1030,7 @@ LedgerMaster::consensusBuilt(
 
     if (ledger->header().seq <= mValidLedgerSeq)
     {
-        auto stream = app_.journal("LedgerConsensus").debug();
+        auto stream = app_.getJournal("LedgerConsensus").debug();
         JLOG(stream) << "Consensus ledger fully validated";
         return;
     }
@@ -1038,7 +1038,7 @@ LedgerMaster::consensusBuilt(
     // This ledger cannot be the new fully-validated ledger, but
     // maybe we saved up validations for some other ledger that can be
 
-    auto validations = app_.validators().negativeUNLFilter(app_.getValidations().currentTrusted());
+    auto validations = app_.getValidators().negativeUNLFilter(app_.getValidations().currentTrusted());
 
     // Track validation counts with sequence numbers
     class valSeq
@@ -1096,7 +1096,7 @@ LedgerMaster::consensusBuilt(
 
     if (maxSeq > mValidLedgerSeq)
     {
-        auto stream = app_.journal("LedgerConsensus").debug();
+        auto stream = app_.getJournal("LedgerConsensus").debug();
         JLOG(stream) << "Consensus triggered check of ledger";
         checkAccept(maxLedger, maxSeq);
     }
@@ -1315,7 +1315,7 @@ LedgerMaster::updatePaths()
             }
             else if (mPathFindNewRequest)
             {  // We have a new request but no new ledger
-                lastLedger = app_.openLedger().current();
+                lastLedger = app_.getOpenLedger().current();
             }
             else
             {  // Nothing to do
@@ -1329,7 +1329,7 @@ LedgerMaster::updatePaths()
         if (!standalone_)
         {  // don't pathfind with a ledger that's more than 60 seconds old
             using namespace std::chrono;
-            auto age = time_point_cast<seconds>(app_.timeKeeper().closeTime()) - lastLedger->header().closeTime;
+            auto age = time_point_cast<seconds>(app_.getTimeKeeper().closeTime()) - lastLedger->header().closeTime;
             if (age > 1min)
             {
                 JLOG(m_journal.debug()) << "Published ledger too old for updating paths";
@@ -1443,7 +1443,7 @@ LedgerMaster::peekMutex()
 std::shared_ptr<ReadView const>
 LedgerMaster::getCurrentLedger()
 {
-    return app_.openLedger().current();
+    return app_.getOpenLedger().current();
 }
 
 std::shared_ptr<Ledger const>

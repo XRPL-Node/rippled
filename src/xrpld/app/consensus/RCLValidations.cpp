@@ -95,7 +95,7 @@ RCLValidationsAdaptor::RCLValidationsAdaptor(Application& app, beast::Journal j)
 NetClock::time_point
 RCLValidationsAdaptor::now() const
 {
-    return app_.timeKeeper().closeTime();
+    return app_.getTimeKeeper().closeTime();
 }
 
 std::optional<RCLValidatedLedger>
@@ -137,14 +137,14 @@ handleNewValidation(
     auto const seq = val->getFieldU32(sfLedgerSequence);
 
     // Ensure validation is marked as trusted if signer currently trusted
-    auto masterKey = app.validators().getTrustedKey(signingKey);
+    auto masterKey = app.getValidators().getTrustedKey(signingKey);
 
     if (!val->isTrusted() && masterKey)
         val->setTrusted();
 
     // If not currently trusted, see if signer is currently listed
     if (!masterKey)
-        masterKey = app.validators().getListedKey(signingKey);
+        masterKey = app.getValidators().getListedKey(signingKey);
 
     auto& validations = app.getValidations();
 

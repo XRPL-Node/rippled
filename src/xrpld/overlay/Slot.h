@@ -519,14 +519,14 @@ class Slots final
 
 public:
     /**
-     * @param logs reference to the logger
+     * @param registry The service registry.
      * @param handler Squelch/unsquelch implementation
      * @param config reference to the global config
      */
-    Slots(Logs& logs, SquelchHandler const& handler, Config const& config)
+    Slots(ServiceRegistry& registry, SquelchHandler const& handler, Config const& config)
         : handler_(handler)
-        , logs_(logs)
-        , journal_(logs.journal("Slots"))
+        , registry_(registry)
+        , journal_(registry.getJournal("Slots"))
         , baseSquelchEnabled_(config.VP_REDUCE_RELAY_BASE_SQUELCH_ENABLE)
         , maxSelectedPeers_(config.VP_REDUCE_RELAY_SQUELCH_MAX_SELECTED_PEERS)
     {
@@ -667,7 +667,7 @@ private:
 
     hash_map<PublicKey, Slot<clock_type>> slots_;
     SquelchHandler const& handler_;  // squelch/unsquelch handler
-    Logs& logs_;
+    ServiceRegistry& registry_;
     beast::Journal const journal_;
 
     bool const baseSquelchEnabled_;
@@ -726,11 +726,11 @@ Slots<clock_type>::updateSlotAndSquelch(
     if (it == slots_.end())
     {
         JLOG(journal_.trace()) << "updateSlotAndSquelch: new slot " << Slice(validator);
-        auto it =
-            slots_
-                .emplace(
-                    std::make_pair(validator, Slot<clock_type>(handler_, logs_.journal("Slot"), maxSelectedPeers_)))
-                .first;
+        auto it = slots_
+                      .emplace(
+                          std::make_pair(
+                              validator, Slot<clock_type>(handler_, registry_.getJournal("Slot"), maxSelectedPeers_)))
+                      .first;
         it->second.update(validator, id, type, callback);
     }
     else

@@ -595,7 +595,7 @@ struct PayStrand_test : public beast::unit_test::suite
                 OfferCrossing::no,
                 ammContext,
                 std::nullopt,
-                env.app().logs().journal("Flow"));
+                env.app().getJournal("Flow"));
             BEAST_EXPECT(ter == expTer);
             if (sizeof...(expSteps) != 0)
                 BEAST_EXPECT(equal(strand, std::forward<decltype(expSteps)>(expSteps)...));
@@ -622,7 +622,7 @@ struct PayStrand_test : public beast::unit_test::suite
                     OfferCrossing::no,
                     ammContext,
                     std::nullopt,
-                    env.app().logs().journal("Flow"));
+                    env.app().getJournal("Flow"));
                 (void)_;
                 BEAST_EXPECT(ter == tesSUCCESS);
             }
@@ -640,7 +640,7 @@ struct PayStrand_test : public beast::unit_test::suite
                     OfferCrossing::no,
                     ammContext,
                     std::nullopt,
-                    env.app().logs().journal("Flow"));
+                    env.app().getJournal("Flow"));
                 (void)_;
                 BEAST_EXPECT(ter == tesSUCCESS);
             }
@@ -735,7 +735,7 @@ struct PayStrand_test : public beast::unit_test::suite
 
             {
                 // The root account can't be the src or dst
-                auto flowJournal = env.app().logs().journal("Flow");
+                auto flowJournal = env.app().getJournal("Flow");
                 {
                     // The root account can't be the dst
                     auto r = toStrand(
@@ -906,7 +906,7 @@ struct PayStrand_test : public beast::unit_test::suite
                 OfferCrossing::no,
                 ammContext,
                 std::nullopt,
-                env.app().logs().journal("Flow"));
+                env.app().getJournal("Flow"));
             BEAST_EXPECT(ter == tesSUCCESS);
             BEAST_EXPECT(equal(strand, D{alice, gw, usdC}));
         }
@@ -934,7 +934,7 @@ struct PayStrand_test : public beast::unit_test::suite
                 OfferCrossing::no,
                 ammContext,
                 std::nullopt,
-                env.app().logs().journal("Flow"));
+                env.app().getJournal("Flow"));
             BEAST_EXPECT(ter == tesSUCCESS);
             BEAST_EXPECT(equal(strand, D{alice, gw, usdC}, B{USD.issue(), xrpIssue(), std::nullopt}, XRPS{bob}));
         }
@@ -1104,22 +1104,22 @@ struct PayStrand_test : public beast::unit_test::suite
             PaymentSandbox sb{env.current().get(), tapNONE};
             {
                 auto const r = ::xrpl::path::RippleCalc::rippleCalculate(
-                    sb, sendMax, deliver, dstAcc, noAccount(), pathSet, std::nullopt, env.app().logs(), &inputs);
+                    sb, sendMax, deliver, dstAcc, noAccount(), pathSet, std::nullopt, env.app(), &inputs);
                 BEAST_EXPECT(r.result() == temBAD_PATH);
             }
             {
                 auto const r = ::xrpl::path::RippleCalc::rippleCalculate(
-                    sb, sendMax, deliver, noAccount(), srcAcc, pathSet, std::nullopt, env.app().logs(), &inputs);
+                    sb, sendMax, deliver, noAccount(), srcAcc, pathSet, std::nullopt, env.app(), &inputs);
                 BEAST_EXPECT(r.result() == temBAD_PATH);
             }
             {
                 auto const r = ::xrpl::path::RippleCalc::rippleCalculate(
-                    sb, noAccountAmount, deliver, dstAcc, srcAcc, pathSet, std::nullopt, env.app().logs(), &inputs);
+                    sb, noAccountAmount, deliver, dstAcc, srcAcc, pathSet, std::nullopt, env.app(), &inputs);
                 BEAST_EXPECT(r.result() == temBAD_PATH);
             }
             {
                 auto const r = ::xrpl::path::RippleCalc::rippleCalculate(
-                    sb, sendMax, noAccountAmount, dstAcc, srcAcc, pathSet, std::nullopt, env.app().logs(), &inputs);
+                    sb, sendMax, noAccountAmount, dstAcc, srcAcc, pathSet, std::nullopt, env.app(), &inputs);
                 BEAST_EXPECT(r.result() == temBAD_PATH);
             }
         }

@@ -65,8 +65,8 @@ PeerImp::PeerImp(
     , id_(id)
     , fingerprint_(getFingerprint(slot->remote_endpoint(), publicKey, to_string(id)))
     , prefix_(makePrefix(fingerprint_))
-    , sink_(app_.journal("Peer"), prefix_)
-    , p_sink_(app_.journal("Protocol"), prefix_)
+    , sink_(app_.getJournal("Peer"), prefix_)
+    , p_sink_(app_.getJournal("Protocol"), prefix_)
     , journal_(sink_)
     , p_journal_(p_sink_)
     , stream_ptr_(std::move(stream_ptr))
@@ -83,7 +83,7 @@ PeerImp::PeerImp(
     , publicKey_(publicKey)
     , lastPingTime_(clock_type::now())
     , creationTime_(clock_type::now())
-    , squelch_(app_.journal("Squelch"))
+    , squelch_(app_.getJournal("Squelch"))
     , usage_(consumer)
     , fee_{Resource::feeTrivialPeer, ""}
     , slot_(slot)
@@ -328,7 +328,7 @@ PeerImp::crawl() const
 bool
 PeerImp::cluster() const
 {
-    return static_cast<bool>(app_.cluster().member(publicKey_));
+    return static_cast<bool>(app_.getCluster().member(publicKey_));
 }
 
 std::string
@@ -753,7 +753,7 @@ PeerImp::doAccept()
 
     JLOG(journal_.debug()) << "Protocol: " << to_string(protocol_);
 
-    if (auto member = app_.cluster().member(publicKey_))
+    if (auto member = app_.getCluster().member(publicKey_))
     {
         {
             std::unique_lock lock{nameMutex_};
@@ -828,12 +828,12 @@ PeerImp::doProtocolStart()
     // Send all the validator lists that have been loaded
     if (inbound_ && supportsFeature(ProtocolFeature::ValidatorListPropagation))
     {
-        app_.validators().for_each_available([&](std::string const& manifest,
-                                                 std::uint32_t version,
-                                                 std::map<std::size_t, ValidatorBlobInfo> const& blobInfos,
-                                                 PublicKey const& pubKey,
-                                                 std::size_t maxSequence,
-                                                 uint256 const& hash) {
+        app_.getValidators().for_each_available([&](std::string const& manifest,
+                                                    std::uint32_t version,
+                                                    std::map<std::size_t, ValidatorBlobInfo> const& blobInfos,
+                                                    PublicKey const& pubKey,
+                                                    std::size_t maxSequence,
+                                                    uint256 const& hash) {
             ValidatorList::sendValidatorList(
                 *this, 0, pubKey, maxSequence, version, manifest, blobInfos, app_.getHashRouter(), p_journal_);
 
@@ -1110,7 +1110,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMCluster> const& m)
         {
             auto const reportTime = NetClock::time_point{NetClock::duration{node.reporttime()}};
 
-            app_.cluster().update(*publicKey, name, node.nodeload(), reportTime);
+            app_.getCluster().update(*publicKey, name, node.nodeload(), reportTime);
         }
     }
 
@@ -1132,13 +1132,13 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMCluster> const& m)
     }
 
     // Calculate the cluster fee:
-    auto const thresh = app_.timeKeeper().now() - 90s;
+    auto const thresh = app_.getTimeKeeper().now() - 90s;
     std::uint32_t clusterFee = 0;
 
     std::vector<std::uint32_t> fees;
-    fees.reserve(app_.cluster().size());
+    fees.reserve(app_.getCluster().size());
 
-    app_.cluster().for_each([&fees, thresh](ClusterNode const& status) {
+    app_.getCluster().for_each([&fees, thresh](ClusterNode const& status) {
         if (status.getReportTime() >= thresh)
             fees.push_back(status.getLoadFee());
     });
@@ -1622,7 +1622,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProposeSet> const& m)
     // suppression for 30 seconds to avoid doing a relatively expensive lookup
     // every time a spam packet is received
     PublicKey const publicKey{makeSlice(set.nodepubkey())};
-    auto const isTrusted = app_.validators().trusted(publicKey);
+    auto const isTrusted = app_.getValidators().trusted(publicKey);
 
     // If the operator has specified that untrusted proposals be dropped then
     // this happens here I.e. before further wasting CPU verifying the signature
@@ -1685,8 +1685,8 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMProposeSet> const& m)
             set.proposeseq(),
             proposeHash,
             closeTime,
-            app_.timeKeeper().closeTime(),
-            calcNodeID(app_.validatorManifests().getMasterKey(publicKey))});
+            app_.getTimeKeeper().closeTime(),
+            calcNodeID(app_.getValidatorManifests().getMasterKey(publicKey))});
 
     std::weak_ptr<PeerImp> weak = shared_from_this();
     app_.getJobQueue().addJob(
@@ -1702,7 +1702,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMStatusChange> const& m)
     JLOG(p_journal_.trace()) << "Status: Change";
 
     if (!m->has_networktime())
-        m->set_networktime(app_.timeKeeper().now().time_since_epoch().count());
+        m->set_networktime(app_.getTimeKeeper().now().time_since_epoch().count());
 
     {
         std::lock_guard sl(recentLock_);
@@ -1963,13 +1963,13 @@ PeerImp::onValidatorListMessage(
         return;
     }
 
-    auto const applyResult = app_.validators().applyListsAndBroadcast(
+    auto const applyResult = app_.getValidators().applyListsAndBroadcast(
         manifest,
         version,
         blobs,
         remote_address_.to_string(),
         hash,
-        app_.overlay(),
+        app_.getOverlay(),
         app_.getHashRouter(),
         app_.getOPs());
 
@@ -2187,20 +2187,23 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMValidation> const& m)
 
     try
     {
-        auto const closeTime = app_.timeKeeper().closeTime();
+        auto const closeTime = app_.getTimeKeeper().closeTime();
 
         std::shared_ptr<STValidation> val;
         {
             SerialIter sit(makeSlice(m->validation()));
             val = std::make_shared<STValidation>(
                 std::ref(sit),
-                [this](PublicKey const& pk) { return calcNodeID(app_.validatorManifests().getMasterKey(pk)); },
+                [this](PublicKey const& pk) { return calcNodeID(app_.getValidatorManifests().getMasterKey(pk)); },
                 false);
             val->setSeen(closeTime);
         }
 
         if (!isCurrent(
-                app_.getValidations().parms(), app_.timeKeeper().closeTime(), val->getSignTime(), val->getSeenTime()))
+                app_.getValidations().parms(),
+                app_.getTimeKeeper().closeTime(),
+                val->getSignTime(),
+                val->getSeenTime()))
         {
             JLOG(p_journal_.trace()) << "Validation: Not current";
             fee_.update(Resource::feeUselessData, "not current");
@@ -2210,7 +2213,7 @@ PeerImp::onMessage(std::shared_ptr<protocol::TMValidation> const& m)
         // RH TODO: when isTrusted = false we should probably also cache a key
         // suppression for 30 seconds to avoid doing a relatively expensive
         // lookup every time a spam packet is received
-        auto const isTrusted = app_.validators().trusted(val->getSignerPublic());
+        auto const isTrusted = app_.getValidators().trusted(val->getSignerPublic());
 
         // If the operator has specified that untrusted validations be
         // dropped then this happens here I.e. before further wasting CPU
@@ -2630,7 +2633,7 @@ PeerImp::doTransactions(std::shared_ptr<protocol::TMGetObjectByHash> const& pack
         sttx->add(s);
         tx->set_rawtransaction(s.data(), s.size());
         tx->set_status(txn->getStatus() == INCLUDED ? protocol::tsCURRENT : protocol::tsNEW);
-        tx->set_receivetimestamp(app_.timeKeeper().now().time_since_epoch().count());
+        tx->set_receivetimestamp(app_.getTimeKeeper().now().time_since_epoch().count());
         tx->set_deferred(txn->getSubmitResult().queued);
     }
 
@@ -2707,7 +2710,7 @@ PeerImp::checkTransaction(
                 if (toSkip)
                 {
                     JLOG(p_journal_.debug()) << "Passing skipped pseudo pseudo-transaction tx " << tx->getID();
-                    app_.overlay().relay(tx->getID(), {}, *toSkip);
+                    app_.getOverlay().relay(tx->getID(), {}, *toSkip);
                 }
                 if (!batch)
                 {
@@ -2798,7 +2801,7 @@ PeerImp::checkPropose(bool isTrusted, std::shared_ptr<protocol::TMProposeSet> co
         // are the source of the message, consequently the message should
         // not be relayed to these peers. But the message must be counted
         // as part of the squelch logic.
-        auto haveMessage = app_.overlay().relay(*packet, peerPos.suppressionID(), peerPos.publicKey());
+        auto haveMessage = app_.getOverlay().relay(*packet, peerPos.suppressionID(), peerPos.publicKey());
         if (!haveMessage.empty())
             overlay_.updateSlotAndSquelch(
                 peerPos.suppressionID(), peerPos.publicKey(), std::move(haveMessage), protocol::mtPROPOSE_LEDGER);

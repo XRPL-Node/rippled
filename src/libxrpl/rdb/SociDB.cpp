@@ -169,8 +169,8 @@ namespace {
 class WALCheckpointer : public Checkpointer
 {
 public:
-    WALCheckpointer(std::uintptr_t id, std::weak_ptr<soci::session> session, JobQueue& q, Logs& logs)
-        : id_(id), session_(std::move(session)), jobQueue_(q), j_(logs.journal("WALCheckpointer"))
+    WALCheckpointer(std::uintptr_t id, std::weak_ptr<soci::session> session, JobQueue& q, ServiceRegistry& registry)
+        : id_(id), session_(std::move(session)), jobQueue_(q), j_(registry.getJournal("WALCheckpointer"))
     {
         if (auto [conn, keepAlive] = getConnection(); conn)
         {
@@ -285,9 +285,9 @@ protected:
 }  // namespace
 
 std::shared_ptr<Checkpointer>
-makeCheckpointer(std::uintptr_t id, std::weak_ptr<soci::session> session, JobQueue& queue, Logs& logs)
+makeCheckpointer(std::uintptr_t id, std::weak_ptr<soci::session> session, JobQueue& queue, ServiceRegistry& registry)
 {
-    return std::make_shared<WALCheckpointer>(id, std::move(session), queue, logs);
+    return std::make_shared<WALCheckpointer>(id, std::move(session), queue, registry);
 }
 
 }  // namespace xrpl

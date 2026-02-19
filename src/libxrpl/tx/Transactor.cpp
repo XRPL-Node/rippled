@@ -293,7 +293,7 @@ Transactor::calculateOwnerReserveFee(ReadView const& view, STTx const& tx)
     // need to rethink charging an owner reserve as a transaction fee.
     // TODO: This function is static, and I don't want to add more parameters.
     // When it is finally refactored to be in a context that has access to the
-    // Application, include "app().overlay().networkID() > 2 ||" in the
+    // Application, include "app().getOverlay().networkID() > 2 ||" in the
     // condition.
     XRPL_ASSERT(
         view.fees().increment > view.fees().base * 100,
@@ -1071,7 +1071,7 @@ Transactor::operator()()
     }
 #endif
 
-    if (auto const& trap = ctx_.registry.trapTxID(); trap && *trap == ctx_.tx.getTransactionID())
+    if (auto const& trap = ctx_.registry.getTrapTxID(); trap && *trap == ctx_.tx.getTransactionID())
     {
         trapTransaction(*trap);
     }
@@ -1172,16 +1172,16 @@ Transactor::operator()()
 
         // If necessary, remove any offers found unfunded during processing
         if ((result == tecOVERSIZE) || (result == tecKILLED))
-            removeUnfundedOffers(view(), removedOffers, ctx_.registry.journal("View"));
+            removeUnfundedOffers(view(), removedOffers, ctx_.registry.getJournal("View"));
 
         if (result == tecEXPIRED)
-            removeExpiredNFTokenOffers(view(), expiredNFTokenOffers, ctx_.registry.journal("View"));
+            removeExpiredNFTokenOffers(view(), expiredNFTokenOffers, ctx_.registry.getJournal("View"));
 
         if (result == tecINCOMPLETE)
-            removeDeletedTrustLines(view(), removedTrustLines, ctx_.registry.journal("View"));
+            removeDeletedTrustLines(view(), removedTrustLines, ctx_.registry.getJournal("View"));
 
         if (result == tecEXPIRED)
-            removeExpiredCredentials(view(), expiredCredentials, ctx_.registry.journal("View"));
+            removeExpiredCredentials(view(), expiredCredentials, ctx_.registry.getJournal("View"));
 
         applied = isTecClaim(result);
     }

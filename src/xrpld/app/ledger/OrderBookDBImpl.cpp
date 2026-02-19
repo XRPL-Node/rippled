@@ -14,7 +14,7 @@ OrderBookDBImpl::OrderBookDBImpl(ServiceRegistry& registry, OrderBookDBConfig co
     , pathSearchMax_(config.pathSearchMax)
     , standalone_(config.standalone)
     , seq_(0)
-    , j_(registry.journal("OrderBookDB"))
+    , j_(registry.getJournal("OrderBookDB"))
 {
 }
 

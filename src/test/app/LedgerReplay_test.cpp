@@ -445,7 +445,7 @@ struct LedgerServer
         assert(param.initLedgers > 0);
         createAccounts(param.initAccounts);
         createLedgerHistory();
-        app.logs().threshold(beast::severities::kWarning);
+        app.getLogs().threshold(beast::severities::kWarning);
     }
 
     /**
@@ -780,8 +780,8 @@ using namespace beast::severities;
 void
 logAll(LedgerServer& server, LedgerReplayClient& client, beast::severities::Severity level = Severity::kTrace)
 {
-    server.app.logs().threshold(level);
-    client.app.logs().threshold(level);
+    server.app.getLogs().threshold(level);
+    client.app.getLogs().threshold(level);
 }
 // logAll(net.server, net.client);
 

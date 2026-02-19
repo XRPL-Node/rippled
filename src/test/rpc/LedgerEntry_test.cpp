@@ -623,7 +623,7 @@ class LedgerEntry_test : public beast::unit_test::suite
                     view.rawInsert(sle);
                     return true;
                 };
-                env.app().openLedger().modify(amendments);
+                env.app().getOpenLedger().modify(amendments);
             }
 
             Json::Value jvParams;
@@ -1463,7 +1463,7 @@ class LedgerEntry_test : public beast::unit_test::suite
                     view.rawInsert(sle);
                     return true;
                 };
-                env.app().openLedger().modify(nUNL);
+                env.app().getOpenLedger().modify(nUNL);
             }
 
             Json::Value jvParams;

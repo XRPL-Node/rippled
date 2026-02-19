@@ -1437,7 +1437,7 @@ std::pair<int, Json::Value>
 rpcClient(
     std::vector<std::string> const& args,
     Config const& config,
-    Logs& logs,
+    ServiceRegistry& registry,
     unsigned int apiVersion,
     std::unordered_map<std::string, std::string> const& headers)
 {
@@ -1452,7 +1452,7 @@ rpcClient(
     try
     {
         Json::Value jvRpc = Json::Value(Json::objectValue);
-        jvRequest = rpcCmdToJson(args, jvRpc, apiVersion, logs.journal("RPCParser"));
+        jvRequest = rpcCmdToJson(args, jvRpc, apiVersion, registry.getJournal("RPCParser"));
 
         if (jvRequest.isMember(jss::error))
         {
@@ -1464,7 +1464,7 @@ rpcClient(
             xrpl::ServerHandler::Setup setup;
             try
             {
-                setup = setup_ServerHandler(config, beast::logstream{logs.journal("HTTPClient").warn()});
+                setup = setup_ServerHandler(config, beast::logstream{registry.getJournal("HTTPClient").warn()});
             }
             catch (std::exception const&)
             {
@@ -1509,7 +1509,7 @@ rpcClient(
                     jvParams,                  // Parsed, execute.
                     setup.client.secure != 0,  // Use SSL
                     config.quiet(),
-                    logs,
+                    registry,
                     std::bind(RPCCallImp::callRPCHandler, &jvOutput, std::placeholders::_1),
                     headers);
                 isService.run();  // This blocks until there are no more
@@ -1575,9 +1575,9 @@ rpcClient(
 namespace RPCCall {
 
 int
-fromCommandLine(Config const& config, std::vector<std::string> const& vCmd, Logs& logs)
+fromCommandLine(Config const& config, std::vector<std::string> const& vCmd, ServiceRegistry& registry)
 {
-    auto const result = rpcClient(vCmd, config, logs, RPC::apiCommandLineVersion);
+    auto const result = rpcClient(vCmd, config, registry, RPC::apiCommandLineVersion);
 
     std::cout << result.second.toStyledString();
 
@@ -1598,11 +1598,11 @@ fromNetwork(
     Json::Value const& jvParams,
     bool const bSSL,
     bool const quiet,
-    Logs& logs,
+    ServiceRegistry& registry,
     std::function<void(Json::Value const& jvInput)> callbackFuncP,
     std::unordered_map<std::string, std::string> headers)
 {
-    auto j = logs.journal("HTTPClient");
+    auto j = registry.getJournal("HTTPClient");
 
     // Connect to localhost
     if (!quiet)

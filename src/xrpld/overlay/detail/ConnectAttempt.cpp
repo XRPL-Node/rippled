@@ -520,7 +520,7 @@ ConnectAttempt::processResponse()
         JLOG(journal_.debug()) << "Protocol: " << to_string(*negotiatedProtocol);
         JLOG(journal_.info()) << "Public Key: " << toBase58(TokenType::NodePublic, publicKey);
 
-        auto const member = app_.cluster().member(publicKey);
+        auto const member = app_.getCluster().member(publicKey);
         if (member)
         {
             JLOG(journal_.info()) << "Cluster name: " << *member;
