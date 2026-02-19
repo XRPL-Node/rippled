@@ -1011,14 +1011,13 @@ class Vault_test : public beast::unit_test::suite
     {
         using namespace test::jtx;
 
-        auto testCase = [this](
-                            std::function<void(
-                                Env & env,
-                                Account const& issuer,
-                                Account const& owner,
-                                Account const& depositor,
-                                Asset const& asset,
-                                Vault& vault)> test) {
+        auto testCase = [this](std::function<void(
+                                   Env & env,
+                                   Account const& issuer,
+                                   Account const& owner,
+                                   Account const& depositor,
+                                   Asset const& asset,
+                                   Vault& vault)> test) {
             Env env{*this, testable_amendments() | featureSingleAssetVault};
             Account issuer{"issuer"};
             Account owner{"owner"};
@@ -1298,14 +1297,13 @@ class Vault_test : public beast::unit_test::suite
     {
         using namespace test::jtx;
 
-        auto testCase = [this](
-                            std::function<void(
-                                Env & env,
-                                Account const& issuer,
-                                Account const& owner,
-                                Account const& depositor,
-                                Asset const& asset,
-                                Vault& vault)> test) {
+        auto testCase = [this](std::function<void(
+                                   Env & env,
+                                   Account const& issuer,
+                                   Account const& owner,
+                                   Account const& depositor,
+                                   Asset const& asset,
+                                   Vault& vault)> test) {
             Env env{*this, testable_amendments() | featureSingleAssetVault};
             Account issuer{"issuer"};
             Account owner{"owner"};
@@ -2143,7 +2141,7 @@ class Vault_test : public beast::unit_test::suite
                      PrettyAsset const& asset,
                      Vault& vault,
                      MPTTester const& mptt) {
-            testcase("lsfVaultDepositBlocked prevents deposits");
+            testcase("MPT lsfVaultDepositBlocked prevents deposits");
             auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
             env(tx);
             env.close();
@@ -2207,7 +2205,7 @@ class Vault_test : public beast::unit_test::suite
                      PrettyAsset const& asset,
                      Vault& vault,
                      MPTTester const& mptt) {
-            testcase("insolvent vault blocks deposits");
+            testcase("MPT insolvent vault blocks deposits");
 
             auto const depositAmount = asset(20);
 
@@ -2280,9 +2278,11 @@ class Vault_test : public beast::unit_test::suite
                 if (!BEAST_EXPECT(sleVault))
                     return;
 
+                std::cout << "assets total: " << sleVault->at(sfAssetsTotal) << std::endl;
+                std::cout << "assets available: " << sleVault->at(sfAssetsAvailable) << std::endl;
+
                 Asset share = sleVault->at(sfShareMPTID);
-                env(vault.clawback(
-                        {.issuer = owner, .id = vaultKeylet.key, .holder = depositor, .amount = share(0).value()}),
+                env(vault.clawback({.issuer = owner, .id = vaultKeylet.key, .holder = depositor, .amount = share(0)}),
                     ter(tesSUCCESS),
                     THISLINE);
                 env.close();
@@ -2974,7 +2974,7 @@ class Vault_test : public beast::unit_test::suite
                      Vault& vault,
                      PrettyAsset const& asset,
                      auto&&...) {
-            testcase("lsfVaultDepositBlocked prevents deposits");
+            testcase("IOU lsfVaultDepositBlocked prevents deposits");
             auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
             env(tx);
             env.close();
@@ -3039,7 +3039,7 @@ class Vault_test : public beast::unit_test::suite
                      Vault& vault,
                      PrettyAsset const& asset,
                      auto&&...) {
-            testcase("insolvent vault blocks deposits");
+            testcase("IOU insolvent vault blocks deposits");
 
             auto const depositAmount = asset(20);
 
@@ -3054,15 +3054,15 @@ class Vault_test : public beast::unit_test::suite
                 env.close();
             }
 
-            auto const& brokerKeylet = keylet::loanbroker(owner.id(), env.seq(owner));
-            auto const& loanKeylet = keylet::loan(brokerKeylet.key, 1);
+            auto const brokerKeylet = keylet::loanbroker(owner.id(), env.seq(owner));
+            auto const loanKeylet = keylet::loan(brokerKeylet.key, 1);
 
             // Create a LoanBroker and a Loan, to drain the vault
             {
                 using namespace loanBroker;
                 using namespace loan;
 
-                env(set(owner, vaultKeylet.key), THISLINE);
+                env(set(owner, vaultKeylet.key), ter{tesSUCCESS}, THISLINE);
                 env.close();
 
                 // Create a simple Loan for the full amount of Vault assets
@@ -3072,7 +3072,7 @@ class Vault_test : public beast::unit_test::suite
                     paymentTotal(1),
                     sig(sfCounterpartySignature, owner),
                     fee(env.current()->fees().base * 2),
-                    ter(tesSUCCESS),
+                    ter{tesSUCCESS},
                     THISLINE);
                 env.close();
 
@@ -3111,10 +3111,11 @@ class Vault_test : public beast::unit_test::suite
                 auto const sleVault = env.le(vaultKeylet);
                 if (!BEAST_EXPECT(sleVault))
                     return;
+                std::cout << "assets total: " << sleVault->at(sfAssetsTotal) << std::endl;
+                std::cout << "assets available: " << sleVault->at(sfAssetsAvailable) << std::endl;
 
                 Asset share = sleVault->at(sfShareMPTID);
-                env(vault.clawback(
-                        {.issuer = owner, .id = vaultKeylet.key, .holder = issuer, .amount = share(0).value()}),
+                env(vault.clawback({.issuer = owner, .id = vaultKeylet.key, .holder = issuer, .amount = share(0)}),
                     ter(tesSUCCESS),
                     THISLINE);
                 env.close();
