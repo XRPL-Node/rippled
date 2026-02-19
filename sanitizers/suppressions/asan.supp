@@ -26,7 +26,7 @@ interceptor_via_fun:boost::context::basic_fixedsize_stack*deallocate
 interceptor_via_fun:boost::context::fiber::~fiber
 interceptor_name:boost/context/fiber_ucontext.hpp
 interceptor_name:boost/context/fixedsize_stack.hpp
-
+interceptor_name:Coro.ipp
 
 
 # Suppress false positive stack-buffer errors in thread stack allocation
