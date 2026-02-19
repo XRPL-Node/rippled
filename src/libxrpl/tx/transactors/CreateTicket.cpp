@@ -67,7 +67,7 @@ CreateTicket::doApply()
             return tecINSUFFICIENT_RESERVE;
     }
 
-    beast::Journal viewJ{ctx_.registry.journal("View")};
+    beast::Journal viewJ{ctx_.registry.get().journal("View")};
 
     // The starting ticket sequence is the same as the current account
     // root sequence.  Before we got here to doApply(), the transaction

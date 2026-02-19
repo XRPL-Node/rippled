@@ -299,7 +299,7 @@ SetSignerList::replaceSignerList()
     view().insert(signerList);
     writeSignersToSLE(signerList, flags);
 
-    auto viewJ = ctx_.registry.journal("View");
+    auto viewJ = ctx_.registry.get().journal("View");
     // Add the signer list to the account's directory.
     auto const page = ctx_.view().dirInsert(ownerDirKeylet, signerListKeylet, describeOwnerDir(account_));
 

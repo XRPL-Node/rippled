@@ -413,7 +413,7 @@ Payment::doApply()
                 account_,
                 ctx_.tx.getFieldPathSet(sfPaths),
                 ctx_.tx[~sfDomainID],
-                ctx_.registry.logs(),
+                ctx_.registry.get().logs(),
                 &rcInput);
             // VFALCO NOTE We might not need to apply, depending
             //             on the TER. But always applying *should*

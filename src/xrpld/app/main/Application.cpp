@@ -744,10 +744,7 @@ public:
     RelationalDatabase&
     getRelationalDatabase() override
     {
-        XRPL_ASSERT(
-            relationalDatabase_,
-            "xrpl::ApplicationImp::getRelationalDatabase : non-null "
-            "relational database");
+        XRPL_ASSERT(relationalDatabase_, "xrpl::ApplicationImp::getRelationalDatabase : non-null relational database");
         return *relationalDatabase_;
     }
 

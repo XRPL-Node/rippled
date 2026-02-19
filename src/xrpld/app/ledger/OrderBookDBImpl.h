@@ -64,7 +64,7 @@ public:
     makeBookListeners(Book const&) override;
 
 private:
-    ServiceRegistry& registry_;
+    std::reference_wrapper<ServiceRegistry> registry_;
     int const pathSearchMax_;
     bool const standalone_;
 
