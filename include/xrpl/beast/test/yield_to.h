@@ -21,9 +21,14 @@ namespace test {
 
 // Sanitizers significantly increase stack frame sizes
 // (TSAN ~3-5x, ASAN ~2-3x), requiring larger coroutine stacks.
-#if defined(__SANITIZE_THREAD__) || defined(__SANITIZE_ADDRESS__) || \
-    (defined(__has_feature) && (__has_feature(thread_sanitizer) || __has_feature(address_sanitizer)))
+#if defined(__SANITIZE_THREAD__) || defined(__SANITIZE_ADDRESS__)
 inline constexpr std::size_t yieldStackSize = 8 * 1024 * 1024;
+#elif defined(__has_feature)
+#if __has_feature(thread_sanitizer) || __has_feature(address_sanitizer)
+inline constexpr std::size_t yieldStackSize = 8 * 1024 * 1024;
+#else
+inline constexpr std::size_t yieldStackSize = 2 * 1024 * 1024;
+#endif
 #else
 inline constexpr std::size_t yieldStackSize = 2 * 1024 * 1024;
 #endif
