@@ -4430,11 +4430,11 @@ make_NetworkOPs(
     NetworkOPs::clock_type& clock,
     bool standalone,
     std::size_t minPeerCount,
-    bool startvalid,
-    JobQueue& job_queue,
+    bool startValid,
+    JobQueue& jobQueue,
     LedgerMaster& ledgerMaster,
     ValidatorKeys const& validatorKeys,
-    boost::asio::io_context& io_svc,
+    boost::asio::io_context& ioSvc,
     beast::Journal journal,
     beast::insight::Collector::ptr const& collector)
 {
@@ -4443,11 +4443,11 @@ make_NetworkOPs(
         clock,
         standalone,
         minPeerCount,
-        startvalid,
-        job_queue,
+        startValid,
+        jobQueue,
         ledgerMaster,
         validatorKeys,
-        io_svc,
+        ioSvc,
         journal,
         collector);
 }
