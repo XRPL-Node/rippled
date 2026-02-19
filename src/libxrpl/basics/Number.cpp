@@ -860,7 +860,8 @@ Number::operator/=(Number const& y)
     return *this;
 }
 
-Number::operator rep() const
+Number::
+operator rep() const
 {
     rep drops = mantissa();
     int offset = exponent();
