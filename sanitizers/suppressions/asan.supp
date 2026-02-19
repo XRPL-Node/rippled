@@ -1,6 +1,6 @@
 # The idea is to empty this file gradually by fixing the underlying issues and removing suppresions.
 #
-# ASAN_OPTIONS="suppressions=sanitizers/suppressions/asan.supp:halt_on_error=0:detect_stack_use_after_return=0"
+# ASAN_OPTIONS="suppressions=sanitizers/suppressions/asan.supp:include=sanitizers/suppressions/runtime-asan-options.txt"
 #
 # Boost coroutines cause multiple ASAN false positives due to swapcontext/fiber stack switching.
 # ASAN cannot correctly track stack memory across coroutine context switches, leading to:
@@ -14,11 +14,10 @@
 # These are now handled by:
 # 1. Using Boost.Coroutine2 with the ucontext backend (BOOST_USE_ASAN + BOOST_USE_UCONTEXT)
 # 2. Runtime options in runtime-asan-options.txt:
-#    - alloc_dealloc_mismatch=0: Suppresses false "bad-free" errors from fiber stack deallocation
+#    - alloc_dealloc_mismatch=0: Suppresses false "bad-free" errors from fiber stack deallocation, on GCC. For Clang we don't instrument boost
 #    - detect_stack_use_after_return=0: Prevents false positives from fake stack tracking
 #    - use_sigaltstack=0: Avoids conflicts with coroutine stack switching
 
 interceptor_name:clock_gettime
 interceptor_name:__bzero
 interceptor_name:nudb
-interceptor_name:boost # Suppress any flackiness
