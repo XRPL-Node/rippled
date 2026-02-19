@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_NUMBER_H_INCLUDED
-#define XRPL_BASICS_NUMBER_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -189,8 +188,7 @@ using int128_t = __int128_t;
 #endif  // !defined(_MSC_VER)
 
 template <class T>
-concept UnsignedMantissa =
-    std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>;
+concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>;
 }  // namespace detail
 
 /** Number is a floating point type that can represent a wide range of values.
@@ -646,15 +644,9 @@ private:
      * bring it back into range.
      *
      */
-    template <
-        bool expectNormal = true,
-        detail::UnsignedMantissa Rep = internalrep>
+    template <bool expectNormal = true, detail::UnsignedMantissa Rep = internalrep>
     void
-    fromInternal(
-        bool negative,
-        Rep mantissa,
-        int exponent,
-        MantissaRange const* pRange);
+    fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange const* pRange);
 
     /** Rebuilds the number from components.
      *
@@ -666,9 +658,7 @@ private:
      * bring it back into range.
      *
      */
-    template <
-        bool expectNormal = true,
-        detail::UnsignedMantissa Rep = internalrep>
+    template <bool expectNormal = true, detail::UnsignedMantissa Rep = internalrep>
     void
     fromInternal(bool negative, Rep mantissa, int exponent);
 
@@ -678,13 +668,8 @@ public:
     constexpr static internalrep largestMantissa = largeRange.max;
 };
 
-inline constexpr Number::Number(
-    bool negative,
-    internalrep mantissa,
-    int exponent,
-    unchecked) noexcept
-    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}
-    , exponent_{exponent}
+inline constexpr Number::Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept
+    : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}, exponent_{exponent}
 {
 }
 
@@ -695,8 +680,7 @@ inline constexpr Number::Number(internalrep mantissa, int exponent, unchecked) n
 
 constexpr static Number numZero{};
 
-inline Number::Number(internalrep mantissa, int exponent, normalized)
-    : Number(false, mantissa, exponent, normalized{})
+inline Number::Number(internalrep mantissa, int exponent, normalized) : Number(false, mantissa, exponent, normalized{})
 {
 }
 
@@ -860,10 +844,7 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 
     if constexpr (std::is_unsigned_v<T>)
     {
-        XRPL_ASSERT_PARTS(
-            !negative,
-            "xrpl::Number::normalizeToRange",
-            "Number is non-negative for unsigned range.");
+        XRPL_ASSERT_PARTS(!negative, "xrpl::Number::normalizeToRange", "Number is non-negative for unsigned range.");
         // To avoid logical errors in release builds, throw if the Number is
         // negative for an unsigned range.
         if (negative)
@@ -997,5 +978,3 @@ public:
 };
 
 }  // namespace xrpl
-
-#endif  // XRPL_BASICS_NUMBER_H_INCLUDED

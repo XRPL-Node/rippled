@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_APPLYSTATETABLE_H_INCLUDED
-#define XRPL_LEDGER_APPLYSTATETABLE_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/Journal.h>
 #include <xrpl/ledger/OpenView.h>
@@ -65,6 +64,11 @@ public:
     std::shared_ptr<SLE const>
     read(ReadView const& base, Keylet const& k) const;
 
+    /** Check only local items without delegating to base.
+        Returns std::nullopt if key not found locally. */
+    std::optional<std::shared_ptr<SLE const>>
+    readLocal(Keylet const& k) const;
+
     std::shared_ptr<SLE>
     peek(ReadView const& base, Keylet const& k);
 
@@ -128,5 +132,3 @@ private:
 
 }  // namespace detail
 }  // namespace xrpl
-
-#endif

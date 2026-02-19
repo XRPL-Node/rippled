@@ -76,7 +76,8 @@ jobs:
     name: ${{ inputs.config_name }}
     runs-on: ${{ fromJSON(inputs.runs_on) }}
     container: ${{ inputs.image != '' && inputs.image || null }}
-    timeout-minutes: 60
+    # Sanitizer builds on GCC are taking longer than 60mins. Hence increasing the timeout to 90mins.
+    timeout-minutes: ${{ inputs.sanitizers != '' && 150 || 60 }}
     env:
       # Use a namespace to keep the objects separate for each configuration.
       CCACHE_NAMESPACE: ${{ inputs.config_name }}
@@ -232,7 +233,7 @@ jobs:
         working-directory: ${{ runner.os == 'Windows' && format('{0}/{1}', env.BUILD_DIR, inputs.build_type) || env.BUILD_DIR }}
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
-          PARALLELISM: ${{ env.SANITIZERS_ENABLED == 'true' && '1' || steps.nproc.outputs.nproc }}
+          PARALLELISM: ${{ env.SANITIZERS_ENABLED == 'true' && steps.nproc.outputs.nproc || steps.nproc.outputs.nproc }}
         run: |
           ./xrpld --unittest --unittest-jobs "${PARALLELISM}"
 

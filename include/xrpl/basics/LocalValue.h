@@ -1,5 +1,6 @@
-#ifndef XRPL_BASICS_LOCALVALUE_H_INCLUDED
-#define XRPL_BASICS_LOCALVALUE_H_INCLUDED
+#pragma once
+
+#include <boost/thread/tss.hpp>
 
 #include <memory>
 #include <unordered_map>
@@ -40,63 +41,21 @@ struct LocalValues
 
     // Keys are the address of a LocalValue.
     std::unordered_map<void const*, std::unique_ptr<BasicValue>> values;
-};
 
-// Wrapper to ensure proper cleanup when thread exits
-struct LocalValuesHolder
-{
-    LocalValues* ptr = nullptr;
-
-    ~LocalValuesHolder()
+    static inline void
+    cleanup(LocalValues* lvs)
     {
-        if (ptr && !ptr->onCoro)
-            delete ptr;
+        if (lvs && !lvs->onCoro)
+            delete lvs;
     }
 };
 
-inline LocalValuesHolder&
-getLocalValuesHolder()
+template <class = void>
+boost::thread_specific_ptr<detail::LocalValues>&
+getLocalValues()
 {
-    thread_local LocalValuesHolder holder;
-    return holder;
-}
-
-inline LocalValues*&
-getLocalValuesPtr()
-{
-    return getLocalValuesHolder().ptr;
-}
-
-inline LocalValues*
-getOrCreateLocalValues()
-{
-    auto& ptr = getLocalValuesPtr();
-    if (!ptr)
-    {
-        ptr = new LocalValues();
-        ptr->onCoro = false;
-    }
-    return ptr;
-}
-
-// For coroutine support, we need explicit swap functions
-inline LocalValues*
-releaseLocalValues()
-{
-    auto& ptr = getLocalValuesPtr();
-    auto* result = ptr;
-    ptr = nullptr;
-    return result;
-}
-
-inline void
-resetLocalValues(LocalValues* lvs)
-{
-    auto& ptr = getLocalValuesPtr();
-    // Clean up old value if it's not a coroutine's LocalValues
-    if (ptr && !ptr->onCoro)
-        delete ptr;
-    ptr = lvs;
+    static boost::thread_specific_ptr<detail::LocalValues> tsp(&detail::LocalValues::cleanup);
+    return tsp;
 }
 
 }  // namespace detail
@@ -129,14 +88,21 @@ template <class T>
 T&
 LocalValue<T>::operator*()
 {
-    auto lvs = detail::getOrCreateLocalValues();
-    auto const iter = lvs->values.find(this);
-    if (iter != lvs->values.end())
-        return *reinterpret_cast<T*>(iter->second->get());
+    auto lvs = detail::getLocalValues().get();
+    if (!lvs)
+    {
+        lvs = new detail::LocalValues();
+        lvs->onCoro = false;
+        detail::getLocalValues().reset(lvs);
+    }
+    else
+    {
+        auto const iter = lvs->values.find(this);
+        if (iter != lvs->values.end())
+            return *reinterpret_cast<T*>(iter->second->get());
+    }
 
     return *reinterpret_cast<T*>(
         lvs->values.emplace(this, std::make_unique<detail::LocalValues::Value<T>>(t_)).first->second->get());
 }
 }  // namespace xrpl
-
-#endif
