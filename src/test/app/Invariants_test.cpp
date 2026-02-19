@@ -15,12 +15,14 @@
 #include <xrpl/protocol/TxFormats.h>
 #include <xrpl/protocol/XRPAmount.h>
 #include <xrpl/tx/ApplyContext.h>
+#include <xrpl/tx/InvariantCheck.h>
 #include <xrpl/tx/apply.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <initializer_list>
 #include <string>
+#include <vector>
 
 namespace xrpl {
 namespace test {
