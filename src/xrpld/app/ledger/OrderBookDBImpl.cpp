@@ -223,7 +223,7 @@ OrderBookDBImpl::getBookSize(Issue const& issue, std::optional<uint256> const& d
 }
 
 bool
-OrderBookDBImpl::isBookToXRP(Issue const& issue, std::optional<Domain> domain)
+OrderBookDBImpl::isBookToXRP(Issue const& issue, std::optional<Domain> const& domain)
 {
     std::lock_guard sl(mLock);
     if (domain)

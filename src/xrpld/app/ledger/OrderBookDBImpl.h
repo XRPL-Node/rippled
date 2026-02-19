@@ -47,7 +47,7 @@ public:
     getBookSize(Issue const& issue, std::optional<Domain> const& domain = std::nullopt) override;
 
     bool
-    isBookToXRP(Issue const& issue, std::optional<Domain> domain = std::nullopt) override;
+    isBookToXRP(Issue const& issue, std::optional<Domain> const& domain = std::nullopt) override;
 
     // OrderBookDBImpl-specific methods
     void
