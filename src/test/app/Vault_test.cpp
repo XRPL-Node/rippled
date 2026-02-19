@@ -2240,11 +2240,10 @@ class Vault_test : public beast::unit_test::suite
                     fee(env.current()->fees().base * 2),
                     ter(tesSUCCESS),
                     THISLINE);
-                env.close();
-
                 env.close(std::chrono::seconds{120 + 60});
 
                 env(manage(owner, loanKeylet.key, tfLoanDefault), ter(tesSUCCESS), THISLINE);
+                env.close();
 
                 auto const sleVault = env.le(vaultKeylet);
                 if (!BEAST_EXPECT(sleVault))
@@ -2277,9 +2276,6 @@ class Vault_test : public beast::unit_test::suite
                 auto const sleVault = env.le(vaultKeylet);
                 if (!BEAST_EXPECT(sleVault))
                     return;
-
-                std::cout << "assets total: " << sleVault->at(sfAssetsTotal) << std::endl;
-                std::cout << "assets available: " << sleVault->at(sfAssetsAvailable) << std::endl;
 
                 Asset share = sleVault->at(sfShareMPTID);
                 env(vault.clawback({.issuer = owner, .id = vaultKeylet.key, .holder = depositor, .amount = share(0)}),
@@ -3074,11 +3070,10 @@ class Vault_test : public beast::unit_test::suite
                     fee(env.current()->fees().base * 2),
                     ter{tesSUCCESS},
                     THISLINE);
-                env.close();
-
                 env.close(std::chrono::seconds{120 + 60});
 
                 env(manage(owner, loanKeylet.key, tfLoanDefault), ter(tesSUCCESS), THISLINE);
+                env.close();
 
                 auto const sleVault = env.le(vaultKeylet);
                 if (!BEAST_EXPECT(sleVault))
@@ -3111,8 +3106,6 @@ class Vault_test : public beast::unit_test::suite
                 auto const sleVault = env.le(vaultKeylet);
                 if (!BEAST_EXPECT(sleVault))
                     return;
-                std::cout << "assets total: " << sleVault->at(sfAssetsTotal) << std::endl;
-                std::cout << "assets available: " << sleVault->at(sfAssetsAvailable) << std::endl;
 
                 Asset share = sleVault->at(sfShareMPTID);
                 env(vault.clawback({.issuer = owner, .id = vaultKeylet.key, .holder = issuer, .amount = share(0)}),
