@@ -968,13 +968,14 @@ class Vault_test : public beast::unit_test::suite
     {
         using namespace test::jtx;
 
-        auto testCase = [this](std::function<void(
-                                   Env & env,
-                                   Account const& issuer,
-                                   Account const& owner,
-                                   Account const& depositor,
-                                   Asset const& asset,
-                                   Vault& vault)> test) {
+        auto testCase = [this](
+                            std::function<void(
+                                Env & env,
+                                Account const& issuer,
+                                Account const& owner,
+                                Account const& depositor,
+                                Asset const& asset,
+                                Vault& vault)> test) {
             Env env{*this, testable_amendments() | featureSingleAssetVault};
             Account issuer{"issuer"};
             Account owner{"owner"};
@@ -1254,13 +1255,14 @@ class Vault_test : public beast::unit_test::suite
     {
         using namespace test::jtx;
 
-        auto testCase = [this](std::function<void(
-                                   Env & env,
-                                   Account const& issuer,
-                                   Account const& owner,
-                                   Account const& depositor,
-                                   Asset const& asset,
-                                   Vault& vault)> test) {
+        auto testCase = [this](
+                            std::function<void(
+                                Env & env,
+                                Account const& issuer,
+                                Account const& owner,
+                                Account const& depositor,
+                                Asset const& asset,
+                                Vault& vault)> test) {
             Env env{*this, testable_amendments() | featureSingleAssetVault};
             Account issuer{"issuer"};
             Account owner{"owner"};
@@ -4577,7 +4579,7 @@ class Vault_test : public beast::unit_test::suite
             {
                 testcase("VaultClawback (asset) - " + prefix + " issuer XRP clawback fails");
                 auto [vault, vaultKeylet] = setupVault(asset, owner, depositor, issuer);
-                // If the asset is XRP, clawback with amount fails as malfored
+                // If the asset is XRP, clawback with amount fails as malformed
                 // when asset is specified.
                 env(vault.clawback({
                         .issuer = issuer,
