@@ -1,5 +1,4 @@
-#ifndef XRPL_SHAMAP_SHAMAPITEM_H_INCLUDED
-#define XRPL_SHAMAP_SHAMAPITEM_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/ByteUtilities.h>
 #include <xrpl/basics/CountedObject.h>
@@ -10,7 +9,7 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
-namespace ripple {
+namespace xrpl {
 
 // an item stored in a SHAMap
 class SHAMapItem : public CountedObject<SHAMapItem>
@@ -43,13 +42,9 @@ private:
     // the only way to properly create one is to first allocate enough memory
     // so we limit this constructor to codepaths that do this right and limit
     // arbitrary construction.
-    SHAMapItem(uint256 const& tag, Slice data)
-        : tag_(tag), size_(static_cast<std::uint32_t>(data.size()))
+    SHAMapItem(uint256 const& tag, Slice data) : tag_(tag), size_(static_cast<std::uint32_t>(data.size()))
     {
-        std::memcpy(
-            reinterpret_cast<std::uint8_t*>(this) + sizeof(*this),
-            data.data(),
-            data.size());
+        std::memcpy(reinterpret_cast<std::uint8_t*>(this) + sizeof(*this), data.data(), data.size());
     }
 
 public:
@@ -125,13 +120,13 @@ intrusive_ptr_release(SHAMapItem const* x)
     {
         auto p = reinterpret_cast<std::uint8_t const*>(x);
 
-        // The SHAMapItem constuctor isn't trivial (because the destructor
+        // The SHAMapItem constructor isn't trivial (because the destructor
         // for CountedObject isn't) so we can't avoid calling it here, but
         // plan for a future where we might not need to.
         if constexpr (!std::is_trivially_destructible_v<SHAMapItem>)
             std::destroy_at(x);
 
-        // If the slabber doens't claim this pointer, it was allocated
+        // If the slabber doesn't claim this pointer, it was allocated
         // manually, so we free it manually.
         if (!detail::slabber.deallocate(const_cast<std::uint8_t*>(p)))
             delete[] p;
@@ -141,9 +136,7 @@ intrusive_ptr_release(SHAMapItem const* x)
 inline boost::intrusive_ptr<SHAMapItem>
 make_shamapitem(uint256 const& tag, Slice data)
 {
-    XRPL_ASSERT(
-        data.size() <= megabytes<std::size_t>(16),
-        "ripple::make_shamapitem : maximum input size");
+    XRPL_ASSERT(data.size() <= megabytes<std::size_t>(16), "xrpl::make_shamapitem : maximum input size");
 
     std::uint8_t* raw = detail::slabber.allocate(data.size());
 
@@ -168,6 +161,4 @@ make_shamapitem(SHAMapItem const& other)
     return make_shamapitem(other.key(), other.slice());
 }
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

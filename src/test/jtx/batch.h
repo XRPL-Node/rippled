@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_BATCH_H_INCLUDED
-#define XRPL_TEST_JTX_BATCH_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 #include <test/jtx/Env.h>
@@ -15,7 +14,7 @@
 #include <cstdint>
 #include <optional>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 namespace jtx {
 
@@ -24,18 +23,11 @@ namespace batch {
 
 /** Calculate Batch Fee. */
 XRPAmount
-calcBatchFee(
-    jtx::Env const& env,
-    uint32_t const& numSigners,
-    uint32_t const& txns = 0);
+calcBatchFee(jtx::Env const& env, uint32_t const& numSigners, uint32_t const& txns = 0);
 
 /** Batch. */
 Json::Value
-outer(
-    jtx::Account const& account,
-    uint32_t seq,
-    STAmount const& fee,
-    std::uint32_t flags);
+outer(jtx::Account const& account, uint32_t seq, STAmount const& fee, std::uint32_t flags);
 
 /** Adds a new Batch Txn on a JTx and autofills. */
 class inner
@@ -49,8 +41,7 @@ public:
     inner(
         Json::Value const& txn,
         std::uint32_t const& sequence,
-        std::optional<std::uint32_t> const& ticket = std::nullopt,
-        std::optional<std::uint32_t> const& fee = std::nullopt)
+        std::optional<std::uint32_t> const& ticket = std::nullopt)
         : txn_(txn), seq_(sequence), ticket_(ticket)
     {
         txn_[jss::SigningPubKey] = "";
@@ -118,20 +109,15 @@ public:
     Account master;
     std::vector<Reg> signers;
 
-    msig(Account const& masterAccount, std::vector<Reg> signers_)
-        : master(masterAccount), signers(std::move(signers_))
+    msig(Account const& masterAccount, std::vector<Reg> signers_) : master(masterAccount), signers(std::move(signers_))
     {
         sortSigners(signers);
     }
 
     template <class AccountType, class... Accounts>
         requires std::convertible_to<AccountType, Reg>
-    explicit msig(
-        Account const& masterAccount,
-        AccountType&& a0,
-        Accounts&&... aN)
-        : master(masterAccount)
-        , signers{std::forward<AccountType>(a0), std::forward<Accounts>(aN)...}
+    explicit msig(Account const& masterAccount, AccountType&& a0, Accounts&&... aN)
+        : master(masterAccount), signers{std::forward<AccountType>(a0), std::forward<Accounts>(aN)...}
     {
         sortSigners(signers);
     }
@@ -145,6 +131,4 @@ public:
 }  // namespace jtx
 
 }  // namespace test
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

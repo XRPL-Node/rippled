@@ -1,10 +1,9 @@
-#ifndef XRPL_NODESTORE_MANAGER_H_INCLUDED
-#define XRPL_NODESTORE_MANAGER_H_INCLUDED
+#pragma once
 
 #include <xrpl/nodestore/DatabaseRotating.h>
 #include <xrpl/nodestore/Factory.h>
 
-namespace ripple {
+namespace xrpl {
 
 namespace NodeStore {
 
@@ -39,11 +38,7 @@ public:
 
     /** Create a backend. */
     virtual std::unique_ptr<Backend>
-    make_Backend(
-        Section const& parameters,
-        std::size_t burstSize,
-        Scheduler& scheduler,
-        beast::Journal journal) = 0;
+    make_Backend(Section const& parameters, std::size_t burstSize, Scheduler& scheduler, beast::Journal journal) = 0;
 
     /** Construct a NodeStore database.
 
@@ -55,7 +50,7 @@ public:
             HyperLevelDB, LevelDBFactory, SQLite, MDB
 
         If the fastBackendParameter is omitted or empty, no ephemeral database
-        is used. If the scheduler parameter is omited or unspecified, a
+        is used. If the scheduler parameter is omitted or unspecified, a
         synchronous scheduler is used which performs all tasks immediately on
         the caller's thread.
 
@@ -83,6 +78,4 @@ public:
 };
 
 }  // namespace NodeStore
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,11 +1,10 @@
-#ifndef XRPL_TEST_JTX_RPC_H_INCLUDED
-#define XRPL_TEST_JTX_RPC_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Env.h>
 
 #include <tuple>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 namespace jtx {
 
@@ -22,15 +21,12 @@ private:
 
 public:
     /// If there's an error code, we expect an error message
-    explicit rpc(error_code_i code, std::optional<std::string> m = {})
-        : code_(code), errorMessage_(m)
+    explicit rpc(error_code_i code, std::optional<std::string> m = {}) : code_(code), errorMessage_(m)
     {
     }
 
     ///  If there is not a code, we expect an exception message
-    explicit rpc(
-        std::string error,
-        std::optional<std::string> exceptionMessage = {})
+    explicit rpc(std::string error, std::optional<std::string> exceptionMessage = {})
         : error_(error), errorException_(exceptionMessage)
     {
     }
@@ -49,11 +45,9 @@ public:
             // always obtained from the lookup into the ErrorInfo lookup table.
             //
             // Take advantage of that fact to populate jt.rpcException. The
-            // check will be aware of whether the rpcExcpetion can be safely
+            // check will be aware of whether the rpcException can be safely
             // ignored.
-            jt.rpcCode = {
-                *code_,
-                errorMessage_ ? *errorMessage_ : errorInfo.message.c_str()};
+            jt.rpcCode = {*code_, errorMessage_ ? *errorMessage_ : errorInfo.message.c_str()};
             jt.rpcException = {errorInfo.token.c_str(), std::nullopt};
         }
         if (error_)
@@ -63,6 +57,4 @@ public:
 
 }  // namespace jtx
 }  // namespace test
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_SECRETKEY_H_INCLUDED
-#define XRPL_PROTOCOL_SECRETKEY_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Buffer.h>
 #include <xrpl/basics/Slice.h>
@@ -12,7 +11,7 @@
 #include <cstring>
 #include <string>
 
-namespace ripple {
+namespace xrpl {
 
 /** A secret key. */
 class SecretKey
@@ -81,8 +80,7 @@ public:
 inline bool
 operator==(SecretKey const& lhs, SecretKey const& rhs)
 {
-    return lhs.size() == rhs.size() &&
-        std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
+    return lhs.size() == rhs.size() && std::memcmp(lhs.data(), rhs.data(), rhs.size()) == 0;
 }
 
 inline bool
@@ -162,6 +160,4 @@ sign(KeyType type, SecretKey const& sk, Slice const& message)
 }
 /** @} */
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,9 +1,8 @@
-#ifndef XRPL_PATH_IMPL_PATHFINDERUTILS_H_INCLUDED
-#define XRPL_PATH_IMPL_PATHFINDERUTILS_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/STAmount.h>
 
-namespace ripple {
+namespace xrpl {
 
 inline STAmount
 largestAmount(STAmount const& amt)
@@ -29,6 +28,4 @@ convertAllCheck(STAmount const& a)
     return a == largestAmount(a);
 }
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

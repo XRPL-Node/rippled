@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_CONTRACT_H_INCLUDED
-#define XRPL_BASICS_CONTRACT_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/type_name.h>
 
@@ -7,7 +6,7 @@
 #include <string>
 #include <utility>
 
-namespace ripple {
+namespace xrpl {
 
 /*  Programming By Contract
 
@@ -36,15 +35,10 @@ template <class E, class... Args>
 [[noreturn]] inline void
 Throw(Args&&... args)
 {
-    static_assert(
-        std::is_convertible<E*, std::exception*>::value,
-        "Exception must derive from std::exception.");
+    static_assert(std::is_convertible<E*, std::exception*>::value, "Exception must derive from std::exception.");
 
     E e(std::forward<Args>(args)...);
-    LogThrow(
-        std::string(
-            "Throwing exception of type " + beast::type_name<E>() + ": ") +
-        e.what());
+    LogThrow(std::string("Throwing exception of type " + beast::type_name<E>() + ": ") + e.what());
     throw e;
 }
 
@@ -52,6 +46,4 @@ Throw(Args&&... args)
 [[noreturn]] void
 LogicError(std::string const& how) noexcept;
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

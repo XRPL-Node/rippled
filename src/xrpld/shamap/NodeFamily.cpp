@@ -4,26 +4,27 @@
 #include <xrpld/app/main/Tuning.h>
 #include <xrpld/shamap/NodeFamily.h>
 
-namespace ripple {
+namespace xrpl {
 
 NodeFamily::NodeFamily(Application& app, CollectorManager& cm)
     : app_(app)
     , db_(app.getNodeStore())
     , j_(app.journal("NodeFamily"))
-    , fbCache_(std::make_shared<FullBelowCache>(
-          "Node family full below cache",
-          stopwatch(),
-          app.journal("NodeFamilyFulLBelowCache"),
-          cm.collector(),
-          fullBelowTargetSize,
-          fullBelowExpiration))
-    , tnCache_(std::make_shared<TreeNodeCache>(
-          "Node family tree node cache",
-          app.config().getValueFor(SizedItem::treeCacheSize),
-          std::chrono::seconds(
-              app.config().getValueFor(SizedItem::treeCacheAge)),
-          stopwatch(),
-          j_))
+    , fbCache_(
+          std::make_shared<FullBelowCache>(
+              "Node family full below cache",
+              stopwatch(),
+              app.journal("NodeFamilyFulLBelowCache"),
+              cm.collector(),
+              fullBelowTargetSize,
+              fullBelowExpiration))
+    , tnCache_(
+          std::make_shared<TreeNodeCache>(
+              "Node family tree node cache",
+              app.config().getValueFor(SizedItem::treeCacheSize),
+              std::chrono::seconds(app.config().getValueFor(SizedItem::treeCacheAge)),
+              stopwatch(),
+              j_))
 {
 }
 
@@ -82,9 +83,8 @@ NodeFamily::acquire(uint256 const& hash, std::uint32_t seq)
     {
         JLOG(j_.error()) << "Missing node in " << to_string(hash);
 
-        app_.getInboundLedgers().acquire(
-            hash, seq, InboundLedger::Reason::GENERIC);
+        app_.getInboundLedgers().acquire(hash, seq, InboundLedger::Reason::GENERIC);
     }
 }
 
-}  // namespace ripple
+}  // namespace xrpl

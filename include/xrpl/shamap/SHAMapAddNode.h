@@ -1,9 +1,8 @@
-#ifndef XRPL_SHAMAP_SHAMAPADDNODE_H_INCLUDED
-#define XRPL_SHAMAP_SHAMAPADDNODE_H_INCLUDED
+#pragma once
 
 #include <string>
 
-namespace ripple {
+namespace xrpl {
 
 // results of adding nodes
 class SHAMapAddNode
@@ -52,8 +51,7 @@ inline SHAMapAddNode::SHAMapAddNode() : mGood(0), mBad(0), mDuplicate(0)
 {
 }
 
-inline SHAMapAddNode::SHAMapAddNode(int good, int bad, int duplicate)
-    : mGood(good), mBad(bad), mDuplicate(duplicate)
+inline SHAMapAddNode::SHAMapAddNode(int good, int bad, int duplicate) : mGood(good), mBad(bad), mDuplicate(duplicate)
 {
 }
 
@@ -161,6 +159,4 @@ SHAMapAddNode::get() const
     return ret;
 }
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

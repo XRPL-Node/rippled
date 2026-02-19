@@ -1,16 +1,14 @@
-#ifndef XRPL_APP_TX_AMMLIQUIDITY_H_INCLUDED
-#define XRPL_APP_TX_AMMLIQUIDITY_H_INCLUDED
-
-#include <xrpld/app/misc/AMMHelpers.h>
-#include <xrpld/app/misc/AMMUtils.h>
-#include <xrpld/app/paths/AMMContext.h>
+#pragma once
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Quality.h>
+#include <xrpl/tx/transactors/AMM/AMMContext.h>
+#include <xrpl/tx/transactors/AMM/AMMHelpers.h>
+#include <xrpl/tx/transactors/AMM/AMMUtils.h>
 
-namespace ripple {
+namespace xrpl {
 
 template <typename TIn, typename TOut>
 class AMMOffer;
@@ -63,8 +61,7 @@ public:
      * quality.
      */
     std::optional<AMMOffer<TIn, TOut>>
-    getOffer(ReadView const& view, std::optional<Quality> const& clobQuality)
-        const;
+    getOffer(ReadView const& view, std::optional<Quality> const& clobQuality) const;
 
     AccountID const&
     ammAccount() const
@@ -131,6 +128,4 @@ private:
     maxOffer(TAmounts<TIn, TOut> const& balances, Rules const& rules) const;
 };
 
-}  // namespace ripple
-
-#endif  // XRPL_APP_TX_AMMLIQUIDITY_H_INCLUDED
+}  // namespace xrpl

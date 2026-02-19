@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STVAR_H_INCLUDED
-#define XRPL_PROTOCOL_STVAR_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STBase.h>
@@ -8,7 +7,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace ripple {
+namespace xrpl {
 namespace detail {
 
 struct defaultObject_t
@@ -42,7 +41,7 @@ concept ValidConstructSTArgs =
 class STVar
 {
 private:
-    // The largest "small object" we can accomodate
+    // The largest "small object" we can accommodate
     static std::size_t constexpr max_size = 72;
 
     std::aligned_storage<max_size>::type d_;
@@ -162,6 +161,4 @@ operator!=(STVar const& lhs, STVar const& rhs)
 }
 
 }  // namespace detail
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_LEDGER_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/core/Config.h>
 #include <xrpld/core/TimeKeeper.h>
@@ -14,7 +13,7 @@
 #include <xrpl/protocol/TxMeta.h>
 #include <xrpl/shamap/SHAMap.h>
 
-namespace ripple {
+namespace xrpl {
 
 class Application;
 class Job;
@@ -82,20 +81,16 @@ public:
 
         Amendments specified are enabled in the genesis ledger
     */
-    Ledger(
-        create_genesis_t,
-        Config const& config,
-        std::vector<uint256> const& amendments,
-        Family& family);
+    Ledger(create_genesis_t, Config const& config, std::vector<uint256> const& amendments, Family& family);
 
-    Ledger(LedgerInfo const& info, Config const& config, Family& family);
+    Ledger(LedgerHeader const& info, Config const& config, Family& family);
 
     /** Used for ledgers loaded from JSON files
 
         @param acquire If true, acquires the ledger if not found locally
     */
     Ledger(
-        LedgerInfo const& info,
+        LedgerHeader const& info,
         bool& loaded,
         bool acquire,
         Config const& config,
@@ -111,11 +106,7 @@ public:
     Ledger(Ledger const& previous, NetClock::time_point closeTime);
 
     // used for database ledgers
-    Ledger(
-        std::uint32_t ledgerSeq,
-        NetClock::time_point closeTime,
-        Config const& config,
-        Family& family);
+    Ledger(std::uint32_t ledgerSeq, NetClock::time_point closeTime, Config const& config, Family& family);
 
     ~Ledger() = default;
 
@@ -129,16 +120,16 @@ public:
         return false;
     }
 
-    LedgerInfo const&
-    info() const override
+    LedgerHeader const&
+    header() const override
     {
-        return info_;
+        return header_;
     }
 
     void
-    setLedgerInfo(LedgerInfo const& info)
+    setLedgerInfo(LedgerHeader const& info)
     {
-        info_ = info;
+        header_ = info;
     }
 
     Fees const&
@@ -160,8 +151,7 @@ public:
     exists(uint256 const& key) const;
 
     std::optional<uint256>
-    succ(uint256 const& key, std::optional<uint256> const& last = std::nullopt)
-        const override;
+    succ(uint256 const& key, std::optional<uint256> const& last = std::nullopt) const override;
 
     std::shared_ptr<SLE const>
     read(Keylet const& k) const override;
@@ -213,7 +203,7 @@ public:
     void
     rawDestroyXRP(XRPAmount const& fee) override
     {
-        info_.drops -= fee;
+        header_.drops -= fee;
     }
 
     //
@@ -244,14 +234,11 @@ public:
     void
     setValidated() const
     {
-        info_.validated = true;
+        header_.validated = true;
     }
 
     void
-    setAccepted(
-        NetClock::time_point closeTime,
-        NetClock::duration closeResolution,
-        bool correctCloseTime);
+    setAccepted(NetClock::time_point closeTime, NetClock::duration closeResolution, bool correctCloseTime);
 
     void
     setImmutable(bool rehash = true);
@@ -276,15 +263,15 @@ public:
     setFull() const
     {
         txMap_.setFull();
-        txMap_.setLedgerSeq(info_.seq);
+        txMap_.setLedgerSeq(header_.seq);
         stateMap_.setFull();
-        stateMap_.setLedgerSeq(info_.seq);
+        stateMap_.setLedgerSeq(header_.seq);
     }
 
     void
     setTotalDrops(std::uint64_t totDrops)
     {
-        info_.drops = totDrops;
+        header_.drops = totDrops;
     }
 
     SHAMap const&
@@ -397,17 +384,12 @@ private:
 
     Fees fees_;
     Rules rules_;
-    LedgerInfo info_;
+    LedgerHeader header_;
     beast::Journal j_;
 };
 
 /** A ledger wrapped in a CachedView. */
 using CachedLedger = CachedView<Ledger>;
-
-std::uint32_t constexpr FLAG_LEDGER_INTERVAL = 256;
-/** Returns true if the given ledgerIndex is a flag ledgerIndex */
-bool
-isFlagLedger(LedgerIndex seq);
 
 //------------------------------------------------------------------------------
 //
@@ -416,14 +398,10 @@ isFlagLedger(LedgerIndex seq);
 //------------------------------------------------------------------------------
 
 extern bool
-pendSaveValidated(
-    Application& app,
-    std::shared_ptr<Ledger const> const& ledger,
-    bool isSynchronous,
-    bool isCurrent);
+pendSaveValidated(Application& app, std::shared_ptr<Ledger const> const& ledger, bool isSynchronous, bool isCurrent);
 
 std::shared_ptr<Ledger>
-loadLedgerHelper(LedgerInfo const& sinfo, Application& app, bool acquire);
+loadLedgerHelper(LedgerHeader const& sinfo, Application& app, bool acquire);
 
 std::shared_ptr<Ledger>
 loadByIndex(std::uint32_t ledgerIndex, Application& app, bool acquire = true);
@@ -457,8 +435,6 @@ std::pair<std::shared_ptr<STTx const>, std::shared_ptr<STObject const>>
 deserializeTxPlusMeta(SHAMapItem const& item);
 
 uint256
-calculateLedgerHash(LedgerInfo const& info);
+calculateLedgerHash(LedgerHeader const& info);
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

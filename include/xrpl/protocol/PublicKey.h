@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_PUBLICKEY_H_INCLUDED
-#define XRPL_PROTOCOL_PUBLICKEY_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Slice.h>
 #include <xrpl/beast/net/IPEndpoint.h>
@@ -15,7 +14,7 @@
 #include <optional>
 #include <ostream>
 
-namespace ripple {
+namespace xrpl {
 
 /** A public key.
 
@@ -126,11 +125,7 @@ operator==(PublicKey const& lhs, PublicKey const& rhs)
 inline bool
 operator<(PublicKey const& lhs, PublicKey const& rhs)
 {
-    return std::lexicographical_compare(
-        lhs.data(),
-        lhs.data() + lhs.size(),
-        rhs.data(),
-        rhs.data() + rhs.size());
+    return std::lexicographical_compare(lhs.data(), lhs.data() + lhs.size(), rhs.data(), rhs.data() + rhs.size());
 }
 
 template <class Hasher>
@@ -231,11 +226,7 @@ verifyDigest(
     SHA512-Half, and the resulting digest is signed.
 */
 [[nodiscard]] bool
-verify(
-    PublicKey const& publicKey,
-    Slice const& m,
-    Slice const& sig,
-    bool mustBeFullyCanonical = true) noexcept;
+verify(PublicKey const& publicKey, Slice const& m, Slice const& sig) noexcept;
 
 /** Calculate the 160-bit node ID from a node public key. */
 NodeID
@@ -264,23 +255,22 @@ getFingerprint(
     }
     return ss.str();
 }
-}  // namespace ripple
+}  // namespace xrpl
 
 //------------------------------------------------------------------------------
 
 namespace Json {
 template <>
-inline ripple::PublicKey
-getOrThrow(Json::Value const& v, ripple::SField const& field)
+inline xrpl::PublicKey
+getOrThrow(Json::Value const& v, xrpl::SField const& field)
 {
-    using namespace ripple;
+    using namespace xrpl;
     std::string const b58 = getOrThrow<std::string>(v, field);
     if (auto pubKeyBlob = strUnHex(b58); publicKeyType(makeSlice(*pubKeyBlob)))
     {
         return PublicKey{makeSlice(*pubKeyBlob)};
     }
-    for (auto const tokenType :
-         {TokenType::NodePublic, TokenType::AccountPublic})
+    for (auto const tokenType : {TokenType::NodePublic, TokenType::AccountPublic})
     {
         if (auto const pk = parseBase58<PublicKey>(tokenType, b58))
             return *pk;
@@ -288,5 +278,3 @@ getOrThrow(Json::Value const& v, ripple::SField const& field)
     Throw<JsonTypeMismatchError>(field.getJsonName(), "PublicKey");
 }
 }  // namespace Json
-
-#endif

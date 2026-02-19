@@ -1,12 +1,11 @@
-#ifndef BEAST_NUDB_VARINT_H_INCLUDED
-#define BEAST_NUDB_VARINT_H_INCLUDED
+#pragma once
 
 #include <nudb/detail/stream.hpp>
 
 #include <cstdint>
 #include <type_traits>
 
-namespace ripple {
+namespace xrpl {
 namespace NodeStore {
 
 // This is a variant of the base128 varint format from
@@ -118,6 +117,4 @@ write(nudb::detail::ostream& os, std::size_t t)
 }
 
 }  // namespace NodeStore
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

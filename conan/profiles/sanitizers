@@ -1,56 +1,68 @@
 include(default)
 {% set compiler, version, compiler_exe = detect_api.detect_default_compiler() %}
-{% set default_sanitizer_flags = "undefined,float-divide-by-zero,signed-integer-overflow" %}
 {% set sanitizers = os.getenv("SANITIZERS") %}
 
-[settings]
-
 [conf]
+{% if sanitizers %}
+    {% if compiler == "gcc" %}
+        {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
+            {% set sanitizer_list = [] %}
+            {% set model_code = "" %}
+            {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1", "-Wno-stringop-overflow"] %}
 
-{% if sanitizers == "Address" or sanitizers == "Thread" %}
-user.package:sanitizers={{ sanitizers }}
-tools.info.package_id:confs+=["user.package:sanitizers"]
+            {% if "address" in sanitizers %}
+                {% set _ = sanitizer_list.append("address") %}
+                {% set model_code = "-mcmodel=large" %}
+                tools.build:defines+=["BOOST_USE_ASAN", "BOOST_USE_UCONTEXT"]
+            {% elif "thread" in sanitizers %}
+                {% set _ = sanitizer_list.append("thread") %}
+                {% set model_code = "-mcmodel=medium" %}
+                {% set _ = extra_cxxflags.append("-Wno-tsan") %}
+                tools.build:defines+=["BOOST_USE_TSAN", "BOOST_USE_UCONTEXT"]
+            {% endif %}
+
+            {% if "undefinedbehavior" in sanitizers %}
+                {% set _ = sanitizer_list.append("undefined") %}
+                {% set _ = sanitizer_list.append("float-divide-by-zero") %}
+                tools.build:defines+=["BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
+            {% endif %}
+
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) ~ " " ~ model_code %}
+
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
+            tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
+            tools.build:exelinkflags+=['{{sanitizer_flags}}']
+        {% endif %}
+    {% elif compiler == "apple-clang" or compiler == "clang" %}
+        {% if "address" in sanitizers or "thread" in sanitizers or "undefinedbehavior" in sanitizers %}
+            {% set sanitizer_list = [] %}
+            {% set extra_cxxflags = ["-fno-omit-frame-pointer", "-O1"] %}
+
+            {% if "address" in sanitizers %}
+                {% set _ = sanitizer_list.append("address") %}
+                tools.build:defines+=["BOOST_USE_ASAN", "BOOST_USE_UCONTEXT"]
+            {% elif "thread" in sanitizers %}
+                {% set _ = sanitizer_list.append("thread") %}
+                tools.build:defines+=["BOOST_USE_TSAN", "BOOST_USE_UCONTEXT"]
+            {% endif %}
+
+            {% if "undefinedbehavior" in sanitizers %}
+                {% set _ = sanitizer_list.append("undefined") %}
+                {% set _ = sanitizer_list.append("float-divide-by-zero") %}
+                {% set _ = sanitizer_list.append("unsigned-integer-overflow") %}
+                tools.build:defines+=[ "BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
+            {% endif %}
+
+            {% set sanitizer_flags = "-fsanitize=" ~ ",".join(sanitizer_list) %}
+
+            tools.build:cxxflags+=['{{sanitizer_flags}} {{" ".join(extra_cxxflags)}}']
+            tools.build:sharedlinkflags+=['{{sanitizer_flags}}']
+            tools.build:exelinkflags+=['{{sanitizer_flags}}']
+        {% endif %}
+    {% endif %}
 {% endif %}
 
-{% if compiler == "gcc" %}
-
-{% set asan_sanitizer_flags = "-fsanitize=address,"~default_sanitizer_flags~" -mcmodel=large -fno-PIC" %}
-{% set tsan_sanitizer_flags = "-fsanitize=thread,"~default_sanitizer_flags~" -mcmodel=medium -fno-PIC" %}
-
-{% if sanitizers == "Address" %}
-tools.build:cxxflags+=['{{asan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -Wno-stringop-overflow -DBOOST_USE_ASAN -DBOOST_USE_UBSAN -DBOOST_USE_UCONTEXT']
-tools.build:sharedlinkflags+=['{{asan_sanitizer_flags}}']
-tools.build:exelinkflags+=['{{asan_sanitizer_flags}}']
-tools.cmake.cmaketoolchain:extra_variables={"use_mold": "OFF", "use_gold": "OFF", "use_lld": "OFF"}
-tools.build:defines+=["BOOST_USE_ASAN", "BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
-
-{% elif sanitizers == "Thread" %}
-tools.build:cxxflags+=['{{tsan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -Wno-stringop-overflow -Wno-tsan -DBOOST_USE_TSAN -DBOOST_USE_UBSAN -DBOOST_USE_UCONTEXT']
-tools.build:sharedlinkflags+=['{{tsan_sanitizer_flags}}']
-tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
-tools.build:defines+=["BOOST_USE_TSAN", "BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
-
-{% endif %}
-
-{% elif compiler == "apple-clang" or compiler == "clang" %}
-
-{% set asan_sanitizer_flags = "-fsanitize=address,"~default_sanitizer_flags~",unsigned-integer-overflow" %}
-{% set tsan_sanitizer_flags = "-fsanitize=thread,"~default_sanitizer_flags~",unsigned-integer-overflow" %}
-{% if sanitizers == "Address" %}
-tools.build:cxxflags+=['{{asan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -DBOOST_USE_ASAN -DBOOST_USE_UBSAN -DBOOST_USE_UCONTEXT']
-tools.build:sharedlinkflags+=['{{asan_sanitizer_flags}}']
-tools.build:exelinkflags+=['{{asan_sanitizer_flags}}']
-tools.build:defines+=["BOOST_USE_ASAN", "BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
-
-{% elif sanitizers == "Thread" %}
-tools.build:cxxflags+=['{{tsan_sanitizer_flags}} -fno-omit-frame-pointer -O1 -DBOOST_USE_TSAN -DBOOST_USE_UBSAN -DBOOST_USE_UCONTEXT']
-tools.build:sharedlinkflags+=['{{tsan_sanitizer_flags}}']
-tools.build:exelinkflags+=['{{tsan_sanitizer_flags}}']
-tools.build:defines+=["BOOST_USE_TSAN", "BOOST_USE_UBSAN", "BOOST_USE_UCONTEXT"]
-
-{% endif %}
-
-{% endif %}
+tools.info.package_id:confs+=["tools.build:cxxflags", "tools.build:exelinkflags", "tools.build:sharedlinkflags", "tools.build:defines"]
 
 [options]
 {% if compiler == "gcc" or compiler == "apple-clang" or compiler == "clang" %}

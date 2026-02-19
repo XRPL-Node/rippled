@@ -1,12 +1,11 @@
-#ifndef XRPL_SHAMAP_TESTS_COMMON_H_INCLUDED
-#define XRPL_SHAMAP_TESTS_COMMON_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/chrono.h>
 #include <xrpl/nodestore/DummyScheduler.h>
 #include <xrpl/nodestore/Manager.h>
 #include <xrpl/shamap/Family.h>
 
-namespace ripple {
+namespace xrpl {
 namespace tests {
 
 class TestNodeFamily : public Family
@@ -24,23 +23,15 @@ private:
 
 public:
     TestNodeFamily(beast::Journal j)
-        : fbCache_(std::make_shared<FullBelowCache>(
-              "App family full below cache",
-              clock_,
-              j))
-        , tnCache_(std::make_shared<TreeNodeCache>(
-              "App family tree node cache",
-              65536,
-              std::chrono::minutes{1},
-              clock_,
-              j))
+        : fbCache_(std::make_shared<FullBelowCache>("App family full below cache", clock_, j))
+        , tnCache_(
+              std::make_shared<TreeNodeCache>("App family tree node cache", 65536, std::chrono::minutes{1}, clock_, j))
         , j_(j)
     {
         Section testSection;
         testSection.set("type", "memory");
         testSection.set("path", "SHAMap_test");
-        db_ = NodeStore::Manager::instance().make_Database(
-            megabytes(4), scheduler_, 1, testSection, j);
+        db_ = NodeStore::Manager::instance().make_Database(megabytes(4), scheduler_, 1, testSection, j);
     }
 
     NodeStore::Database&
@@ -81,15 +72,13 @@ public:
     }
 
     void
-    missingNodeAcquireBySeq(std::uint32_t refNum, uint256 const& nodeHash)
-        override
+    missingNodeAcquireBySeq(std::uint32_t refNum, uint256 const& nodeHash) override
     {
         Throw<std::runtime_error>("missing node");
     }
 
     void
-    missingNodeAcquireByHash(uint256 const& refHash, std::uint32_t refNum)
-        override
+    missingNodeAcquireByHash(uint256 const& refHash, std::uint32_t refNum) override
     {
         Throw<std::runtime_error>("missing node");
     }
@@ -109,6 +98,4 @@ public:
 };
 
 }  // namespace tests
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

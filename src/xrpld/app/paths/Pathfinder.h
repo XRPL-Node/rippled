@@ -1,15 +1,14 @@
-#ifndef XRPL_APP_PATHS_PATHFINDER_H_INCLUDED
-#define XRPL_APP_PATHS_PATHFINDER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/RippleLineCache.h>
-#include <xrpld/core/LoadEvent.h>
 
 #include <xrpl/basics/CountedObject.h>
+#include <xrpl/core/LoadEvent.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/STPathSet.h>
 
-namespace ripple {
+namespace xrpl {
 
 /** Calculates payment paths.
 
@@ -40,15 +39,11 @@ public:
     initPathTable();
 
     bool
-    findPaths(
-        int searchLevel,
-        std::function<bool(void)> const& continueCallback = {});
+    findPaths(int searchLevel, std::function<bool(void)> const& continueCallback = {});
 
     /** Compute the rankings of the paths. */
     void
-    computePathRanks(
-        int maxPaths,
-        std::function<bool(void)> const& continueCallback = {});
+    computePathRanks(int maxPaths, std::function<bool(void)> const& continueCallback = {});
 
     /* Get the best paths, up to maxPaths in number, from mCompletePaths.
 
@@ -64,11 +59,11 @@ public:
         std::function<bool(void)> const& continueCallback = {});
 
     enum NodeType {
-        nt_SOURCE,     // The source account: with an issuer account, if needed.
-        nt_ACCOUNTS,   // Accounts that connect from this source/currency.
-        nt_BOOKS,      // Order books that connect to this currency.
-        nt_XRP_BOOK,   // The order book from this currency to XRP.
-        nt_DEST_BOOK,  // The order book to the destination currency/issuer.
+        nt_SOURCE,      // The source account: with an issuer account, if needed.
+        nt_ACCOUNTS,    // Accounts that connect from this source/currency.
+        nt_BOOKS,       // Order books that connect to this currency.
+        nt_XRP_BOOK,    // The order book from this currency to XRP.
+        nt_DEST_BOOK,   // The order book to the destination currency/issuer.
         nt_DESTINATION  // The destination account only.
     };
 
@@ -116,9 +111,7 @@ private:
 
     // Add all paths of one type to mCompletePaths.
     STPathSet&
-    addPathsForType(
-        PathType const& type,
-        std::function<bool(void)> const& continueCallback);
+    addPathsForType(PathType const& type, std::function<bool(void)> const& continueCallback);
 
     bool
     issueMatchesOrigin(Issue const&);
@@ -164,10 +157,7 @@ private:
 
     // Is the "no ripple" flag set from one account to another?
     bool
-    isNoRipple(
-        AccountID const& fromAccount,
-        AccountID const& toAccount,
-        Currency const& currency);
+    isNoRipple(AccountID const& fromAccount, AccountID const& toAccount, Currency const& currency);
 
     void
     rankPaths(
@@ -219,6 +209,4 @@ private:
     static std::uint32_t const afAC_LAST = 0x080;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

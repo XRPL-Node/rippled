@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_PENDINGSAVES_H_INCLUDED
-#define XRPL_APP_PENDINGSAVES_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/Protocol.h>
 
@@ -7,7 +6,7 @@
 #include <map>
 #include <mutex>
 
-namespace ripple {
+namespace xrpl {
 
 /** Keeps track of which ledgers haven't been fully saved.
 
@@ -124,6 +123,4 @@ public:
     }
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

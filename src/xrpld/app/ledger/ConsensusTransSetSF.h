@@ -1,12 +1,11 @@
-#ifndef XRPL_APP_LEDGER_CONSENSUSTRANSSETSF_H_INCLUDED
-#define XRPL_APP_LEDGER_CONSENSUSTRANSSETSF_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/main/Application.h>
 
 #include <xrpl/basics/TaggedCache.h>
 #include <xrpl/shamap/SHAMapSyncFilter.h>
 
-namespace ripple {
+namespace xrpl {
 
 // Sync filters allow low-level SHAMapSync code to interact correctly with
 // higher-level structures such as caches and transaction stores
@@ -22,12 +21,8 @@ public:
 
     // Note that the nodeData is overwritten by this call
     void
-    gotNode(
-        bool fromFilter,
-        SHAMapHash const& nodeHash,
-        std::uint32_t ledgerSeq,
-        Blob&& nodeData,
-        SHAMapNodeType type) const override;
+    gotNode(bool fromFilter, SHAMapHash const& nodeHash, std::uint32_t ledgerSeq, Blob&& nodeData, SHAMapNodeType type)
+        const override;
 
     std::optional<Blob>
     getNode(SHAMapHash const& nodeHash) const override;
@@ -38,6 +33,4 @@ private:
     beast::Journal const j_;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,7 +1,6 @@
 // Copyright (c) 2022, Nikolaos D. Bougalis <nikb@bougalis.net>
 
-#ifndef XRPL_BASICS_SPINLOCK_H_INCLUDED
-#define XRPL_BASICS_SPINLOCK_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -13,7 +12,7 @@
 #include <immintrin.h>
 #endif
 
-namespace ripple {
+namespace xrpl {
 
 namespace detail {
 /** Inform the processor that we are in a tight spin-wait loop.
@@ -100,12 +99,9 @@ public:
         @note For performance reasons, you should strive to have `lock` be
               on a cacheline by itself.
      */
-    packed_spinlock(std::atomic<T>& lock, int index)
-        : bits_(lock), mask_(static_cast<T>(1) << index)
+    packed_spinlock(std::atomic<T>& lock, int index) : bits_(lock), mask_(static_cast<T>(1) << index)
     {
-        XRPL_ASSERT(
-            index >= 0 && (mask_ != 0),
-            "ripple::packed_spinlock::packed_spinlock : valid index and mask");
+        XRPL_ASSERT(index >= 0 && (mask_ != 0), "xrpl::packed_spinlock::packed_spinlock : valid index and mask");
     }
 
     [[nodiscard]] bool
@@ -178,10 +174,7 @@ public:
         T expected = 0;
 
         return lock_.compare_exchange_weak(
-            expected,
-            std::numeric_limits<T>::max(),
-            std::memory_order_acquire,
-            std::memory_order_relaxed);
+            expected, std::numeric_limits<T>::max(), std::memory_order_acquire, std::memory_order_relaxed);
     }
 
     void
@@ -206,6 +199,4 @@ public:
 };
 /** @} */
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

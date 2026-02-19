@@ -1,5 +1,4 @@
-#ifndef BEAST_UTILITY_INSTRUMENTATION_H_INCLUDED
-#define BEAST_UTILITY_INSTRUMENTATION_H_INCLUDED
+#pragma once
 
 #include <cassert>
 
@@ -13,15 +12,14 @@
 // The duplication is because Visual Studio 2019 cannot compile that header
 // even with the option -Zc:__cplusplus added.
 #define ALWAYS(cond, message, ...) assert((message) && (cond))
-#define ALWAYS_OR_UNREACHABLE(cond, message, ...) assert((message) && (cond))
+#define ALWAYS_OR_UNREACHABLE(cond, message) assert((message) && (cond))
 #define SOMETIMES(cond, message, ...)
 #define REACHABLE(message, ...)
 #define UNREACHABLE(message, ...) assert((message) && false)
 #endif
 
 #define XRPL_ASSERT ALWAYS_OR_UNREACHABLE
-#define XRPL_ASSERT_PARTS(cond, function, description, ...) \
-    XRPL_ASSERT(cond, function " : " description)
+#define XRPL_ASSERT_PARTS(cond, function, description, ...) XRPL_ASSERT(cond, function " : " description)
 
 // How to use the instrumentation macros:
 //
@@ -52,5 +50,3 @@
 // instrumentation macros - its name describes the condition which was _not_
 // meant to happen, while name in other macros describes the condition that is
 // meant to happen (e.g. as in "assert that this happens").
-
-#endif

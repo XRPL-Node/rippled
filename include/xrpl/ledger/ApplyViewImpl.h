@@ -1,12 +1,11 @@
-#ifndef XRPL_LEDGER_APPLYVIEWIMPL_H_INCLUDED
-#define XRPL_LEDGER_APPLYVIEWIMPL_H_INCLUDED
+#pragma once
 
 #include <xrpl/ledger/OpenView.h>
 #include <xrpl/ledger/detail/ApplyViewBase.h>
 #include <xrpl/protocol/STAmount.h>
 #include <xrpl/protocol/TER.h>
 
-namespace ripple {
+namespace xrpl {
 
 /** Editable, discardable view that can build metadata for one tx.
 
@@ -34,13 +33,7 @@ public:
         destructor.
     */
     std::optional<TxMeta>
-    apply(
-        OpenView& to,
-        STTx const& tx,
-        TER ter,
-        std::optional<uint256> parentBatchId,
-        bool isDryRun,
-        beast::Journal j);
+    apply(OpenView& to, STTx const& tx, TER ter, std::optional<uint256> parentBatchId, bool isDryRun, beast::Journal j);
 
     /** Set the amount of currency delivered.
 
@@ -75,6 +68,4 @@ private:
     std::optional<STAmount> deliver_;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

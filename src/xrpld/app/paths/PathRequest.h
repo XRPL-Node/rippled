@@ -1,21 +1,20 @@
-#ifndef XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
-#define XRPL_APP_PATHS_PATHREQUEST_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/Pathfinder.h>
 #include <xrpld/app/paths/RippleLineCache.h>
-#include <xrpld/rpc/InfoSub.h>
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/UintTypes.h>
+#include <xrpl/server/InfoSub.h>
 
 #include <map>
 #include <mutex>
 #include <optional>
 #include <set>
 
-namespace ripple {
+namespace xrpl {
 
 // A pathfinding request submitted by a client
 // The request issuer must maintain a strong pointer
@@ -103,14 +102,10 @@ private:
         std::function<bool(void)> const&);
 
     /** Finds and sets a PathSet in the JSON argument.
-        Returns false if the source currencies are inavlid.
+        Returns false if the source currencies are invalid.
     */
     bool
-    findPaths(
-        std::shared_ptr<RippleLineCache> const&,
-        int const,
-        Json::Value&,
-        std::function<bool(void)> const&);
+    findPaths(std::shared_ptr<RippleLineCache> const&, int const, Json::Value&, std::function<bool(void)> const&);
 
     int
     parseJson(Json::Value const&);
@@ -158,6 +153,4 @@ private:
     static unsigned int const max_paths_ = 4;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl
