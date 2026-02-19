@@ -3,4 +3,3 @@ detect_stack_use_after_return=0
 halt_on_error=0
 print_summary=true
 use_sigaltstack=0
-alloc_dealloc_mismatch=0
