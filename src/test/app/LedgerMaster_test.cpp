@@ -78,8 +78,9 @@ class LedgerMaster_test : public beast::unit_test::suite
             auto result = env.app().getLedgerMaster().txnIdFromIndex(startLegSeq, txnIndex);
             BEAST_EXPECT(
                 *result ==
-                uint256("277F4FD89C20B92457FEF05FF63F6405563AD0563C73D967A29727"
-                        "72679ADC65"));
+                uint256(
+                    "277F4FD89C20B92457FEF05FF63F6405563AD0563C73D967A29727"
+                    "72679ADC65"));
         }
         // success (second tx)
         {
@@ -87,8 +88,9 @@ class LedgerMaster_test : public beast::unit_test::suite
             auto result = env.app().getLedgerMaster().txnIdFromIndex(startLegSeq + 1, txnIndex);
             BEAST_EXPECT(
                 *result ==
-                uint256("293DF7335EBBAF4420D52E70ABF470EB4C5792CAEA2F91F76193C2"
-                        "819F538FDE"));
+                uint256(
+                    "293DF7335EBBAF4420D52E70ABF470EB4C5792CAEA2F91F76193C2"
+                    "819F538FDE"));
         }
     }
 

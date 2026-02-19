@@ -24,6 +24,14 @@ option(xrpld "Build xrpld" ON)
 
 option(tests "Build tests" ON)
 
+option(unity "Creates a build using UNITY support in cmake." OFF)
+if (unity)
+    if (NOT is_ci)
+        set(CMAKE_UNITY_BUILD_BATCH_SIZE 15 CACHE STRING "")
+    endif ()
+    set(CMAKE_UNITY_BUILD ON CACHE BOOL "Do a unity build")
+endif ()
+
 if (is_clang AND is_linux)
     option(voidstar "Enable Antithesis instrumentation." OFF)
 endif ()
