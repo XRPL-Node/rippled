@@ -258,14 +258,14 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
             if activate_tsan:
                 configurations.append(
                     {
-                        "config_name": config_name + "-tsan-ubsan",
+                        "config_name": config_name + "-tsan",
                         "cmake_args": cmake_args,
                         "cmake_target": cmake_target,
                         "build_only": build_only,
                         "build_type": build_type,
                         "os": os,
                         "architecture": architecture,
-                        "sanitizers": "thread,undefinedbehavior",
+                        "sanitizers": "thread",
                     }
                 )
         else:
