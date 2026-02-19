@@ -76,7 +76,7 @@ jobs:
     name: ${{ inputs.config_name }}
     runs-on: ${{ fromJSON(inputs.runs_on) }}
     container: ${{ inputs.image != '' && inputs.image || null }}
-    timeout-minutes: ${{ inputs.sanitizers != '' && 120 || 60 }}
+    timeout-minutes: ${{ inputs.sanitizers != '' && 360 || 60 }}
     env:
       # Use a namespace to keep the objects separate for each configuration.
       CCACHE_NAMESPACE: ${{ inputs.config_name }}
@@ -229,7 +229,7 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          ./xrpld --unittest --unittest-jobs 1
+          ./xrpld --unittest --unittest-jobs 2
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
