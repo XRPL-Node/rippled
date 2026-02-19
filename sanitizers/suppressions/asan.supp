@@ -8,8 +8,15 @@
 # - stack-use-after-scope errors
 # - stack-buffer-overflow errors in seemingly unrelated code (e.g., std::chrono::steady_clock::now())
 # - stack-buffer-underflow errors in seemingly unrelated code (e.g., xxhasher::retrieveHash(), clock_gettime)
+# - bad-free errors in boost::context::basic_fixedsize_stack::deallocate (ASan loses track of
+#   malloc allocations after fiber/context switches, reporting "free on address not malloc()-ed")
 #
-# These are now handled by using coroutine2 and ucontext backend.
+# These are now handled by:
+# 1. Using Boost.Coroutine2 with the ucontext backend (BOOST_USE_ASAN + BOOST_USE_UCONTEXT)
+# 2. Runtime options in runtime-asan-options.txt:
+#    - alloc_dealloc_mismatch=0: Suppresses false "bad-free" errors from fiber stack deallocation
+#    - detect_stack_use_after_return=0: Prevents false positives from fake stack tracking
+#    - use_sigaltstack=0: Avoids conflicts with coroutine stack switching
 
 interceptor_name:clock_gettime
 interceptor_name:__bzero
