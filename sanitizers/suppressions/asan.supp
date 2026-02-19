@@ -14,4 +14,4 @@
 interceptor_name:clock_gettime
 interceptor_name:__bzero
 interceptor_name:nudb
-interceptor_name:coro # Suppress any flackiness
+interceptor_name:boost # Suppress any flackiness
