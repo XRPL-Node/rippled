@@ -3491,7 +3491,8 @@ NetworkOPsImp::addAccountHistoryJob(SubAccountHistoryInfoWeak subInfo)
             {
                 case Sqlite: {
                     auto db = static_cast<SQLiteDatabase*>(&registry_.get().getRelationalDatabase());
-                    RelationalDatabase::AccountTxPageOptions options{accountId, minLedger, maxLedger, marker, 0, true};
+                    RelationalDatabase::AccountTxPageOptions options{
+                        accountId, {minLedger, maxLedger}, marker, 0, true};
                     return db->newestAccountTxPage(options);
                 }
                 // LCOV_EXCL_START
