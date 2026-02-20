@@ -699,52 +699,6 @@ Transactor::checkSign(PreclaimContext const& ctx)
 }
 
 NotTEC
-Transactor::checkBatchSign(PreclaimContext const& ctx)
-{
-    NotTEC ret = tesSUCCESS;
-    STArray const& signers{ctx.tx.getFieldArray(sfBatchSigners)};
-    for (auto const& signer : signers)
-    {
-        auto const idAccount = signer.getAccountID(sfAccount);
-
-        Blob const& pkSigner = signer.getFieldVL(sfSigningPubKey);
-        if (pkSigner.empty())
-        {
-            if (ret = checkMultiSign(ctx.view, ctx.flags, idAccount, signer, ctx.j);
-                !isTesSuccess(ret))
-                return ret;
-        }
-        else
-        {
-            // LCOV_EXCL_START
-            if (!publicKeyType(makeSlice(pkSigner)))
-                return tefBAD_AUTH;
-            // LCOV_EXCL_STOP
-
-            auto const idSigner = calcAccountID(PublicKey(makeSlice(pkSigner)));
-            auto const sleAccount = ctx.view.read(keylet::account(idAccount));
-
-            // A batch can include transactions from an un-created account ONLY
-            // when the account master key is the signer
-            if (!sleAccount)
-            {
-                if (idAccount != idSigner)
-                    return tefBAD_AUTH;
-            }
-            else
-            {
-                if (isPseudoAccount(sleAccount))
-                    return tefBAD_AUTH;
-
-                if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j); !isTesSuccess(ret))
-                    return ret;
-            }
-        }
-    }
-    return ret;
-}
-
-NotTEC
 Transactor::checkSingleSign(
     ReadView const& view,
     AccountID const& idSigner,

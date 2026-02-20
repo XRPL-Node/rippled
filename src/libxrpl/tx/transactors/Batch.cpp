@@ -461,6 +461,51 @@ Batch::preflightSigValidated(PreflightContext const& ctx)
     return tesSUCCESS;
 }
 
+NotTEC
+Batch::checkBatchSign(PreclaimContext const& ctx)
+{
+    NotTEC ret = tesSUCCESS;
+    STArray const& signers{ctx.tx.getFieldArray(sfBatchSigners)};
+    for (auto const& signer : signers)
+    {
+        auto const idAccount = signer.getAccountID(sfAccount);
+
+        Blob const& pkSigner = signer.getFieldVL(sfSigningPubKey);
+        if (pkSigner.empty())
+        {
+            if (ret = checkMultiSign(ctx.view, ctx.flags, idAccount, signer, ctx.j); !isTesSuccess(ret))
+                return ret;
+        }
+        else
+        {
+            // LCOV_EXCL_START
+            if (!publicKeyType(makeSlice(pkSigner)))
+                return tefBAD_AUTH;
+            // LCOV_EXCL_STOP
+
+            auto const idSigner = calcAccountID(PublicKey(makeSlice(pkSigner)));
+            auto const sleAccount = ctx.view.read(keylet::account(idAccount));
+
+            // A batch can include transactions from an un-created account ONLY
+            // when the account master key is the signer
+            if (!sleAccount)
+            {
+                if (idAccount != idSigner)
+                    return tefBAD_AUTH;
+            }
+            else
+            {
+                if (isPseudoAccount(sleAccount))
+                    return tefBAD_AUTH;
+
+                if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j); !isTesSuccess(ret))
+                    return ret;
+            }
+        }
+    }
+    return ret;
+}
+
 /**
  * @brief Checks the validity of signatures for a batch transaction.
  *
@@ -469,7 +514,7 @@ Batch::preflightSigValidated(PreflightContext const& ctx)
  * corresponding error code.
  *
  * Next, it verifies the batch-specific signature requirements by calling
- * Transactor::checkBatchSign. If this check fails, it also returns the
+ * Batch::checkBatchSign. If this check fails, it also returns the
  * corresponding error code.
  *
  * If both checks succeed, the function returns tesSUCCESS.
@@ -484,7 +529,7 @@ Batch::checkSign(PreclaimContext const& ctx)
     if (auto ret = Transactor::checkSign(ctx); !isTesSuccess(ret))
         return ret;
 
-    if (auto ret = Transactor::checkBatchSign(ctx); !isTesSuccess(ret))
+    if (auto ret = checkBatchSign(ctx); !isTesSuccess(ret))
         return ret;
 
     return tesSUCCESS;

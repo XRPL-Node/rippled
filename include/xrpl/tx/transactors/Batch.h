@@ -28,6 +28,9 @@ public:
     preflightSigValidated(PreflightContext const& ctx);
 
     static NotTEC
+    checkBatchSign(PreclaimContext const& ctx);
+
+    static NotTEC
     checkSign(PreclaimContext const& ctx);
 
     TER
