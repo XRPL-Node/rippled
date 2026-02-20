@@ -282,7 +282,7 @@ Number::Guard::doRound(rep& drops, std::string_view location)
             static_assert(sizeof(internalrep) == sizeof(rep));
             // This should be impossible, because it's impossible to represent
             // "largestMantissa + 0.6" in Number, regardless of the scale. There aren't
-            // enough digits available. You'd either get a mantissa of "largestMantissa "
+            // enough digits available. You'd either get a mantissa of "largestMantissa"
             // or "largestMantissa / 10 + 1", neither of which will round up when
             // converting to rep, though the latter might overflow _before_
             // rounding.

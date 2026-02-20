@@ -22,9 +22,11 @@ to_string(Number const& amount);
 
 /** Returns a rough estimate of log10(value).
  *
- * The return value is a pair (log, rem), where log is the estimated log10,
- * and rem is value divided by 10^log. If rem is 1, then value is an exact
- * power of ten, and log is the exact log10(value).
+ * The return value is a pair (log, rem), where log is the estimated
+ * base-10 logarithm (roughly floor(log10(value))), and rem is value with
+ * all factors of 10 removed (i.e., divided by the largest power of 10 that
+ * divides value). If rem is 1, then value is an exact power of ten, and
+ * log is the exact log10(value).
  *
  * This function only works for positive values.
  */
