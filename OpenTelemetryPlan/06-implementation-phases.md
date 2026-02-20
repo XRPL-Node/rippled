@@ -315,6 +315,7 @@ flowchart TB
 **Goal**: Get basic tracing working with minimal code changes.
 
 **What You Get**:
+
 - RPC request/response traces for all commands
 - Latency breakdown per RPC command
 - Error visibility with stack traces
@@ -323,6 +324,7 @@ flowchart TB
 **Code Changes**: ~15 lines in `ServerHandler.cpp`, ~40 lines in new telemetry module
 
 **Why Start Here**:
+
 - RPC is the lowest-risk, highest-visibility component
 - Immediate value for debugging client issues
 - No cross-node complexity
@@ -333,6 +335,7 @@ flowchart TB
 **Goal**: Add transaction lifecycle tracing across nodes.
 
 **What You Get**:
+
 - End-to-end transaction traces from submit to relay
 - Cross-node correlation (see transaction path)
 - HashRouter deduplication visibility
@@ -341,6 +344,7 @@ flowchart TB
 **Code Changes**: ~120 lines across 4 files, plus protobuf extension
 
 **Why Do This Second**:
+
 - Builds on RPC tracing (transactions submitted via RPC)
 - Moderate complexity (requires context propagation)
 - High value for debugging transaction issues
@@ -350,6 +354,7 @@ flowchart TB
 **Goal**: Full observability including consensus.
 
 **What You Get**:
+
 - Complete consensus round visibility
 - Phase transition timing
 - Validator proposal tracking
@@ -358,6 +363,7 @@ flowchart TB
 **Code Changes**: ~100 lines across 3 consensus files
 
 **Why Do This Last**:
+
 - Highest complexity (consensus is critical path)
 - Requires thorough testing
 - Lower relative value (consensus issues are rarer)
@@ -392,7 +398,7 @@ Clear, measurable criteria for each phase.
 
 | Criterion       | Measurement                                                | Target                       |
 | --------------- | ---------------------------------------------------------- | ---------------------------- |
-| SDK Integration | `cmake --build` succeeds with `-DXRPL_ENABLE_TELEMETRY=ON` | ✅ Compiles                   |
+| SDK Integration | `cmake --build` succeeds with `-DXRPL_ENABLE_TELEMETRY=ON` | ✅ Compiles                  |
 | Runtime Toggle  | `enabled=0` produces zero overhead                         | <0.1% CPU difference         |
 | Span Creation   | Unit test creates and exports span                         | Span appears in Jaeger       |
 | Configuration   | All config options parsed correctly                        | Config validation tests pass |
@@ -534,4 +540,4 @@ flowchart TB
 
 ---
 
-*Previous: [Configuration Reference](./05-configuration-reference.md)* | *Next: [Observability Backends](./07-observability-backends.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Configuration Reference](./05-configuration-reference.md)_ | _Next: [Observability Backends](./07-observability-backends.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

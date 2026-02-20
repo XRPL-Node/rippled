@@ -29,7 +29,24 @@ flowchart LR
 
 ---
 
-## Slide 2: Comparison with Existing Solutions
+## Slide 2: OpenTelemetry vs Open Source Alternatives
+
+| Feature             | OpenTelemetry    | Jaeger           | Zipkin             | SkyWalking | Pinpoint   | Prometheus |
+| ------------------- | ---------------- | ---------------- | ------------------ | ---------- | ---------- | ---------- |
+| **Tracing**         | YES              | YES              | YES                | YES        | YES        | NO         |
+| **Metrics**         | YES              | NO               | NO                 | YES        | YES        | YES        |
+| **Logs**            | YES              | NO               | NO                 | YES        | NO         | NO         |
+| **C++ SDK**         | YES Official     | YES (Deprecated) | YES (Unmaintained) | NO         | NO         | YES        |
+| **Vendor Neutral**  | YES Primary goal | NO               | NO                 | NO         | NO         | NO         |
+| **Instrumentation** | Manual + Auto    | Manual           | Manual             | Auto-first | Auto-first | Manual     |
+| **Backend**         | Any (exporters)  | Self             | Self               | Self       | Self       | Self       |
+| **CNCF Status**     | Incubating       | Graduated        | NO                 | Incubating | NO         | Graduated  |
+
+> **Why OpenTelemetry?** It's the only actively maintained, full-featured C++ option with vendor neutrality — allowing export to Jaeger, Prometheus, Grafana, or any commercial backend without changing instrumentation.
+
+---
+
+## Slide 3: Comparison with rippled's Existing Solutions
 
 ### Current Observability Stack
 
@@ -46,16 +63,16 @@ flowchart LR
 
 | Scenario                         | PerfLog | StatsD | OpenTelemetry |
 | -------------------------------- | ------- | ------ | ------------- |
-| "How many TXs per second?"       | ❌       | ✅      | ❌             |
-| "Why was this specific TX slow?" | ⚠️       | ❌      | ✅             |
-| "Which node delayed consensus?"  | ❌       | ❌      | ✅             |
-| "Show TX journey across 5 nodes" | ❌       | ❌      | ✅             |
+| "How many TXs per second?"       | ❌      | ✅     | ❌            |
+| "Why was this specific TX slow?" | ⚠️      | ❌     | ✅            |
+| "Which node delayed consensus?"  | ❌      | ❌     | ✅            |
+| "Show TX journey across 5 nodes" | ❌      | ❌     | ✅            |
 
 > **Key Insight**: OpenTelemetry **complements** (not replaces) existing systems.
 
 ---
 
-## Slide 3: Architecture
+## Slide 4: Architecture
 
 ### High-Level Integration Architecture
 
@@ -103,7 +120,7 @@ sequenceDiagram
 
 ---
 
-## Slide 4: Implementation Plan
+## Slide 5: Implementation Plan
 
 ### 5-Phase Rollout (9 Weeks)
 
@@ -143,7 +160,7 @@ gantt
 
 ---
 
-## Slide 5: Performance Overhead
+## Slide 6: Performance Overhead
 
 ### Estimated System Impact
 
@@ -211,7 +228,7 @@ flowchart LR
 
 ---
 
-## Slide 6: Data Collection & Privacy
+## Slide 7: Data Collection & Privacy
 
 ### What Data is Collected
 
@@ -260,4 +277,4 @@ flowchart LR
 
 ---
 
-*End of Presentation*
+_End of Presentation_

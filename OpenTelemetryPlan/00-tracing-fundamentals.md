@@ -136,6 +136,7 @@ For traces to work across nodes, **trace context must be propagated** in message
 ### How span_id Changes at Each Hop
 
 Only **one** `span_id` travels in the context - the sender's current span. Each node:
+
 1. Extracts the received `span_id` and uses it as the `parent_span_id`
 2. Creates a **new** `span_id` for its own span
 3. Sends its own `span_id` as the parent when forwarding
@@ -192,19 +193,23 @@ message TMTransaction {
 Not every trace needs to be recorded. **Sampling** reduces overhead:
 
 ### Head Sampling (at trace start)
+
 ```
 Request arrives → Random 10% chance → Record or skip entire trace
 ```
+
 - ✅ Low overhead
 - ❌ May miss interesting traces
 
 ### Tail Sampling (after trace completes)
+
 ```
 Trace completes → Collector evaluates:
                   - Error? → KEEP
                   - Slow? → KEEP
                   - Normal? → Sample 10%
 ```
+
 - ✅ Never loses important traces
 - ❌ Higher memory usage at collector
 
@@ -236,4 +241,4 @@ Trace completes → Collector evaluates:
 
 ---
 
-*Next: [Architecture Analysis](./01-architecture-analysis.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Next: [Architecture Analysis](./01-architecture-analysis.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

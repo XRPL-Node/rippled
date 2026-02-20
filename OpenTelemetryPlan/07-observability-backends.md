@@ -137,6 +137,7 @@ flowchart TB
 | **Gateway**   | Central collector(s) | Centralized processing   | Single point of failure |
 
 **Recommendation**: Use **Gateway** pattern with regional collectors for rippled networks:
+
 - One collector cluster per datacenter/region
 - Tail-based sampling at collector level
 - Multiple export destinations for redundancy
@@ -472,23 +473,27 @@ flowchart TB
 ### 7.7.3 Example: Debugging a Slow Transaction
 
 **Step 1: Find the trace**
+
 ```
 # In Grafana Explore with Tempo
 {resource.service.name="rippled" && span.xrpl.tx.hash="ABC123..."}
 ```
 
 **Step 2: Get the trace_id from the trace view**
+
 ```
 Trace ID: 4bf92f3577b34da6a3ce929d0e0e4736
 ```
 
 **Step 3: Find related PerfLog entries**
+
 ```
 # In Grafana Explore with Loki
 {job="rippled"} |= "4bf92f3577b34da6a3ce929d0e0e4736"
 ```
 
 **Step 4: Check Insight metrics for the time window**
+
 ```
 # In Grafana with Prometheus
 rate(rippled_tx_applied_total[1m])
@@ -587,4 +592,4 @@ rate(rippled_tx_applied_total[1m])
 
 ---
 
-*Previous: [Implementation Phases](./06-implementation-phases.md)* | *Next: [Appendix](./08-appendix.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Implementation Phases](./06-implementation-phases.md)_ | _Next: [Appendix](./08-appendix.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

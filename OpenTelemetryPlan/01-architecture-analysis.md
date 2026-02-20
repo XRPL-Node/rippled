@@ -250,6 +250,7 @@ After implementing OpenTelemetry, operators and developers will gain visibility 
 ### 1.8.3 Concrete Dashboard Examples
 
 **Transaction Trace View (Jaeger/Tempo):**
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │ Trace: abc123... (Transaction Submission)                    Duration: 847ms   │
@@ -270,6 +271,7 @@ After implementing OpenTelemetry, operators and developers will gain visibility 
 ```
 
 **RPC Performance Dashboard Panel:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ RPC Command Latency (Last 1 Hour)                           │
@@ -325,4 +327,4 @@ xychart-beta
 
 ---
 
-*Next: [Design Decisions](./02-design-decisions.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Next: [Design Decisions](./02-design-decisions.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

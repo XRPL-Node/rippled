@@ -191,6 +191,7 @@ xychart-beta
 ```
 
 **Notes**:
+
 - Memory increases linearly with span rate
 - Batch export prevents unbounded growth
 - Queue size is configurable (default 2048 spans)
@@ -386,8 +387,8 @@ quadrantChart
 
 ### 3.9.5 Backward Compatibility
 
-| Compatibility   | Status | Notes                                                 |
-| --------------- | ------ | ----------------------------------------------------- |
+| Compatibility   | Status  | Notes                                                 |
+| --------------- | ------- | ----------------------------------------------------- |
 | **Config File** | ✅ Full | New `[telemetry]` section is optional                 |
 | **Protocol**    | ✅ Full | Optional protobuf fields with high field numbers      |
 | **Build**       | ✅ Full | `XRPL_ENABLE_TELEMETRY=OFF` produces identical binary |
@@ -405,6 +406,7 @@ If issues are discovered after deployment:
 ### 3.9.7 Code Change Examples
 
 **Minimal RPC Instrumentation (Low Intrusiveness):**
+
 ```cpp
 // Before
 void ServerHandler::onRequest(...) {
@@ -425,6 +427,7 @@ void ServerHandler::onRequest(...) {
 ```
 
 **Consensus Instrumentation (Medium Intrusiveness):**
+
 ```cpp
 // Before
 void RCLConsensusAdaptor::startRound(...) {
@@ -445,4 +448,4 @@ void RCLConsensusAdaptor::startRound(...) {
 
 ---
 
-*Previous: [Design Decisions](./02-design-decisions.md)* | *Next: [Code Samples](./04-code-samples.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Design Decisions](./02-design-decisions.md)_ | _Next: [Code Samples](./04-code-samples.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

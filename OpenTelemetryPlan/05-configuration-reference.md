@@ -506,7 +506,7 @@ service:
 
 ```yaml
 # docker-compose-telemetry.yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # OpenTelemetry Collector
@@ -517,8 +517,8 @@ services:
     volumes:
       - ./otel-collector-dev.yaml:/etc/otel-collector-config.yaml:ro
     ports:
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
       - "13133:13133" # Health check
     depends_on:
       - jaeger
@@ -628,8 +628,8 @@ datasources:
       httpMethod: GET
       tracesToLogs:
         datasourceUid: loki
-        tags: ['service.name', 'xrpl.tx.hash']
-        mappedTags: [{ key: 'trace_id', value: 'traceID' }]
+        tags: ["service.name", "xrpl.tx.hash"]
+        mappedTags: [{ key: "trace_id", value: "traceID" }]
         mapTagNamesEnabled: true
         filterByTraceID: true
       serviceMap:
@@ -656,7 +656,7 @@ datasources:
     jsonData:
       tracesToLogs:
         datasourceUid: loki
-        tags: ['service.name']
+        tags: ["service.name"]
 ```
 
 #### Elastic APM
@@ -685,10 +685,10 @@ datasources:
 apiVersion: 1
 
 providers:
-  - name: 'rippled-dashboards'
+  - name: "rippled-dashboards"
     orgId: 1
-    folder: 'rippled'
-    folderUid: 'rippled'
+    folder: "rippled"
+    folderUid: "rippled"
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30
@@ -880,7 +880,7 @@ In Tempo data source configuration, set up the derived field:
 jsonData:
   tracesToLogs:
     datasourceUid: loki
-    tags: ['trace_id', 'xrpl.tx.hash']
+    tags: ["trace_id", "xrpl.tx.hash"]
     filterByTraceID: true
     filterBySpanID: false
 ```
@@ -894,9 +894,9 @@ To correlate traces with existing Beast Insight metrics:
 ```yaml
 # prometheus.yaml
 scrape_configs:
-  - job_name: 'rippled-statsd'
+  - job_name: "rippled-statsd"
     static_configs:
-      - targets: ['statsd-exporter:9102']
+      - targets: ["statsd-exporter:9102"]
 ```
 
 **Step 2: Add exemplars to metrics**
@@ -933,4 +933,4 @@ This allows clicking on metric data points to jump directly to the related trace
 
 ---
 
-*Previous: [Code Samples](./04-code-samples.md)* | *Next: [Implementation Phases](./06-implementation-phases.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Code Samples](./04-code-samples.md)_ | _Next: [Implementation Phases](./06-implementation-phases.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

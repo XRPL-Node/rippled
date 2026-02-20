@@ -979,4 +979,4 @@ flowchart TB
 
 ---
 
-*Previous: [Implementation Strategy](./03-implementation-strategy.md)* | *Next: [Configuration Reference](./05-configuration-reference.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Implementation Strategy](./03-implementation-strategy.md)_ | _Next: [Configuration Reference](./05-configuration-reference.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

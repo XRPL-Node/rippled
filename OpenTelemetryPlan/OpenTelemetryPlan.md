@@ -130,6 +130,7 @@ Performance optimization strategies include probabilistic head sampling (10% def
 ## 4. Code Samples
 
 Complete C++ implementation examples are provided for all telemetry components:
+
 - `Telemetry.h` - Core interface for tracer access and span creation
 - `SpanGuard.h` - RAII wrapper for automatic span lifecycle management
 - `TracingInstrumentation.h` - Macros for conditional instrumentation
@@ -186,4 +187,4 @@ The appendix contains a glossary of OpenTelemetry and rippled-specific terms, re
 
 ---
 
-*This document provides a comprehensive implementation plan for integrating OpenTelemetry distributed tracing into the rippled XRP Ledger node software. For detailed information on any section, follow the links to the corresponding sub-documents.*
+_This document provides a comprehensive implementation plan for integrating OpenTelemetry distributed tracing into the rippled XRP Ledger node software. For detailed information on any section, follow the links to the corresponding sub-documents._

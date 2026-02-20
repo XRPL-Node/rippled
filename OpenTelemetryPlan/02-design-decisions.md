@@ -95,6 +95,7 @@ opts.content_type = otlp::HttpRequestContentType::kJson;  // or kBinary
 ```
 
 **Examples**:
+
 - `tx.receive` - Transaction received from peer
 - `consensus.phase.establish` - Consensus establish phase
 - `rpc.command.server_info` - server_info RPC command
@@ -104,51 +105,51 @@ opts.content_type = otlp::HttpRequestContentType::kJson;  // or kBinary
 ```yaml
 # Transaction Spans
 tx:
-  receive:     "Transaction received from network"
-  validate:    "Transaction signature/format validation"
-  process:     "Full transaction processing"
-  relay:       "Transaction relay to peers"
-  apply:       "Apply transaction to ledger"
+  receive: "Transaction received from network"
+  validate: "Transaction signature/format validation"
+  process: "Full transaction processing"
+  relay: "Transaction relay to peers"
+  apply: "Apply transaction to ledger"
 
 # Consensus Spans
 consensus:
-  round:       "Complete consensus round"
+  round: "Complete consensus round"
   phase:
-    open:      "Open phase - collecting transactions"
+    open: "Open phase - collecting transactions"
     establish: "Establish phase - reaching agreement"
-    accept:    "Accept phase - applying consensus"
+    accept: "Accept phase - applying consensus"
   proposal:
-    receive:   "Receive peer proposal"
-    send:      "Send our proposal"
+    receive: "Receive peer proposal"
+    send: "Send our proposal"
   validation:
-    receive:   "Receive peer validation"
-    send:      "Send our validation"
+    receive: "Receive peer validation"
+    send: "Send our validation"
 
 # RPC Spans
 rpc:
-  request:     "HTTP/WebSocket request handling"
+  request: "HTTP/WebSocket request handling"
   command:
-    "*":       "Specific RPC command (dynamic)"
+    "*": "Specific RPC command (dynamic)"
 
 # Peer Spans
 peer:
-  connect:     "Peer connection establishment"
-  disconnect:  "Peer disconnection"
+  connect: "Peer connection establishment"
+  disconnect: "Peer disconnection"
   message:
-    send:      "Send protocol message"
-    receive:   "Receive protocol message"
+    send: "Send protocol message"
+    receive: "Receive protocol message"
 
 # Ledger Spans
 ledger:
-  acquire:     "Ledger acquisition from network"
-  build:       "Build new ledger"
-  validate:    "Ledger validation"
-  close:       "Close ledger"
+  acquire: "Ledger acquisition from network"
+  build: "Build new ledger"
+  validate: "Ledger validation"
+  close: "Close ledger"
 
 # Job Spans
 job:
-  enqueue:     "Job added to queue"
-  execute:     "Job execution"
+  enqueue: "Job added to queue"
+  execute: "Job execution"
 ```
 
 ---
@@ -173,6 +174,7 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 ### 2.4.2 Span Attributes by Category
 
 #### Transaction Attributes
+
 ```cpp
 "xrpl.tx.hash"         = string   // Transaction hash (hex)
 "xrpl.tx.type"         = string   // "Payment", "OfferCreate", etc.
@@ -184,6 +186,7 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 ```
 
 #### Consensus Attributes
+
 ```cpp
 "xrpl.consensus.round"          = int64    // Round number
 "xrpl.consensus.phase"          = string   // "open", "establish", "accept"
@@ -196,6 +199,7 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 ```
 
 #### RPC Attributes
+
 ```cpp
 "xrpl.rpc.command"     = string   // Command name
 "xrpl.rpc.version"     = int64    // API version
@@ -204,6 +208,7 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 ```
 
 #### Peer & Message Attributes
+
 ```cpp
 "xrpl.peer.id"            = string   // Peer public key (base58)
 "xrpl.peer.address"       = string   // IP:port
@@ -215,6 +220,7 @@ resource::SemanticConventions::SERVICE_INSTANCE_ID = <node_public_key_base58>
 ```
 
 #### Ledger & Job Attributes
+
 ```cpp
 "xrpl.ledger.hash"       = string   // Ledger hash
 "xrpl.ledger.index"      = int64    // Ledger sequence/index
@@ -352,6 +358,7 @@ rippled already has two observability mechanisms. OpenTelemetry complements (not
 ### 2.6.2 What Each Framework Does Best
 
 #### PerfLog
+
 - **Purpose**: Detailed local event logging for RPC and job execution
 - **Strengths**:
   - Rich JSON output with timing data
@@ -373,6 +380,7 @@ rippled already has two observability mechanisms. OpenTelemetry complements (not
 ```
 
 #### Beast Insight (StatsD)
+
 - **Purpose**: Real-time metrics for monitoring dashboards
 - **Strengths**:
   - Aggregated metrics (counters, gauges, histograms)
@@ -391,6 +399,7 @@ insight.timing("consensus.round", duration);
 ```
 
 #### OpenTelemetry (NEW)
+
 - **Purpose**: Distributed request tracing across nodes
 - **Strengths**:
   - **Cross-node correlation** via `trace_id`
@@ -411,14 +420,14 @@ span->SetAttribute("peer.id", peerId);
 
 ### 2.6.3 When to Use Each
 
-| Scenario                                | PerfLog   | StatsD | OpenTelemetry |
-| --------------------------------------- | --------- | ------ | ------------- |
-| "How many TXs per second?"              | ❌         | ✅      | ❌             |
-| "What's the p99 RPC latency?"           | ❌         | ✅      | ✅             |
-| "Why was this specific TX slow?"        | ⚠️ partial | ❌      | ✅             |
-| "Which node delayed consensus?"         | ❌         | ❌      | ✅             |
-| "What happened on node X at time T?"    | ✅         | ❌      | ✅             |
-| "Show me the TX journey across 5 nodes" | ❌         | ❌      | ✅             |
+| Scenario                                | PerfLog    | StatsD | OpenTelemetry |
+| --------------------------------------- | ---------- | ------ | ------------- |
+| "How many TXs per second?"              | ❌         | ✅     | ❌            |
+| "What's the p99 RPC latency?"           | ❌         | ✅     | ✅            |
+| "Why was this specific TX slow?"        | ⚠️ partial | ❌     | ✅            |
+| "Which node delayed consensus?"         | ❌         | ❌     | ✅            |
+| "What happened on node X at time T?"    | ✅         | ❌     | ✅            |
+| "Show me the TX journey across 5 nodes" | ❌         | ❌     | ✅            |
 
 ### 2.6.4 Coexistence Strategy
 
@@ -482,4 +491,4 @@ Status doCommand(RPC::JsonContext& context, Json::Value& result)
 
 ---
 
-*Previous: [Architecture Analysis](./01-architecture-analysis.md)* | *Next: [Implementation Strategy](./03-implementation-strategy.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Architecture Analysis](./01-architecture-analysis.md)_ | _Next: [Implementation Strategy](./03-implementation-strategy.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_

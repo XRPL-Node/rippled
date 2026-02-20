@@ -130,4 +130,4 @@ flowchart TB
 
 ---
 
-*Previous: [Observability Backends](./07-observability-backends.md)* | *Back to: [Overview](./OpenTelemetryPlan.md)*
+_Previous: [Observability Backends](./07-observability-backends.md)_ | _Back to: [Overview](./OpenTelemetryPlan.md)_
