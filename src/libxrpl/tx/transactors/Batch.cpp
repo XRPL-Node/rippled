@@ -536,8 +536,11 @@ Batch::checkSign(PreclaimContext const& ctx)
     if (auto ret = Transactor::checkSign(ctx); !isTesSuccess(ret))
         return ret;
 
-    if (auto ret = checkBatchSign(ctx); !isTesSuccess(ret))
-        return ret;
+    if (ctx.tx.isFieldPresent(sfBatchSigners))
+    {
+        if (auto ret = checkBatchSign(ctx); !isTesSuccess(ret))
+            return ret;
+    }
 
     return tesSUCCESS;
 }

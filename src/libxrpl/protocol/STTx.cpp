@@ -278,6 +278,8 @@ STTx::checkBatchSign(Rules const& rules) const
             JLOG(debugLog().fatal()) << "not a batch transaction";
             return Unexpected("Not a batch transaction.");
         }
+        if (!isFieldPresent(sfBatchSigners))
+            return Unexpected("Missing BatchSigners field.");
         STArray const& signers{getFieldArray(sfBatchSigners)};
         for (auto const& signer : signers)
         {
@@ -292,9 +294,8 @@ STTx::checkBatchSign(Rules const& rules) const
     }
     catch (std::exception const& e)
     {
-        JLOG(debugLog().error()) << "Batch signature check failed: " << e.what();
+        return Unexpected(std::string("Internal batch signature check failure: ") + e.what());
     }
-    return Unexpected("Internal batch signature check failure.");
 }
 
 Json::Value
@@ -488,7 +489,7 @@ multiSignHelper(
         if (!validSig)
             return Unexpected(
                 std::string("Invalid signature on account ") + toBase58(accountID) +
-                errorWhat.value_or("") + ".");
+                (errorWhat ? ": " + *errorWhat : "") + ".");
     }
     // All signatures verified.
     return {};
