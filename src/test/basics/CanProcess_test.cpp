@@ -29,7 +29,11 @@ struct CanProcess_test : beast::unit_test::suite
 {
     template <class Mutex, class Collection, class Item>
     void
-    test(std::string const& name, Mutex& mtx, Collection& collection, std::vector<Item> const& items)
+    test(
+        std::string const& name,
+        Mutex& mtx,
+        Collection& collection,
+        std::vector<Item> const& items)
     {
         testcase(name);
 
@@ -47,13 +51,15 @@ struct CanProcess_test : beast::unit_test::suite
         for (int i = 0; i < items.size(); ++i)
         {
             {
-                auto const& good = trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
+                auto const& good =
+                    trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
                 BEAST_EXPECT(*good);
             }
             BEAST_EXPECT(trackers.size() == (2 * i) + 1);
             BEAST_EXPECT(collection.size() == i + 1);
             {
-                auto const& bad = trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
+                auto const& bad =
+                    trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
                 BEAST_EXPECT(!*bad);
             }
             BEAST_EXPECT(trackers.size() == 2 * (i + 1));
@@ -75,7 +81,8 @@ struct CanProcess_test : beast::unit_test::suite
             BEAST_EXPECT(collection.size() == items.size());
             {
                 // Append a new "bad" one
-                auto const& bad = trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
+                auto const& bad =
+                    trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
                 BEAST_EXPECT(!*bad);
             }
             BEAST_EXPECT(trackers.size() == 2 * items.size());
@@ -91,7 +98,8 @@ struct CanProcess_test : beast::unit_test::suite
             BEAST_EXPECT(collection.size() == items.size() - 1);
             {
                 // Append a new "good" one
-                auto const& good = trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
+                auto const& good =
+                    trackers.emplace_back(std::make_shared<CanProcess>(mtx, collection, items[i]));
                 BEAST_EXPECT(*good);
             }
             BEAST_EXPECT(trackers.size() == 2 * items.size());
