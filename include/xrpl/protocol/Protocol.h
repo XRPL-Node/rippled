@@ -302,7 +302,7 @@ std::size_t constexpr ecGamalEncryptedLength = 33;
 /** EC ElGamal ciphertext length: two 33-byte components concatenated */
 std::size_t constexpr ecGamalEncryptedTotalLength = 66;
 
-/** Length of equality ZKProof */
+/** Length of equality ZKProof in bytes */
 std::size_t constexpr ecEqualityProofLength = 98;
 
 /** Length of EC point (compressed) */
@@ -311,22 +311,28 @@ std::size_t constexpr compressedECPointLength = 33;
 /** Length of EC public key (compressed) */
 std::size_t constexpr ecPubKeyLength = compressedECPointLength;
 
-/** Length of EC private key */
+/** Length of EC private key in bytes */
 std::size_t constexpr ecPrivKeyLength = 32;
 
-/** Length of the EC blinding factor */
+/** Length of the EC blinding factor in bytes */
 std::size_t constexpr ecBlindingFactorLength = 32;
 
-/** Length of Schnorr ZKProof for public key registration */
+/** Length of Schnorr ZKProof for public key registration in bytes */
 std::size_t constexpr ecSchnorrProofLength = 65;
 
-/** Length of ElGamal ciphertext equality proof */
+/** Length of ElGamal ciphertext equality proof in bytes */
 std::size_t constexpr ecCiphertextEqualityProofLength = 261;
 
-/** Length of ElGamal Pedersen linkage proof */
+/** Length of ElGamal Pedersen linkage proof in bytes */
 std::size_t constexpr ecPedersenProofLength = 195;
 
 /** Length of Pedersen Commitment (compressed) */
 std::size_t constexpr ecPedersenCommitmentLength = compressedECPointLength;
+
+/** Length of single bulletproof (range proof for 1 commitment) in bytes */
+std::size_t constexpr ecSingleBulletproofLength = 688;
+
+/** Length of double bulletproof (range proof for 2 commitments) in bytes */
+std::size_t constexpr ecDoubleBulletproofLength = 754;
 
 }  // namespace xrpl

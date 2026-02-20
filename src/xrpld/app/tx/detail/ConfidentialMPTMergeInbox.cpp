@@ -55,25 +55,29 @@ ConfidentialMPTMergeInbox::doApply()
     auto const mptIssuanceID = ctx_.tx[sfMPTokenIssuanceID];
     auto sleMptoken = view().peek(keylet::mptoken(mptIssuanceID, account_));
     if (!sleMptoken)
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     // sanity check
     if (!sleMptoken->isFieldPresent(sfConfidentialBalanceSpending) ||
         !sleMptoken->isFieldPresent(sfConfidentialBalanceInbox) ||
         !sleMptoken->isFieldPresent(sfHolderElGamalPublicKey))
     {
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
     }
 
-    // homomorphically add holder's encrypted balance
+    // Merge inbox into spending: spending = spending + inbox
+    // This allows holder to use received funds. Without merging, incoming
+    // transfers sit in inbox and cannot be spent or converted back.
     Buffer sum(ecGamalEncryptedTotalLength);
     if (TER const ter = homomorphicAdd(
             (*sleMptoken)[sfConfidentialBalanceSpending], (*sleMptoken)[sfConfidentialBalanceInbox], sum);
         !isTesSuccess(ter))
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     (*sleMptoken)[sfConfidentialBalanceSpending] = sum;
 
+    // Reset inbox to encrypted zero. Must use canonical zero encryption
+    // (deterministic ciphertext) so the ledger state is reproducible.
     auto const zeroEncryption =
         encryptCanonicalZeroAmount((*sleMptoken)[sfHolderElGamalPublicKey], account_, mptIssuanceID);
 
@@ -82,8 +86,7 @@ ConfidentialMPTMergeInbox::doApply()
 
     (*sleMptoken)[sfConfidentialBalanceInbox] = *zeroEncryption;
 
-    // it's fine if it reaches max uint32, it just resets to 0
-    (*sleMptoken)[sfConfidentialBalanceVersion] = (*sleMptoken)[~sfConfidentialBalanceVersion].value_or(0u) + 1u;
+    incrementConfidentialVersion(*sleMptoken);
 
     view().update(sleMptoken);
     return tesSUCCESS;

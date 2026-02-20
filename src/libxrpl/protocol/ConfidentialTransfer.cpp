@@ -1,6 +1,8 @@
 #include <xrpl/protocol/ConfidentialTransfer.h>
 #include <xrpl/protocol/Protocol.h>
 
+#include <boost/endian/conversion.hpp>
+
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 
@@ -407,6 +409,12 @@ verifyClawbackEqualityProof(
 NotTEC
 checkEncryptedAmountFormat(STObject const& object)
 {
+    // Current usage of this function is only for ConfidentialMPTConvert and
+    // ConfidentialMPTConvertBack transactions, which already enforce that these fields
+    // are present.
+    if (!object.isFieldPresent(sfHolderEncryptedAmount) || !object.isFieldPresent(sfIssuerEncryptedAmount))
+        return temMALFORMED;  // LCOV_EXCL_LINE
+
     if (object[sfHolderEncryptedAmount].length() != ecGamalEncryptedTotalLength ||
         object[sfIssuerEncryptedAmount].length() != ecGamalEncryptedTotalLength)
         return temBAD_CIPHERTEXT;
@@ -504,4 +512,113 @@ verifyBalancePcmLinkage(
     return tesSUCCESS;
 }
 
+TER
+verifyAggregatedBulletproof(
+    Slice const& proof,
+    std::vector<Slice> const& compressedCommitments,
+    uint256 const& contextHash)
+{
+    // 1. Validate Aggregation Factor (m), m to be a power of 2
+    std::size_t const m = compressedCommitments.size();
+    if (m == 0 || (m & (m - 1)) != 0)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // 2. Prepare Pedersen Commitments, parse from compressed format
+    auto const ctx = secp256k1Context();
+    std::vector<secp256k1_pubkey> commitments(m);
+    for (size_t i = 0; i < m; ++i)
+    {
+        // Sanity check length
+        if (compressedCommitments[i].size() != ecPedersenCommitmentLength)
+            return tecINTERNAL;  // LCOV_EXCL_LINE
+
+        if (secp256k1_ec_pubkey_parse(
+                ctx, &commitments[i], compressedCommitments[i].data(), ecPedersenCommitmentLength) != 1)
+            return tecINTERNAL;  // LCOV_EXCL_LINE
+    }
+
+    // 3. Prepare Generator Vectors (G_vec, H_vec)
+    // The range proof requires vectors of size 64 * m
+    std::size_t const n = 64 * m;
+    std::vector<secp256k1_pubkey> G_vec(n);
+    std::vector<secp256k1_pubkey> H_vec(n);
+
+    // Retrieve deterministic generators "G" and "H"
+    if (secp256k1_mpt_get_generator_vector(ctx, G_vec.data(), n, (unsigned char const*)"G", 1) != 1)
+    {
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+    }
+
+    if (secp256k1_mpt_get_generator_vector(ctx, H_vec.data(), n, (unsigned char const*)"H", 1) != 1)
+    {
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+    }
+
+    // 4. Prepare Base Generator (pk_base / H)
+    secp256k1_pubkey pk_base;
+    if (secp256k1_mpt_get_h_generator(ctx, &pk_base) != 1)
+    {
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+    }
+
+    // 5. Verify the Proof
+    int const result = secp256k1_bulletproof_verify_agg(
+        ctx,
+        G_vec.data(),
+        H_vec.data(),
+        reinterpret_cast<unsigned char const*>(proof.data()),
+        proof.size(),
+        commitments.data(),
+        m,
+        &pk_base,
+        contextHash.data());
+
+    if (result != 1)
+        return tecBAD_PROOF;
+
+    return tesSUCCESS;
+}
+
+TER
+computeConvertBackRemainder(Slice const& commitment, std::uint64_t amount, Buffer& out)
+{
+    if (commitment.size() != ecPedersenCommitmentLength || amount == 0)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    auto const ctx = secp256k1Context();
+
+    // Parse commitment from compressed format
+    secp256k1_pubkey pcBalance;
+    if (secp256k1_ec_pubkey_parse(ctx, &pcBalance, commitment.data(), ecPedersenCommitmentLength) != 1)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // Convert amount to 32-byte big-endian scalar
+    unsigned char mScalar[32] = {0};
+    std::uint64_t amountBigEndian = boost::endian::native_to_big(amount);
+    std::memcpy(&mScalar[24], &amountBigEndian, sizeof(amountBigEndian));
+
+    // Compute mG = amount * G
+    secp256k1_pubkey mG;
+    if (!secp256k1_ec_pubkey_create(ctx, &mG, mScalar))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // Negate mG to get -mG
+    if (!secp256k1_ec_pubkey_negate(ctx, &mG))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // Compute pcRem = pcBalance + (-mG)
+    secp256k1_pubkey const* summands[2] = {&pcBalance, &mG};
+    secp256k1_pubkey pcRem;
+    if (!secp256k1_ec_pubkey_combine(ctx, &pcRem, summands, 2))
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    // Serialize result to compressed format
+    out.alloc(ecPedersenCommitmentLength);
+    size_t outLen = ecPedersenCommitmentLength;
+    if (secp256k1_ec_pubkey_serialize(ctx, out.data(), &outLen, &pcRem, SECP256K1_EC_COMPRESSED) != 1 ||
+        outLen != ecPedersenCommitmentLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    return tesSUCCESS;
+}
 }  // namespace xrpl

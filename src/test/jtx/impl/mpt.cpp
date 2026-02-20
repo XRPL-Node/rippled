@@ -882,26 +882,33 @@ MPTTester::getConvertBackProof(
     Account const& holder,
     std::uint64_t const amount,
     uint256 const& contextHash,
-    Buffer const& holderCiphertext,
-    Buffer const& issuerCiphertext,
-    std::optional<Buffer> const& auditorCiphertext,
-    Buffer const& blindingFactor,
     PedersenProofParams const& pcParams) const
 {
+    // Expected total proof length: pedersen proof + single bulletproof
+    std::size_t constexpr expectedProofLength = ecPedersenProofLength + ecSingleBulletproofLength;
+
     auto const sleMptoken = env_.le(keylet::mptoken(*id_, holder.id()));
     if (!sleMptoken || !sleMptoken->isFieldPresent(sfConfidentialBalanceSpending))
-        return Buffer{};
+        return Buffer(expectedProofLength);
 
     auto const holderPubKey = getPubKey(holder);
-    if (holderPubKey)
-    {
-        Buffer const pedersenProof = getBalanceLinkageProof(holder, contextHash, *holderPubKey, pcParams);
 
-        // todo: incorporate range proof
-        return pedersenProof;
-    }
+    if (!holderPubKey)
+        return Buffer(expectedProofLength);
 
-    return Buffer{};
+    Buffer const pedersenProof = getBalanceLinkageProof(holder, contextHash, *holderPubKey, pcParams);
+
+    // Generate bulletproof for the remaining balance (balance - amount)
+    // Use the same blinding factor as the one used to generate the PC_balance
+    std::uint64_t const remainingBalance = pcParams.amt - amount;
+    Buffer const bulletproof = getBulletproof({remainingBalance}, {pcParams.blindingFactor}, contextHash);
+
+    // Combine pedersen proof and bulletproof
+    Buffer combinedProof(pedersenProof.size() + bulletproof.size());
+    std::memcpy(combinedProof.data(), pedersenProof.data(), pedersenProof.size());
+    std::memcpy(combinedProof.data() + pedersenProof.size(), bulletproof.data(), bulletproof.size());
+
+    return combinedProof;
 }
 
 std::optional<Buffer>
@@ -1076,7 +1083,7 @@ MPTTester::convert(MPTConvert const& arg)
             auto const postAuditorBalance = getDecryptedBalance(*arg.account, AUDITOR_ENCRYPTED_BALANCE);
 
             if (!postAuditorBalance)
-                Throw<std::runtime_error>("Failed to get post-convert balance");
+                Throw<std::runtime_error>("Failed to get post-convert auditor balance");
 
             // auditor's encrypted balance is updated correctly
             env_.require(requireAny([&]() -> bool { return *prevAuditorBalance + *arg.amt == *postAuditorBalance; }));
@@ -1687,17 +1694,13 @@ MPTTester::convertBack(MPTConvertBack const& arg)
         // generate a dummy proof if no encrypted amount field, so that other
         // preflight/preclaim are checked
         if (!prevEncryptedSpendingBalance)
-            proof = Buffer();
+            proof = Buffer(ecPedersenProofLength + ecSingleBulletproofLength);
         else
         {
             proof = getConvertBackProof(
                 *arg.account,
                 *arg.amt,
                 contextHash,
-                holderCiphertext,
-                issuerCiphertext,
-                auditorCiphertext,
-                blindingFactor,
                 {
                     .pedersenCommitment = pedersenCommitment,
                     .amt = *prevSpendingBalance,
@@ -1826,7 +1829,7 @@ MPTTester::getBalanceLinkageProof(
         !secp256k1_ec_pubkey_parse(
             ctx, &c2, params.encryptedAmt.data() + ecGamalEncryptedLength, ecGamalEncryptedLength))
     {
-        return Buffer();
+        return Buffer(ecPedersenProofLength);
     }
 
     secp256k1_pubkey pk;
@@ -1857,6 +1860,57 @@ MPTTester::getBalanceLinkageProof(
         Throw<std::runtime_error>("Pedersen proof generation failed");
 
     return proof;
+}
+
+Buffer
+MPTTester::getBulletproof(
+    std::vector<std::uint64_t> const& values,
+    std::vector<Buffer> const& blindingFactors,
+    uint256 const& contextHash) const
+{
+    std::size_t const m = values.size();
+
+    if (m == 0 || m > 2 || m != blindingFactors.size())
+        Throw<std::runtime_error>("getBulletproof: invalid input parameters");
+
+    for (auto const& bf : blindingFactors)
+    {
+        if (bf.size() != ecBlindingFactorLength)
+            Throw<std::runtime_error>("Invalid blinding factor length");
+    }
+
+    // Flatten blinding factors into contiguous memory (m * 32 bytes)
+    std::vector<unsigned char> blindingsFlat(m * ecBlindingFactorLength);
+    for (std::size_t i = 0; i < m; ++i)
+        std::memcpy(
+            blindingsFlat.data() + i * ecBlindingFactorLength, blindingFactors[i].data(), ecBlindingFactorLength);
+
+    secp256k1_pubkey pk_base;
+    if (secp256k1_mpt_get_h_generator(secp256k1Context(), &pk_base) != 1)
+        Throw<std::runtime_error>("Failed to get H generator");
+
+    // Proof size scales with m; use safe upper bound
+    Buffer bulletproof(4096);
+    std::size_t proofLen = 4096;
+
+    if (secp256k1_bulletproof_prove_agg(
+            secp256k1Context(),
+            bulletproof.data(),
+            &proofLen,
+            values.data(),
+            blindingsFlat.data(),
+            m,
+            &pk_base,
+            contextHash.data()) != 1)
+    {
+        Throw<std::runtime_error>("Bulletproof generation failed");
+    }
+
+    std::size_t const expectedLen = (m == 1) ? ecSingleBulletproofLength : ecDoubleBulletproofLength;
+    if (proofLen != expectedLen)
+        Throw<std::runtime_error>("Unexpected bulletproof length");
+
+    return Buffer(bulletproof.data(), proofLen);
 }
 
 }  // namespace jtx

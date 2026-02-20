@@ -454,10 +454,6 @@ public:
         Account const& holder,
         std::uint64_t const amount,
         uint256 const& contextHash,
-        Buffer const& holderCiphertext,
-        Buffer const& issuerCiphertext,
-        std::optional<Buffer> const& auditorCiphertext,
-        Buffer const& blindingFactor,
         PedersenProofParams const& pcParams) const;
 
     std::uint32_t
@@ -476,6 +472,12 @@ public:
         uint256 const& contextHash,
         Buffer const& pubKey,
         PedersenProofParams const& params) const;
+
+    Buffer
+    getBulletproof(
+        std::vector<std::uint64_t> const& values,
+        std::vector<Buffer> const& blindingFactors,
+        uint256 const& contextHash) const;
 
     Buffer
     getPedersenCommitment(std::uint64_t const amount, Buffer const& pedersenBlindingFactor);

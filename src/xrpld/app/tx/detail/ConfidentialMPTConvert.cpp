@@ -155,11 +155,11 @@ ConfidentialMPTConvert::doApply()
 
     auto sleMptoken = view().peek(keylet::mptoken(mptIssuanceID, account_));
     if (!sleMptoken)
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto sleIssuance = view().peek(keylet::mptIssuance(mptIssuanceID));
     if (!sleIssuance)
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto const amtToConvert = ctx_.tx[sfMPTAmount];
     auto const amt = (*sleMptoken)[~sfMPTAmount].value_or(0);
@@ -167,6 +167,8 @@ ConfidentialMPTConvert::doApply()
     if (ctx_.tx.isFieldPresent(sfHolderElGamalPublicKey))
         (*sleMptoken)[sfHolderElGamalPublicKey] = ctx_.tx[sfHolderElGamalPublicKey];
 
+    // Converting decreases regular balance and increases confidential outstanding.
+    // The confidential outstanding tracks total tokens in confidential form globally.
     (*sleMptoken)[sfMPTAmount] = amt - amtToConvert;
     (*sleIssuance)[sfConfidentialOutstandingAmount] =
         (*sleIssuance)[~sfConfidentialOutstandingAmount].value_or(0) + amtToConvert;
@@ -176,18 +178,19 @@ ConfidentialMPTConvert::doApply()
 
     auto const auditorEc = ctx_.tx[~sfAuditorEncryptedAmount];
 
-    // todo: we should check sfConfidentialBalanceSpending depending on
-    // if we encrypt zero amount
+    // Two cases for Convert:
+    // 1. Holder already has confidential balances -> homomorphically add to inbox
+    // 2. First-time convert -> initialize all confidential balance fields
     if (sleMptoken->isFieldPresent(sfIssuerEncryptedBalance) &&
         sleMptoken->isFieldPresent(sfConfidentialBalanceInbox) &&
         sleMptoken->isFieldPresent(sfConfidentialBalanceSpending))
     {
-        // homomorphically add holder's encrypted balance
+        // Case 1: Add to existing inbox balance (holder will merge later)
         {
             Buffer sum(ecGamalEncryptedTotalLength);
             if (TER const ter = homomorphicAdd(holderEc, (*sleMptoken)[sfConfidentialBalanceInbox], sum);
                 !isTesSuccess(ter))
-                return tecINTERNAL;
+                return tecINTERNAL;  // LCOV_EXCL_LINE
 
             (*sleMptoken)[sfConfidentialBalanceInbox] = sum;
         }
@@ -197,7 +200,7 @@ ConfidentialMPTConvert::doApply()
             Buffer sum(ecGamalEncryptedTotalLength);
             if (TER const ter = homomorphicAdd(issuerEc, (*sleMptoken)[sfIssuerEncryptedBalance], sum);
                 !isTesSuccess(ter))
-                return tecINTERNAL;
+                return tecINTERNAL;  // LCOV_EXCL_LINE
 
             (*sleMptoken)[sfIssuerEncryptedBalance] = sum;
         }
@@ -208,7 +211,7 @@ ConfidentialMPTConvert::doApply()
             Buffer sum(ecGamalEncryptedTotalLength);
             if (TER const ter = homomorphicAdd(*auditorEc, (*sleMptoken)[sfAuditorEncryptedBalance], sum);
                 !isTesSuccess(ter))
-                return tecINTERNAL;
+                return tecINTERNAL;  // LCOV_EXCL_LINE
 
             (*sleMptoken)[sfAuditorEncryptedBalance] = sum;
         }
@@ -218,6 +221,7 @@ ConfidentialMPTConvert::doApply()
         !sleMptoken->isFieldPresent(sfConfidentialBalanceInbox) &&
         !sleMptoken->isFieldPresent(sfConfidentialBalanceSpending))
     {
+        // Case 2: First-time convert - initialize all confidential fields
         (*sleMptoken)[sfConfidentialBalanceInbox] = holderEc;
         (*sleMptoken)[sfIssuerEncryptedBalance] = issuerEc;
         (*sleMptoken)[sfConfidentialBalanceVersion] = 0;
@@ -225,7 +229,8 @@ ConfidentialMPTConvert::doApply()
         if (auditorEc)
             (*sleMptoken)[sfAuditorEncryptedBalance] = *auditorEc;
 
-        // encrypt sfConfidentialBalanceSpending with zero balance
+        // Spending balance starts at zero. Must use canonical zero encryption
+        // (deterministic ciphertext) so the ledger state is reproducible.
         auto const zeroBalance =
             encryptCanonicalZeroAmount((*sleMptoken)[sfHolderElGamalPublicKey], account_, mptIssuanceID);
 

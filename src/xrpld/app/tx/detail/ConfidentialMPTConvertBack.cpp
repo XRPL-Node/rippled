@@ -36,10 +36,27 @@ ConfidentialMPTConvertBack::preflight(PreflightContext const& ctx)
     if (auto const res = checkEncryptedAmountFormat(ctx.tx); !isTesSuccess(res))
         return res;
 
+    // ConvertBack proof = pedersen linkage proof + single bulletproof
+    if (ctx.tx[sfZKProof].size() != ecPedersenProofLength + ecSingleBulletproofLength)
+        return temMALFORMED;
+
     return tesSUCCESS;
 }
 
-TER
+/**
+ * Verifies the cryptographic proofs for a ConvertBack transaction.
+ *
+ * This function verifies three proofs:
+ * 1. Revealed amount proof: verifies the encrypted amounts (holder, issuer,
+ *    auditor) all encrypt the same revealed amount using the blinding factor.
+ * 2. Pedersen linkage proof: verifies the balance commitment is derived from
+ *    the holder's encrypted spending balance.
+ * 3. Bulletproof (range proof): verifies the remaining balance (balance - amount)
+ *    is non-negative, preventing overdrafts.
+ *
+ * All proofs are verified before returning any error to prevent timing attacks.
+ */
+static TER
 verifyProofs(STTx const& tx, std::shared_ptr<SLE const> const& issuance, std::shared_ptr<SLE const> const& mptoken)
 {
     if (!mptoken->isFieldPresent(sfHolderElGamalPublicKey))
@@ -62,6 +79,11 @@ verifyProofs(STTx const& tx, std::shared_ptr<SLE const> const& issuance, std::sh
         auditor.emplace(ConfidentialRecipient{(*issuance)[sfAuditorElGamalPublicKey], tx[sfAuditorEncryptedAmount]});
     }
 
+    // Run all verifications before returning any error to prevent timing attacks
+    // that could reveal which proof failed.
+    bool valid = true;
+
+    // verify revealed amount
     if (auto const ter = verifyRevealedAmount(
             amount,
             blindingFactor,
@@ -70,30 +92,65 @@ verifyProofs(STTx const& tx, std::shared_ptr<SLE const> const& issuance, std::sh
             auditor);
         !isTesSuccess(ter))
     {
-        return ter;
+        valid = false;
     }
 
-    // Use a pointer to parse each proof component
-    Buffer zkps = Buffer(tx[sfZKProof].data(), tx[sfZKProof].size());
-    std::uint8_t* ptr = zkps.data();
+    // Parse proof components using offset
+    auto const proof = tx[sfZKProof];
+    size_t remainingLength = proof.size();
+    size_t currentOffset = 0;
+
+    // Extract Pedersen linkage proof
+    if (remainingLength < ecPedersenProofLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    auto const pedersenProof = proof.substr(currentOffset, ecPedersenProofLength);
+    currentOffset += ecPedersenProofLength;
+    remainingLength -= ecPedersenProofLength;
+
+    // Extract bulletproof
+    if (remainingLength < ecSingleBulletproofLength)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
+
+    auto const bulletproof = proof.substr(currentOffset, ecSingleBulletproofLength);
+    currentOffset += ecSingleBulletproofLength;
+    remainingLength -= ecSingleBulletproofLength;
+
+    if (remainingLength != 0)
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     // verify el gamal pedersen linkage
+    if (auto const ter = verifyBalancePcmLinkage(
+            pedersenProof,
+            (*mptoken)[sfConfidentialBalanceSpending],
+            holderPubKey,
+            tx[sfBalanceCommitment],
+            contextHash);
+        !isTesSuccess(ter))
     {
-        Buffer const pedersen{ptr, ecPedersenProofLength};
-        if (auto const ter = verifyBalancePcmLinkage(
-                pedersen,
-                (*mptoken)[sfConfidentialBalanceSpending],
-                holderPubKey,
-                tx[sfBalanceCommitment],
-                contextHash);
-            !isTesSuccess(ter))
+        valid = false;
+    }
+
+    // verify bullet proof
+    {
+        // Compute PC_rem = PC_balance - mG (the commitment to the remaining balance)
+        Buffer pcRem;
+        if (auto const ter = computeConvertBackRemainder(tx[sfBalanceCommitment], amount, pcRem); !isTesSuccess(ter))
         {
-            return ter;
+            valid = false;
         }
 
-        // increment pointer
-        ptr += ecPedersenProofLength;
+        // The bulletproof verifies that the remaining balance is non-negative
+        std::vector<Slice> commitments{Slice(pcRem.data(), pcRem.size())};
+
+        if (auto const ter = verifyAggregatedBulletproof(bulletproof, commitments, contextHash); !isTesSuccess(ter))
+        {
+            valid = false;
+        }
     }
+
+    if (!valid)
+        return tecBAD_PROOF;
 
     return tesSUCCESS;
 }
@@ -171,15 +228,17 @@ ConfidentialMPTConvertBack::doApply()
 
     auto sleMptoken = view().peek(keylet::mptoken(mptIssuanceID, account_));
     if (!sleMptoken)
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto sleIssuance = view().peek(keylet::mptIssuance(mptIssuanceID));
     if (!sleIssuance)
-        return tecINTERNAL;
+        return tecINTERNAL;  // LCOV_EXCL_LINE
 
     auto const amtToConvertBack = ctx_.tx[sfMPTAmount];
     auto const amt = (*sleMptoken)[~sfMPTAmount].value_or(0);
 
+    // Converting back increases regular balance and decreases confidential
+    // outstanding. This is the inverse of Convert.
     (*sleMptoken)[sfMPTAmount] = amt + amtToConvertBack;
     (*sleIssuance)[sfConfidentialOutstandingAmount] =
         (*sleIssuance)[sfConfidentialOutstandingAmount] - amtToConvertBack;
@@ -192,7 +251,7 @@ ConfidentialMPTConvertBack::doApply()
         if (TER const ter = homomorphicSubtract(
                 (*sleMptoken)[sfConfidentialBalanceSpending], ctx_.tx[sfHolderEncryptedAmount], res);
             !isTesSuccess(ter))
-            return tecINTERNAL;
+            return tecINTERNAL;  // LCOV_EXCL_LINE
 
         (*sleMptoken)[sfConfidentialBalanceSpending] = res;
     }
@@ -203,7 +262,7 @@ ConfidentialMPTConvertBack::doApply()
         if (TER const ter =
                 homomorphicSubtract((*sleMptoken)[sfIssuerEncryptedBalance], ctx_.tx[sfIssuerEncryptedAmount], res);
             !isTesSuccess(ter))
-            return tecINTERNAL;
+            return tecINTERNAL;  // LCOV_EXCL_LINE
 
         (*sleMptoken)[sfIssuerEncryptedBalance] = res;
     }
@@ -214,12 +273,11 @@ ConfidentialMPTConvertBack::doApply()
         if (TER const ter =
                 homomorphicSubtract((*sleMptoken)[sfAuditorEncryptedBalance], ctx_.tx[sfAuditorEncryptedAmount], res);
             !isTesSuccess(ter))
-            return tecINTERNAL;
+            return tecINTERNAL;  // LCOV_EXCL_LINE
 
         (*sleMptoken)[sfAuditorEncryptedBalance] = res;
     }
 
-    // increment version
     incrementConfidentialVersion(*sleMptoken);
 
     view().update(sleIssuance);

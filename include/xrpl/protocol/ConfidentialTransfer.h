@@ -292,10 +292,12 @@ verifyElGamalEncryption(
  * @brief Validates the format of encrypted amount fields in a transaction.
  *
  * Checks that all ciphertext fields in the transaction object have the
- * correct length and contain valid EC points.
+ * correct length and contain valid EC points. This function is only used
+ * by ConfidentialMPTConvert and ConfidentialMPTConvertBack transactions.
  *
  * @param object The transaction object containing encrypted amount fields.
- * @return tesSUCCESS if all formats are valid, or an error code otherwise.
+ * @return tesSUCCESS if all formats are valid, temMALFORMED if required fields
+ *         are missing, or temBAD_CIPHERTEXT if format validation fails.
  */
 NotTEC
 checkEncryptedAmountFormat(STObject const& object);
@@ -449,4 +451,35 @@ verifyBalancePcmLinkage(
     Slice const& pcmSlice,
     uint256 const& contextHash);
 
+/**
+ * @brief Verifies an aggregated Bulletproof range proof.
+ *
+ * This function verifies that all commitments in commitment_C_vec commit
+ * to values within the valid 64-bit range [0, 2^64 - 1].
+ *
+ * @param proof       The serialized Bulletproof proof.
+ * @param compressedCommitments Vector of compressed Pedersen commitments (each 33 bytes).
+ * @param contextHash The unique context hash for this transaction.
+ * @return tesSUCCESS if the proof is valid, tecBAD_PROOF if verification
+ *         fails, or tecINTERNAL for internal errors.
+ */
+TER
+verifyAggregatedBulletproof(
+    Slice const& proof,
+    std::vector<Slice> const& compressedCommitments,
+    uint256 const& contextHash);
+
+/**
+ * @brief Computes the remainder commitment for ConvertBack.
+ *
+ * Given a Pedersen commitment PC = m*G + rho*H, this function computes
+ * PC_rem = PC - amount*G = (m - amount)*G + rho*H
+ *
+ * @param commitment The compressed Pedersen commitment (33 bytes).
+ * @param amount     The amount to subtract (must be non-zero).
+ * @param out        Output buffer for the resulting commitment (33 bytes).
+ * @return tesSUCCESS on success, tecINTERNAL on failure or if amount is 0.
+ */
+TER
+computeConvertBackRemainder(Slice const& commitment, std::uint64_t amount, Buffer& out);
 }  // namespace xrpl
