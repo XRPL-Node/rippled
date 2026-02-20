@@ -107,7 +107,17 @@ Batch::calculateBaseFee(ReadView const& view, STTx const& tx)
             if (signer.isFieldPresent(sfTxnSignature))
                 signerCount += 1;
             else if (signer.isFieldPresent(sfSigners))
-                signerCount += signer.getFieldArray(sfSigners).size();
+            {
+                auto const& nestedSigners = signer.getFieldArray(sfSigners);
+                // LCOV_EXCL_START
+                if (nestedSigners.size() > STTx::maxMultiSigners)
+                {
+                    JLOG(debugLog().error()) << "BatchTrace: Nested Signers array exceeds max entries.";
+                    return XRPAmount{INITIAL_XRP};
+                }
+                // LCOV_EXCL_STOP
+                signerCount += nestedSigners.size();
+            }
         }
     }
 
