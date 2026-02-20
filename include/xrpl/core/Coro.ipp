@@ -8,7 +8,8 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
     , type_(type)
     , name_(name)
     , running_(false)
-    , coro_([this, fn = std::forward<F>(f)](boost::coroutines2::coroutine<void>::push_type& do_yield) {
+    , coro_([this, fn = std::forward<F>(f)](
+                boost::coroutines2::asymmetric_coroutine<void>::push_type& do_yield) {
         yield_ = &do_yield;
         yield();
         fn(shared_from_this());
