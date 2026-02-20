@@ -2,6 +2,7 @@
 #include <xrpld/app/ledger/LedgerToJson.h>
 #include <xrpld/app/misc/DeliverMax.h>
 #include <xrpld/app/misc/TxQ.h>
+#include <xrpld/rpc/CTID.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/DeliveredAmount.h>
 #include <xrpld/rpc/MPTokenIssuanceID.h>
@@ -164,6 +165,17 @@ fillJsonTx(
             RPC::insertMPTokenIssuanceID(
                 txJson[jss::metaData], txn, {txn->getTransactionID(), fill.ledger.seq(), *stMeta});
         }
+    }
+
+    // compute outgoing CTID
+    if (fill.context && stMeta && stMeta->isFieldPresent(sfTransactionIndex))
+    {
+        uint32_t lgrSeq = fill.ledger.seq();
+        uint32_t txnIdx = stMeta->getFieldU32(sfTransactionIndex);
+        uint32_t netID = fill.context->app.getNetworkIDService().getNetworkID();
+
+        if (auto ctid = RPC::encodeCTID(lgrSeq, txnIdx, netID))
+            txJson[jss::ctid] = *ctid;
     }
 
     if ((fill.options & LedgerFill::ownerFunds) && txn->getTxnType() == ttOFFER_CREATE)

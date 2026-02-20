@@ -6,6 +6,7 @@
 #include <test/jtx/xchain_bridge.h>
 
 #include <xrpld/app/misc/TxQ.h>
+#include <xrpld/rpc/CTID.h>
 
 #include <xrpl/beast/unit_test.h>
 #include <xrpl/json/json_value.h>
@@ -614,8 +615,7 @@ class LedgerRPC_test : public beast::unit_test::suite
     void
     testLedgerAccountsOption()
     {
-        testcase("Ledger Request, Accounts Hashes");
-        using namespace test::jtx;
+        testcase("Ledger Request, Accounts Hashes");        using namespace test::jtx;
 
         Env env{*this};
 
@@ -671,6 +671,126 @@ class LedgerRPC_test : public beast::unit_test::suite
         }
     }
 
+    void
+    testLedgerExpandedTransactionsCTID()
+    {
+        testcase("Ledger Expanded Transactions Include CTID");
+        using namespace test::jtx;
+
+        // Use a specific network ID so we can verify it in the CTID
+        constexpr uint32_t NETWORK_ID = 11111;
+        auto cfg = envconfig([&](std::unique_ptr<Config> cfg) {
+            cfg->NETWORK_ID = NETWORK_ID;
+            return cfg;
+        });
+
+        Env env{*this, std::move(cfg)};
+        uint32_t netID = env.app().getNetworkIDService().getNetworkID();
+        BEAST_EXPECT(netID == NETWORK_ID);
+
+        Account const alice{"alice"};
+        env.fund(XRP(10000), alice);
+        env.close();
+
+        // Submit a transaction and close the ledger
+        env(noop(alice));
+        env.close();
+
+        auto const ledgerSeq = env.closed()->header().seq;
+
+        // Request ledger with expanded transactions (API v2, non-binary)
+        {
+            Json::Value jv;
+            jv[jss::ledger_index] = ledgerSeq;
+            jv[jss::transactions] = true;
+            jv[jss::expand] = true;
+            jv[jss::api_version] = 2;
+            auto jrr = env.rpc("json", "ledger", to_string(jv))[jss::result];
+            BEAST_EXPECT(jrr[jss::status] == "success");
+            auto const& txns = jrr[jss::ledger][jss::transactions];
+            BEAST_EXPECT(txns.isArray() && txns.size() > 0);
+            for (auto const& tx : txns)
+            {
+                BEAST_EXPECT(tx.isMember(jss::ctid));
+                auto const ctid = tx[jss::ctid].asString();
+                // Verify CTID can be decoded and matches the ledger
+                auto const decoded = RPC::decodeCTID(ctid);
+                if (BEAST_EXPECT(decoded.has_value()))
+                {
+                    auto const [seq, idx, net] = *decoded;
+                    BEAST_EXPECT(seq == ledgerSeq);
+                    BEAST_EXPECT(net == NETWORK_ID);
+                }
+            }
+        }
+
+        // Request ledger with expanded transactions (API v1, non-binary)
+        {
+            Json::Value jv;
+            jv[jss::ledger_index] = ledgerSeq;
+            jv[jss::transactions] = true;
+            jv[jss::expand] = true;
+            auto jrr = env.rpc("json", "ledger", to_string(jv))[jss::result];
+            BEAST_EXPECT(jrr[jss::status] == "success");
+            auto const& txns = jrr[jss::ledger][jss::transactions];
+            BEAST_EXPECT(txns.isArray() && txns.size() > 0);
+            for (auto const& tx : txns)
+            {
+                BEAST_EXPECT(tx.isMember(jss::ctid));
+                auto const ctid = tx[jss::ctid].asString();
+                auto const decoded = RPC::decodeCTID(ctid);
+                if (BEAST_EXPECT(decoded.has_value()))
+                {
+                    auto const [seq, idx, net] = *decoded;
+                    BEAST_EXPECT(seq == ledgerSeq);
+                    BEAST_EXPECT(net == NETWORK_ID);
+                }
+            }
+        }
+
+        // Request ledger with expanded transactions (binary)
+        {
+            Json::Value jv;
+            jv[jss::ledger_index] = ledgerSeq;
+            jv[jss::transactions] = true;
+            jv[jss::expand] = true;
+            jv[jss::binary] = true;
+            auto jrr = env.rpc("json", "ledger", to_string(jv))[jss::result];
+            BEAST_EXPECT(jrr[jss::status] == "success");
+            auto const& txns = jrr[jss::ledger][jss::transactions];
+            BEAST_EXPECT(txns.isArray() && txns.size() > 0);
+            for (auto const& tx : txns)
+            {
+                BEAST_EXPECT(tx.isMember(jss::ctid));
+                auto const ctid = tx[jss::ctid].asString();
+                auto const decoded = RPC::decodeCTID(ctid);
+                if (BEAST_EXPECT(decoded.has_value()))
+                {
+                    auto const [seq, idx, net] = *decoded;
+                    BEAST_EXPECT(seq == ledgerSeq);
+                    BEAST_EXPECT(net == NETWORK_ID);
+                }
+            }
+        }
+
+        // Request ledger with non-expanded transactions (should NOT have CTID)
+        {
+            Json::Value jv;
+            jv[jss::ledger_index] = ledgerSeq;
+            jv[jss::transactions] = true;
+            jv[jss::expand] = false;
+            auto jrr = env.rpc("json", "ledger", to_string(jv))[jss::result];
+            BEAST_EXPECT(jrr[jss::status] == "success");
+            auto const& txns = jrr[jss::ledger][jss::transactions];
+            BEAST_EXPECT(txns.isArray() && txns.size() > 0);
+            for (auto const& tx : txns)
+            {
+                // Non-expanded transactions are just hash strings
+                BEAST_EXPECT(tx.isString());
+            }
+        }
+    }
+
 public:
     void
     run() override
@@ -685,6 +805,7 @@ public:
         testNoQueue();
         testQueue();
         testLedgerAccountsOption();
+        testLedgerExpandedTransactionsCTID();
     }
 };
 
