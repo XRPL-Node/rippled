@@ -77,7 +77,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.runs_on) }}
     container: ${{ inputs.image != '' && inputs.image || null }}
     # Sanitizer builds on GCC are taking longer than 60mins. Hence increasing the timeout to 90mins.
-    timeout-minutes: ${{ inputs.sanitizers != '' && 150 || 60 }}
+    timeout-minutes: ${{ inputs.sanitizers != '' && 360 || 60 }}
     env:
       # Use a namespace to keep the objects separate for each configuration.
       CCACHE_NAMESPACE: ${{ inputs.config_name }}
