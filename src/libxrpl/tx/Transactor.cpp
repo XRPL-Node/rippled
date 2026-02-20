@@ -175,12 +175,11 @@ Transactor::preflight1(PreflightContext const& ctx, std::uint32_t flagMask)
     if (ctx.tx.getSeqProxy().isTicket() && ctx.tx.isFieldPresent(sfAccountTxnID))
         return temINVALID;
 
-    if (ctx.tx.isFlag(tfInnerBatchTxn) && !ctx.rules.enabled(featureBatch))
+    if (ctx.tx.isFlag(tfInnerBatchTxn) && !ctx.rules.enabled(featureBatchV1_1))
         return temINVALID_FLAG;
 
     XRPL_ASSERT(
-        ctx.tx.isFlag(tfInnerBatchTxn) == ctx.parentBatchId.has_value() ||
-            !ctx.rules.enabled(featureBatch),
+        ctx.tx.isFlag(tfInnerBatchTxn) == ctx.parentBatchId.has_value() || !ctx.rules.enabled(featureBatchV1_1),
         "Inner batch transaction must have a parent batch ID.");
 
     return tesSUCCESS;
@@ -196,13 +195,13 @@ Transactor::preflight2(PreflightContext const& ctx)
         return *ret;
 
     // It should be impossible for the InnerBatchTxn flag to be set without
-    // featureBatch being enabled
+    // featureBatchV1_1 being enabled
     XRPL_ASSERT_PARTS(
-        !ctx.tx.isFlag(tfInnerBatchTxn) || ctx.rules.enabled(featureBatch),
+        !ctx.tx.isFlag(tfInnerBatchTxn) || ctx.rules.enabled(featureBatchV1_1),
         "xrpl::Transactor::preflight2",
         "InnerBatch flag only set if feature enabled");
     // Skip signature check on batch inner transactions
-    if (ctx.tx.isFlag(tfInnerBatchTxn) && ctx.rules.enabled(featureBatch))
+    if (ctx.tx.isFlag(tfInnerBatchTxn) && ctx.rules.enabled(featureBatchV1_1))
         return tesSUCCESS;
     // Do not add any checks after this point that are relevant for
     // batch inner transactions. They will be skipped.
@@ -647,7 +646,7 @@ Transactor::checkSign(
 
     auto const pkSigner = sigObject.getFieldVL(sfSigningPubKey);
     // Ignore signature check on batch inner transactions
-    if (parentBatchId && view.rules().enabled(featureBatch))
+    if (parentBatchId && view.rules().enabled(featureBatchV1_1))
     {
         // Defensive Check: These values are also checked in Batch::preflight
         if (sigObject.isFieldPresent(sfTxnSignature) || !pkSigner.empty() ||
@@ -731,13 +730,15 @@ Transactor::checkBatchSign(PreclaimContext const& ctx)
             {
                 if (idAccount != idSigner)
                     return tefBAD_AUTH;
-
-                return tesSUCCESS;
             }
+            else
+            {
+                if (isPseudoAccount(sleAccount))
+                    return tefBAD_AUTH;
 
-            if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j);
-                !isTesSuccess(ret))
-                return ret;
+                if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j); !isTesSuccess(ret))
+                    return ret;
+            }
         }
     }
     return ret;

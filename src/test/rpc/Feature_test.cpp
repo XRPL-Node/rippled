@@ -114,9 +114,8 @@ class Feature_test : public beast::unit_test::suite
 
         // Test a random sampling of the variables. If any of these get retired
         // or removed, swap out for any other feature.
-        BEAST_EXPECT(
-            featureToName(fixRemoveNFTokenAutoTrustLine) == "fixRemoveNFTokenAutoTrustLine");
-        BEAST_EXPECT(featureToName(featureBatch) == "Batch");
+        BEAST_EXPECT(featureToName(fixRemoveNFTokenAutoTrustLine) == "fixRemoveNFTokenAutoTrustLine");
+        BEAST_EXPECT(featureToName(featureBatchV1_1) == "BatchV1_1");
         BEAST_EXPECT(featureToName(featureDID) == "DID");
         BEAST_EXPECT(featureToName(fixIncludeKeyletFields) == "fixIncludeKeyletFields");
         BEAST_EXPECT(featureToName(featureTokenEscrow) == "TokenEscrow");
