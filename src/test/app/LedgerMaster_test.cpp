@@ -109,7 +109,9 @@ class LedgerMaster_test : public beast::unit_test::suite
 
         auto const deleteInterval = 8;
 
-        Env env{*this, envconfig([](auto cfg) { return online_delete(std::move(cfg), deleteInterval); })};
+        Env env{*this, envconfig([](auto cfg) {
+                    return online_delete(std::move(cfg), deleteInterval);
+                })};
 
         auto const alice = Account("alice");
         env.fund(XRP(1000), alice);
@@ -147,7 +149,8 @@ class LedgerMaster_test : public beast::unit_test::suite
                 minSeq = lastRotated;
                 lastRotated = maxSeq;
             }
-            BEAST_EXPECTS(env.closed()->header().seq == maxSeq, to_string(env.closed()->header().seq));
+            BEAST_EXPECTS(
+                env.closed()->header().seq == maxSeq, to_string(env.closed()->header().seq));
             BEAST_EXPECTS(store.getLastRotated() == lastRotated, to_string(store.getLastRotated()));
             std::stringstream expectedRange;
             expectedRange << minSeq << "-" << maxSeq;
