@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 
 #ifdef _MSC_VER
@@ -67,9 +68,9 @@ isPowerOfTen(T value)
  *
  * The mantissa is in the range [min, max], where
  *
- * The mantissa_scale enum indicates whether the range is "small" or "large".
- * This intentionally restricts the number of MantissaRanges that can be
- * used to two: one for each scale.
+ * The mantissa_scale enum indicates whether the range is "small" or
+ * "large".  This intentionally prevents the creation of any
+ * MantissaRanges representing other values.
  *
  * The "small" scale is based on the behavior of STAmount for IOUs. It has a min
  * value of 10^15, and a max value of 10^16-1. This was sufficient for
