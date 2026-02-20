@@ -62,13 +62,16 @@ class AccountTx_test : public beast::unit_test::suite
         for (Json::Value const& metaNode : txNode[jss::meta][sfAffectedNodes.jsonName])
         {
             if (metaNode.isMember(sfCreatedNode.jsonName))
-                createdNodes.insert(metaNode[sfCreatedNode.jsonName][sfLedgerEntryType.jsonName].asString());
+                createdNodes.insert(
+                    metaNode[sfCreatedNode.jsonName][sfLedgerEntryType.jsonName].asString());
 
             else if (metaNode.isMember(sfDeletedNode.jsonName))
-                deletedNodes.insert(metaNode[sfDeletedNode.jsonName][sfLedgerEntryType.jsonName].asString());
+                deletedNodes.insert(
+                    metaNode[sfDeletedNode.jsonName][sfLedgerEntryType.jsonName].asString());
 
             else if (metaNode.isMember(sfModifiedNode.jsonName))
-                modifiedNodes.insert(metaNode[sfModifiedNode.jsonName][sfLedgerEntryType.jsonName].asString());
+                modifiedNodes.insert(
+                    metaNode[sfModifiedNode.jsonName][sfLedgerEntryType.jsonName].asString());
 
             else
                 fail("Unexpected or unlabeled node type in metadata.", __FILE__, __LINE__);
@@ -99,16 +102,20 @@ class AccountTx_test : public beast::unit_test::suite
                 case 1:
                     return j.isMember(jss::result) && (j[jss::result][jss::status] == "success") &&
                         (j[jss::result][jss::transactions].size() == 2) &&
-                        (j[jss::result][jss::transactions][0u][jss::tx][jss::TransactionType] == jss::AccountSet) &&
-                        (j[jss::result][jss::transactions][1u][jss::tx][jss::TransactionType] == jss::Payment) &&
-                        (j[jss::result][jss::transactions][1u][jss::tx][jss::DeliverMax] == "10000000010") &&
+                        (j[jss::result][jss::transactions][0u][jss::tx][jss::TransactionType] ==
+                         jss::AccountSet) &&
+                        (j[jss::result][jss::transactions][1u][jss::tx][jss::TransactionType] ==
+                         jss::Payment) &&
+                        (j[jss::result][jss::transactions][1u][jss::tx][jss::DeliverMax] ==
+                         "10000000010") &&
                         (j[jss::result][jss::transactions][1u][jss::tx][jss::Amount] ==
                          j[jss::result][jss::transactions][1u][jss::tx][jss::DeliverMax]);
                 case 2:
                 case 3:
                     if (j.isMember(jss::result) && (j[jss::result][jss::status] == "success") &&
                         (j[jss::result][jss::transactions].size() == 2) &&
-                        (j[jss::result][jss::transactions][0u][jss::tx_json][jss::TransactionType] == jss::AccountSet))
+                        (j[jss::result][jss::transactions][0u][jss::tx_json]
+                          [jss::TransactionType] == jss::AccountSet))
                     {
                         auto const& payment = j[jss::result][jss::transactions][1u];
 
@@ -120,7 +127,8 @@ class AccountTx_test : public beast::unit_test::suite
                             (payment[jss::hash] ==
                              "9F3085D85F472D1CC29627F260DF68EDE59D42D1D0C33E345"
                              "ECF0D4CE981D0A8") &&
-                            (payment[jss::validated] == true) && (payment[jss::ledger_index] == 3) &&
+                            (payment[jss::validated] == true) &&
+                            (payment[jss::ledger_index] == 3) &&
                             (payment[jss::ledger_hash] ==
                              "5476DCD816EA04CBBA57D47BBF1FC58A5217CC93A5ADD79CB"
                              "580A5AFDD727E33") &&
@@ -168,14 +176,16 @@ class AccountTx_test : public beast::unit_test::suite
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(env.rpc(apiVersion, "json", "account_tx", to_string(p))));
             else
-                BEAST_EXPECT(isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
+                BEAST_EXPECT(
+                    isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
 
             p[jss::ledger_index_min] = 1;
             p[jss::ledger_index_max] = 2;
             if (apiVersion < 2u)
                 BEAST_EXPECT(noTxs(env.rpc("json", "account_tx", to_string(p))));
             else
-                BEAST_EXPECT(isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
+                BEAST_EXPECT(
+                    isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
 
             p[jss::ledger_index_min] = 2;
             p[jss::ledger_index_max] = 1;
@@ -193,7 +203,8 @@ class AccountTx_test : public beast::unit_test::suite
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(env.rpc(apiVersion, "json", "account_tx", to_string(p))));
             else
-                BEAST_EXPECT(isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
+                BEAST_EXPECT(
+                    isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
 
             p[jss::ledger_index_min] = env.current()->header().seq;
             BEAST_EXPECT(isErr(
@@ -211,7 +222,8 @@ class AccountTx_test : public beast::unit_test::suite
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(env.rpc(apiVersion, "json", "account_tx", to_string(p))));
             else
-                BEAST_EXPECT(isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
+                BEAST_EXPECT(
+                    isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
 
             p[jss::ledger_index_max] = 3;
             BEAST_EXPECT(hasTxs(env.rpc(apiVersion, "json", "account_tx", to_string(p))));
@@ -275,7 +287,8 @@ class AccountTx_test : public beast::unit_test::suite
             if (apiVersion < 2u)
                 BEAST_EXPECT(hasTxs(env.rpc(apiVersion, "json", "account_tx", to_string(p))));
             else
-                BEAST_EXPECT(isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
+                BEAST_EXPECT(
+                    isErr(env.rpc("json", "account_tx", to_string(p)), rpcLGR_IDX_MALFORMED));
         }
         // test account non-string
         {
@@ -393,7 +406,8 @@ class AccountTx_test : public beast::unit_test::suite
 
             // Test case: limit = 10 should succeed (valid integer)
             p[jss::limit] = 10;
-            BEAST_EXPECT(env.rpc("json", "account_tx", to_string(p))[jss::result][jss::status] == "success");
+            BEAST_EXPECT(
+                env.rpc("json", "account_tx", to_string(p))[jss::result][jss::status] == "success");
         }
     }
 
@@ -669,7 +683,9 @@ class AccountTx_test : public beast::unit_test::suite
 
             // The first two transactions listed in sanity haven't happened yet.
             constexpr unsigned int beckyDeletedOffset = 2;
-            BEAST_EXPECT(std::size(sanity) == result[jss::result][jss::transactions].size() + beckyDeletedOffset);
+            BEAST_EXPECT(
+                std::size(sanity) ==
+                result[jss::result][jss::transactions].size() + beckyDeletedOffset);
 
             Json::Value const& txs{result[jss::result][jss::transactions]};
 
@@ -681,7 +697,8 @@ class AccountTx_test : public beast::unit_test::suite
 
         // All it takes is a large enough XRP payment to resurrect
         // becky's account.  Try too small a payment.
-        env(pay(alice, becky, drops(env.current()->fees().accountReserve(0)) - XRP(1)), ter(tecNO_DST_INSUF_XRP));
+        env(pay(alice, becky, drops(env.current()->fees().accountReserve(0)) - XRP(1)),
+            ter(tecNO_DST_INSUF_XRP));
         env.close();
 
         // Actually resurrect becky's account.
@@ -753,7 +770,9 @@ class AccountTx_test : public beast::unit_test::suite
 
         // alice creates issuance
         mptAlice.create(
-            {.ownerCount = 1, .holderCount = 0, .flags = tfMPTCanClawback | tfMPTRequireAuth | tfMPTCanTransfer});
+            {.ownerCount = 1,
+             .holderCount = 0,
+             .flags = tfMPTCanClawback | tfMPTRequireAuth | tfMPTCanTransfer});
 
         checkAliceAcctTx(3, jss::MPTokenIssuanceCreate);
 

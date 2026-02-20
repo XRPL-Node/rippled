@@ -59,7 +59,8 @@ struct WithSourceLocation
 
     // Non-explicit constructor allows implicit conversion.
     // The default argument for loc is evaluated at the call site.
-    WithSourceLocation(T v, std::source_location l = std::source_location::current()) : value(std::move(v)), loc(l)
+    WithSourceLocation(T v, std::source_location l = std::source_location::current())
+        : value(std::move(v)), loc(l)
     {
     }
 };
@@ -99,7 +100,8 @@ class SuiteLogs : public Logs
     beast::unit_test::suite& suite_;
 
 public:
-    explicit SuiteLogs(beast::unit_test::suite& suite) : Logs(beast::severities::kError), suite_(suite)
+    explicit SuiteLogs(beast::unit_test::suite& suite)
+        : Logs(beast::severities::kError), suite_(suite)
     {
     }
 
@@ -187,12 +189,19 @@ public:
         std::optional<beast::severities::Severity> thresh = std::nullopt,
         std::optional<XRPAmount> referenceFee = std::nullopt)
         : test(suite_)
-        , bundle_(suite_, std::move(config), std::move(logs), thresh.value_or(beast::severities::kError), referenceFee)
+        , bundle_(
+              suite_,
+              std::move(config),
+              std::move(logs),
+              thresh.value_or(beast::severities::kError),
+              referenceFee)
         , journal{bundle_.app->journal("Env")}
     {
         memoize(Account::master);
         Pathfinder::initPathTable();
-        foreachFeature(features, [&appFeats = app().config().features](uint256 const& f) { appFeats.insert(f); });
+        foreachFeature(features, [&appFeats = app().config().features](uint256 const& f) {
+            appFeats.insert(f);
+        });
     }
 
     /**
@@ -231,7 +240,9 @@ public:
      * @param referenceFee non-default reference fee
      *
      */
-    Env(beast::unit_test::suite& suite_, FeatureBitset features, std::optional<XRPAmount> referenceFee = std::nullopt)
+    Env(beast::unit_test::suite& suite_,
+        FeatureBitset features,
+        std::optional<XRPAmount> referenceFee = std::nullopt)
         : Env(suite_, envconfig(), features, nullptr, std::nullopt, referenceFee)
     {
     }
@@ -253,7 +264,12 @@ public:
         std::unique_ptr<Logs> logs = nullptr,
         std::optional<beast::severities::Severity> thresh = std::nullopt,
         std::optional<XRPAmount> referenceFee = std::nullopt)
-        : Env(suite_, std::move(config), testable_amendments(), std::move(logs), thresh, referenceFee)
+        : Env(suite_,
+              std::move(config),
+              testable_amendments(),
+              std::move(logs),
+              thresh,
+              referenceFee)
     {
     }
 
@@ -270,7 +286,9 @@ public:
      * tweaks.
      * @param referenceFee Optional reference fee to use in fee settings.
      */
-    Env(beast::unit_test::suite& suite_, std::unique_ptr<Config> config, std::optional<XRPAmount> referenceFee)
+    Env(beast::unit_test::suite& suite_,
+        std::unique_ptr<Config> config,
+        std::optional<XRPAmount> referenceFee)
         : Env(suite_, std::move(config), testable_amendments(), nullptr, std::nullopt, referenceFee)
     {
     }
@@ -284,7 +302,8 @@ public:
      *
      * @param suite_ the current unit_test::suite
      */
-    Env(beast::unit_test::suite& suite_, std::optional<XRPAmount> referenceFee) : Env(suite_, envconfig(), referenceFee)
+    Env(beast::unit_test::suite& suite_, std::optional<XRPAmount> referenceFee)
+        : Env(suite_, envconfig(), referenceFee)
     {
     }
 
@@ -360,7 +379,9 @@ public:
 
     template <class... Args>
     Json::Value
-    rpc(std::unordered_map<std::string, std::string> const& headers, std::string const& cmd, Args&&... args);
+    rpc(std::unordered_map<std::string, std::string> const& headers,
+        std::string const& cmd,
+        Args&&... args);
 
     template <class... Args>
     Json::Value
@@ -410,7 +431,9 @@ public:
         @return true if no error, false if error
     */
     bool
-    close(NetClock::time_point closeTime, std::optional<std::chrono::milliseconds> consensusDelay = std::nullopt);
+    close(
+        NetClock::time_point closeTime,
+        std::optional<std::chrono::milliseconds> consensusDelay = std::nullopt);
 
     /** Close and advance the ledger.
 
@@ -861,14 +884,24 @@ template <class... Args>
 Json::Value
 Env::rpc(unsigned apiVersion, std::string const& cmd, Args&&... args)
 {
-    return rpc(apiVersion, std::unordered_map<std::string, std::string>(), cmd, std::forward<Args>(args)...);
+    return rpc(
+        apiVersion,
+        std::unordered_map<std::string, std::string>(),
+        cmd,
+        std::forward<Args>(args)...);
 }
 
 template <class... Args>
 Json::Value
-Env::rpc(std::unordered_map<std::string, std::string> const& headers, std::string const& cmd, Args&&... args)
+Env::rpc(
+    std::unordered_map<std::string, std::string> const& headers,
+    std::string const& cmd,
+    Args&&... args)
 {
-    return do_rpc(RPC::apiCommandLineVersion, std::vector<std::string>{cmd, std::forward<Args>(args)...}, headers);
+    return do_rpc(
+        RPC::apiCommandLineVersion,
+        std::vector<std::string>{cmd, std::forward<Args>(args)...},
+        headers);
 }
 
 template <class... Args>

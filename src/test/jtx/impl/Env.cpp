@@ -66,7 +66,8 @@ Env::AppBundle::AppBundle(
         config->FEES.reference_fee = *fee;
     }
     // Hack so we don't have to call Config::setup
-    HTTPClient::initializeSSLContext(config->SSL_VERIFY_DIR, config->SSL_VERIFY_FILE, config->SSL_VERIFY, debugLog());
+    HTTPClient::initializeSSLContext(
+        config->SSL_VERIFY_DIR, config->SSL_VERIFY_FILE, config->SSL_VERIFY, debugLog());
     owned = make_Application(std::move(config), std::move(logs), std::move(timeKeeper_));
     app = owned.get();
     app->logs().threshold(thresh);
@@ -279,12 +280,20 @@ Env::fund(bool setDefaultRipple, STAmount const& amount, Account const& account)
             jtx::seq(jtx::autofill),
             fee(jtx::autofill),
             sig(jtx::autofill));
-        apply(fset(account, asfDefaultRipple), jtx::seq(jtx::autofill), fee(jtx::autofill), sig(jtx::autofill));
+        apply(
+            fset(account, asfDefaultRipple),
+            jtx::seq(jtx::autofill),
+            fee(jtx::autofill),
+            sig(jtx::autofill));
         require(flags(account, asfDefaultRipple));
     }
     else
     {
-        apply(pay(master, account, amount), jtx::seq(jtx::autofill), fee(jtx::autofill), sig(jtx::autofill));
+        apply(
+            pay(master, account, amount),
+            jtx::seq(jtx::autofill),
+            fee(jtx::autofill),
+            sig(jtx::autofill));
         require(nflags(account, asfDefaultRipple));
     }
     require(jtx::balance(account, amount));
@@ -294,7 +303,11 @@ void
 Env::trust(STAmount const& amount, Account const& account)
 {
     auto const start = balance(account);
-    apply(jtx::trust(account, amount), jtx::seq(jtx::autofill), fee(jtx::autofill), sig(jtx::autofill));
+    apply(
+        jtx::trust(account, amount),
+        jtx::seq(jtx::autofill),
+        fee(jtx::autofill),
+        sig(jtx::autofill));
     apply(
         pay(master, account, drops(current()->fees().base)),
         jtx::seq(jtx::autofill),
@@ -388,8 +401,9 @@ Env::sign_and_submit(JTx const& jt, Json::Value params, std::source_location con
         // Use the provided parameters, and go straight
         // to the (RPC) client.
         assert(params.isObject());
-        if (!params.isMember(jss::secret) && !params.isMember(jss::key_type) && !params.isMember(jss::seed) &&
-            !params.isMember(jss::seed_hex) && !params.isMember(jss::passphrase))
+        if (!params.isMember(jss::secret) && !params.isMember(jss::key_type) &&
+            !params.isMember(jss::seed) && !params.isMember(jss::seed_hex) &&
+            !params.isMember(jss::passphrase))
         {
             params[jss::secret] = passphrase;
         }
@@ -408,7 +422,11 @@ Env::sign_and_submit(JTx const& jt, Json::Value params, std::source_location con
 }
 
 void
-Env::postconditions(JTx const& jt, ParsedResult const& parsed, Json::Value const& jr, std::source_location const& loc)
+Env::postconditions(
+    JTx const& jt,
+    ParsedResult const& parsed,
+    Json::Value const& jr,
+    std::source_location const& loc)
 {
     auto const line = jt.testLine ? " (" + to_string(*jt.testLine) + ")" : "";
     auto const locStr = std::string("(") + loc.file_name() + ":" + to_string(loc.line()) + ")";
@@ -417,28 +435,31 @@ Env::postconditions(JTx const& jt, ParsedResult const& parsed, Json::Value const
         (jt.ter && parsed.ter &&
          !test.expect(
              *parsed.ter == *jt.ter,
-             "apply " + locStr + ": Got " + transToken(*parsed.ter) + " (" + transHuman(*parsed.ter) + "); Expected " +
-                 transToken(*jt.ter) + " (" + transHuman(*jt.ter) + ")" + line));
+             "apply " + locStr + ": Got " + transToken(*parsed.ter) + " (" +
+                 transHuman(*parsed.ter) + "); Expected " + transToken(*jt.ter) + " (" +
+                 transHuman(*jt.ter) + ")" + line));
     using namespace std::string_literals;
     bad = (jt.rpcCode &&
            !test.expect(
                parsed.rpcCode == jt.rpcCode->first && parsed.rpcMessage == jt.rpcCode->second,
                "apply " + locStr + ": Got RPC result "s +
-                   (parsed.rpcCode ? RPC::get_error_info(*parsed.rpcCode).token.c_str() : "NO RESULT") + " (" +
-                   parsed.rpcMessage + "); Expected " + RPC::get_error_info(jt.rpcCode->first).token.c_str() + " (" +
+                   (parsed.rpcCode ? RPC::get_error_info(*parsed.rpcCode).token.c_str()
+                                   : "NO RESULT") +
+                   " (" + parsed.rpcMessage + "); Expected " +
+                   RPC::get_error_info(jt.rpcCode->first).token.c_str() + " (" +
                    jt.rpcCode->second + ")" + line)) ||
         bad;
     // If we have an rpcCode (just checked), then the rpcException check is
     // optional - the 'error' field may not be defined, but if it is, it must
     // match rpcError.
-    bad =
-        (jt.rpcException &&
-         !test.expect(
-             (jt.rpcCode && parsed.rpcError.empty()) ||
-                 (parsed.rpcError == jt.rpcException->first &&
-                  (!jt.rpcException->second || parsed.rpcException == *jt.rpcException->second)),
-             "apply " + locStr + ": Got RPC result "s + parsed.rpcError + " (" + parsed.rpcException + "); Expected " +
-                 jt.rpcException->first + " (" + jt.rpcException->second.value_or("n/a") + ")" + line)) ||
+    bad = (jt.rpcException &&
+           !test.expect(
+               (jt.rpcCode && parsed.rpcError.empty()) ||
+                   (parsed.rpcError == jt.rpcException->first &&
+                    (!jt.rpcException->second || parsed.rpcException == *jt.rpcException->second)),
+               "apply " + locStr + ": Got RPC result "s + parsed.rpcError + " (" +
+                   parsed.rpcException + "); Expected " + jt.rpcException->first + " (" +
+                   jt.rpcException->second.value_or("n/a") + ")" + line)) ||
         bad;
     if (bad)
     {
@@ -509,8 +530,9 @@ Env::autofill_sig(JTx& jt)
     // If the sig is still needed, get it here.
     if (!jt.fill_sig)
         return;
-    auto const account = jv.isMember(sfDelegate.jsonName) ? lookup(jv[sfDelegate.jsonName].asString())
-                                                          : lookup(jv[jss::Account].asString());
+    auto const account = jv.isMember(sfDelegate.jsonName)
+        ? lookup(jv[sfDelegate.jsonName].asString())
+        : lookup(jv[jss::Account].asString());
     if (!app().checkSigs())
     {
         jv[jss::SigningPubKey] = strHex(account.pk().slice());
