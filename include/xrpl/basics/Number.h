@@ -325,7 +325,11 @@ public:
 
     Number(rep mantissa);
     explicit Number(rep mantissa, int exponent);
-    explicit constexpr Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept;
+    explicit constexpr Number(
+        bool negative,
+        internalrep mantissa,
+        int exponent,
+        unchecked) noexcept;
     // Assume unsigned values are... unsigned. i.e. positive
     explicit constexpr Number(internalrep mantissa, int exponent, unchecked) noexcept;
     // Only unit tests are expected to use this ctor
@@ -668,7 +672,11 @@ public:
     constexpr static internalrep largestMantissa = largeRange.max;
 };
 
-inline constexpr Number::Number(bool negative, internalrep mantissa, int exponent, unchecked) noexcept
+inline constexpr Number::Number(
+    bool negative,
+    internalrep mantissa,
+    int exponent,
+    unchecked) noexcept
     : mantissa_{(negative ? -1 : 1) * static_cast<rep>(mantissa)}, exponent_{exponent}
 {
 }
@@ -680,7 +688,8 @@ inline constexpr Number::Number(internalrep mantissa, int exponent, unchecked) n
 
 constexpr static Number numZero{};
 
-inline Number::Number(internalrep mantissa, int exponent, normalized) : Number(false, mantissa, exponent, normalized{})
+inline Number::Number(internalrep mantissa, int exponent, normalized)
+    : Number(false, mantissa, exponent, normalized{})
 {
 }
 
@@ -844,7 +853,10 @@ Number::normalizeToRange(T minMantissa, T maxMantissa) const
 
     if constexpr (std::is_unsigned_v<T>)
     {
-        XRPL_ASSERT_PARTS(!negative, "xrpl::Number::normalizeToRange", "Number is non-negative for unsigned range.");
+        XRPL_ASSERT_PARTS(
+            !negative,
+            "xrpl::Number::normalizeToRange",
+            "Number is non-negative for unsigned range.");
         // To avoid logical errors in release builds, throw if the Number is
         // negative for an unsigned range.
         if (negative)
@@ -941,7 +953,8 @@ class NumberRoundModeGuard
     saveNumberRoundMode saved_;
 
 public:
-    explicit NumberRoundModeGuard(Number::rounding_mode mode) noexcept : saved_{Number::setround(mode)}
+    explicit NumberRoundModeGuard(Number::rounding_mode mode) noexcept
+        : saved_{Number::setround(mode)}
     {
     }
 
@@ -961,7 +974,8 @@ class NumberMantissaScaleGuard
     MantissaRange::mantissa_scale const saved_;
 
 public:
-    explicit NumberMantissaScaleGuard(MantissaRange::mantissa_scale scale) noexcept : saved_{Number::getMantissaScale()}
+    explicit NumberMantissaScaleGuard(MantissaRange::mantissa_scale scale) noexcept
+        : saved_{Number::getMantissaScale()}
     {
         Number::setMantissaScale(scale);
     }

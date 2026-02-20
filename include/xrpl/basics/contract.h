@@ -36,7 +36,9 @@ template <class E, class... Args>
 [[noreturn]] XRPL_NO_SANITIZE_ADDRESS inline void
 Throw(Args&&... args)
 {
-    static_assert(std::is_convertible<E*, std::exception*>::value, "Exception must derive from std::exception.");
+    static_assert(
+        std::is_convertible<E*, std::exception*>::value,
+        "Exception must derive from std::exception.");
 
     E e(std::forward<Args>(args)...);
     LogThrow(std::string("Throwing exception of type " + beast::type_name<E>() + ": ") + e.what());

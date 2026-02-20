@@ -206,7 +206,11 @@ Number::Guard::round() noexcept
 
 template <detail::UnsignedMantissa T>
 void
-Number::Guard::bringIntoRange(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa)
+Number::Guard::bringIntoRange(
+    bool& negative,
+    T& mantissa,
+    int& exponent,
+    internalrep const& minMantissa)
 {
     // Bring mantissa back into the minMantissa / maxMantissa range AFTER
     // rounding
@@ -254,7 +258,11 @@ Number::Guard::doRoundUp(
 
 template <detail::UnsignedMantissa T>
 void
-Number::Guard::doRoundDown(bool& negative, T& mantissa, int& exponent, internalrep const& minMantissa)
+Number::Guard::doRoundDown(
+    bool& negative,
+    T& mantissa,
+    int& exponent,
+    internalrep const& minMantissa)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (mantissa & 1) == 1))
@@ -378,7 +386,8 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
         auto const maxMantissa = range.max;
         auto const minMantissa = range.min;
 
-        XRPL_ASSERT_PARTS(mantissa >= minMantissa, "xrpl::Number::fromInternal", "mantissa large enough");
+        XRPL_ASSERT_PARTS(
+            mantissa >= minMantissa, "xrpl::Number::fromInternal", "mantissa large enough");
 
         if (mantissa > maxMantissa || mantissa < minMantissa)
         {
@@ -386,7 +395,9 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
         }
 
         XRPL_ASSERT_PARTS(
-            mantissa >= minMantissa && mantissa <= maxMantissa, "xrpl::Number::fromInternal", "mantissa in range");
+            mantissa >= minMantissa && mantissa <= maxMantissa,
+            "xrpl::Number::fromInternal",
+            "mantissa in range");
     }
 
     auto const sign = negative ? -1 : 1;
@@ -395,7 +406,9 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent, MantissaRange co
     exponent_ = exponent;
 
     XRPL_ASSERT_PARTS(
-        (pRange && isnormal(*pRange)) || isnormal(), "xrpl::Number::fromInternal", "Number is normalized");
+        (pRange && isnormal(*pRange)) || isnormal(),
+        "xrpl::Number::fromInternal",
+        "Number is normalized");
 }
 
 /** Rebuilds the number from components.
@@ -424,7 +437,8 @@ Number::fromInternal(bool negative, Rep mantissa, int exponent)
 constexpr Number
 Number::oneSmall()
 {
-    return Number{false, Number::smallRange.referenceMin, -Number::smallRange.log, Number::unchecked{}};
+    return Number{
+        false, Number::smallRange.referenceMin, -Number::smallRange.log, Number::unchecked{}};
 };
 
 constexpr Number oneSml = Number::oneSmall();
@@ -432,7 +446,8 @@ constexpr Number oneSml = Number::oneSmall();
 constexpr Number
 Number::oneLarge()
 {
-    return Number{false, Number::largeRange.referenceMin, -Number::largeRange.log, Number::unchecked{}};
+    return Number{
+        false, Number::largeRange.referenceMin, -Number::largeRange.log, Number::unchecked{}};
 };
 
 constexpr Number oneLrg = Number::oneLarge();
@@ -507,9 +522,13 @@ doNormalize(
     g.doRoundUp(negative, mantissa, exponent, minMantissa, maxMantissa, "Number::normalize 2");
 
     XRPL_ASSERT_PARTS(
-        mantissa >= minMantissa && mantissa <= maxMantissa, "xrpl::doNormalize", "final mantissa fits in range");
+        mantissa >= minMantissa && mantissa <= maxMantissa,
+        "xrpl::doNormalize",
+        "final mantissa fits in range");
     XRPL_ASSERT_PARTS(
-        exponent >= minExponent && exponent <= maxExponent, "xrpl::doNormalize", "final exponent fits in range");
+        exponent >= minExponent && exponent <= maxExponent,
+        "xrpl::doNormalize",
+        "final exponent fits in range");
 }
 
 template <>
@@ -612,7 +631,8 @@ Number::operator+=(Number const& y)
         return *this;
     }
 
-    XRPL_ASSERT(isnormal(range) && y.isnormal(range), "xrpl::Number::operator+=(Number) : is normal");
+    XRPL_ASSERT(
+        isnormal(range) && y.isnormal(range), "xrpl::Number::operator+=(Number) : is normal");
     // *n = negative
     // *s = sign
     // *m = mantissa
@@ -762,7 +782,12 @@ Number::operator*=(Number const& y)
     xm = static_cast<internalrep>(zm);
     xe = ze;
     g.doRoundUp(
-        zn, xm, xe, minMantissa, maxMantissa, "Number::multiplication overflow : exponent is " + std::to_string(xe));
+        zn,
+        xm,
+        xe,
+        minMantissa,
+        maxMantissa,
+        "Number::multiplication overflow : exponent is " + std::to_string(xe));
 
     normalize(zn, xm, xe, minMantissa, maxMantissa);
     fromInternal(zn, xm, xe, &range);
@@ -921,7 +946,8 @@ to_string(Number const& amount)
 
     // Use scientific notation for exponents that are too small or too large
     auto const rangeLog = range.log;
-    if (((exponent != 0 && amount.exponent() != 0) && ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
+    if (((exponent != 0 && amount.exponent() != 0) &&
+         ((exponent < -(rangeLog + 10)) || (exponent > -(rangeLog - 10)))))
     {
         // Remove trailing zeroes from the mantissa.
         while (mantissa != 0 && mantissa % 10 == 0 && exponent < Number::maxExponent)
@@ -976,9 +1002,11 @@ to_string(Number const& amount)
 
     XRPL_ASSERT(post_to >= post_from, "xrpl::to_string(Number) : second distance check");
 
-    post_to = std::find_if(std::make_reverse_iterator(post_to), std::make_reverse_iterator(post_from), [](char c) {
-                  return c != '0';
-              }).base();
+    post_to = std::find_if(
+                  std::make_reverse_iterator(post_to),
+                  std::make_reverse_iterator(post_from),
+                  [](char c) { return c != '0'; })
+                  .base();
 
     std::string ret;
 
@@ -1092,7 +1120,8 @@ Number::root(MantissaRange const& range, Number f, unsigned d)
 
     //  return r * 10^(e/d) to reverse scaling
     auto const result = r.shiftExponent(e / di);
-    XRPL_ASSERT_PARTS(result.isnormal(range), "xrpl::root(Number, unsigned)", "result is normalized");
+    XRPL_ASSERT_PARTS(
+        result.isnormal(range), "xrpl::root(Number, unsigned)", "result is normalized");
     return result;
 }
 
