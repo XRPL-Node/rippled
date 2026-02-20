@@ -44,7 +44,11 @@ ManagerImp::ManagerImp()
 }
 
 std::unique_ptr<Backend>
-ManagerImp::make_Backend(Section const& parameters, std::size_t burstSize, Scheduler& scheduler, beast::Journal journal)
+ManagerImp::make_Backend(
+    Section const& parameters,
+    std::size_t burstSize,
+    Scheduler& scheduler,
+    beast::Journal journal)
 {
     std::string const type{get(parameters, "type")};
     if (type.empty())
@@ -69,7 +73,8 @@ ManagerImp::make_Database(
 {
     auto backend{make_Backend(config, burstSize, scheduler, journal)};
     backend->open();
-    auto db = std::make_unique<DatabaseNodeImp>(scheduler, readThreads, std::move(backend), config, journal);
+    auto db = std::make_unique<DatabaseNodeImp>(
+        scheduler, readThreads, std::move(backend), config, journal);
     db->startReadThreads();
     return db;
 }
@@ -85,8 +90,8 @@ void
 ManagerImp::erase(Factory& factory)
 {
     std::lock_guard _(mutex_);
-    auto const iter =
-        std::find_if(list_.begin(), list_.end(), [&factory](Factory* other) { return other == &factory; });
+    auto const iter = std::find_if(
+        list_.begin(), list_.end(), [&factory](Factory* other) { return other == &factory; });
     XRPL_ASSERT(iter != list_.end(), "xrpl::NodeStore::ManagerImp::erase : valid input");
     list_.erase(iter);
 }
@@ -95,8 +100,9 @@ Factory*
 ManagerImp::find(std::string const& name)
 {
     std::lock_guard _(mutex_);
-    auto const iter = std::find_if(
-        list_.begin(), list_.end(), [&name](Factory* other) { return boost::iequals(name, other->getName()); });
+    auto const iter = std::find_if(list_.begin(), list_.end(), [&name](Factory* other) {
+        return boost::iequals(name, other->getName());
+    });
     if (iter == list_.end())
         return nullptr;
     return *iter;
