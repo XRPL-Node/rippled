@@ -1402,7 +1402,7 @@ class Batch_test : public beast::unit_test::suite
             env.close();
         }
 
-        // temARRAY_TOO_LARGE: Batch: signers array exceeds 8 entries.
+        // temARRAY_TOO_LARGE: Batch preflight: signers array exceeds 8 entries.
         {
             test::jtx::Env env{*this, features};
 

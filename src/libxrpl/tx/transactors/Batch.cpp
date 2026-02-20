@@ -215,6 +215,13 @@ Batch::preflight(PreflightContext const& ctx)
         return temARRAY_TOO_LARGE;
     }
 
+    if (ctx.tx.isFieldPresent(sfBatchSigners) && ctx.tx.getFieldArray(sfBatchSigners).size() > maxBatchTxCount)
+    {
+        JLOG(ctx.j.debug()) << "BatchTrace[" << parentBatchId << "]:"
+                            << "signers array exceeds 8 entries.";
+        return temARRAY_TOO_LARGE;
+    }
+
     // Validation Inner Batch Txns
     std::unordered_set<uint256> uniqueHashes;
     std::unordered_map<AccountID, std::unordered_set<std::uint32_t>> accountSeqTicket;
@@ -436,7 +443,7 @@ Batch::preflightSigValidated(PreflightContext const& ctx)
             if (requiredSigners.erase(signerAccount) == 0)
             {
                 JLOG(ctx.j.debug()) << "BatchTrace[" << parentBatchId << "]: "
-                                    << "no account signature for inner txn.";
+                                    << "extra signer provided: " << signerAccount;
                 return temBAD_SIGNER;
             }
         }
