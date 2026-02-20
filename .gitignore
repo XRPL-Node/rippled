@@ -74,3 +74,4 @@ DerivedData
 
 # clangd cache
 /.cache
+build_nocmake/
