@@ -498,3 +498,74 @@
 | 9    | Document results and next steps      | 1         | 0              | 8          |
 
 **Parallel work**: Tasks 0 and 1 can run in parallel. Tasks 2 and 5 have no dependency on each other. Tasks 6 and 7 can be done in parallel once Tasks 4 and 5 are complete.
+
+---
+
+## Next Steps (Post-POC)
+
+### Metrics Pipeline for Grafana Dashboards
+
+The current POC exports **traces only**. Grafana's Explore view can query Jaeger for individual traces, but time-series charts (latency histograms, request throughput, error rates) require a **metrics pipeline**. To enable this:
+
+1. **Add a `spanmetrics` connector** to the OTel Collector config that derives RED metrics (Rate, Errors, Duration) from trace spans automatically:
+   ```yaml
+   connectors:
+     spanmetrics:
+       histogram:
+         explicit:
+           buckets: [1ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 5s]
+       dimensions:
+         - name: xrpl.rpc.command
+         - name: xrpl.rpc.status
+
+   exporters:
+     prometheus:
+       endpoint: 0.0.0.0:8889
+
+   service:
+     pipelines:
+       traces:
+         receivers: [otlp]
+         processors: [batch]
+         exporters: [debug, otlp/jaeger, spanmetrics]
+       metrics:
+         receivers: [spanmetrics]
+         exporters: [prometheus]
+   ```
+
+2. **Add Prometheus** to the Docker Compose stack to scrape the collector's metrics endpoint.
+
+3. **Add Prometheus as a Grafana datasource** and build dashboards for:
+   - RPC request latency (p50/p95/p99) by command
+   - RPC throughput (requests/sec) by command
+   - Error rate by command
+   - Span duration distribution
+
+### Additional Instrumentation
+
+- **W3C `traceparent` header extraction** in `ServerHandler` to support cross-service context propagation from external callers
+- **WebSocket RPC tracing** in `ServerHandler::onWSMessage()`
+- **Transaction relay tracing** across nodes using protobuf `TraceContext` messages
+- **Consensus round and phase tracing** for validator coordination visibility
+- **Ledger close tracing** to measure close-to-validated latency
+
+### Production Hardening
+
+- **Tail-based sampling** in the OTel Collector to reduce volume while retaining error/slow traces
+- **TLS configuration** for the OTLP exporter in production deployments
+- **Resource limits** on the batch processor queue to prevent unbounded memory growth
+- **Health monitoring** for the telemetry pipeline itself (collector lag, export failures)
+
+### POC Lessons Learned
+
+Issues encountered during POC implementation that inform future work:
+
+| Issue | Resolution | Impact on Future Work |
+|-------|-----------|----------------------|
+| Conan lockfile rejected `opentelemetry-cpp/1.18.0` | Used `--lockfile=""` to bypass | Lockfile must be regenerated when adding new dependencies |
+| Conan package only builds OTLP HTTP exporter, not gRPC | Switched from gRPC to HTTP exporter (`localhost:4318/v1/traces`) | HTTP exporter is the default; gRPC requires custom Conan profile |
+| CMake target `opentelemetry-cpp::api` etc. don't exist in Conan package | Use umbrella target `opentelemetry-cpp::opentelemetry-cpp` | Conan targets differ from upstream CMake targets |
+| OTel Collector `logging` exporter deprecated | Renamed to `debug` exporter | Use `debug` in all collector configs going forward |
+| Macro parameter `telemetry` collided with `::xrpl::telemetry::` namespace | Renamed macro params to `_tel_obj_`, `_span_name_` | Avoid common words as macro parameter names |
+| `opentelemetry::trace::Scope` creates new context on move | Store scope as member, create once in constructor | SpanGuard move semantics need care with Scope lifecycle |
+| `TracerProviderFactory::Create` returns `unique_ptr<sdk::TracerProvider>`, not `nostd::shared_ptr` | Use `std::shared_ptr` member, wrap in `nostd::shared_ptr` for global provider | OTel SDK factory return types don't match API provider types |
