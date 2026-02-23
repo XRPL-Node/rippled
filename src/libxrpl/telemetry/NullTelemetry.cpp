@@ -80,9 +80,8 @@ public:
     opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer>
     getTracer(std::string_view) override
     {
-        static auto noopTracer =
-            opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer>(
-                new opentelemetry::trace::NoopTracer());
+        static auto noopTracer = opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer>(
+            new opentelemetry::trace::NoopTracer());
         return noopTracer;
     }
 

@@ -18,8 +18,8 @@
     so that builds without telemetry have zero dependency on opentelemetry-cpp.
 */
 
-#include <xrpl/beast/utility/Journal.h>
 #include <xrpl/basics/BasicConfig.h>
+#include <xrpl/beast/utility/Journal.h>
 
 #include <chrono>
 #include <memory>
@@ -27,10 +27,10 @@
 #include <string_view>
 
 #ifdef XRPL_ENABLE_TELEMETRY
-#include <opentelemetry/trace/tracer.h>
-#include <opentelemetry/trace/span.h>
 #include <opentelemetry/context/context.h>
 #include <opentelemetry/nostd/shared_ptr.h>
+#include <opentelemetry/trace/span.h>
+#include <opentelemetry/trace/tracer.h>
 #endif
 
 namespace xrpl {
@@ -111,27 +111,34 @@ public:
     /** Initialize the tracing pipeline (exporter, processor, provider).
         Call after construction.
     */
-    virtual void start() = 0;
+    virtual void
+    start() = 0;
 
     /** Flush pending spans and shut down the tracing pipeline.
         Call before destruction.
     */
-    virtual void stop() = 0;
+    virtual void
+    stop() = 0;
 
     /** @return true if this instance is actively exporting spans. */
-    virtual bool isEnabled() const = 0;
+    virtual bool
+    isEnabled() const = 0;
 
     /** @return true if transaction processing should be traced. */
-    virtual bool shouldTraceTransactions() const = 0;
+    virtual bool
+    shouldTraceTransactions() const = 0;
 
     /** @return true if consensus rounds should be traced. */
-    virtual bool shouldTraceConsensus() const = 0;
+    virtual bool
+    shouldTraceConsensus() const = 0;
 
     /** @return true if RPC request handling should be traced. */
-    virtual bool shouldTraceRpc() const = 0;
+    virtual bool
+    shouldTraceRpc() const = 0;
 
     /** @return true if peer-to-peer messages should be traced. */
-    virtual bool shouldTracePeer() const = 0;
+    virtual bool
+    shouldTracePeer() const = 0;
 
 #ifdef XRPL_ENABLE_TELEMETRY
     /** Get or create a named tracer instance.
@@ -154,8 +161,7 @@ public:
     virtual opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span>
     startSpan(
         std::string_view name,
-        opentelemetry::trace::SpanKind kind =
-            opentelemetry::trace::SpanKind::kInternal) = 0;
+        opentelemetry::trace::SpanKind kind = opentelemetry::trace::SpanKind::kInternal) = 0;
 
     /** Start a new span with an explicit parent context.
 
@@ -171,8 +177,7 @@ public:
     startSpan(
         std::string_view name,
         opentelemetry::context::Context const& parentContext,
-        opentelemetry::trace::SpanKind kind =
-            opentelemetry::trace::SpanKind::kInternal) = 0;
+        opentelemetry::trace::SpanKind kind = opentelemetry::trace::SpanKind::kInternal) = 0;
 #endif
 };
 

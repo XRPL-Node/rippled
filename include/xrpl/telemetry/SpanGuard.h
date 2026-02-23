@@ -14,13 +14,13 @@
 
 #ifdef XRPL_ENABLE_TELEMETRY
 
-#include <opentelemetry/trace/span.h>
-#include <opentelemetry/trace/scope.h>
 #include <opentelemetry/context/runtime_context.h>
 #include <opentelemetry/nostd/shared_ptr.h>
+#include <opentelemetry/trace/scope.h>
+#include <opentelemetry/trace/span.h>
 
-#include <string_view>
 #include <exception>
+#include <string_view>
 
 namespace xrpl {
 namespace telemetry {
@@ -42,8 +42,7 @@ public:
 
         @param span  The span to guard. Ended in the destructor.
     */
-    explicit SpanGuard(
-        opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span)
+    explicit SpanGuard(opentelemetry::nostd::shared_ptr<opentelemetry::trace::Span> span)
         : span_(std::move(span)), scope_(span_)
     {
     }
@@ -54,13 +53,14 @@ public:
         because Scope is not movable.
     */
     SpanGuard(SpanGuard const&) = delete;
-    SpanGuard& operator=(SpanGuard const&) = delete;
-    SpanGuard(SpanGuard&& other) noexcept
-        : span_(std::move(other.span_)), scope_(span_)
+    SpanGuard&
+    operator=(SpanGuard const&) = delete;
+    SpanGuard(SpanGuard&& other) noexcept : span_(std::move(other.span_)), scope_(span_)
     {
         other.span_ = nullptr;
     }
-    SpanGuard& operator=(SpanGuard&&) = delete;
+    SpanGuard&
+    operator=(SpanGuard&&) = delete;
 
     ~SpanGuard()
     {
@@ -95,9 +95,7 @@ public:
         @param description  Optional human-readable status description.
     */
     void
-    setStatus(
-        opentelemetry::trace::StatusCode code,
-        std::string_view description = "")
+    setStatus(opentelemetry::trace::StatusCode code, std::string_view description = "")
     {
         span_->SetStatus(code, std::string(description));
     }
@@ -112,8 +110,7 @@ public:
     setAttribute(std::string_view key, T&& value)
     {
         span_->SetAttribute(
-            opentelemetry::nostd::string_view(key.data(), key.size()),
-            std::forward<T>(value));
+            opentelemetry::nostd::string_view(key.data(), key.size()), std::forward<T>(value));
     }
 
     /** Add a named event to the span's timeline.
@@ -134,12 +131,10 @@ public:
     void
     recordException(std::exception const& e)
     {
-        span_->AddEvent("exception", {
-            {"exception.type", "std::exception"},
-            {"exception.message", std::string(e.what())}
-        });
-        span_->SetStatus(
-            opentelemetry::trace::StatusCode::kError, e.what());
+        span_->AddEvent(
+            "exception",
+            {{"exception.type", "std::exception"}, {"exception.message", std::string(e.what())}});
+        span_->SetStatus(opentelemetry::trace::StatusCode::kError, e.what());
     }
 
     /** Return the current OTel context.

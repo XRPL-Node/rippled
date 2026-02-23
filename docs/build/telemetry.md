@@ -130,34 +130,34 @@ trace_peer=0
 
 ### Configuration options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | int | `0` | Enable (`1`) or disable (`0`) telemetry at runtime |
-| `service_name` | string | `rippled` | Service name reported in traces |
-| `service_instance_id` | string | node public key | Unique instance identifier |
-| `exporter` | string | `otlp_http` | Exporter type |
-| `endpoint` | string | `http://localhost:4318/v1/traces` | OTLP/HTTP collector endpoint |
-| `use_tls` | int | `0` | Enable TLS for the exporter connection |
-| `tls_ca_cert` | string | (empty) | Path to CA certificate for TLS |
-| `sampling_ratio` | double | `1.0` | Fraction of traces to sample (`0.0` to `1.0`) |
-| `batch_size` | uint32 | `512` | Maximum spans per export batch |
-| `batch_delay_ms` | uint32 | `5000` | Maximum delay (ms) before flushing a batch |
-| `max_queue_size` | uint32 | `2048` | Maximum spans queued in memory |
-| `trace_rpc` | int | `1` | Enable RPC request tracing |
-| `trace_transactions` | int | `1` | Enable transaction lifecycle tracing |
-| `trace_consensus` | int | `1` | Enable consensus round tracing |
-| `trace_peer` | int | `0` | Enable peer message tracing (high volume) |
-| `trace_ledger` | int | `1` | Enable ledger close tracing |
+| Option                | Type   | Default                           | Description                                        |
+| --------------------- | ------ | --------------------------------- | -------------------------------------------------- |
+| `enabled`             | int    | `0`                               | Enable (`1`) or disable (`0`) telemetry at runtime |
+| `service_name`        | string | `rippled`                         | Service name reported in traces                    |
+| `service_instance_id` | string | node public key                   | Unique instance identifier                         |
+| `exporter`            | string | `otlp_http`                       | Exporter type                                      |
+| `endpoint`            | string | `http://localhost:4318/v1/traces` | OTLP/HTTP collector endpoint                       |
+| `use_tls`             | int    | `0`                               | Enable TLS for the exporter connection             |
+| `tls_ca_cert`         | string | (empty)                           | Path to CA certificate for TLS                     |
+| `sampling_ratio`      | double | `1.0`                             | Fraction of traces to sample (`0.0` to `1.0`)      |
+| `batch_size`          | uint32 | `512`                             | Maximum spans per export batch                     |
+| `batch_delay_ms`      | uint32 | `5000`                            | Maximum delay (ms) before flushing a batch         |
+| `max_queue_size`      | uint32 | `2048`                            | Maximum spans queued in memory                     |
+| `trace_rpc`           | int    | `1`                               | Enable RPC request tracing                         |
+| `trace_transactions`  | int    | `1`                               | Enable transaction lifecycle tracing               |
+| `trace_consensus`     | int    | `1`                               | Enable consensus round tracing                     |
+| `trace_peer`          | int    | `0`                               | Enable peer message tracing (high volume)          |
+| `trace_ledger`        | int    | `1`                               | Enable ledger close tracing                        |
 
 ## Observability Stack
 
 A Docker Compose stack is provided in `docker/telemetry/` with three services:
 
-| Service | Port | Purpose |
-|---------|------|---------|
+| Service            | Port                                           | Purpose                                              |
+| ------------------ | ---------------------------------------------- | ---------------------------------------------------- |
 | **OTel Collector** | `4317` (gRPC), `4318` (HTTP), `13133` (health) | Receives OTLP spans, batches, and forwards to Jaeger |
-| **Jaeger** | `16686` (UI) | Trace storage and visualization |
-| **Grafana** | `3000` | Dashboards (Jaeger pre-configured as datasource) |
+| **Jaeger**         | `16686` (UI)                                   | Trace storage and visualization                      |
+| **Grafana**        | `3000`                                         | Dashboards (Jaeger pre-configured as datasource)     |
 
 ### Start the stack
 
@@ -193,6 +193,7 @@ rpc.request
 ```
 
 Each span includes attributes:
+
 - `xrpl.rpc.command` — the RPC method name
 - `xrpl.rpc.version` — API version
 - `xrpl.rpc.role` — `admin` or `user`
@@ -254,18 +255,18 @@ The Conan package provides a single umbrella target
 
 ### Key files
 
-| File | Purpose |
-|------|---------|
-| `include/xrpl/telemetry/Telemetry.h` | Abstract telemetry interface and `Setup` struct |
-| `include/xrpl/telemetry/SpanGuard.h` | RAII span guard (activates scope, ends span on destruction) |
-| `src/libxrpl/telemetry/Telemetry.cpp` | OTel-backed implementation (`TelemetryImpl`) |
-| `src/libxrpl/telemetry/TelemetryConfig.cpp` | Config parser (`setup_Telemetry()`) |
-| `src/libxrpl/telemetry/NullTelemetry.cpp` | No-op implementation (used when disabled) |
-| `src/xrpld/telemetry/TracingInstrumentation.h` | Convenience macros (`XRPL_TRACE_RPC`, etc.) |
-| `src/xrpld/rpc/detail/ServerHandler.cpp` | RPC entry point instrumentation |
-| `src/xrpld/rpc/detail/RPCHandler.cpp` | Per-command instrumentation |
-| `docker/telemetry/docker-compose.yml` | Observability stack (Collector + Jaeger + Grafana) |
-| `docker/telemetry/otel-collector-config.yaml` | OTel Collector pipeline configuration |
+| File                                           | Purpose                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| `include/xrpl/telemetry/Telemetry.h`           | Abstract telemetry interface and `Setup` struct             |
+| `include/xrpl/telemetry/SpanGuard.h`           | RAII span guard (activates scope, ends span on destruction) |
+| `src/libxrpl/telemetry/Telemetry.cpp`          | OTel-backed implementation (`TelemetryImpl`)                |
+| `src/libxrpl/telemetry/TelemetryConfig.cpp`    | Config parser (`setup_Telemetry()`)                         |
+| `src/libxrpl/telemetry/NullTelemetry.cpp`      | No-op implementation (used when disabled)                   |
+| `src/xrpld/telemetry/TracingInstrumentation.h` | Convenience macros (`XRPL_TRACE_RPC`, etc.)                 |
+| `src/xrpld/rpc/detail/ServerHandler.cpp`       | RPC entry point instrumentation                             |
+| `src/xrpld/rpc/detail/RPCHandler.cpp`          | Per-command instrumentation                                 |
+| `docker/telemetry/docker-compose.yml`          | Observability stack (Collector + Jaeger + Grafana)          |
+| `docker/telemetry/otel-collector-config.yaml`  | OTel Collector pipeline configuration                       |
 
 ### Conditional compilation
 

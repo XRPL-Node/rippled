@@ -127,9 +127,7 @@ target_link_libraries(xrpl.libxrpl.tx PUBLIC xrpl.libxrpl.ledger)
 add_module(xrpl telemetry)
 target_link_libraries(xrpl.libxrpl.telemetry PUBLIC xrpl.libxrpl.basics xrpl.libxrpl.beast)
 if (telemetry)
-    target_link_libraries(
-        xrpl.libxrpl.telemetry
-        PUBLIC opentelemetry-cpp::opentelemetry-cpp)
+    target_link_libraries(xrpl.libxrpl.telemetry PUBLIC opentelemetry-cpp::opentelemetry-cpp)
 endif ()
 
 add_library(xrpl.libxrpl)

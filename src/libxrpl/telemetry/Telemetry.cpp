@@ -12,9 +12,8 @@
 
 #ifdef XRPL_ENABLE_TELEMETRY
 
-#include <xrpl/telemetry/Telemetry.h>
-
 #include <xrpl/basics/Log.h>
+#include <xrpl/telemetry/Telemetry.h>
 
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_options.h>
@@ -98,26 +97,21 @@ public:
     getTracer(std::string_view) override
     {
         static auto noopTracer =
-            opentelemetry::nostd::shared_ptr<trace_api::Tracer>(
-                new trace_api::NoopTracer());
+            opentelemetry::nostd::shared_ptr<trace_api::Tracer>(new trace_api::NoopTracer());
         return noopTracer;
     }
 
     opentelemetry::nostd::shared_ptr<trace_api::Span>
     startSpan(std::string_view, trace_api::SpanKind) override
     {
-        return opentelemetry::nostd::shared_ptr<trace_api::Span>(
-            new trace_api::NoopSpan(nullptr));
+        return opentelemetry::nostd::shared_ptr<trace_api::Span>(new trace_api::NoopSpan(nullptr));
     }
 
     opentelemetry::nostd::shared_ptr<trace_api::Span>
-    startSpan(
-        std::string_view,
-        opentelemetry::context::Context const&,
-        trace_api::SpanKind) override
+    startSpan(std::string_view, opentelemetry::context::Context const&, trace_api::SpanKind)
+        override
     {
-        return opentelemetry::nostd::shared_ptr<trace_api::Span>(
-            new trace_api::NoopSpan(nullptr));
+        return opentelemetry::nostd::shared_ptr<trace_api::Span>(new trace_api::NoopSpan(nullptr));
     }
 };
 
@@ -142,17 +136,15 @@ class TelemetryImpl : public Telemetry
     std::shared_ptr<trace_sdk::TracerProvider> sdkProvider_;
 
 public:
-    TelemetryImpl(Setup const& setup, beast::Journal journal)
-        : setup_(setup), journal_(journal)
+    TelemetryImpl(Setup const& setup, beast::Journal journal) : setup_(setup), journal_(journal)
     {
     }
 
     void
     start() override
     {
-        JLOG(journal_.info())
-            << "Telemetry starting: endpoint=" << setup_.exporterEndpoint
-            << " sampling=" << setup_.samplingRatio;
+        JLOG(journal_.info()) << "Telemetry starting: endpoint=" << setup_.exporterEndpoint
+                              << " sampling=" << setup_.samplingRatio;
 
         // Configure OTLP HTTP exporter
         otlp_http::OtlpHttpExporterOptions exporterOpts;
@@ -160,49 +152,36 @@ public:
         if (setup_.useTls)
             exporterOpts.ssl_ca_cert_path = setup_.tlsCertPath;
 
-        auto exporter =
-            otlp_http::OtlpHttpExporterFactory::Create(exporterOpts);
+        auto exporter = otlp_http::OtlpHttpExporterFactory::Create(exporterOpts);
 
         // Configure batch processor
         trace_sdk::BatchSpanProcessorOptions processorOpts;
         processorOpts.max_queue_size = setup_.maxQueueSize;
-        processorOpts.schedule_delay_millis =
-            std::chrono::milliseconds(setup_.batchDelay);
+        processorOpts.schedule_delay_millis = std::chrono::milliseconds(setup_.batchDelay);
         processorOpts.max_export_batch_size = setup_.batchSize;
 
         auto processor =
-            trace_sdk::BatchSpanProcessorFactory::Create(
-                std::move(exporter), processorOpts);
+            trace_sdk::BatchSpanProcessorFactory::Create(std::move(exporter), processorOpts);
 
         // Configure resource attributes
         auto resourceAttrs = resource::Resource::Create({
-            {resource::SemanticConventions::kServiceName,
-             setup_.serviceName},
-            {resource::SemanticConventions::kServiceVersion,
-             setup_.serviceVersion},
-            {resource::SemanticConventions::kServiceInstanceId,
-             setup_.serviceInstanceId},
-            {"xrpl.network.id",
-             static_cast<int64_t>(setup_.networkId)},
+            {resource::SemanticConventions::kServiceName, setup_.serviceName},
+            {resource::SemanticConventions::kServiceVersion, setup_.serviceVersion},
+            {resource::SemanticConventions::kServiceInstanceId, setup_.serviceInstanceId},
+            {"xrpl.network.id", static_cast<int64_t>(setup_.networkId)},
             {"xrpl.network.type", setup_.networkType},
         });
 
         // Configure sampler
-        auto sampler =
-            std::make_unique<trace_sdk::TraceIdRatioBasedSampler>(
-                setup_.samplingRatio);
+        auto sampler = std::make_unique<trace_sdk::TraceIdRatioBasedSampler>(setup_.samplingRatio);
 
         // Create TracerProvider
-        sdkProvider_ =
-            trace_sdk::TracerProviderFactory::Create(
-                std::move(processor),
-                resourceAttrs,
-                std::move(sampler));
+        sdkProvider_ = trace_sdk::TracerProviderFactory::Create(
+            std::move(processor), resourceAttrs, std::move(sampler));
 
         // Set as global provider
         trace_api::Provider::SetTracerProvider(
-            opentelemetry::nostd::shared_ptr<trace_api::TracerProvider>(
-                sdkProvider_));
+            opentelemetry::nostd::shared_ptr<trace_api::TracerProvider>(sdkProvider_));
 
         JLOG(journal_.info()) << "Telemetry started successfully";
     }
@@ -257,8 +236,7 @@ public:
     getTracer(std::string_view name) override
     {
         if (!sdkProvider_)
-            return trace_api::Provider::GetTracerProvider()->GetTracer(
-                std::string(name));
+            return trace_api::Provider::GetTracerProvider()->GetTracer(std::string(name));
         return sdkProvider_->GetTracer(std::string(name));
     }
 

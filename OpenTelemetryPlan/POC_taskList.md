@@ -6,16 +6,16 @@
 
 ### Related Plan Documents
 
-| Document | Relevance to POC |
-|----------|-----------------|
-| [00-tracing-fundamentals.md](./00-tracing-fundamentals.md) | Core concepts: traces, spans, context propagation, sampling |
-| [01-architecture-analysis.md](./01-architecture-analysis.md) | RPC request flow (§1.5), key trace points (§1.6), instrumentation priority (§1.7) |
-| [02-design-decisions.md](./02-design-decisions.md) | SDK selection (§2.1), exporter config (§2.2), span naming (§2.3), attribute schema (§2.4), coexistence with PerfLog/Insight (§2.6) |
-| [03-implementation-strategy.md](./03-implementation-strategy.md) | Directory structure (§3.1), key principles (§3.2), performance overhead (§3.3-3.6), conditional compilation (§3.7.3), code intrusiveness (§3.9) |
-| [04-code-samples.md](./04-code-samples.md) | Telemetry interface (§4.1), SpanGuard (§4.2), macros (§4.3), RPC instrumentation (§4.5.3) |
+| Document                                                         | Relevance to POC                                                                                                                                          |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [00-tracing-fundamentals.md](./00-tracing-fundamentals.md)       | Core concepts: traces, spans, context propagation, sampling                                                                                               |
+| [01-architecture-analysis.md](./01-architecture-analysis.md)     | RPC request flow (§1.5), key trace points (§1.6), instrumentation priority (§1.7)                                                                         |
+| [02-design-decisions.md](./02-design-decisions.md)               | SDK selection (§2.1), exporter config (§2.2), span naming (§2.3), attribute schema (§2.4), coexistence with PerfLog/Insight (§2.6)                        |
+| [03-implementation-strategy.md](./03-implementation-strategy.md) | Directory structure (§3.1), key principles (§3.2), performance overhead (§3.3-3.6), conditional compilation (§3.7.3), code intrusiveness (§3.9)           |
+| [04-code-samples.md](./04-code-samples.md)                       | Telemetry interface (§4.1), SpanGuard (§4.2), macros (§4.3), RPC instrumentation (§4.5.3)                                                                 |
 | [05-configuration-reference.md](./05-configuration-reference.md) | rippled config (§5.1), config parser (§5.2), Application integration (§5.3), CMake (§5.4), Collector config (§5.5), Docker Compose (§5.6), Grafana (§5.8) |
-| [06-implementation-phases.md](./06-implementation-phases.md) | Phase 1 core tasks (§6.2), Phase 2 RPC tasks (§6.3), quick wins (§6.10), definition of done (§6.11) |
-| [07-observability-backends.md](./07-observability-backends.md) | Jaeger dev setup (§7.1), Grafana dashboards (§7.6), alert rules (§7.6.3) |
+| [06-implementation-phases.md](./06-implementation-phases.md)     | Phase 1 core tasks (§6.2), Phase 2 RPC tasks (§6.3), quick wins (§6.10), definition of done (§6.11)                                                       |
+| [07-observability-backends.md](./07-observability-backends.md)   | Jaeger dev setup (§7.1), Grafana dashboards (§7.6), alert rules (§7.6.3)                                                                                  |
 
 ---
 
@@ -24,6 +24,7 @@
 **Objective**: Stand up the backend infrastructure to receive, store, and display traces.
 
 **What to do**:
+
 - Create `docker/telemetry/docker-compose.yml` in the repo with three services:
   1. **OpenTelemetry Collector** (`otel/opentelemetry-collector-contrib:latest`)
      - Expose ports `4317` (OTLP gRPC) and `4318` (OTLP HTTP)
@@ -38,6 +39,7 @@
      - Provision Jaeger as a data source via `docker/telemetry/grafana/provisioning/datasources/jaeger.yaml`
 
 - Create `docker/telemetry/otel-collector-config.yaml`:
+
   ```yaml
   receivers:
     otlp:
@@ -79,11 +81,13 @@
   ```
 
 **Verification**: Run `docker compose -f docker/telemetry/docker-compose.yml up -d`, then:
+
 - `curl http://localhost:13133` returns healthy (Collector)
 - `http://localhost:16686` opens Jaeger UI (no traces yet)
 - `http://localhost:3000` opens Grafana (optional)
 
 **Reference**:
+
 - [05-configuration-reference.md §5.5](./05-configuration-reference.md) — Collector config (dev YAML with Jaeger exporter)
 - [05-configuration-reference.md §5.6](./05-configuration-reference.md) — Docker Compose development environment
 - [07-observability-backends.md §7.1](./07-observability-backends.md) — Jaeger quick start and backend selection
@@ -96,6 +100,7 @@
 **Objective**: Make `opentelemetry-cpp` available to the build system.
 
 **What to do**:
+
 - Edit `conanfile.py` to add `opentelemetry-cpp` as an **optional** dependency. The gRPC otel plugin flag (`"grpc/*:otel_plugin": False`) in the existing conanfile may need to remain false — we pull the OTel SDK separately.
   - Add a Conan option: `with_telemetry = [True, False]` defaulting to `False`
   - When `with_telemetry` is `True`, add `opentelemetry-cpp` to `self.requires()`
@@ -107,10 +112,12 @@
 - Verify the build succeeds with `-DXRPL_ENABLE_TELEMETRY=OFF` (no regressions) and with `-DXRPL_ENABLE_TELEMETRY=ON` (SDK links successfully).
 
 **Key files**:
-- `/home/pratik/sourceCode/2rippled/conanfile.py`
-- `/home/pratik/sourceCode/2rippled/CMakeLists.txt`
+
+- `conanfile.py`
+- `CMakeLists.txt`
 
 **Reference**:
+
 - [05-configuration-reference.md §5.4](./05-configuration-reference.md) — CMake integration, `FindOpenTelemetry.cmake`, `XRPL_ENABLE_TELEMETRY` option
 - [03-implementation-strategy.md §3.2](./03-implementation-strategy.md) — Key principle: zero-cost when disabled via compile-time flags
 - [02-design-decisions.md §2.1](./02-design-decisions.md) — SDK selection rationale and required OTel components
@@ -122,6 +129,7 @@
 **Objective**: Define the `Telemetry` abstract interface and a no-op implementation so the rest of the codebase can reference telemetry without hard-depending on the OTel SDK.
 
 **What to do**:
+
 - Create `include/xrpl/telemetry/Telemetry.h`:
   - Define `namespace xrpl::telemetry`
   - Define `struct Telemetry::Setup` holding: `enabled`, `exporterEndpoint`, `samplingRatio`, `serviceName`, `serviceVersion`, `serviceInstanceId`, `traceRpc`, `traceTransactions`, `traceConsensus`, `tracePeer`
@@ -151,11 +159,13 @@
 - Guard all OTel SDK headers behind `#ifdef XRPL_ENABLE_TELEMETRY`. The `NullTelemetry` implementation should compile without the OTel SDK present.
 
 **Key new files**:
+
 - `include/xrpl/telemetry/Telemetry.h`
 - `include/xrpl/telemetry/SpanGuard.h`
 - `src/libxrpl/telemetry/NullTelemetry.cpp`
 
 **Reference**:
+
 - [04-code-samples.md §4.1](./04-code-samples.md) — Full `Telemetry` interface with `Setup` struct, lifecycle, tracer access, span creation, and component filtering methods
 - [04-code-samples.md §4.2](./04-code-samples.md) — Full `SpanGuard` RAII implementation and `NullSpanGuard` no-op class
 - [03-implementation-strategy.md §3.1](./03-implementation-strategy.md) — Directory structure: `include/xrpl/telemetry/` for headers, `src/libxrpl/telemetry/` for implementation
@@ -168,6 +178,7 @@
 **Objective**: Implement the real `Telemetry` class that initializes the OTel SDK, configures the OTLP exporter and batch processor, and creates tracers/spans.
 
 **What to do**:
+
 - Create `src/libxrpl/telemetry/Telemetry.cpp` (compiled only when `XRPL_ENABLE_TELEMETRY=ON`):
   - `class TelemetryImpl : public Telemetry` that:
     - In `start()`: creates a `TracerProvider` with:
@@ -191,13 +202,16 @@
 - Add telemetry source files to CMake. When `XRPL_ENABLE_TELEMETRY=ON`, compile `Telemetry.cpp` and `TelemetryConfig.cpp` and link against `opentelemetry-cpp::api`, `opentelemetry-cpp::sdk`, `opentelemetry-cpp::otlp_grpc_exporter`. When OFF, compile only `NullTelemetry.cpp`.
 
 **Key new files**:
+
 - `src/libxrpl/telemetry/Telemetry.cpp`
 - `src/libxrpl/telemetry/TelemetryConfig.cpp`
 
 **Key modified files**:
+
 - `CMakeLists.txt` (add telemetry library target)
 
 **Reference**:
+
 - [04-code-samples.md §4.1](./04-code-samples.md) — `Telemetry` interface that `TelemetryImpl` must implement
 - [05-configuration-reference.md §5.2](./05-configuration-reference.md) — `setup_Telemetry()` config parser implementation
 - [02-design-decisions.md §2.2](./02-design-decisions.md) — OTLP/gRPC exporter config (endpoint, TLS options)
@@ -212,6 +226,7 @@
 **Objective**: Wire the `Telemetry` object into `Application` so all components can access it.
 
 **What to do**:
+
 - Edit `src/xrpld/app/main/Application.h`:
   - Forward-declare `namespace xrpl::telemetry { class Telemetry; }`
   - Add pure virtual method: `virtual telemetry::Telemetry& getTelemetry() = 0;`
@@ -241,11 +256,13 @@
   ```
 
 **Key modified files**:
+
 - `src/xrpld/app/main/Application.h`
 - `src/xrpld/app/main/Application.cpp`
 - `cfg/rippled-example.cfg` (or equivalent example config)
 
 **Reference**:
+
 - [05-configuration-reference.md §5.3](./05-configuration-reference.md) — `ApplicationImp` changes: member declaration, constructor init, `start()`/`stop()` wiring, `getTelemetry()` override
 - [05-configuration-reference.md §5.1](./05-configuration-reference.md) — `[telemetry]` config section format and all option defaults
 - [03-implementation-strategy.md §3.9.2](./03-implementation-strategy.md) — File impact assessment: `Application.cpp` ~15 lines added, ~3 changed (Low risk)
@@ -257,8 +274,10 @@
 **Objective**: Define convenience macros that make instrumenting code one-liners, and that compile to zero-cost no-ops when telemetry is disabled.
 
 **What to do**:
+
 - Create `src/xrpld/telemetry/TracingInstrumentation.h`:
   - When `XRPL_ENABLE_TELEMETRY` is defined:
+
     ```cpp
     #define XRPL_TRACE_SPAN(telemetry, name) \
         auto _xrpl_span_ = (telemetry).startSpan(name); \
@@ -280,12 +299,15 @@
             _xrpl_guard_->recordException(e); \
         }
     ```
+
   - When `XRPL_ENABLE_TELEMETRY` is NOT defined, all macros expand to `((void)0)`
 
 **Key new file**:
+
 - `src/xrpld/telemetry/TracingInstrumentation.h`
 
 **Reference**:
+
 - [04-code-samples.md §4.3](./04-code-samples.md) — Full macro definitions for `XRPL_TRACE_SPAN`, `XRPL_TRACE_RPC`, `XRPL_TRACE_CONSENSUS`, `XRPL_TRACE_SET_ATTR`, `XRPL_TRACE_EXCEPTION` with both enabled and disabled branches
 - [03-implementation-strategy.md §3.7.3](./03-implementation-strategy.md) — Conditional instrumentation pattern: compile-time `#ifndef` and runtime `shouldTrace*()` checks
 - [03-implementation-strategy.md §3.9.7](./03-implementation-strategy.md) — Before/after code examples showing minimal intrusiveness (~1-3 lines per instrumentation point)
@@ -297,6 +319,7 @@
 **Objective**: Add tracing to the HTTP RPC entry point so every incoming RPC request creates a span.
 
 **What to do**:
+
 - Edit `src/xrpld/rpc/detail/ServerHandler.cpp`:
   - `#include` the `TracingInstrumentation.h` header
   - In `ServerHandler::onRequest(Session& session)`:
@@ -318,9 +341,11 @@
   in Jaeger for every HTTP RPC call.
 
 **Key modified file**:
+
 - `src/xrpld/rpc/detail/ServerHandler.cpp` (~15-25 lines added)
 
 **Reference**:
+
 - [04-code-samples.md §4.5.3](./04-code-samples.md) — Complete `ServerHandler::onRequest()` instrumented code sample with W3C header extraction, span creation, attribute setting, and error handling
 - [01-architecture-analysis.md §1.5](./01-architecture-analysis.md) — RPC request flow diagram: HTTP request -> attributes -> jobqueue.enqueue -> rpc.command -> response
 - [01-architecture-analysis.md §1.6](./01-architecture-analysis.md) — Key trace points table: `rpc.request` in `ServerHandler.cpp::onRequest()` (Priority: High)
@@ -335,6 +360,7 @@
 **Objective**: Add per-command tracing inside the RPC handler so each command (e.g., `submit`, `account_info`, `server_info`) gets its own child span.
 
 **What to do**:
+
 - Edit `src/xrpld/rpc/detail/RPCHandler.cpp`:
   - `#include` the `TracingInstrumentation.h` header
   - In `doCommand(RPC::JsonContext& context, Json::Value& result)`:
@@ -354,9 +380,11 @@
   ```
 
 **Key modified file**:
+
 - `src/xrpld/rpc/detail/RPCHandler.cpp` (~15-20 lines added)
 
 **Reference**:
+
 - [04-code-samples.md §4.5.3](./04-code-samples.md) — `ServerHandler::onRequest()` code sample (includes child span pattern for `rpc.command.*`)
 - [02-design-decisions.md §2.3](./02-design-decisions.md) — Span naming: `rpc.command.*` pattern with dynamic command name (e.g., `rpc.command.server_info`)
 - [02-design-decisions.md §2.4.2](./02-design-decisions.md) — RPC attribute schema: `xrpl.rpc.command`, `xrpl.rpc.version`, `xrpl.rpc.role`, `xrpl.rpc.status`
@@ -373,12 +401,15 @@
 **What to do**:
 
 1. **Start the Docker stack**:
+
    ```bash
    docker compose -f docker/telemetry/docker-compose.yml up -d
    ```
+
    Verify Collector health: `curl http://localhost:13133`
 
 2. **Build rippled with telemetry**:
+
    ```bash
    # Adjust for your actual build workflow
    conan install . --build=missing -o with_telemetry=True
@@ -388,6 +419,7 @@
 
 3. **Configure rippled**:
    Add to `rippled.cfg` (or your local test config):
+
    ```ini
    [telemetry]
    enabled=1
@@ -397,11 +429,13 @@
    ```
 
 4. **Start rippled** in standalone mode:
+
    ```bash
    ./rippled --conf rippled.cfg -a --start
    ```
 
 5. **Generate RPC traffic**:
+
    ```bash
    # server_info
    curl -s -X POST http://localhost:5005 \
@@ -432,6 +466,7 @@
    - Confirm no new traces appear and no errors in rippled logs
 
 **Verification Checklist**:
+
 - [ ] Docker stack starts without errors
 - [ ] rippled builds with `-DXRPL_ENABLE_TELEMETRY=ON`
 - [ ] rippled starts and connects to OTel Collector (check rippled logs for telemetry messages)
@@ -443,6 +478,7 @@
 - [ ] Setting `enabled=0` at runtime produces no traces and no errors
 
 **Reference**:
+
 - [06-implementation-phases.md §6.11.1](./06-implementation-phases.md) — Phase 1 definition of done: SDK compiles, runtime toggle works, span creation verified in Jaeger, config validation passes
 - [06-implementation-phases.md §6.11.2](./06-implementation-phases.md) — Phase 2 definition of done: 100% RPC coverage, traceparent propagation, <1ms p99 overhead, dashboard deployed
 - [06-implementation-phases.md §6.8](./06-implementation-phases.md) — Success metrics: trace coverage >95%, CPU overhead <3%, memory <5 MB, latency impact <2%
@@ -456,6 +492,7 @@
 **Objective**: Capture findings, screenshots, and remaining work for the team.
 
 **What to do**:
+
 - Take screenshots of Jaeger showing:
   - The service list with "rippled"
   - A trace with the full span tree
@@ -472,6 +509,7 @@
   - [Phase 5](./06-implementation-phases.md): [Production collector config](./05-configuration-reference.md) (§5.5.2), [Grafana dashboards](./07-observability-backends.md) (§7.6), [alerting](./07-observability-backends.md) (§7.6.3)
 
 **Reference**:
+
 - [06-implementation-phases.md §6.1](./06-implementation-phases.md) — Full 5-phase timeline overview and Gantt chart
 - [06-implementation-phases.md §6.10](./06-implementation-phases.md) — Crawl-Walk-Run strategy: POC is the CRAWL phase, next steps are WALK and RUN
 - [06-implementation-phases.md §6.12](./06-implementation-phases.md) — Recommended implementation order (14 steps across 9 weeks)
@@ -485,7 +523,7 @@
 ## Summary
 
 | Task | Description                          | New Files | Modified Files | Depends On |
-|------|--------------------------------------|-----------|----------------|------------|
+| ---- | ------------------------------------ | --------- | -------------- | ---------- |
 | 0    | Docker observability stack           | 4         | 0              | —          |
 | 1    | OTel C++ SDK dependency              | 0         | 2              | —          |
 | 2    | Core Telemetry interface + NullImpl  | 3         | 0              | 1          |
@@ -508,6 +546,7 @@
 The current POC exports **traces only**. Grafana's Explore view can query Jaeger for individual traces, but time-series charts (latency histograms, request throughput, error rates) require a **metrics pipeline**. To enable this:
 
 1. **Add a `spanmetrics` connector** to the OTel Collector config that derives RED metrics (Rate, Errors, Duration) from trace spans automatically:
+
    ```yaml
    connectors:
      spanmetrics:
@@ -560,12 +599,12 @@ The current POC exports **traces only**. Grafana's Explore view can query Jaeger
 
 Issues encountered during POC implementation that inform future work:
 
-| Issue | Resolution | Impact on Future Work |
-|-------|-----------|----------------------|
-| Conan lockfile rejected `opentelemetry-cpp/1.18.0` | Used `--lockfile=""` to bypass | Lockfile must be regenerated when adding new dependencies |
-| Conan package only builds OTLP HTTP exporter, not gRPC | Switched from gRPC to HTTP exporter (`localhost:4318/v1/traces`) | HTTP exporter is the default; gRPC requires custom Conan profile |
-| CMake target `opentelemetry-cpp::api` etc. don't exist in Conan package | Use umbrella target `opentelemetry-cpp::opentelemetry-cpp` | Conan targets differ from upstream CMake targets |
-| OTel Collector `logging` exporter deprecated | Renamed to `debug` exporter | Use `debug` in all collector configs going forward |
-| Macro parameter `telemetry` collided with `::xrpl::telemetry::` namespace | Renamed macro params to `_tel_obj_`, `_span_name_` | Avoid common words as macro parameter names |
-| `opentelemetry::trace::Scope` creates new context on move | Store scope as member, create once in constructor | SpanGuard move semantics need care with Scope lifecycle |
-| `TracerProviderFactory::Create` returns `unique_ptr<sdk::TracerProvider>`, not `nostd::shared_ptr` | Use `std::shared_ptr` member, wrap in `nostd::shared_ptr` for global provider | OTel SDK factory return types don't match API provider types |
+| Issue                                                                                              | Resolution                                                                    | Impact on Future Work                                            |
+| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Conan lockfile rejected `opentelemetry-cpp/1.18.0`                                                 | Used `--lockfile=""` to bypass                                                | Lockfile must be regenerated when adding new dependencies        |
+| Conan package only builds OTLP HTTP exporter, not gRPC                                             | Switched from gRPC to HTTP exporter (`localhost:4318/v1/traces`)              | HTTP exporter is the default; gRPC requires custom Conan profile |
+| CMake target `opentelemetry-cpp::api` etc. don't exist in Conan package                            | Use umbrella target `opentelemetry-cpp::opentelemetry-cpp`                    | Conan targets differ from upstream CMake targets                 |
+| OTel Collector `logging` exporter deprecated                                                       | Renamed to `debug` exporter                                                   | Use `debug` in all collector configs going forward               |
+| Macro parameter `telemetry` collided with `::xrpl::telemetry::` namespace                          | Renamed macro params to `_tel_obj_`, `_span_name_`                            | Avoid common words as macro parameter names                      |
+| `opentelemetry::trace::Scope` creates new context on move                                          | Store scope as member, create once in constructor                             | SpanGuard move semantics need care with Scope lifecycle          |
+| `TracerProviderFactory::Create` returns `unique_ptr<sdk::TracerProvider>`, not `nostd::shared_ptr` | Use `std::shared_ptr` member, wrap in `nostd::shared_ptr` for global provider | OTel SDK factory return types don't match API provider types     |
