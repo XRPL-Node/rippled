@@ -185,24 +185,33 @@ private:
 
 }  // anonymous namespace
 
+// Test fixture that manages the SSL context lifecycle via RAII.
+// SetUp() initializes the context before each test and TearDown()
+// cleans it up afterwards, so individual tests don't need to worry
+// about resource management.
 class HTTPClientTest : public ::testing::Test
 {
 protected:
+    // Shared journal for SSL context initialization and HTTP requests.
     beast::Journal j_{TestSink::instance()};
 
+    // Initialize the global SSL context used by HTTPClient.
     void
     SetUp() override
     {
         HTTPClient::initializeSSLContext("", "", false, j_);
     }
 
+    // Release the global SSL context to prevent memory leaks.
     void
     TearDown() override
     {
         HTTPClient::cleanupSSLContext();
     }
 
-    // Helper function to run HTTP client test
+    // Issue an HTTP GET to the given test server and drive the
+    // io_context until a response arrives or a timeout is reached.
+    // Returns true when the completion handler was invoked.
     bool
     runHTTPTest(
         TestHTTPServer& server,
