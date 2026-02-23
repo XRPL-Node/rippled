@@ -234,7 +234,7 @@ jobs:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
           PARALLELISM: ${{ env.SANITIZERS_ENABLED == 'true' && '1' || steps.nproc.outputs.nproc }}
         run: |
-          ./xrpld --unittest --unittest-jobs 1
+          ./xrpld --unittest --unittest-jobs ${BUILD_NPROC}
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
