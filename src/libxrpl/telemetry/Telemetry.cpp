@@ -1,3 +1,15 @@
+/** OpenTelemetry SDK implementation of the Telemetry interface.
+
+    Compiled only when XRPL_ENABLE_TELEMETRY is defined (via CMake
+    telemetry=ON). Contains:
+
+      - TelemetryImpl: configures the OTel SDK with an OTLP/HTTP exporter,
+        batch span processor, trace-ID-ratio sampler, and resource attributes.
+      - NullTelemetryOtel: no-op fallback used when telemetry is compiled in
+        but disabled at runtime (enabled=0 in config).
+      - make_Telemetry(): factory that selects the appropriate implementation.
+*/
+
 #ifdef XRPL_ENABLE_TELEMETRY
 
 #include <xrpl/telemetry/Telemetry.h>
@@ -26,13 +38,16 @@ namespace trace_sdk = opentelemetry::sdk::trace;
 namespace otlp_http = opentelemetry::exporter::otlp;
 namespace resource = opentelemetry::sdk::resource;
 
-// A no-op implementation used when XRPL_ENABLE_TELEMETRY is defined
-// but setup.enabled is false. This lives in the anonymous namespace
-// so there is no ODR conflict with the NullTelemetry in
-// NullTelemetry.cpp (which also lives in its own anonymous namespace).
+/** No-op implementation used when XRPL_ENABLE_TELEMETRY is defined but
+    setup.enabled is false at runtime.
+
+    Lives in the anonymous namespace so there is no ODR conflict with the
+    NullTelemetry in NullTelemetry.cpp.
+*/
 class NullTelemetryOtel : public Telemetry
 {
-    Setup setup_;
+    /** Retained configuration (unused, kept for diagnostic access). */
+    Setup const setup_;
 
 public:
     explicit NullTelemetryOtel(Setup const& setup) : setup_(setup)
@@ -106,10 +121,24 @@ public:
     }
 };
 
+/** Full OTel SDK implementation that exports trace spans via OTLP/HTTP.
+
+    Configures an OTLP/HTTP exporter, batch span processor,
+    TraceIdRatioBasedSampler, and resource attributes on start().
+*/
 class TelemetryImpl : public Telemetry
 {
-    Setup setup_;
-    beast::Journal journal_;
+    /** Configuration from the [telemetry] config section. */
+    Setup const setup_;
+
+    /** Journal used for log output during start/stop. */
+    beast::Journal const journal_;
+
+    /** The SDK TracerProvider that owns the export pipeline.
+
+        Held as std::shared_ptr so we can call ForceFlush() on shutdown.
+        Wrapped in a nostd::shared_ptr when registered as the global provider.
+    */
     std::shared_ptr<trace_sdk::TracerProvider> sdkProvider_;
 
 public:

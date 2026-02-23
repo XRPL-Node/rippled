@@ -1,3 +1,12 @@
+/** Parser for the [telemetry] section of xrpld.cfg.
+
+    Reads configuration values from the config file and populates a
+    Telemetry::Setup struct. All options have sensible defaults so the
+    section can be minimal or omitted entirely.
+
+    See cfg/xrpld-example.cfg for the full list of available options.
+*/
+
 #include <xrpl/telemetry/Telemetry.h>
 
 namespace xrpl {

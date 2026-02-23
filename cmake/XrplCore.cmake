@@ -119,7 +119,11 @@ target_link_libraries(
 add_module(xrpl tx)
 target_link_libraries(xrpl.libxrpl.tx PUBLIC xrpl.libxrpl.ledger)
 
-# Telemetry module
+# Telemetry module — OpenTelemetry distributed tracing support.
+# Sources: include/xrpl/telemetry/ (headers), src/libxrpl/telemetry/ (impl).
+# When telemetry=ON, links the Conan-provided umbrella target
+# opentelemetry-cpp::opentelemetry-cpp (individual component targets like
+# ::api, ::sdk are not available in the Conan package).
 add_module(xrpl telemetry)
 target_link_libraries(xrpl.libxrpl.telemetry PUBLIC xrpl.libxrpl.basics xrpl.libxrpl.beast)
 if (telemetry)

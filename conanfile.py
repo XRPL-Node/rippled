@@ -142,6 +142,8 @@ class Xrpl(ConanFile):
             self.requires("jemalloc/5.3.0")
         if self.options.rocksdb:
             self.requires("rocksdb/10.5.1")
+        # OpenTelemetry C++ SDK for distributed tracing (optional).
+        # Provides OTLP/HTTP exporter, batch span processor, and trace API.
         if self.options.telemetry:
             self.requires("opentelemetry-cpp/1.18.0")
         self.requires("xxhash/0.8.3", **transitive_headers_opt)

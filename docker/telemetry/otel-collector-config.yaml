@@ -1,3 +1,9 @@
+# OpenTelemetry Collector configuration for rippled development.
+#
+# Pipeline: OTLP receiver -> batch processor -> debug exporter + Jaeger.
+# rippled sends traces via OTLP/HTTP to port 4318. The collector batches
+# them and forwards to Jaeger via OTLP/gRPC on the Docker network.
+
 receivers:
   otlp:
     protocols:

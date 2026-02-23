@@ -1,3 +1,19 @@
+# Docker Compose stack for rippled OpenTelemetry observability.
+#
+# Provides three services for local development:
+#   - otel-collector: receives OTLP traces from rippled, batches and
+#     forwards them to Jaeger. Listens on ports 4317 (gRPC) and 4318 (HTTP).
+#   - jaeger: all-in-one tracing backend with UI on port 16686.
+#   - grafana: dashboards on port 3000, pre-configured with Jaeger datasource.
+#
+# Usage:
+#   docker compose -f docker/telemetry/docker-compose.yml up -d
+#
+# Configure rippled to export traces by adding to xrpld.cfg:
+#   [telemetry]
+#   enabled=1
+#   endpoint=http://localhost:4318/v1/traces
+
 version: "3.8"
 
 services:

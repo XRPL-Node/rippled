@@ -1,3 +1,15 @@
+/** No-op implementation of the Telemetry interface.
+
+    Always compiled (regardless of XRPL_ENABLE_TELEMETRY). Provides the
+    make_Telemetry() factory when telemetry is compiled out (#ifndef), which
+    unconditionally returns a NullTelemetry that does nothing.
+
+    When XRPL_ENABLE_TELEMETRY IS defined, the OTel virtual methods
+    (getTracer, startSpan) return noop tracers/spans. The make_Telemetry()
+    factory in this file is not used in that case -- Telemetry.cpp provides
+    its own factory that can return the real TelemetryImpl.
+*/
+
 #include <xrpl/telemetry/Telemetry.h>
 
 #ifdef XRPL_ENABLE_TELEMETRY
@@ -9,9 +21,15 @@ namespace telemetry {
 
 namespace {
 
+/** No-op Telemetry that returns immediately from every method.
+
+    Used as the sole implementation when XRPL_ENABLE_TELEMETRY is not
+    defined, or as a fallback when it is defined but enabled=0.
+*/
 class NullTelemetry : public Telemetry
 {
-    Setup setup_;
+    /** Retained configuration (unused, kept for diagnostic access). */
+    Setup const setup_;
 
 public:
     explicit NullTelemetry(Setup const& setup) : setup_(setup)
@@ -89,8 +107,9 @@ public:
 
 }  // namespace
 
-// When XRPL_ENABLE_TELEMETRY is off OR setup.enabled is false,
-// return NullTelemetry
+/** Factory used when XRPL_ENABLE_TELEMETRY is not defined.
+    Unconditionally returns a NullTelemetry instance.
+*/
 #ifndef XRPL_ENABLE_TELEMETRY
 std::unique_ptr<Telemetry>
 make_Telemetry(Telemetry::Setup const& setup, beast::Journal)
