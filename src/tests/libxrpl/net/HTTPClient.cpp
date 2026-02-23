@@ -182,61 +182,75 @@ private:
     }
 };
 
-// Helper function to run HTTP client test
-// Note: Caller must ensure HTTPClient::initializeSSLContext has been called
-// before this function, and HTTPClient::cleanupSSLContext is called after
-// all tests are completed.
-bool
-runHTTPTest(
-    TestHTTPServer& server,
-    std::string const& path,
-    bool& completed,
-    int& resultStatus,
-    std::string& resultData,
-    boost::system::error_code& resultError,
-    beast::Journal& j)
-{
-    HTTPClient::get(
-        false,  // no SSL
-        server.ioc(),
-        "127.0.0.1",
-        server.port(),
-        path,
-        1024,  // max response size
-        std::chrono::seconds(5),
-        [&](boost::system::error_code const& ec, int status, std::string const& data) -> bool {
-            resultError = ec;
-            resultStatus = status;
-            resultData = data;
-            completed = true;
-            return false;  // don't retry
-        },
-        j);
-
-    // Run the IO context until completion
-    auto start = std::chrono::steady_clock::now();
-    while (server.ioc().run_one() != 0)
-    {
-        if (std::chrono::steady_clock::now() - start >= std::chrono::seconds(10) || server.finished())
-        {
-            break;
-        }
-
-        if (completed)
-        {
-            server.stop();
-        }
-    }
-
-    // Drain any remaining handlers to ensure proper cleanup of HTTPClientImp
-    server.ioc().poll();
-
-    return completed;
-}
-
 }  // anonymous namespace
 
-TEST(HTTPClient, case_insensitive_content_length)
+class HTTPClientTest : public ::testing::Test
+{
+protected:
+    beast::Journal j_{TestSink::instance()};
+
+    void
+    SetUp() override
+    {
+        HTTPClient::initializeSSLContext("", "", false, j_);
+    }
+
+    void
+    TearDown() override
+    {
+        HTTPClient::cleanupSSLContext();
+    }
+
+    // Helper function to run HTTP client test
+    bool
+    runHTTPTest(
+        TestHTTPServer& server,
+        std::string const& path,
+        bool& completed,
+        int& resultStatus,
+        std::string& resultData,
+        boost::system::error_code& resultError)
+    {
+        HTTPClient::get(
+            false,  // no SSL
+            server.ioc(),
+            "127.0.0.1",
+            server.port(),
+            path,
+            1024,  // max response size
+            std::chrono::seconds(5),
+            [&](boost::system::error_code const& ec, int status, std::string const& data) -> bool {
+                resultError = ec;
+                resultStatus = status;
+                resultData = data;
+                completed = true;
+                return false;  // don't retry
+            },
+            j_);
+
+        // Run the IO context until completion
+        auto start = std::chrono::steady_clock::now();
+        while (server.ioc().run_one() != 0)
+        {
+            if (std::chrono::steady_clock::now() - start >= std::chrono::seconds(10) || server.finished())
+            {
+                break;
+            }
+
+            if (completed)
+            {
+                server.stop();
+            }
+        }
+
+        // Drain any remaining handlers to ensure proper cleanup of HTTPClientImp
+        server.ioc().poll();
+
+        return completed;
+    }
+};
+
+TEST_F(HTTPClientTest, case_insensitive_content_length)
 {
     // Test different cases of Content-Length header
     std::vector<std::string> headerCases = {
@@ -259,27 +273,17 @@ TEST(HTTPClient, case_insensitive_content_length)
         std::string resultData;
         boost::system::error_code resultError;
 
-        beast::Journal j{TestSink::instance()};
-        HTTPClient::initializeSSLContext("", "", false, j);
-
-        bool testCompleted = runHTTPTest(server, "/test", completed, resultStatus, resultData, resultError, j);
+        bool testCompleted = runHTTPTest(server, "/test", completed, resultStatus, resultData, resultError);
         // Verify results
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);
         EXPECT_EQ(resultStatus, 200);
         EXPECT_EQ(resultData, testBody);
     }
-
-    // Clean up SSL context to prevent memory leaks
-    HTTPClient::cleanupSSLContext();
 }
 
-TEST(HTTPClient, basic_http_request)
+TEST_F(HTTPClientTest, basic_http_request)
 {
-    // Initialize SSL context once for the entire test
-    beast::Journal j{TestSink::instance()};
-    HTTPClient::initializeSSLContext("", "", false, j);
-
     TestHTTPServer server;
     std::string testBody = "Test response body";
     server.setResponseBody(testBody);
@@ -290,23 +294,16 @@ TEST(HTTPClient, basic_http_request)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(server, "/basic", completed, resultStatus, resultData, resultError, j);
+    bool testCompleted = runHTTPTest(server, "/basic", completed, resultStatus, resultData, resultError);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
     EXPECT_EQ(resultStatus, 200);
     EXPECT_EQ(resultData, testBody);
-
-    // Clean up SSL context to prevent memory leaks
-    HTTPClient::cleanupSSLContext();
 }
 
-TEST(HTTPClient, empty_response)
+TEST_F(HTTPClientTest, empty_response)
 {
-    // Initialize SSL context once for the entire test
-    beast::Journal j{TestSink::instance()};
-    HTTPClient::initializeSSLContext("", "", false, j);
-
     TestHTTPServer server;
     server.setResponseBody("");  // Empty body
     server.setHeader("Content-Length", "0");
@@ -316,23 +313,16 @@ TEST(HTTPClient, empty_response)
     std::string resultData;
     boost::system::error_code resultError;
 
-    bool testCompleted = runHTTPTest(server, "/empty", completed, resultStatus, resultData, resultError, j);
+    bool testCompleted = runHTTPTest(server, "/empty", completed, resultStatus, resultData, resultError);
 
     EXPECT_TRUE(testCompleted);
     EXPECT_FALSE(resultError);
     EXPECT_EQ(resultStatus, 200);
     EXPECT_TRUE(resultData.empty());
-
-    // Clean up SSL context to prevent memory leaks
-    HTTPClient::cleanupSSLContext();
 }
 
-TEST(HTTPClient, different_status_codes)
+TEST_F(HTTPClientTest, different_status_codes)
 {
-    // Initialize SSL context once for the entire test
-    beast::Journal j{TestSink::instance()};
-    HTTPClient::initializeSSLContext("", "", false, j);
-
     std::vector<unsigned int> statusCodes = {200, 404, 500};
 
     for (auto status : statusCodes)
@@ -346,13 +336,10 @@ TEST(HTTPClient, different_status_codes)
         std::string resultData;
         boost::system::error_code resultError;
 
-        bool testCompleted = runHTTPTest(server, "/status", completed, resultStatus, resultData, resultError, j);
+        bool testCompleted = runHTTPTest(server, "/status", completed, resultStatus, resultData, resultError);
 
         EXPECT_TRUE(testCompleted);
         EXPECT_FALSE(resultError);
         EXPECT_EQ(resultStatus, static_cast<int>(status));
     }
-
-    // Clean up SSL context to prevent memory leaks
-    HTTPClient::cleanupSSLContext();
 }
