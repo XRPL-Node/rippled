@@ -4,6 +4,7 @@ debug=true
 halt_on_error=0
 print_stats=true
 print_legend=true
+symbolize=true
 print_cmdline=true
 print_summary=true
 use_sigaltstack=0
