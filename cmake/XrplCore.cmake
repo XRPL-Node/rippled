@@ -119,6 +119,15 @@ target_link_libraries(
 add_module(xrpl tx)
 target_link_libraries(xrpl.libxrpl.tx PUBLIC xrpl.libxrpl.ledger)
 
+# Telemetry module
+add_module(xrpl telemetry)
+target_link_libraries(xrpl.libxrpl.telemetry PUBLIC xrpl.libxrpl.basics xrpl.libxrpl.beast)
+if (telemetry)
+    target_link_libraries(
+        xrpl.libxrpl.telemetry
+        PUBLIC opentelemetry-cpp::opentelemetry-cpp)
+endif ()
+
 add_library(xrpl.libxrpl)
 set_target_properties(xrpl.libxrpl PROPERTIES OUTPUT_NAME xrpl)
 
@@ -144,6 +153,7 @@ target_link_modules(
     resource
     server
     shamap
+    telemetry
     tx)
 
 # All headers in libxrpl are in modules.

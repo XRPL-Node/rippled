@@ -126,6 +126,13 @@ if (rocksdb)
     target_link_libraries(xrpl_libs INTERFACE RocksDB::rocksdb)
 endif ()
 
+option(telemetry "Enable OpenTelemetry tracing" OFF)
+if (telemetry)
+    find_package(opentelemetry-cpp CONFIG REQUIRED)
+    add_compile_definitions(XRPL_ENABLE_TELEMETRY)
+    message(STATUS "OpenTelemetry tracing enabled")
+endif ()
+
 # Work around changes to Conan recipe for now.
 if (TARGET nudb::core)
     set(nudb nudb::core)

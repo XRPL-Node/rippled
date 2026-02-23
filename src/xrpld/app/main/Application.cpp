@@ -51,6 +51,7 @@
 #include <xrpl/resource/Fees.h>
 #include <xrpl/server/LoadFeeTrack.h>
 #include <xrpl/server/Wallet.h>
+#include <xrpl/telemetry/Telemetry.h>
 #include <xrpl/tx/apply.h>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -146,6 +147,7 @@ public:
 
     beast::Journal m_journal;
     std::unique_ptr<perf::PerfLog> perfLog_;
+    std::unique_ptr<telemetry::Telemetry> telemetry_;
     Application::MutexType m_masterMutex;
 
     // Required by the SHAMapStore
@@ -250,45 +252,50 @@ public:
         , m_journal(logs_->journal("Application"))
 
         // PerfLog must be started before any other threads are launched.
-        , perfLog_(
-              perf::make_PerfLog(
-                  perf::setup_PerfLog(config_->section("perf"), config_->CONFIG_DIR),
-                  *this,
-                  logs_->journal("PerfLog"),
-                  [this] { signalStop("PerfLog"); }))
+        , perfLog_(perf::make_PerfLog(
+              perf::setup_PerfLog(config_->section("perf"), config_->CONFIG_DIR),
+              *this,
+              logs_->journal("PerfLog"),
+              [this] { signalStop("PerfLog"); }))
+
+        , telemetry_(telemetry::make_Telemetry(
+              telemetry::setup_Telemetry(
+                  config_->section("telemetry"),
+                  "",  // nodePublicKey not yet available at this point
+                  BuildInfo::getVersionString()),
+              logs_->journal("Telemetry")))
 
         , m_txMaster(*this)
 
         , m_collectorManager(
               make_CollectorManager(config_->section(SECTION_INSIGHT), logs_->journal("Collector")))
 
-        , m_jobQueue(
-              std::make_unique<JobQueue>(
-                  [](std::unique_ptr<Config> const& config) {
-                      if (config->standalone() && !config->FORCE_MULTI_THREAD)
-                          return 1;
+        , m_jobQueue(std::make_unique<JobQueue>(
+              [](std::unique_ptr<Config> const& config) {
+                  if (config->standalone() && !config->FORCE_MULTI_THREAD)
+                      return 1;
 
-                      if (config->WORKERS)
-                          return config->WORKERS;
+                  if (config->WORKERS)
+                      return config->WORKERS;
 
-                      auto count = static_cast<int>(std::thread::hardware_concurrency());
+                  auto count = static_cast<int>(std::thread::hardware_concurrency());
 
-                      // Be more aggressive about the number of threads to use
-                      // for the job queue if the server is configured as
-                      // "large" or "huge" if there are enough cores.
-                      if (config->NODE_SIZE >= 4 && count >= 16)
-                          count = 6 + std::min(count, 8);
-                      else if (config->NODE_SIZE >= 3 && count >= 8)
-                          count = 4 + std::min(count, 6);
-                      else
-                          count = 2 + std::min(count, 4);
+                  // Be more aggressive about the number of threads to use
+                  // for the job queue if the server is configured as
+                  // "large" or "huge" if there are enough cores.
+                  if (config->NODE_SIZE >= 4 && count >= 16)
+                      count = 6 + std::min(count, 8);
+                  else if (config->NODE_SIZE >= 3 && count >= 8)
+                      count = 4 + std::min(count, 6);
+                  else
+                      count = 2 + std::min(count, 4);
 
-                      return count;
-                  }(config_),
-                  m_collectorManager->group("jobq"),
-                  logs_->journal("JobQueue"),
-                  *logs_,
-                  *perfLog_))
+                  return count;
+              }(config_),
+              m_collectorManager->group("jobq"),
+              logs_->journal("JobQueue"),
+              *logs_,
+              *perfLog_))
 
         , m_nodeStoreScheduler(*m_jobQueue)
 
@@ -323,18 +330,16 @@ public:
 
         , m_orderBookDB(make_OrderBookDB(*this, {config_->PATH_SEARCH_MAX, config_->standalone()}))
 
-        , m_pathRequests(
-              std::make_unique<PathRequests>(
-                  *this,
-                  logs_->journal("PathRequest"),
-                  m_collectorManager->collector()))
+        , m_pathRequests(std::make_unique<PathRequests>(
+              *this,
+              logs_->journal("PathRequest"),
+              m_collectorManager->collector()))
 
-        , m_ledgerMaster(
-              std::make_unique<LedgerMaster>(
-                  *this,
-                  stopwatch(),
-                  m_collectorManager->collector(),
-                  logs_->journal("LedgerMaster")))
+        , m_ledgerMaster(std::make_unique<LedgerMaster>(
+              *this,
+              stopwatch(),
+              m_collectorManager->collector(),
+              logs_->journal("LedgerMaster")))
 
         , ledgerCleaner_(make_LedgerCleaner(*this, logs_->journal("LedgerCleaner")))
 
@@ -350,11 +355,10 @@ public:
                   gotTXSet(set, fromAcquire);
               }))
 
-        , m_ledgerReplayer(
-              std::make_unique<LedgerReplayer>(
-                  *this,
-                  *m_inboundLedgers,
-                  make_PeerSetBuilder(*this)))
+        , m_ledgerReplayer(std::make_unique<LedgerReplayer>(
+              *this,
+              *m_inboundLedgers,
+              make_PeerSetBuilder(*this)))
 
         , m_acceptedLedgerCache(
               "AcceptedLedger",
@@ -385,14 +389,13 @@ public:
 
         , publisherManifests_(std::make_unique<ManifestCache>(logs_->journal("ManifestCache")))
 
-        , validators_(
-              std::make_unique<ValidatorList>(
-                  *validatorManifests_,
-                  *publisherManifests_,
-                  *timeKeeper_,
-                  config_->legacy("database_path"),
-                  logs_->journal("ValidatorList"),
-                  config_->VALIDATION_QUORUM))
+        , validators_(std::make_unique<ValidatorList>(
+              *validatorManifests_,
+              *publisherManifests_,
+              *timeKeeper_,
+              config_->legacy("database_path"),
+              logs_->journal("ValidatorList"),
+              config_->VALIDATION_QUORUM))
 
         , validatorSites_(std::make_unique<ValidatorSite>(*this))
 
@@ -615,6 +618,12 @@ public:
     getPerfLog() override
     {
         return *perfLog_;
+    }
+
+    telemetry::Telemetry&
+    getTelemetry() override
+    {
+        return *telemetry_;
     }
 
     NodeCache&
@@ -886,9 +895,8 @@ public:
                 }))
         {
             using namespace std::chrono;
-            sweepTimer_.expires_after(
-                seconds{config_->SWEEP_INTERVAL.value_or(
-                    config_->getValueFor(SizedItem::sweepInterval))});
+            sweepTimer_.expires_after(seconds{
+                config_->SWEEP_INTERVAL.value_or(config_->getValueFor(SizedItem::sweepInterval))});
             sweepTimer_.async_wait(std::move(*optionalCountedHandler));
         }
     }
@@ -1463,6 +1471,7 @@ ApplicationImp::start(bool withTimers)
 
     ledgerCleaner_->start();
     perfLog_->start();
+    telemetry_->start();
 }
 
 void
@@ -1553,6 +1562,7 @@ ApplicationImp::run()
     ledgerCleaner_->stop();
     m_nodeStore->stop();
     perfLog_->stop();
+    telemetry_->stop();
 
     JLOG(m_journal.info()) << "Done.";
 }
