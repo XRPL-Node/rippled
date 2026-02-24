@@ -14,8 +14,7 @@ namespace jtx {
 std::tuple<Json::Value, Keylet>
 Vault::create(CreateArgs const& args)
 {
-    auto sequence = args.sequence ? *args.sequence : env.seq(args.owner);
-    auto keylet = keylet::vault(args.owner.id(), sequence);
+    auto keylet = keylet::vault(args.owner.id(), env.seq(args.owner));
     Json::Value jv;
     jv[jss::TransactionType] = jss::VaultCreate;
     jv[jss::Account] = args.owner.human();
