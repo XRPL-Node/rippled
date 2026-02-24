@@ -179,7 +179,8 @@ ApplyView::dirAdd(
         while (page && indexes.size() >= dirNodeMaxEntries)
         {
             // Find a page with space, or a gap in pages.
-            auto [prevPage, prevNode, prevIndexes] = directory::findPreviousPage(*this, directory, node);
+            auto [prevPage, prevNode, prevIndexes] =
+                directory::findPreviousPage(*this, directory, node);
             if (!gapPages && prevPage != page - 1)
                 gapPages.emplace(prevPage, prevNode, page, node);
             page = prevPage;
