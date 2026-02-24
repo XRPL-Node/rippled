@@ -114,7 +114,12 @@ VaultClawback::preclaim(PreclaimContext const& ctx)
         if (amount != beast::zero)
         {
             Number const& sharesHeld = accountHolds(
-                ctx.view, holder, share, FreezeHandling::fhIGNORE_FREEZE, AuthHandling::ahIGNORE_AUTH, ctx.j);
+                ctx.view,
+                holder,
+                share,
+                FreezeHandling::fhIGNORE_FREEZE,
+                AuthHandling::ahIGNORE_AUTH,
+                ctx.j);
 
             // The VaultOwner must burn all shares
             if (amount != sharesHeld)
@@ -218,8 +223,13 @@ VaultClawback::assetsToClawback(
 
     if (clawbackAmount == beast::zero)
     {
-        auto const sharesDestroyed =
-            accountHolds(view(), holder, share, FreezeHandling::fhIGNORE_FREEZE, AuthHandling::ahIGNORE_AUTH, j_);
+        auto const sharesDestroyed = accountHolds(
+            view(),
+            holder,
+            share,
+            FreezeHandling::fhIGNORE_FREEZE,
+            AuthHandling::ahIGNORE_AUTH,
+            j_);
         auto const maybeAssets = sharesToAssetsWithdraw(vault, sleShareIssuance, sharesDestroyed);
         if (!maybeAssets)
             return Unexpected(tecINTERNAL);  // LCOV_EXCL_LINE
@@ -232,7 +242,8 @@ VaultClawback::assetsToClawback(
     try
     {
         {
-            auto const maybeShares = assetsToSharesWithdraw(vault, sleShareIssuance, assetsRecovered);
+            auto const maybeShares =
+                assetsToSharesWithdraw(vault, sleShareIssuance, assetsRecovered);
             if (!maybeShares)
                 return Unexpected(tecINTERNAL);  // LCOV_EXCL_LINE
             sharesDestroyed = *maybeShares;
@@ -251,14 +262,15 @@ VaultClawback::assetsToClawback(
             // otherwise the corresponding assets might breach the
             // AssetsAvailable
             {
-                auto const maybeShares =
-                    assetsToSharesWithdraw(vault, sleShareIssuance, assetsRecovered, TruncateShares::yes);
+                auto const maybeShares = assetsToSharesWithdraw(
+                    vault, sleShareIssuance, assetsRecovered, TruncateShares::yes);
                 if (!maybeShares)
                     return Unexpected(tecINTERNAL);  // LCOV_EXCL_LINE
                 sharesDestroyed = *maybeShares;
             }
 
-            auto const maybeAssets = sharesToAssetsWithdraw(vault, sleShareIssuance, sharesDestroyed);
+            auto const maybeAssets =
+                sharesToAssetsWithdraw(vault, sleShareIssuance, sharesDestroyed);
             if (!maybeAssets)
                 return Unexpected(tecINTERNAL);  // LCOV_EXCL_LINE
             assetsRecovered = *maybeAssets;
@@ -279,7 +291,8 @@ VaultClawback::assetsToClawback(
             << "VaultClawback: overflow error with"
             << " scale=" << (int)vault->at(sfScale).value()  //
             << ", assetsTotal=" << vault->at(sfAssetsTotal).value()
-            << ", sharesTotal=" << sleShareIssuance->at(sfOutstandingAmount) << ", amount=" << clawbackAmount.value();
+            << ", sharesTotal=" << sleShareIssuance->at(sfOutstandingAmount)
+            << ", amount=" << clawbackAmount.value();
         return Unexpected(tecPATH_DRY);
     }
 
@@ -313,7 +326,8 @@ VaultClawback::doApply()
 
     [[maybe_unused]] auto const lossUnrealized = vault->at(sfLossUnrealized);
     XRPL_ASSERT(
-        lossUnrealized <= (assetsTotal - assetsAvailable), "xrpl::VaultClawback::doApply : loss and assets do balance");
+        lossUnrealized <= (assetsTotal - assetsAvailable),
+        "xrpl::VaultClawback::doApply : loss and assets do balance");
 
     AccountID holder = tx[sfHolder];
     STAmount sharesDestroyed = {share};
@@ -322,8 +336,13 @@ VaultClawback::doApply()
     // The Owner is burning shares
     if (account_ == vault->at(sfOwner) && amount.asset() == share)
     {
-        sharesDestroyed =
-            accountHolds(view(), holder, share, FreezeHandling::fhIGNORE_FREEZE, AuthHandling::ahIGNORE_AUTH, j_);
+        sharesDestroyed = accountHolds(
+            view(),
+            holder,
+            share,
+            FreezeHandling::fhIGNORE_FREEZE,
+            AuthHandling::ahIGNORE_AUTH,
+            j_);
     }
     else  // The Issuer is clawbacking vault assets
     {
@@ -346,7 +365,8 @@ VaultClawback::doApply()
 
     auto const& vaultAccount = vault->at(sfAccount);
     // Transfer shares from holder to vault.
-    if (auto const ter = accountSend(view(), holder, vaultAccount, sharesDestroyed, j_, WaiveTransferFee::Yes);
+    if (auto const ter =
+            accountSend(view(), holder, vaultAccount, sharesDestroyed, j_, WaiveTransferFee::Yes);
         !isTesSuccess(ter))
         return ter;
 
@@ -355,7 +375,8 @@ VaultClawback::doApply()
     // Keep MPToken if holder is the vault owner.
     if (holder != vault->at(sfOwner))
     {
-        if (auto const ter = removeEmptyHolding(view(), holder, sharesDestroyed.asset(), j_); isTesSuccess(ter))
+        if (auto const ter = removeEmptyHolding(view(), holder, sharesDestroyed.asset(), j_);
+            isTesSuccess(ter))
         {
             JLOG(j_.debug())  //
                 << "VaultClawback: removed empty MPToken for vault shares"
@@ -379,7 +400,8 @@ VaultClawback::doApply()
     if (assetsRecovered > beast::zero)
     {
         // Transfer assets from vault to issuer.
-        if (auto const ter = accountSend(view(), vaultAccount, account_, assetsRecovered, j_, WaiveTransferFee::Yes);
+        if (auto const ter = accountSend(
+                view(), vaultAccount, account_, assetsRecovered, j_, WaiveTransferFee::Yes);
             !isTesSuccess(ter))
             return ter;
 

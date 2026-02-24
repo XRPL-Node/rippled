@@ -34,8 +34,8 @@ VaultSet::getFlagsMask(PreflightContext const& ctx)
 static bool
 isValidVaultUpdate(PreflightContext const& ctx)
 {
-    auto const atLeastOneFieldPresent =
-        ctx.tx.isFieldPresent(sfDomainID) || ctx.tx.isFieldPresent(sfAssetsMaximum) || ctx.tx.isFieldPresent(sfData);
+    auto const atLeastOneFieldPresent = ctx.tx.isFieldPresent(sfDomainID) ||
+        ctx.tx.isFieldPresent(sfAssetsMaximum) || ctx.tx.isFieldPresent(sfData);
 
     auto const shouldCheckFlags = ctx.rules.enabled(fixLendingProtocolV1_1);
     auto const expectedFlags = ~(VaultSet::getFlagsMask(ctx) | tfUniversal);
@@ -78,7 +78,8 @@ VaultSet::preflight(PreflightContext const& ctx)
 
     if (ctx.tx.isFlag(tfVaultDepositBlock) && ctx.tx.isFlag(tfVaultDepositUnblock))
     {
-        JLOG(ctx.j.debug()) << "VaultSet: cannot set tfVaultDepositBlock and tfVaultDepositUnblock simultaneously.";
+        JLOG(ctx.j.debug())
+            << "VaultSet: cannot set tfVaultDepositBlock and tfVaultDepositUnblock simultaneously.";
         return temINVALID_FLAG;
     }
 
