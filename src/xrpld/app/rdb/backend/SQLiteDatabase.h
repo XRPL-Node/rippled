@@ -452,13 +452,13 @@ private:
     auto
     checkoutLedger()
     {
-        if (!lgrdb_)
+        if (!ledgerDb_)
         {
             constexpr auto msg = "Ledger database is not available";
             JLOG(j_.fatal()) << msg;
             Throw<std::runtime_error>(msg);
         }
-        return lgrdb_->checkoutDb();
+        return ledgerDb_->checkoutDb();
     }
 
     /**
