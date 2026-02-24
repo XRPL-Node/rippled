@@ -34,13 +34,13 @@ VaultSet::getFlagsMask(PreflightContext const& ctx)
 static bool
 isValidVaultUpdate(PreflightContext const& ctx)
 {
-    auto const shouldCheckFlags = ctx.rules.enabled(fixLendingProtocolV1_1);
-
     auto const atLeastOneFieldPresent =
         ctx.tx.isFieldPresent(sfDomainID) || ctx.tx.isFieldPresent(sfAssetsMaximum) || ctx.tx.isFieldPresent(sfData);
 
-    return atLeastOneFieldPresent ||
-        (shouldCheckFlags && (ctx.tx.isFlag(tfVaultDepositBlock) || ctx.tx.isFlag(tfVaultDepositUnblock)));
+    auto const shouldCheckFlags = ctx.rules.enabled(fixLendingProtocolV1_1);
+    auto const expectedFlags = ~(VaultSet::getFlagsMask(ctx) | tfUniversal);
+
+    return atLeastOneFieldPresent || (shouldCheckFlags && (ctx.tx.getFlags() & expectedFlags));
 }
 
 NotTEC

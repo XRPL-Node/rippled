@@ -1,3 +1,5 @@
+#include <xrpl/tx/transactors/Vault/VaultCreate.h>
+//
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/Asset.h>
 #include <xrpl/protocol/Feature.h>
@@ -12,7 +14,6 @@
 #include <xrpl/protocol/TxFlags.h>
 #include <xrpl/tx/transactors/MPT/MPTokenAuthorize.h>
 #include <xrpl/tx/transactors/MPT/MPTokenIssuanceCreate.h>
-#include <xrpl/tx/transactors/Vault/VaultCreate.h>
 
 namespace xrpl {
 

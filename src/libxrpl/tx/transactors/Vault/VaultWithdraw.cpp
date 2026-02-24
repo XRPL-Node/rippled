@@ -1,3 +1,5 @@
+#include <xrpl/tx/transactors/Vault/VaultWithdraw.h>
+//
 #include <xrpl/ledger/CredentialHelpers.h>
 #include <xrpl/ledger/View.h>
 #include <xrpl/protocol/AccountID.h>
@@ -7,7 +9,6 @@
 #include <xrpl/protocol/STTakesAsset.h>
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFlags.h>
-#include <xrpl/tx/transactors/Vault/VaultWithdraw.h>
 
 namespace xrpl {
 
