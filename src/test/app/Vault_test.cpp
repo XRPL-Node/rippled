@@ -1006,7 +1006,7 @@ class Vault_test : public beast::unit_test::suite
 
                 {
                     auto tx = vault.set({.owner = owner, .id = keylet.key});
-                    tx[sfFlags] = tfVaultPrivate;
+                    tx[sfFlags] = tfVaultDepositBlock | tfVaultDepositUnblock;
                     env(tx, ter(temINVALID_FLAG));
                 }
             });
