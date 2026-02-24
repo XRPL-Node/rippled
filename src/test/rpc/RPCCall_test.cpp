@@ -5512,7 +5512,9 @@ public:
     testRPCCall(unsigned apiVersion)
     {
         testcase << "RPCCall API version " << apiVersion;
-        if (!BEAST_EXPECT(apiVersion >= RPC::apiMinimumSupportedVersion && apiVersion <= RPC::apiMaximumValidVersion))
+        if (!BEAST_EXPECT(
+                apiVersion >= RPC::apiMinimumSupportedVersion &&
+                apiVersion <= RPC::apiMaximumValidVersion))
             return;
 
         test::jtx::Env env(*this, makeNetworkConfig(11111));  // Used only for its Journal.
@@ -5525,7 +5527,8 @@ public:
 
             std::vector<std::string> const args{rpcCallTest.args.begin(), rpcCallTest.args.end()};
 
-            char const* const expVersioned = (apiVersion - RPC::apiMinimumSupportedVersion) < rpcCallTest.exp.size()
+            char const* const expVersioned =
+                (apiVersion - RPC::apiMinimumSupportedVersion) < rpcCallTest.exp.size()
                 ? rpcCallTest.exp[apiVersion - RPC::apiMinimumSupportedVersion]
                 : rpcCallTest.exp.back();
 
@@ -5548,8 +5551,8 @@ public:
             // Lambda to remove the "params[0u]:error_code" field if present.
             // Error codes are not expected to be stable between releases.
             auto rmErrorCode = [](Json::Value& json) {
-                if (json.isMember(jss::params) && json[jss::params].isArray() && json[jss::params].size() > 0 &&
-                    json[jss::params][0u].isObject())
+                if (json.isMember(jss::params) && json[jss::params].isArray() &&
+                    json[jss::params].size() > 0 && json[jss::params][0u].isObject())
                 {
                     json[jss::params][0u].removeMember(jss::error_code);
                 }
