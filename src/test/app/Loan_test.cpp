@@ -2644,7 +2644,7 @@ protected:
                 env(manage(lender, loanKeylet.key, tfLoanDefault), ter(tecNO_PERMISSION));
             });
 
-#if LOANTODO
+#if LOAN_TODO
         // TODO
 
         /*
@@ -5316,7 +5316,7 @@ protected:
         }
     }
 
-#if LOANTODO
+#if LOAN_TODO
     void
     testLoanPayLateFullPaymentBypassesPenalties()
     {
@@ -7059,7 +7059,8 @@ protected:
         if (!BEAST_EXPECT(vaultAfterImpair))
             return;
 
-        BEAST_EXPECT(vaultAfterImpair->at(sfLossUnrealized) == broker.asset(PRINCIPAL_AMOUNT).value());
+        BEAST_EXPECT(
+            vaultAfterImpair->at(sfLossUnrealized) == broker.asset(PRINCIPAL_AMOUNT).value());
 
         // Helper to get share balance for a depositor
         auto const shareAsset = vaultAfterImpair->at(sfShareMPTID);
@@ -7076,9 +7077,12 @@ protected:
         BEAST_EXPECT(sharesLpA == sharesLpB);
 
         // Helper to attempt withdrawal
-        auto const attemptWithdrawShares = [&](Account const& depositor, std::uint64_t shareAmount, TER expected) {
+        auto const attemptWithdrawShares = [&](Account const& depositor,
+                                               std::uint64_t shareAmount,
+                                               TER expected) {
             STAmount const shareAmt{MPTIssue{shareAsset}, Number(shareAmount)};
-            env(v.withdraw({.depositor = depositor, .id = broker.vaultKeylet().key, .amount = shareAmt}),
+            env(v.withdraw(
+                    {.depositor = depositor, .id = broker.vaultKeylet().key, .amount = shareAmt}),
                 ter(expected));
             env.close();
         };
@@ -7097,7 +7101,7 @@ public:
     void
     run() override
     {
-#if LOANTODO
+#if LOAN_TODO
         testLoanPayLateFullPaymentBypassesPenalties();
         testLoanCoverMinimumRoundingExploit();
 #endif

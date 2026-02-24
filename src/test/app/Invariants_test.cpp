@@ -3816,7 +3816,7 @@ class Invariants_test : public beast::unit_test::suite
         NumberMantissaScaleGuard g{MantissaRange::large};
 
         auto makeDelta = [&vaultAsset](Number const& n) -> ValidVault::DeltaInfo {
-            return {n, n.scale<STAmount>(vaultAsset.raw())};
+            return {n, scale(n, vaultAsset.raw())};
         };
 
         auto const testCases = std::vector<TestCase>{
@@ -3833,12 +3833,14 @@ class Invariants_test : public beast::unit_test::suite
             {
                 .name = "Mixed scales",
                 .expectedMinScale = -17,
-                .values = {makeDelta(Number{1, -2}), makeDelta(Number{5, -3}), makeDelta(Number{3, -2})},
+                .values =
+                    {makeDelta(Number{1, -2}), makeDelta(Number{5, -3}), makeDelta(Number{3, -2})},
             },
             {
                 .name = "Equal scales",
                 .expectedMinScale = -16,
-                .values = {makeDelta(Number{1, -1}), makeDelta(Number{5, -1}), makeDelta(Number{1, -1})},
+                .values =
+                    {makeDelta(Number{1, -1}), makeDelta(Number{5, -1}), makeDelta(Number{1, -1})},
             },
             {
                 .name = "Mixed mantissa sizes",
@@ -3859,7 +3861,8 @@ class Invariants_test : public beast::unit_test::suite
 
             BEAST_EXPECTS(
                 actualScale == tc.expectedMinScale,
-                "expected: " + std::to_string(tc.expectedMinScale) + ", actual: " + std::to_string(actualScale));
+                "expected: " + std::to_string(tc.expectedMinScale) +
+                    ", actual: " + std::to_string(actualScale));
             for (auto const& num : tc.values)
             {
                 // None of these scales are far enough apart that rounding the
@@ -3868,8 +3871,8 @@ class Invariants_test : public beast::unit_test::suite
                 auto const actualRounded = roundToAsset(vaultAsset, num.delta, actualScale);
                 BEAST_EXPECTS(
                     actualRounded == num.delta,
-                    "number " + to_string(num.delta) + " rounded to scale " + std::to_string(actualScale) + " is " +
-                        to_string(actualRounded));
+                    "number " + to_string(num.delta) + " rounded to scale " +
+                        std::to_string(actualScale) + " is " + to_string(actualRounded));
             }
         }
 
@@ -3896,7 +3899,8 @@ class Invariants_test : public beast::unit_test::suite
 
             BEAST_EXPECTS(
                 actualScale == tc.expectedMinScale,
-                "expected: " + std::to_string(tc.expectedMinScale) + ", actual: " + std::to_string(actualScale));
+                "expected: " + std::to_string(tc.expectedMinScale) +
+                    ", actual: " + std::to_string(actualScale));
             std::optional<Number> first;
             Number firstRounded;
             for (auto const& num : tc.values)
