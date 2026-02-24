@@ -10,7 +10,7 @@
 #include <xrpl/protocol/jss.h>
 #include <xrpl/resource/Fees.h>
 
-namespace ripple {
+namespace xrpl {
 
 void
 addLine(Json::Value& jsonLines, RPCTrustLine const& line)
@@ -104,8 +104,8 @@ doAccountLines(RPC::JsonContext& context)
 
     // this flag allows the requester to ask incoming trustlines in default
     // state be omitted
-    bool ignoreDefault = params.isMember(jss::ignore_default) &&
-        params[jss::ignore_default].asBool();
+    bool ignoreDefault =
+        params.isMember(jss::ignore_default) && params[jss::ignore_default].asBool();
 
     Json::Value& jsonLines(result[jss::lines] = Json::arrayValue);
     struct VisitData
@@ -173,7 +173,7 @@ doAccountLines(RPC::JsonContext& context)
                     if (!sleCur)
                     {
                         // LCOV_EXCL_START
-                        UNREACHABLE("ripple::doAccountLines : null SLE");
+                        UNREACHABLE("xrpl::doAccountLines : null SLE");
                         return false;
                         // LCOV_EXCL_STOP
                     }
@@ -181,8 +181,7 @@ doAccountLines(RPC::JsonContext& context)
                     if (++count == limit)
                     {
                         marker = sleCur->key();
-                        nextHint =
-                            RPC::getStartHint(sleCur, visitData.accountID);
+                        nextHint = RPC::getStartHint(sleCur, visitData.accountID);
                     }
 
                     if (sleCur->getType() != ltRIPPLE_STATE)
@@ -191,24 +190,19 @@ doAccountLines(RPC::JsonContext& context)
                     bool ignore = false;
                     if (visitData.ignoreDefault)
                     {
-                        if (sleCur->getFieldAmount(sfLowLimit).getIssuer() ==
-                            visitData.accountID)
-                            ignore =
-                                !(sleCur->getFieldU32(sfFlags) & lsfLowReserve);
+                        if (sleCur->getFieldAmount(sfLowLimit).getIssuer() == visitData.accountID)
+                            ignore = !(sleCur->getFieldU32(sfFlags) & lsfLowReserve);
                         else
-                            ignore = !(
-                                sleCur->getFieldU32(sfFlags) & lsfHighReserve);
+                            ignore = !(sleCur->getFieldU32(sfFlags) & lsfHighReserve);
                     }
 
                     if (!ignore && count <= limit)
                     {
-                        auto const line =
-                            RPCTrustLine::makeItem(visitData.accountID, sleCur);
+                        auto const line = RPCTrustLine::makeItem(visitData.accountID, sleCur);
 
                         if (line &&
                             (!visitData.raPeerAccount ||
-                             *visitData.raPeerAccount ==
-                                 line->getAccountIDPeer()))
+                             *visitData.raPeerAccount == line->getAccountIDPeer()))
                         {
                             visitData.items.emplace_back(*line);
                         }
@@ -227,8 +221,7 @@ doAccountLines(RPC::JsonContext& context)
     if (count == limit + 1 && marker)
     {
         result[jss::limit] = limit;
-        result[jss::marker] =
-            to_string(*marker) + "," + std::to_string(nextHint);
+        result[jss::marker] = to_string(*marker) + "," + std::to_string(nextHint);
     }
 
     result[jss::account] = toBase58(accountID);
@@ -240,4 +233,4 @@ doAccountLines(RPC::JsonContext& context)
     return result;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

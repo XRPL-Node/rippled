@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_CSF_TIMERS_H_INCLUDED
-#define XRPL_TEST_CSF_TIMERS_H_INCLUDED
+#pragma once
 
 #include <test/csf/Scheduler.h>
 #include <test/csf/SimTime.h>
@@ -7,7 +6,7 @@
 #include <chrono>
 #include <ostream>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 namespace csf {
 
@@ -53,10 +52,8 @@ public:
 
         RealDuration realDuration = realTime - startRealTime_;
         SimDuration simDuration = simTime - startSimTime_;
-        out_ << "Heartbeat. Time Elapsed: {sim: "
-             << duration_cast<seconds>(simDuration).count()
-             << "s | real: " << duration_cast<seconds>(realDuration).count()
-             << "s}\n"
+        out_ << "Heartbeat. Time Elapsed: {sim: " << duration_cast<seconds>(simDuration).count()
+             << "s | real: " << duration_cast<seconds>(realDuration).count() << "s}\n"
              << std::flush;
 
         scheduler_.in(interval_, [this]() { beat(scheduler_.now()); });
@@ -65,6 +62,4 @@ public:
 
 }  // namespace csf
 }  // namespace test
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

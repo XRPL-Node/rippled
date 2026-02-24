@@ -3,7 +3,7 @@
 
 #include <xrpld/core/ConfigSections.h>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 
 std::atomic<bool> envUseIPv4{false};
@@ -108,9 +108,7 @@ addGrpcConfig(std::unique_ptr<Config> cfg)
 }
 
 std::unique_ptr<Config>
-addGrpcConfigWithSecureGateway(
-    std::unique_ptr<Config> cfg,
-    std::string const& secureGateway)
+addGrpcConfigWithSecureGateway(std::unique_ptr<Config> cfg, std::string const& secureGateway)
 {
     (*cfg)[SECTION_PORT_GRPC].set("ip", getEnvLocalhostAddr());
 
@@ -156,4 +154,4 @@ makeConfig(
 
 }  // namespace jtx
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl

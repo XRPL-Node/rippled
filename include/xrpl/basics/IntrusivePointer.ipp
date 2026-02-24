@@ -1,20 +1,17 @@
-#ifndef XRPL_BASICS_INTRUSIVEPOINTER_IPP_INCLUDED
-#define XRPL_BASICS_INTRUSIVEPOINTER_IPP_INCLUDED
+#pragma once
 
 #include <xrpl/basics/IntrusivePointer.h>
 #include <xrpl/basics/IntrusiveRefCounts.h>
 
 #include <utility>
 
-namespace ripple {
+namespace xrpl {
 
 template <class T>
 template <CAdoptTag TAdoptTag>
 SharedIntrusive<T>::SharedIntrusive(T* p, TAdoptTag) noexcept : ptr_{p}
 {
-    if constexpr (std::is_same_v<
-                      TAdoptTag,
-                      SharedIntrusiveAdoptIncrementStrongTag>)
+    if constexpr (std::is_same_v<TAdoptTag, SharedIntrusiveAdoptIncrementStrongTag>)
     {
         if (p)
             p->addStrongRef();
@@ -46,16 +43,14 @@ SharedIntrusive<T>::SharedIntrusive(SharedIntrusive<TT> const& rhs)
 }
 
 template <class T>
-SharedIntrusive<T>::SharedIntrusive(SharedIntrusive&& rhs)
-    : ptr_{rhs.unsafeExchange(nullptr)}
+SharedIntrusive<T>::SharedIntrusive(SharedIntrusive&& rhs) : ptr_{rhs.unsafeExchange(nullptr)}
 {
 }
 
 template <class T>
 template <class TT>
     requires std::convertible_to<TT*, T*>
-SharedIntrusive<T>::SharedIntrusive(SharedIntrusive<TT>&& rhs)
-    : ptr_{rhs.unsafeExchange(nullptr)}
+SharedIntrusive<T>::SharedIntrusive(SharedIntrusive<TT>&& rhs) : ptr_{rhs.unsafeExchange(nullptr)}
 {
 }
 template <class T>
@@ -112,9 +107,7 @@ requires std::convertible_to<TT*, T*>
 SharedIntrusive<T>&
 SharedIntrusive<T>::operator=(SharedIntrusive<TT>&& rhs)
 {
-    static_assert(
-        !std::is_same_v<T, TT>,
-        "This overload should not be instantiated for T == TT");
+    static_assert(!std::is_same_v<T, TT>, "This overload should not be instantiated for T == TT");
 
     unsafeReleaseAndStore(rhs.unsafeExchange(nullptr));
     return *this;
@@ -139,9 +132,7 @@ template <CAdoptTag TAdoptTag>
 void
 SharedIntrusive<T>::adopt(T* p)
 {
-    if constexpr (std::is_same_v<
-                      TAdoptTag,
-                      SharedIntrusiveAdoptIncrementStrongTag>)
+    if constexpr (std::is_same_v<TAdoptTag, SharedIntrusiveAdoptIncrementStrongTag>)
     {
         if (p)
             p->addStrongRef();
@@ -157,9 +148,7 @@ SharedIntrusive<T>::~SharedIntrusive()
 
 template <class T>
 template <class TT>
-SharedIntrusive<T>::SharedIntrusive(
-    StaticCastTagSharedIntrusive,
-    SharedIntrusive<TT> const& rhs)
+SharedIntrusive<T>::SharedIntrusive(StaticCastTagSharedIntrusive, SharedIntrusive<TT> const& rhs)
     : ptr_{[&] {
         auto p = static_cast<T*>(rhs.unsafeGetRawPtr());
         if (p)
@@ -171,18 +160,14 @@ SharedIntrusive<T>::SharedIntrusive(
 
 template <class T>
 template <class TT>
-SharedIntrusive<T>::SharedIntrusive(
-    StaticCastTagSharedIntrusive,
-    SharedIntrusive<TT>&& rhs)
+SharedIntrusive<T>::SharedIntrusive(StaticCastTagSharedIntrusive, SharedIntrusive<TT>&& rhs)
     : ptr_{static_cast<T*>(rhs.unsafeExchange(nullptr))}
 {
 }
 
 template <class T>
 template <class TT>
-SharedIntrusive<T>::SharedIntrusive(
-    DynamicCastTagSharedIntrusive,
-    SharedIntrusive<TT> const& rhs)
+SharedIntrusive<T>::SharedIntrusive(DynamicCastTagSharedIntrusive, SharedIntrusive<TT> const& rhs)
     : ptr_{[&] {
         auto p = dynamic_cast<T*>(rhs.unsafeGetRawPtr());
         if (p)
@@ -194,9 +179,7 @@ SharedIntrusive<T>::SharedIntrusive(
 
 template <class T>
 template <class TT>
-SharedIntrusive<T>::SharedIntrusive(
-    DynamicCastTagSharedIntrusive,
-    SharedIntrusive<TT>&& rhs)
+SharedIntrusive<T>::SharedIntrusive(DynamicCastTagSharedIntrusive, SharedIntrusive<TT>&& rhs)
 {
     // This can be simplified without the `exchange`, but the `exchange` is kept
     // in anticipation of supporting atomic operations.
@@ -225,7 +208,8 @@ SharedIntrusive<T>::operator->() const noexcept
 }
 
 template <class T>
-SharedIntrusive<T>::operator bool() const noexcept
+SharedIntrusive<T>::
+operator bool() const noexcept
 {
     return bool(unsafeGetRawPtr());
 }
@@ -315,8 +299,7 @@ WeakIntrusive<T>::WeakIntrusive(WeakIntrusive&& rhs) : ptr_{rhs.ptr_}
 }
 
 template <class T>
-WeakIntrusive<T>::WeakIntrusive(SharedIntrusive<T> const& rhs)
-    : ptr_{rhs.unsafeGetRawPtr()}
+WeakIntrusive<T>::WeakIntrusive(SharedIntrusive<T> const& rhs) : ptr_{rhs.unsafeGetRawPtr()}
 {
     if (ptr_)
         ptr_->addWeakRef();
@@ -521,7 +504,8 @@ SharedWeakUnion<T>::getStrong() const
 }
 
 template <class T>
-SharedWeakUnion<T>::operator bool() const noexcept
+SharedWeakUnion<T>::
+operator bool() const noexcept
 {
     return bool(get());
 }
@@ -608,7 +592,7 @@ SharedWeakUnion<T>::convertToStrong()
         [[maybe_unused]] auto action = p->releaseWeakRef();
         XRPL_ASSERT(
             (action == ReleaseWeakRefAction::noop),
-            "ripple::SharedWeakUnion::convertToStrong : "
+            "xrpl::SharedWeakUnion::convertToStrong : "
             "action is noop");
         unsafeSetRawPtr(p, RefStrength::strong);
         return true;
@@ -637,7 +621,7 @@ SharedWeakUnion<T>::convertToWeak()
             // We just added a weak ref. How could we destroy?
             // LCOV_EXCL_START
             UNREACHABLE(
-                "ripple::SharedWeakUnion::convertToWeak : destroying freshly "
+                "xrpl::SharedWeakUnion::convertToWeak : destroying freshly "
                 "added ref");
             delete p;
             unsafeSetRawPtr(nullptr);
@@ -719,5 +703,4 @@ SharedWeakUnion<T>::unsafeReleaseNoStore()
     }
 }
 
-}  // namespace ripple
-#endif
+}  // namespace xrpl

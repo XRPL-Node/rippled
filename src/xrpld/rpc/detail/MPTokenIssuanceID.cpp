@@ -1,6 +1,6 @@
 #include <xrpld/rpc/MPTokenIssuanceID.h>
 
-namespace ripple {
+namespace xrpl {
 
 namespace RPC {
 
@@ -32,10 +32,8 @@ getIDFromCreatedIssuance(TxMeta const& transactionMeta)
             node.getFName() != sfCreatedNode)
             continue;
 
-        auto const& mptNode =
-            node.peekAtField(sfNewFields).downcast<STObject>();
-        return makeMptID(
-            mptNode.getFieldU32(sfSequence), mptNode.getAccountID(sfIssuer));
+        auto const& mptNode = node.peekAtField(sfNewFields).downcast<STObject>();
+        return makeMptID(mptNode.getFieldU32(sfSequence), mptNode.getAccountID(sfIssuer));
     }
 
     return std::nullopt;
@@ -56,4 +54,4 @@ insertMPTokenIssuanceID(
 }
 
 }  // namespace RPC
-}  // namespace ripple
+}  // namespace xrpl

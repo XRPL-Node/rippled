@@ -8,7 +8,7 @@
 #include <xrpl/protocol/jss.h>
 #include <xrpl/resource/Fees.h>
 
-namespace ripple {
+namespace xrpl {
 
 Json::Value
 doPathFind(RPC::JsonContext& context)
@@ -18,8 +18,7 @@ doPathFind(RPC::JsonContext& context)
 
     auto lpLedger = context.ledgerMaster.getClosedLedger();
 
-    if (!context.params.isMember(jss::subcommand) ||
-        !context.params[jss::subcommand].isString())
+    if (!context.params.isMember(jss::subcommand) || !context.params[jss::subcommand].isString())
     {
         return rpcError(rpcINVALID_PARAMS);
     }
@@ -63,4 +62,4 @@ doPathFind(RPC::JsonContext& context)
     return rpcError(rpcINVALID_PARAMS);
 }
 
-}  // namespace ripple
+}  // namespace xrpl

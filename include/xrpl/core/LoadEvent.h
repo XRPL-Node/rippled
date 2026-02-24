@@ -1,10 +1,9 @@
-#ifndef XRPL_CORE_LOADEVENT_H_INCLUDED
-#define XRPL_CORE_LOADEVENT_H_INCLUDED
+#pragma once
 
 #include <chrono>
 #include <string>
 
-namespace ripple {
+namespace xrpl {
 
 class LoadMonitor;
 
@@ -65,6 +64,4 @@ private:
     std::chrono::steady_clock::duration timeRunning_;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_CONSENSUS_RCLCXLEDGER_H_INCLUDED
-#define XRPL_APP_CONSENSUS_RCLCXLEDGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/LedgerToJson.h>
@@ -7,7 +6,7 @@
 #include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
 
-namespace ripple {
+namespace xrpl {
 
 /** Represents a ledger in RCLConsensus.
 
@@ -69,7 +68,7 @@ public:
     bool
     closeAgree() const
     {
-        return ripple::getCloseAgree(ledger_->header());
+        return xrpl::getCloseAgree(ledger_->header());
     }
 
     //! The close time of this ledger
@@ -90,7 +89,7 @@ public:
     Json::Value
     getJson() const
     {
-        return ripple::getJson({*ledger_, {}});
+        return xrpl::getJson({*ledger_, {}});
     }
 
     /** The ledger instance.
@@ -100,5 +99,4 @@ public:
     */
     std::shared_ptr<Ledger const> ledger_;
 };
-}  // namespace ripple
-#endif
+}  // namespace xrpl

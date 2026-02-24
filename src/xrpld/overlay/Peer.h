@@ -1,5 +1,4 @@
-#ifndef XRPL_OVERLAY_PEER_H_INCLUDED
-#define XRPL_OVERLAY_PEER_H_INCLUDED
+#pragma once
 
 #include <xrpld/overlay/Message.h>
 
@@ -8,7 +7,7 @@
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/PublicKey.h>
 
-namespace ripple {
+namespace xrpl {
 
 namespace Resource {
 class Charge;
@@ -119,6 +118,4 @@ public:
     txReduceRelayEnabled() const = 0;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

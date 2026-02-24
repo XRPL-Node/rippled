@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_SERVERHANDLER_H_INCLUDED
-#define XRPL_RPC_SERVERHANDLER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/main/CollectorManager.h>
@@ -20,7 +19,7 @@
 #include <mutex>
 #include <vector>
 
-namespace ripple {
+namespace xrpl {
 
 inline bool
 operator<(Port const& lhs, Port const& rhs)
@@ -151,11 +150,7 @@ public:
         http_request_type&& request,
         boost::asio::ip::tcp::endpoint const& remote_address)
     {
-        return onHandoff(
-            session,
-            {},
-            std::forward<http_request_type>(request),
-            remote_address);
+        return onHandoff(session, {}, std::forward<http_request_type>(request), remote_address);
     }
 
     void
@@ -180,9 +175,7 @@ private:
         Json::Value const& jv);
 
     void
-    processSession(
-        std::shared_ptr<Session> const&,
-        std::shared_ptr<JobQueue::Coro> coro);
+    processSession(std::shared_ptr<Session> const&, std::shared_ptr<JobQueue::Coro> coro);
 
     void
     processRequest(
@@ -210,6 +203,4 @@ make_ServerHandler(
     Resource::Manager&,
     CollectorManager& cm);
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

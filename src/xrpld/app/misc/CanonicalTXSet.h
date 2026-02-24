@@ -1,12 +1,11 @@
-#ifndef XRPL_APP_MISC_CANONICALTXSET_H_INCLUDED
-#define XRPL_APP_MISC_CANONICALTXSET_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/protocol/RippleLedgerHash.h>
 #include <xrpl/protocol/STTx.h>
 #include <xrpl/protocol/SeqProxy.h>
 
-namespace ripple {
+namespace xrpl {
 
 /** Holds transactions which were deferred to the next pass of consensus.
 
@@ -86,8 +85,7 @@ private:
     accountKey(AccountID const& account);
 
 public:
-    using const_iterator =
-        std::map<Key, std::shared_ptr<STTx const>>::const_iterator;
+    using const_iterator = std::map<Key, std::shared_ptr<STTx const>>::const_iterator;
 
 public:
     explicit CanonicalTXSet(LedgerHash const& saltHash) : salt_(saltHash)
@@ -156,6 +154,4 @@ private:
     uint256 salt_;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

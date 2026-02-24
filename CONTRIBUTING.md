@@ -219,7 +219,7 @@ coherent rather than a set of _thou shalt not_ commandments.
 
 ## Formatting
 
-All code must conform to `clang-format` version 18,
+All code must conform to `clang-format` version 21,
 according to the settings in [`.clang-format`](./.clang-format),
 unless the result would be unreasonably difficult to read or maintain.
 To demarcate lines that should be left as-is, surround them with comments like
@@ -304,7 +304,7 @@ For this reason:
 - Example **bad** name
   `"RFC1751::insert(char* s, int x, int start, int length) : length is greater than or equal zero"`
   (missing namespace, unnecessary full function signature, description too verbose).
-  Good name: `"ripple::RFC1751::insert : minimum length"`.
+  Good name: `"xrpl::RFC1751::insert : minimum length"`.
 - In **few** well-justified cases a non-standard name can be used, in which case a
   comment should be placed to explain the rationale (example in `contract.cpp`)
 - Do **not** rename a contract without a good reason (e.g. the name no longer
@@ -555,16 +555,16 @@ Rippled uses a linear workflow model that can be summarized as:
 git fetch --multiple upstreams user1 user2 user3 [...]
 git checkout -B release-next --no-track upstream/develop
 
-# Only do an ff-only merge if prbranch1 is either already
+# Only do an ff-only merge if pr-branch1 is either already
 # squashed, or needs to be merged with separate commits,
 # and has no merge commits.
-# Use -S on the ff-only merge if prbranch1 isn't signed.
-git merge [-S] --ff-only user1/prbranch1
+# Use -S on the ff-only merge if pr-branch1 isn't signed.
+git merge [-S] --ff-only user1/pr-branch1
 
-git merge --squash user2/prbranch2
+git merge --squash user2/pr-branch2
 git commit -S # Use the commit message provided on the PR
 
-git merge --squash user3/prbranch3
+git merge --squash user3/pr-branch3
 git commit -S # Use the commit message provided on the PR
 
 [...]
@@ -872,11 +872,12 @@ git push --delete upstream-push master-next
 11. [Create a new release on
     Github](https://github.com/XRPLF/rippled/releases). Be sure that
     "Set as the latest release" is checked.
-12. Finally [reverse merge the release into `develop`](#follow-up-reverse-merge).
+12. Open a PR to update the [API-CHANGELOG](API-CHANGELOG.md) and `API-VERSION-[n].md` with the changes for this release (if any are missing).
+13. Finally, [reverse merge the release into `develop`](#follow-up-reverse-merge).
 
 #### Special cases: point releases, hotfixes, etc.
 
-On occassion, a bug or issue is discovered in a version that already
+On occasion, a bug or issue is discovered in a version that already
 had a final release. Most of the time, development will have started
 on the next version, and will usually have changes in `develop`
 and often in `release`.

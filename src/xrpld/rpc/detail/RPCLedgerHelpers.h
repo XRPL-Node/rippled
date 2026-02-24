@@ -1,17 +1,18 @@
-#ifndef XRPL_RPC_RPCLEDGERHELPERS_H_INCLUDED
-#define XRPL_RPC_RPCLEDGERHELPERS_H_INCLUDED
+#pragma once
 
-#include <xrpld/app/misc/NetworkOPs.h>
+#include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/Status.h>
 #include <xrpld/rpc/detail/Tuning.h>
 
 #include <xrpl/proto/org/xrpl/rpc/v1/xrp_ledger.pb.h>
+#include <xrpl/protocol/LedgerShortcut.h>
+#include <xrpl/server/NetworkOPs.h>
 
 #include <optional>
 
-namespace ripple {
+namespace xrpl {
 
 class ReadView;
 class Transaction;
@@ -19,8 +20,6 @@ class Transaction;
 namespace RPC {
 
 struct JsonContext;
-
-enum class LedgerShortcut { Current, Closed, Validated };
 
 /**
  * @brief Retrieves a ledger by its hash.
@@ -109,10 +108,7 @@ lookupLedger(std::shared_ptr<ReadView const>&, JsonContext const&);
  * @return Status indicating success or failure of the operation.
  */
 Status
-lookupLedger(
-    std::shared_ptr<ReadView const>&,
-    JsonContext const&,
-    Json::Value& result);
+lookupLedger(std::shared_ptr<ReadView const>&, JsonContext const&, Json::Value& result);
 
 /**
  * @brief Retrieves a ledger from a gRPC request context.
@@ -176,6 +172,4 @@ getOrAcquireLedger(RPC::JsonContext const& context);
 
 }  // namespace RPC
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

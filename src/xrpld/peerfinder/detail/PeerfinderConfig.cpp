@@ -1,7 +1,7 @@
 #include <xrpld/peerfinder/PeerfinderManager.h>
 #include <xrpld/peerfinder/detail/Tuning.h>
 
-namespace ripple {
+namespace xrpl {
 namespace PeerFinder {
 
 Config::Config()
@@ -18,8 +18,7 @@ Config::Config()
 bool
 operator==(Config const& lhs, Config const& rhs)
 {
-    return lhs.autoConnect == rhs.autoConnect &&
-        lhs.peerPrivate == rhs.peerPrivate &&
+    return lhs.autoConnect == rhs.autoConnect && lhs.peerPrivate == rhs.peerPrivate &&
         lhs.wantIncoming == rhs.wantIncoming && lhs.inPeers == rhs.inPeers &&
         lhs.maxPeers == rhs.maxPeers && lhs.outPeers == rhs.outPeers &&
         lhs.features == lhs.features && lhs.ipLimit == rhs.ipLimit &&
@@ -29,9 +28,7 @@ operator==(Config const& lhs, Config const& rhs)
 std::size_t
 Config::calcOutPeers() const
 {
-    return std::max(
-        (maxPeers * Tuning::outPercent + 50) / 100,
-        std::size_t(Tuning::minOutCount));
+    return std::max((maxPeers * Tuning::outPercent + 50) / 100, std::size_t(Tuning::minOutCount));
 }
 
 void
@@ -45,8 +42,7 @@ Config::applyTuning()
         ipLimit = 2;
 
         if (inPeers > Tuning::defaultMaxPeers)
-            ipLimit += std::min(
-                5, static_cast<int>(inPeers / Tuning::defaultMaxPeers));
+            ipLimit += std::min(5, static_cast<int>(inPeers / Tuning::defaultMaxPeers));
     }
 
     // We don't allow a single IP to consume all incoming slots,
@@ -68,7 +64,7 @@ Config::onWrite(beast::PropertyStream::Map& map)
 
 Config
 Config::makeConfig(
-    ripple::Config const& cfg,
+    xrpl::Config const& cfg,
     std::uint16_t port,
     bool validationPublicKey,
     int ipLimit)
@@ -129,4 +125,4 @@ Config::makeConfig(
 }
 
 }  // namespace PeerFinder
-}  // namespace ripple
+}  // namespace xrpl

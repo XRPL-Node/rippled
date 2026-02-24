@@ -1,7 +1,7 @@
 #include <xrpl/beast/core/CurrentThreadName.h>
 #include <xrpl/core/Job.h>
 
-namespace ripple {
+namespace xrpl {
 
 Job::Job() : mType(jtINVALID), mJobIndex(0)
 {
@@ -17,11 +17,7 @@ Job::Job(
     std::uint64_t index,
     LoadMonitor& lm,
     std::function<void()> const& job)
-    : mType(type)
-    , mJobIndex(index)
-    , mJob(job)
-    , mName(name)
-    , m_queue_time(clock_type::now())
+    : mType(type), mJobIndex(index), mJob(job), mName(name), m_queue_time(clock_type::now())
 {
     m_loadEvent = std::make_shared<LoadEvent>(std::ref(lm), name, false);
 }
@@ -41,7 +37,7 @@ Job::queue_time() const
 void
 Job::doJob()
 {
-    beast::setCurrentThreadName("doJob: " + mName);
+    beast::setCurrentThreadName("j:" + mName);
     m_loadEvent->start();
     m_loadEvent->setName(mName);
 
@@ -100,4 +96,4 @@ Job::operator<=(Job const& j) const
     return mJobIndex <= j.mJobIndex;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

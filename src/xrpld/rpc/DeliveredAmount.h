@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_DELIVEREDAMOUNT_H_INCLUDED
-#define XRPL_RPC_DELIVEREDAMOUNT_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/Protocol.h>
 #include <xrpl/protocol/STAmount.h>
@@ -11,7 +10,7 @@ namespace Json {
 class Value;
 }
 
-namespace ripple {
+namespace xrpl {
 
 class ReadView;
 class Transaction;
@@ -62,6 +61,4 @@ getDeliveredAmount(
 /** @} */
 
 }  // namespace RPC
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

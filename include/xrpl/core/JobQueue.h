@@ -1,5 +1,4 @@
-#ifndef XRPL_CORE_JOBQUEUE_H_INCLUDED
-#define XRPL_CORE_JOBQUEUE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/core/ClosureCounter.h>
@@ -12,7 +11,7 @@
 
 #include <set>
 
-namespace ripple {
+namespace xrpl {
 
 namespace perf {
 class PerfLog;
@@ -141,14 +140,12 @@ public:
     */
     template <
         typename JobHandler,
-        typename = std::enable_if_t<std::is_same<
-            decltype(std::declval<JobHandler&&>()()),
-            void>::value>>
+        typename =
+            std::enable_if_t<std::is_same<decltype(std::declval<JobHandler&&>()()), void>::value>>
     bool
     addJob(JobType type, std::string const& name, JobHandler&& jobHandler)
     {
-        if (auto optionalCountedJob =
-                jobCounter_.wrap(std::forward<JobHandler>(jobHandler)))
+        if (auto optionalCountedJob = jobCounter_.wrap(std::forward<JobHandler>(jobHandler)))
         {
             return addRefCountedJob(type, name, std::move(*optionalCountedJob));
         }
@@ -264,10 +261,7 @@ private:
     //
     //    return true if func added to queue.
     bool
-    addRefCountedJob(
-        JobType type,
-        std::string const& name,
-        JobFunction const& func);
+    addRefCountedJob(JobType type, std::string const& name, JobFunction const& func);
 
     // Returns the next Job we should run now.
     //
@@ -382,11 +376,11 @@ private:
             lock is released which only happens after the coroutine completes.
 */
 
-}  // namespace ripple
+}  // namespace xrpl
 
 #include <xrpl/core/Coro.ipp>
 
-namespace ripple {
+namespace xrpl {
 
 template <class F>
 std::shared_ptr<JobQueue::Coro>
@@ -396,8 +390,7 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
         Last param is the function the coroutine runs. Signature of
         void(std::shared_ptr<Coro>).
     */
-    auto coro = std::make_shared<Coro>(
-        Coro_create_t{}, *this, t, name, std::forward<F>(f));
+    auto coro = std::make_shared<Coro>(Coro_create_t{}, *this, t, name, std::forward<F>(f));
     if (!coro->post())
     {
         // The Coro was not successfully posted.  Disable it so it's destructor
@@ -408,6 +401,4 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
     return coro;
 }
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

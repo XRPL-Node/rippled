@@ -4,7 +4,7 @@
 #include <xrpl/protocol/STInteger.h>
 #include <xrpl/protocol/TxFormats.h>
 
-namespace ripple {
+namespace xrpl {
 
 struct STInteger_test : public beast::unit_test::suite
 {
@@ -22,8 +22,7 @@ struct STInteger_test : public beast::unit_test::suite
         STUInt8 tr(sfTransactionResult, 0);
         BEAST_EXPECT(tr.value() == 0);
         BEAST_EXPECT(
-            tr.getText() ==
-            "The transaction was applied. Only final in a validated ledger.");
+            tr.getText() == "The transaction was applied. Only final in a validated ledger.");
         BEAST_EXPECT(tr.getSType() == STI_UINT8);
         BEAST_EXPECT(tr.getJson(JsonOptions::none) == "tesSUCCESS");
 
@@ -101,8 +100,7 @@ struct STInteger_test : public beast::unit_test::suite
         BEAST_EXPECT(u64_2.value() == 0xFFFFFFFFFFFFFFFFull);
         BEAST_EXPECT(u64_2.getText() == "18446744073709551615");
         BEAST_EXPECT(u64_2.getSType() == STI_UINT64);
-        BEAST_EXPECT(
-            u64_2.getJson(JsonOptions::none) == "18446744073709551615");
+        BEAST_EXPECT(u64_2.getJson(JsonOptions::none) == "18446744073709551615");
     }
 
     void
@@ -139,6 +137,6 @@ struct STInteger_test : public beast::unit_test::suite
     }
 };
 
-BEAST_DEFINE_TESTSUITE(STInteger, protocol, ripple);
+BEAST_DEFINE_TESTSUITE(STInteger, protocol, xrpl);
 
-}  // namespace ripple
+}  // namespace xrpl

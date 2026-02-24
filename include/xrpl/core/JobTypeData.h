@@ -1,11 +1,10 @@
-#ifndef XRPL_CORE_JOBTYPEDATA_H_INCLUDED
-#define XRPL_CORE_JOBTYPEDATA_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/beast/insight/Collector.h>
 #include <xrpl/core/JobTypeInfo.h>
 
-namespace ripple {
+namespace xrpl {
 
 struct JobTypeData
 {
@@ -43,8 +42,7 @@ public:
         , running(0)
         , deferred(0)
     {
-        m_load.setTargetLatency(
-            info.getAverageLatency(), info.getPeakLatency());
+        m_load.setTargetLatency(info.getAverageLatency(), info.getPeakLatency());
 
         if (!info.special())
         {
@@ -83,6 +81,4 @@ public:
     }
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

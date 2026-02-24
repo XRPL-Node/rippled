@@ -1,9 +1,8 @@
-#ifndef XRPL_PROTOCOL_JSONFIELDS_H_INCLUDED
-#define XRPL_PROTOCOL_JSONFIELDS_H_INCLUDED
+#pragma once
 
 #include <xrpl/json/json_value.h>
 
-namespace ripple {
+namespace xrpl {
 namespace jss {
 
 // JSON static strings
@@ -725,6 +724,4 @@ JSS(write_load);              // out: GetCounts
 #undef JSS
 
 }  // namespace jss
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

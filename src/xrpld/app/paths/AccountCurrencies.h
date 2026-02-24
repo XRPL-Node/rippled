@@ -1,11 +1,10 @@
-#ifndef XRPL_APP_PATHS_ACCOUNTCURRENCIES_H_INCLUDED
-#define XRPL_APP_PATHS_ACCOUNTCURRENCIES_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/paths/RippleLineCache.h>
 
 #include <xrpl/protocol/UintTypes.h>
 
-namespace ripple {
+namespace xrpl {
 
 hash_set<Currency>
 accountDestCurrencies(
@@ -19,6 +18,4 @@ accountSourceCurrencies(
     std::shared_ptr<RippleLineCache> const& lrLedger,
     bool includeXRP);
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

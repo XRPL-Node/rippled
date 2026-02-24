@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_HARDENED_HASH_H_INCLUDED
-#define XRPL_BASICS_HARDENED_HASH_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/hash/hash_append.h>
 #include <xrpl/beast/hash/xxhasher.h>
@@ -9,7 +8,7 @@
 #include <random>
 #include <utility>
 
-namespace ripple {
+namespace xrpl {
 
 namespace detail {
 
@@ -92,6 +91,4 @@ public:
     }
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

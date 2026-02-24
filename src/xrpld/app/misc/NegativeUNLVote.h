@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_MISC_NEGATIVEUNLVOTE_H_INCLUDED
-#define XRPL_APP_MISC_NEGATIVEUNLVOTE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 
@@ -10,7 +9,7 @@
 
 #include <optional>
 
-namespace ripple {
+namespace xrpl {
 
 template <class Adaptor>
 class Validations;
@@ -34,20 +33,17 @@ public:
      * An unreliable validator is a candidate to be disabled by the NegativeUNL
      * protocol.
      */
-    static constexpr size_t negativeUNLLowWaterMark =
-        FLAG_LEDGER_INTERVAL * 50 / 100;
+    static constexpr size_t negativeUNLLowWaterMark = FLAG_LEDGER_INTERVAL * 50 / 100;
     /**
      * An unreliable validator must have more than negativeUNLHighWaterMark
      * validations in the last flag ledger period to be re-enabled.
      */
-    static constexpr size_t negativeUNLHighWaterMark =
-        FLAG_LEDGER_INTERVAL * 80 / 100;
+    static constexpr size_t negativeUNLHighWaterMark = FLAG_LEDGER_INTERVAL * 80 / 100;
     /**
      * The minimum number of validations of the local node for it to
      * participate in the voting.
      */
-    static constexpr size_t negativeUNLMinLocalValsToVote =
-        FLAG_LEDGER_INTERVAL * 90 / 100;
+    static constexpr size_t negativeUNLMinLocalValsToVote = FLAG_LEDGER_INTERVAL * 90 / 100;
     /**
      * We don't want to disable new validators immediately after adding them.
      * So we skip voting for disabling them for 2 flag ledgers.
@@ -194,6 +190,4 @@ private:
     friend class test::NegativeUNLVoteScoreTable_test;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_RANDOM_H_INCLUDED
-#define XRPL_BASICS_RANDOM_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/beast/xor_shift_engine.h>
@@ -11,7 +10,7 @@
 #include <random>
 #include <type_traits>
 
-namespace ripple {
+namespace xrpl {
 
 #ifndef __INTELLISENSE__
 static_assert(
@@ -90,12 +89,10 @@ default_prng()
 */
 /** @{ */
 template <class Engine, class Integral>
-std::enable_if_t<
-    std::is_integral<Integral>::value && detail::is_engine<Engine>::value,
-    Integral>
+std::enable_if_t<std::is_integral<Integral>::value && detail::is_engine<Engine>::value, Integral>
 rand_int(Engine& engine, Integral min, Integral max)
 {
-    XRPL_ASSERT(max > min, "ripple::rand_int : max over min inputs");
+    XRPL_ASSERT(max > min, "xrpl::rand_int : max over min inputs");
 
     // This should have no state and constructing it should
     // be very cheap. If that turns out not to be the case
@@ -111,9 +108,7 @@ rand_int(Integral min, Integral max)
 }
 
 template <class Engine, class Integral>
-std::enable_if_t<
-    std::is_integral<Integral>::value && detail::is_engine<Engine>::value,
-    Integral>
+std::enable_if_t<std::is_integral<Integral>::value && detail::is_engine<Engine>::value, Integral>
 rand_int(Engine& engine, Integral max)
 {
     return rand_int(engine, Integral(0), max);
@@ -127,9 +122,7 @@ rand_int(Integral max)
 }
 
 template <class Integral, class Engine>
-std::enable_if_t<
-    std::is_integral<Integral>::value && detail::is_engine<Engine>::value,
-    Integral>
+std::enable_if_t<std::is_integral<Integral>::value && detail::is_engine<Engine>::value, Integral>
 rand_int(Engine& engine)
 {
     return rand_int(engine, std::numeric_limits<Integral>::max());
@@ -147,22 +140,18 @@ rand_int()
 /** @{ */
 template <class Byte, class Engine>
 std::enable_if_t<
-    (std::is_same<Byte, unsigned char>::value ||
-     std::is_same<Byte, std::uint8_t>::value) &&
+    (std::is_same<Byte, unsigned char>::value || std::is_same<Byte, std::uint8_t>::value) &&
         detail::is_engine<Engine>::value,
     Byte>
 rand_byte(Engine& engine)
 {
     return static_cast<Byte>(rand_int<Engine, std::uint32_t>(
-        engine,
-        std::numeric_limits<Byte>::min(),
-        std::numeric_limits<Byte>::max()));
+        engine, std::numeric_limits<Byte>::min(), std::numeric_limits<Byte>::max()));
 }
 
 template <class Byte = std::uint8_t>
 std::enable_if_t<
-    (std::is_same<Byte, unsigned char>::value ||
-     std::is_same<Byte, std::uint8_t>::value),
+    (std::is_same<Byte, unsigned char>::value || std::is_same<Byte, std::uint8_t>::value),
     Byte>
 rand_byte()
 {
@@ -186,6 +175,4 @@ rand_bool()
 }
 /** @} */
 
-}  // namespace ripple
-
-#endif  // XRPL_BASICS_RANDOM_H_INCLUDED
+}  // namespace xrpl

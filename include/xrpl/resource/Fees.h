@@ -1,9 +1,8 @@
-#ifndef XRPL_RESOURCE_FEES_H_INCLUDED
-#define XRPL_RESOURCE_FEES_H_INCLUDED
+#pragma once
 
 #include <xrpl/resource/Charge.h>
 
-namespace ripple {
+namespace xrpl {
 namespace Resource {
 
 // clang-format off
@@ -40,6 +39,4 @@ extern Charge const feeDrop;              // The cost of being dropped for
 // clang-format on
 
 }  // namespace Resource
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

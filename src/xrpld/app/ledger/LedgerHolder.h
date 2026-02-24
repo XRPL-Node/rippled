@@ -1,12 +1,11 @@
-#ifndef XRPL_APP_LEDGER_LEDGERHOLDER_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGERHOLDER_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/contract.h>
 
 #include <mutex>
 
-namespace ripple {
+namespace xrpl {
 
 // Can std::atomic<std::shared_ptr>> make this lock free?
 
@@ -53,6 +52,4 @@ private:
     std::shared_ptr<Ledger const> m_heldLedger;
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

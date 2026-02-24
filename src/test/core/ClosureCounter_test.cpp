@@ -7,7 +7,7 @@
 #include <chrono>
 #include <thread>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 
 //------------------------------------------------------------------------------
@@ -16,11 +16,7 @@ class ClosureCounter_test : public beast::unit_test::suite
 {
     // We're only using Env for its Journal.  That Journal gives better
     // coverage in unit tests.
-    test::jtx::Env env_{
-        *this,
-        jtx::envconfig(),
-        nullptr,
-        beast::severities::kDisabled};
+    test::jtx::Env env_{*this, jtx::envconfig(), nullptr, beast::severities::kDisabled};
     beast::Journal j{env_.app().journal("ClosureCounter_test")};
 
     void
@@ -152,8 +148,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped =
-                strCounter.wrap([](TrackedString in) { return in += "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString in) { return in += "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
@@ -170,8 +165,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString const&> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped = strCounter.wrap(
-                [](TrackedString const& in) { return in + "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString const& in) { return in + "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
@@ -188,8 +182,7 @@ class ClosureCounter_test : public beast::unit_test::suite
             ClosureCounter<TrackedString, TrackedString&> strCounter;
             BEAST_EXPECT(strCounter.count() == 0);
 
-            auto wrapped =
-                strCounter.wrap([](TrackedString& in) { return in += "!"; });
+            auto wrapped = strCounter.wrap([](TrackedString& in) { return in += "!"; });
 
             BEAST_EXPECT(strCounter.count() == 1);
             BEAST_EXPECT(wrapped);
@@ -318,7 +311,7 @@ public:
     }
 };
 
-BEAST_DEFINE_TESTSUITE(ClosureCounter, core, ripple);
+BEAST_DEFINE_TESTSUITE(ClosureCounter, core, xrpl);
 
 }  // namespace test
-}  // namespace ripple
+}  // namespace xrpl

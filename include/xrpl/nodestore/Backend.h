@@ -1,11 +1,10 @@
-#ifndef XRPL_NODESTORE_BACKEND_H_INCLUDED
-#define XRPL_NODESTORE_BACKEND_H_INCLUDED
+#pragma once
 
 #include <xrpl/nodestore/Types.h>
 
 #include <cstdint>
 
-namespace ripple {
+namespace xrpl {
 namespace NodeStore {
 
 /** A backend used for the NodeStore.
@@ -65,8 +64,7 @@ public:
     open(bool createIfMissing, uint64_t appType, uint64_t uid, uint64_t salt)
     {
         Throw<std::runtime_error>(
-            "Deterministic appType/uid/salt not supported by backend " +
-            getName());
+            "Deterministic appType/uid/salt not supported by backend " + getName());
     }
 
     /** Close the backend.
@@ -143,6 +141,4 @@ public:
 };
 
 }  // namespace NodeStore
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

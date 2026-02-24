@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_CONSENSUS_RCLCXPEERPOS_H_INCLUDED
-#define XRPL_APP_CONSENSUS_RCLCXPEERPOS_H_INCLUDED
+#pragma once
 
 #include <xrpld/consensus/ConsensusProposal.h>
 
@@ -14,7 +13,7 @@
 #include <cstdint>
 #include <string>
 
-namespace ripple {
+namespace xrpl {
 
 /** A peer's signed, proposed position for use in RCLConsensus.
 
@@ -128,6 +127,4 @@ proposalUniqueId(
     Slice const& publicKey,
     Slice const& signature);
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_CORE_JOB_H_INCLUDED
-#define XRPL_CORE_JOB_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/core/ClosureCounter.h>
@@ -7,7 +6,7 @@
 
 #include <functional>
 
-namespace ripple {
+namespace xrpl {
 
 // Note that this queue should only be used for CPU-bound jobs
 // It is primarily intended for signature checking
@@ -131,6 +130,4 @@ private:
 
 using JobCounter = ClosureCounter<void>;
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

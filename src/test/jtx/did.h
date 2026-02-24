@@ -1,11 +1,10 @@
-#ifndef XRPL_TEST_JTX_DID_H_INCLUDED
-#define XRPL_TEST_JTX_DID_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 #include <test/jtx/Env.h>
 #include <test/jtx/owners.h>
 
-namespace ripple {
+namespace xrpl {
 namespace test {
 namespace jtx {
 
@@ -80,6 +79,4 @@ del(jtx::Account const& account);
 }  // namespace jtx
 
 }  // namespace test
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

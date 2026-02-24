@@ -1,6 +1,6 @@
 #include <xrpld/app/paths/AccountCurrencies.h>
 
-namespace ripple {
+namespace xrpl {
 
 hash_set<Currency>
 accountSourceCurrencies(
@@ -14,8 +14,7 @@ accountSourceCurrencies(
     if (includeXRP)
         currencies.insert(xrpCurrency());
 
-    if (auto const lines =
-            lrCache->getRippleLines(account, LineDirection::outgoing))
+    if (auto const lines = lrCache->getRippleLines(account, LineDirection::outgoing))
     {
         for (auto const& rspEntry : *lines)
         {
@@ -24,10 +23,9 @@ accountSourceCurrencies(
             // Filter out non
             if (saBalance > beast::zero
                 // Have IOUs to send.
-                ||
-                (rspEntry.getLimitPeer()
-                 // Peer extends credit.
-                 && ((-saBalance) < rspEntry.getLimitPeer())))  // Credit left.
+                || (rspEntry.getLimitPeer()
+                    // Peer extends credit.
+                    && ((-saBalance) < rspEntry.getLimitPeer())))  // Credit left.
             {
                 currencies.insert(saBalance.getCurrency());
             }
@@ -50,8 +48,7 @@ accountDestCurrencies(
         currencies.insert(xrpCurrency());
     // Even if account doesn't exist
 
-    if (auto const lines =
-            lrCache->getRippleLines(account, LineDirection::outgoing))
+    if (auto const lines = lrCache->getRippleLines(account, LineDirection::outgoing))
     {
         for (auto const& rspEntry : *lines)
         {
@@ -66,4 +63,4 @@ accountDestCurrencies(
     return currencies;
 }
 
-}  // namespace ripple
+}  // namespace xrpl

@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_SEED_H_INCLUDED
-#define XRPL_PROTOCOL_SEED_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Slice.h>
 #include <xrpl/basics/base_uint.h>
@@ -8,7 +7,7 @@
 #include <array>
 #include <optional>
 
-namespace ripple {
+namespace xrpl {
 
 /** Seeds are used to generate deterministic secret keys. */
 class Seed
@@ -117,6 +116,4 @@ toBase58(Seed const& seed)
     return encodeBase58Token(TokenType::FamilySeed, seed.data(), seed.size());
 }
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

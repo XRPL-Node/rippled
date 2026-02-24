@@ -1,9 +1,8 @@
-#ifndef XRPL_CORE_JOBTYPEINFO_H_INCLUDED
-#define XRPL_CORE_JOBTYPEINFO_H_INCLUDED
+#pragma once
 
 #include <xrpl/core/Job.h>
 
-namespace ripple {
+namespace xrpl {
 
 /** Holds all the 'static' information about a job, which does not change */
 class JobTypeInfo
@@ -78,6 +77,4 @@ public:
     }
 };
 
-}  // namespace ripple
-
-#endif
+}  // namespace xrpl

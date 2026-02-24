@@ -2,12 +2,9 @@
 #include <xrpl/core/LoadEvent.h>
 #include <xrpl/core/LoadMonitor.h>
 
-namespace ripple {
+namespace xrpl {
 
-LoadEvent::LoadEvent(
-    LoadMonitor& monitor,
-    std::string const& name,
-    bool shouldStart)
+LoadEvent::LoadEvent(LoadMonitor& monitor, std::string const& name, bool shouldStart)
     : monitor_(monitor)
     , running_(shouldStart)
     , name_(name)
@@ -63,7 +60,7 @@ LoadEvent::start()
 void
 LoadEvent::stop()
 {
-    XRPL_ASSERT(running_, "ripple::LoadEvent::stop : is running");
+    XRPL_ASSERT(running_, "xrpl::LoadEvent::stop : is running");
 
     auto const now = std::chrono::steady_clock::now();
 
@@ -74,4 +71,4 @@ LoadEvent::stop()
     monitor_.addLoadSample(*this);
 }
 
-}  // namespace ripple
+}  // namespace xrpl
