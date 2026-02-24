@@ -25,7 +25,7 @@ make_NetworkOPs(
     JobQueue& jobQueue,
     LedgerMaster& ledgerMaster,
     ValidatorKeys const& validatorKeys,
-    boost::asio::io_context& ioSvc,
+    boost::asio::io_context& ioCtx,
     beast::Journal journal,
     beast::insight::Collector::ptr const& collector);
 

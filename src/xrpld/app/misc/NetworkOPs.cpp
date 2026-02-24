@@ -208,16 +208,16 @@ public:
         JobQueue& job_queue,
         LedgerMaster& ledgerMaster,
         ValidatorKeys const& validatorKeys,
-        boost::asio::io_context& io_svc,
+        boost::asio::io_context& ioCtx,
         beast::Journal journal,
         beast::insight::Collector::ptr const& collector)
         : registry_(registry)
         , m_journal(journal)
         , m_localTX(make_LocalTxs())
         , mMode(start_valid ? OperatingMode::FULL : OperatingMode::DISCONNECTED)
-        , heartbeatTimer_(io_svc)
-        , clusterTimer_(io_svc)
-        , accountHistoryTxTimer_(io_svc)
+        , heartbeatTimer_(ioCtx)
+        , clusterTimer_(ioCtx)
+        , accountHistoryTxTimer_(ioCtx)
         , mConsensus(
               registry_.get().app(),
               make_FeeVote(
@@ -4435,7 +4435,7 @@ make_NetworkOPs(
     JobQueue& jobQueue,
     LedgerMaster& ledgerMaster,
     ValidatorKeys const& validatorKeys,
-    boost::asio::io_context& ioSvc,
+    boost::asio::io_context& ioCtx,
     beast::Journal journal,
     beast::insight::Collector::ptr const& collector)
 {
@@ -4448,7 +4448,7 @@ make_NetworkOPs(
         jobQueue,
         ledgerMaster,
         validatorKeys,
-        ioSvc,
+        ioCtx,
         journal,
         collector);
 }
