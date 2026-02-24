@@ -170,7 +170,8 @@ InboundLedger::~InboundLedger()
     {
         JLOG(journal_.debug()) << "Acquire " << hash_ << " abort "
                                << ((timeouts_ == 0) ? std::string()
-                                                    : (std::string("timeouts:") + std::to_string(timeouts_) + " "))
+                                                    : (std::string("timeouts:") +
+                                                       std::to_string(timeouts_) + " "))
                                << mStats.get();
     }
 }
@@ -222,7 +223,8 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
             if (mLedger->header().hash != hash_ || (mSeq != 0 && mSeq != mLedger->header().seq))
             {
                 // We know for a fact the ledger can never be acquired
-                JLOG(journal_.warn()) << "hash " << hash_ << " seq " << std::to_string(mSeq) << " cannot be a ledger";
+                JLOG(journal_.warn())
+                    << "hash " << hash_ << " seq " << std::to_string(mSeq) << " cannot be a ledger";
                 mLedger.reset();
                 failed_ = true;
             }
@@ -259,7 +261,8 @@ InboundLedger::tryDB(NodeStore::Database& srcDB)
                 return;
 
             // Store the ledger header in the ledger's database
-            mLedger->stateMap().family().db().store(hotLEDGER, std::move(*data), hash_, mLedger->header().seq);
+            mLedger->stateMap().family().db().store(
+                hotLEDGER, std::move(*data), hash_, mLedger->header().seq);
         }
 
         if (mSeq == 0)
@@ -400,8 +403,9 @@ InboundLedger::done()
     touch();
 
     JLOG(journal_.debug()) << "Acquire " << hash_ << (failed_ ? " fail " : " ")
-                           << ((timeouts_ == 0) ? std::string()
-                                                : (std::string("timeouts:") + std::to_string(timeouts_) + " "))
+                           << ((timeouts_ == 0)
+                                   ? std::string()
+                                   : (std::string("timeouts:") + std::to_string(timeouts_) + " "))
                            << mStats.get();
 
     XRPL_ASSERT(complete_ || failed_, "xrpl::InboundLedger::done : complete or failed");
@@ -538,7 +542,8 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
         tmGL.set_itype(protocol::liBASE);
         if (mSeq != 0)
             tmGL.set_ledgerseq(mSeq);
-        JLOG(journal_.trace()) << "Sending header request to " << (peer ? "selected peer" : "all peers");
+        JLOG(journal_.trace()) << "Sending header request to "
+                               << (peer ? "selected peer" : "all peers");
         mPeerSet->sendRequest(tmGL, peer);
         return;
     }
@@ -577,7 +582,8 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
             // we need the root node
             tmGL.set_itype(protocol::liAS_NODE);
             *tmGL.add_nodeids() = SHAMapNodeID().getRawString();
-            JLOG(journal_.trace()) << "Sending AS root request to " << (peer ? "selected peer" : "all peers");
+            JLOG(journal_.trace())
+                << "Sending AS root request to " << (peer ? "selected peer" : "all peers");
             mPeerSet->sendRequest(tmGL, peer);
             return;
         }
@@ -617,8 +623,8 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
                             *(tmGL.add_nodeids()) = id.first.getRawString();
                         }
 
-                        JLOG(journal_.trace()) << "Sending AS node request (" << nodes.size() << ") to "
-                                               << (peer ? "selected peer" : "all peers");
+                        JLOG(journal_.trace()) << "Sending AS node request (" << nodes.size()
+                                               << ") to " << (peer ? "selected peer" : "all peers");
                         mPeerSet->sendRequest(tmGL, peer);
                         return;
                     }
@@ -647,7 +653,8 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
             // we need the root node
             tmGL.set_itype(protocol::liTX_NODE);
             *(tmGL.add_nodeids()) = SHAMapNodeID().getRawString();
-            JLOG(journal_.trace()) << "Sending TX root request to " << (peer ? "selected peer" : "all peers");
+            JLOG(journal_.trace())
+                << "Sending TX root request to " << (peer ? "selected peer" : "all peers");
             mPeerSet->sendRequest(tmGL, peer);
             return;
         }
@@ -695,20 +702,23 @@ InboundLedger::trigger(std::shared_ptr<Peer> const& peer, TriggerReason reason)
 
     if (complete_ || failed_)
     {
-        JLOG(journal_.debug()) << "Done:" << (complete_ ? " complete" : "") << (failed_ ? " failed " : " ")
-                               << mLedger->header().seq;
+        JLOG(journal_.debug()) << "Done:" << (complete_ ? " complete" : "")
+                               << (failed_ ? " failed " : " ") << mLedger->header().seq;
         sl.unlock();
         done();
     }
 }
 
 void
-InboundLedger::filterNodes(std::vector<std::pair<SHAMapNodeID, uint256>>& nodes, TriggerReason reason)
+InboundLedger::filterNodes(
+    std::vector<std::pair<SHAMapNodeID, uint256>>& nodes,
+    TriggerReason reason)
 {
     // Sort nodes so that the ones we haven't recently
     // requested come before the ones we have.
-    auto dup = std::stable_partition(
-        nodes.begin(), nodes.end(), [this](auto const& item) { return mRecentNodes.count(item.second) == 0; });
+    auto dup = std::stable_partition(nodes.begin(), nodes.end(), [this](auto const& item) {
+        return mRecentNodes.count(item.second) == 0;
+    });
 
     // If everything is a duplicate we don't want to send
     // any query at all except on a timeout where we need
@@ -756,7 +766,8 @@ InboundLedger::takeHeader(std::string const& data)
     mLedger = std::make_shared<Ledger>(deserializeHeader(makeSlice(data)), app_.config(), *f);
     if (mLedger->header().hash != hash_ || (mSeq != 0 && mSeq != mLedger->header().seq))
     {
-        JLOG(journal_.warn()) << "Acquire hash mismatch: " << mLedger->header().hash << "!=" << hash_;
+        JLOG(journal_.warn()) << "Acquire hash mismatch: " << mLedger->header().hash
+                              << "!=" << hash_;
         mLedger.reset();
         return false;
     }
@@ -809,16 +820,19 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
         return;
     }
 
-    auto [map, rootHash, filter] = [&]() -> std::tuple<SHAMap&, SHAMapHash, std::unique_ptr<SHAMapSyncFilter>> {
+    auto [map, rootHash, filter] =
+        [&]() -> std::tuple<SHAMap&, SHAMapHash, std::unique_ptr<SHAMapSyncFilter>> {
         if (packet.type() == protocol::liTX_NODE)
             return {
                 mLedger->txMap(),
                 SHAMapHash{mLedger->header().txHash},
-                std::make_unique<TransactionStateSF>(mLedger->txMap().family().db(), app_.getLedgerMaster())};
+                std::make_unique<TransactionStateSF>(
+                    mLedger->txMap().family().db(), app_.getLedgerMaster())};
         return {
             mLedger->stateMap(),
             SHAMapHash{mLedger->header().accountHash},
-            std::make_unique<AccountStateSF>(mLedger->stateMap().family().db(), app_.getLedgerMaster())};
+            std::make_unique<AccountStateSF>(
+                mLedger->stateMap().family().db(), app_.getLedgerMaster())};
     }();
 
     try
@@ -891,7 +905,8 @@ InboundLedger::takeAsRootNode(Slice const& data, SHAMapAddNode& san)
     }
 
     AccountStateSF filter(mLedger->stateMap().family().db(), app_.getLedgerMaster());
-    san += mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, data, &filter);
+    san +=
+        mLedger->stateMap().addRootNode(SHAMapHash{mLedger->header().accountHash}, data, &filter);
     return san.isGood();
 }
 
@@ -956,7 +971,9 @@ InboundLedger::getNeededHashes()
     Returns 'true' if we need to dispatch
 */
 bool
-InboundLedger::gotData(std::weak_ptr<Peer> peer, std::shared_ptr<protocol::TMLedgerData> const& data)
+InboundLedger::gotData(
+    std::weak_ptr<Peer> peer,
+    std::shared_ptr<protocol::TMLedgerData> const& data)
 {
     std::lock_guard sl(mReceivedDataLock);
 
@@ -1064,7 +1081,8 @@ InboundLedger::processData(std::shared_ptr<Peer> peer, protocol::TMLedgerData& p
         SHAMapAddNode san;
         receiveNode(packet, san);
 
-        JLOG(journal_.debug()) << "Ledger " << ((packet.type() == protocol::liTX_NODE) ? "TX" : "AS")
+        JLOG(journal_.debug()) << "Ledger "
+                               << ((packet.type() == protocol::liTX_NODE) ? "TX" : "AS")
                                << " node stats: " << san.get();
 
         if (san.isUseful())
@@ -1139,7 +1157,8 @@ struct PeerDataCounts
             outFunc(v);
         }
 #else
-        std::sample(counts.begin(), counts.end(), boost::make_function_output_iterator(outFunc), n, rng);
+        std::sample(
+            counts.begin(), counts.end(), boost::make_function_output_iterator(outFunc), n, rng);
 #endif
     }
 };
@@ -1190,7 +1209,9 @@ InboundLedger::runData()
     // Select a random sample of the peers that gives us the most nodes that are
     // useful
     dataCounts.prune();
-    dataCounts.sampleN(maxUsefulPeers, [&](std::shared_ptr<Peer> const& peer) { trigger(peer, TriggerReason::reply); });
+    dataCounts.sampleN(maxUsefulPeers, [&](std::shared_ptr<Peer> const& peer) {
+        trigger(peer, TriggerReason::reply);
+    });
 }
 
 Json::Value

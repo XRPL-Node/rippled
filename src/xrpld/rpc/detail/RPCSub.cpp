@@ -69,7 +69,8 @@ public:
             // Start a sending thread.
             JLOG(j_.info()) << "RPCCall::fromNetwork start";
 
-            mSending = m_jobQueue.addJob(jtCLIENT_SUBSCRIBE, "RPCSubSendThr", [this]() { sendThread(); });
+            mSending =
+                m_jobQueue.addJob(jtCLIENT_SUBSCRIBE, "RPCSubSendThr", [this]() { sendThread(); });
         }
     }
 
@@ -131,7 +132,17 @@ private:
                     JLOG(j_.info()) << "RPCCall::fromNetwork: " << mIp;
 
                     RPCCall::fromNetwork(
-                        m_io_context, mIp, mPort, mUsername, mPassword, mPath, "event", jvEvent, mSSL, true, registry_);
+                        m_io_context,
+                        mIp,
+                        mPort,
+                        mUsername,
+                        mPassword,
+                        mPath,
+                        "event",
+                        jvEvent,
+                        mSSL,
+                        true,
+                        registry_);
                 }
                 catch (std::exception const& e)
                 {
@@ -180,7 +191,13 @@ make_RPCSub(
     ServiceRegistry& registry)
 {
     return std::make_shared<RPCSubImp>(
-        std::ref(source), std::ref(io_context), std::ref(jobQueue), strUrl, strUsername, strPassword, registry);
+        std::ref(source),
+        std::ref(io_context),
+        std::ref(jobQueue),
+        strUrl,
+        strUsername,
+        strPassword,
+        registry);
 }
 
 }  // namespace xrpl

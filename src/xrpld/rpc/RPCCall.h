@@ -25,7 +25,10 @@ namespace xrpl {
 namespace RPCCall {
 
 int
-fromCommandLine(Config const& config, std::vector<std::string> const& vCmd, ServiceRegistry& registry);
+fromCommandLine(
+    Config const& config,
+    std::vector<std::string> const& vCmd,
+    ServiceRegistry& registry);
 
 void
 fromNetwork(
@@ -40,12 +43,17 @@ fromNetwork(
     bool const bSSL,
     bool quiet,
     ServiceRegistry& registry,
-    std::function<void(Json::Value const& jvInput)> callbackFuncP = std::function<void(Json::Value const& jvInput)>(),
+    std::function<void(Json::Value const& jvInput)> callbackFuncP =
+        std::function<void(Json::Value const& jvInput)>(),
     std::unordered_map<std::string, std::string> headers = {});
 }  // namespace RPCCall
 
 Json::Value
-rpcCmdToJson(std::vector<std::string> const& args, Json::Value& retParams, unsigned int apiVersion, beast::Journal j);
+rpcCmdToJson(
+    std::vector<std::string> const& args,
+    Json::Value& retParams,
+    unsigned int apiVersion,
+    beast::Journal j);
 
 /** Internal invocation of RPC client.
  *  Used by both rippled command line as well as rippled unit tests
