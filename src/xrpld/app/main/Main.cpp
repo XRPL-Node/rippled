@@ -746,8 +746,6 @@ run(int argc, char** argv)
     // No arguments. Run server.
     if (!vm.count("parameters"))
     {
-        // TODO: this comment can be removed in a future release -
-        // say 1.7 or higher
         if (app->config().had_trailing_comments())
         {
             JLOG(app->getJournal("Application").warn())
