@@ -71,7 +71,9 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_channels: account and ledger hash.",
      __LINE__,
-     {"account_channels", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rD5MbavGfiSC5m7mkxy1FANuT7s3HxqpoF"},
+     {"account_channels",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "rD5MbavGfiSC5m7mkxy1FANuT7s3HxqpoF"},
      R"({
     "method" : "account_channels",
     "params" : [
@@ -84,7 +86,9 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_channels: account and ledger index.",
      __LINE__,
-     {"account_channels", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "r9emE59aTWb85t64dAebKrxYMBTpzK5yR7"},
+     {"account_channels",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "r9emE59aTWb85t64dAebKrxYMBTpzK5yR7"},
      R"({
     "method" : "account_channels",
     "params" : [
@@ -97,7 +101,9 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_channels: two accounts.",
      __LINE__,
-     {"account_channels", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA"},
+     {"account_channels",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA"},
      R"({
     "method" : "account_channels",
     "params" : [
@@ -127,7 +133,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_channels: two accounts and ledger index.",
      __LINE__,
-     {"account_channels", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "90210"},
+     {"account_channels",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "90210"},
      R"({
     "method" : "account_channels",
     "params" : [
@@ -457,7 +466,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_lines: peer and numeric ledger index.",
      __LINE__,
-     {"account_lines", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "888888888"},
+     {"account_lines",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "888888888"},
      R"({
     "method" : "account_lines",
     "params" : [
@@ -471,7 +483,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_lines: peer and text ledger index.",
      __LINE__,
-     {"account_lines", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "closed"},
+     {"account_lines",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "closed"},
      R"({
     "method" : "account_lines",
     "params" : [
@@ -612,7 +627,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     {
         "account_lines: invalid ledger selector.",
         __LINE__,
-        {"account_lines", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "not_a_ledger"},
+        {"account_lines",
+         "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+         "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+         "not_a_ledger"},
         R"({
     "method" : "account_lines",
     "params" : [
@@ -1050,7 +1068,13 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_tx: ledger_index_min and _max plus trailing params.",
      __LINE__,
-     {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "-1", "413", "binary", "count", "descending"},
+     {"account_tx",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "-1",
+      "413",
+      "binary",
+      "count",
+      "descending"},
      R"({
     "method" : "account_tx",
     "params" : [
@@ -1082,7 +1106,14 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_tx: ledger_index_min and _max, limit, trailing args.",
      __LINE__,
-     {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "247", "-1", "300", "count", "descending", "binary"},
+     {"account_tx",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "247",
+      "-1",
+      "300",
+      "count",
+      "descending",
+      "binary"},
      R"({
     "method" : "account_tx",
     "params" : [
@@ -1116,7 +1147,14 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"account_tx: ledger_index_min and _max, limit, offset, trailing.",
      __LINE__,
-     {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "589", "590", "67", "45", "descending", "count"},
+     {"account_tx",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "589",
+      "590",
+      "67",
+      "45",
+      "descending",
+      "count"},
      R"({
     "method" : "account_tx",
     "params" : [
@@ -1284,7 +1322,14 @@ static RPCCallTestData const rpcCallTestArray[] = {
     },
     {"account_tx: RIPD-1570.",
      __LINE__,
-     {"account_tx", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "-1", "-1", "2", "false", "false", "false"},
+     {"account_tx",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "-1",
+      "-1",
+      "2",
+      "false",
+      "false",
+      "false"},
      R"({
    "method" : "account_tx",
    "params" : [
@@ -1363,7 +1408,11 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"book_offers: add issuer and numeric ledger index.",
      __LINE__,
-     {"book_offers", "USD/rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "EUR", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "666"},
+     {"book_offers",
+      "USD/rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "EUR",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "666"},
      R"({
     "method" : "book_offers",
     "params" : [
@@ -1383,7 +1432,11 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"book_offers: add issuer and text ledger index.",
      __LINE__,
-     {"book_offers", "USD", "EUR/rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA", "current"},
+     {"book_offers",
+      "USD",
+      "EUR/rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "rnUy2SHTrB9DubsPmkJZUXTf5FcNDGrYEA",
+      "current"},
      R"({
     "method" : "book_offers",
     "params" : [
@@ -2252,7 +2305,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"deposit_authorized: with text ledger index.",
      __LINE__,
-     {"deposit_authorized", "source_account_NotValidated", "destination_account_NotValidated", "validated"},
+     {"deposit_authorized",
+      "source_account_NotValidated",
+      "destination_account_NotValidated",
+      "validated"},
      R"({
     "method" : "deposit_authorized",
     "params" : [
@@ -4342,7 +4398,12 @@ static RPCCallTestData const rpcCallTestArray[] = {
      })"},
     {"sign: too many arguments.",
      __LINE__,
-     {"sign", "my_secret", R"({"json_argument":true})", "offline", "CounterpartySignature", "extra"},
+     {"sign",
+      "my_secret",
+      R"({"json_argument":true})",
+      "offline",
+      "CounterpartySignature",
+      "extra"},
      R"({
     "method" : "sign",
     "params" : [
@@ -4413,7 +4474,11 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"sign_for: offline.",
      __LINE__,
-     {"sign_for", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "my_secret", R"({"json_argument":true})", "offline"},
+     {"sign_for",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "my_secret",
+      R"({"json_argument":true})",
+      "offline"},
      R"({
     "method" : "sign_for",
     "params" : [
@@ -4447,7 +4512,12 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"sign_for: too many arguments.",
      __LINE__,
-     {"sign_for", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "my_secret", R"({"json_argument":true})", "offline", "extra"},
+     {"sign_for",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "my_secret",
+      R"({"json_argument":true})",
+      "offline",
+      "extra"},
      R"({
     "method" : "sign_for",
     "params" : [
@@ -4478,7 +4548,11 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"sign_for: invalid final argument.",
      __LINE__,
-     {"sign_for", "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", "my_secret", R"({"json_argument":true})", "ofline"},
+     {"sign_for",
+      "rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh",
+      "my_secret",
+      R"({"json_argument":true})",
+      "ofline"},
      R"({
     "method" : "sign_for",
     "params" : [
@@ -4575,7 +4649,12 @@ static RPCCallTestData const rpcCallTestArray[] = {
      })"},
     {"submit: too many arguments.",
      __LINE__,
-     {"submit", "my_secret", R"({"json_argument":true})", "offline", "CounterpartySignature", "extra"},
+     {"submit",
+      "my_secret",
+      R"({"json_argument":true})",
+      "offline",
+      "CounterpartySignature",
+      "extra"},
      R"({
     "method" : "submit",
     "params" : [
@@ -4823,7 +4902,9 @@ static RPCCallTestData const rpcCallTestArray[] = {
     // -----------------------------------------------------------
     {"transaction_entry: ledger index.",
      __LINE__,
-     {"transaction_entry", "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV", "4294967295"},
+     {"transaction_entry",
+      "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV",
+      "4294967295"},
      R"({
     "method" : "transaction_entry",
     "params" : [
@@ -4836,7 +4917,9 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"transaction_entry: text ledger index.",
      __LINE__,
-     {"transaction_entry", "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV", "current"},
+     {"transaction_entry",
+      "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV",
+      "current"},
      R"({
     "method" : "transaction_entry",
     "params" : [
@@ -4880,7 +4963,10 @@ static RPCCallTestData const rpcCallTestArray[] = {
     })"},
     {"transaction_entry: too many arguments.",
      __LINE__,
-     {"transaction_entry", "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV", "validated", "extra"},
+     {"transaction_entry",
+      "0123456789ABCDEFGHIJKLMNOPQRSTUV0123456789ABCDEFGHIJKLMNOPQRSTUV",
+      "validated",
+      "extra"},
      R"({
     "method" : "transaction_entry",
     "params" : [

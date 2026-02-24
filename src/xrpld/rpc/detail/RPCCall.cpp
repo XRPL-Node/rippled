@@ -293,7 +293,8 @@ private:
         }
         else
         {
-            std::int32_t ledgerMin = 0, ledgerMax = 0;  // note: these are only used when properly set
+            std::int32_t ledgerMin = 0,
+                         ledgerMax = 0;  // note: these are only used when properly set
             if (auto const ledgerMinOpt = jvParseInt(jvParams[1u]))
             {
                 // A value of -1 instructs the server to use the most recent
