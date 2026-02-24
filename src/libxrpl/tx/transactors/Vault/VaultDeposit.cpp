@@ -170,7 +170,8 @@ VaultDeposit::doApply()
     // Note, vault owner is always authorized
     if (vault->isFlag(lsfVaultPrivate) && account_ != vault->at(sfOwner))
     {
-        if (auto const err = enforceMPTokenAuthorization(ctx_.view(), mptIssuanceID, account_, mPriorBalance, j_);
+        if (auto const err = enforceMPTokenAuthorization(
+                ctx_.view(), mptIssuanceID, account_, mPriorBalance, j_);
             !isTesSuccess(err))
             return err;
     }
@@ -179,8 +180,8 @@ VaultDeposit::doApply()
         // No authorization needed, but must ensure there is MPToken
         if (!view().exists(keylet::mptoken(mptIssuanceID, account_)))
         {
-            if (auto const err =
-                    authorizeMPToken(view(), mPriorBalance, mptIssuanceID->value(), account_, ctx_.journal);
+            if (auto const err = authorizeMPToken(
+                    view(), mPriorBalance, mptIssuanceID->value(), account_, ctx_.journal);
                 !isTesSuccess(err))
                 return err;
         }
@@ -189,7 +190,8 @@ VaultDeposit::doApply()
         if (vault->isFlag(lsfVaultPrivate))
         {
             // This follows from the reverse of the outer enclosing if condition
-            XRPL_ASSERT(account_ == vault->at(sfOwner), "xrpl::VaultDeposit::doApply : account is owner");
+            XRPL_ASSERT(
+                account_ == vault->at(sfOwner), "xrpl::VaultDeposit::doApply : account is owner");
             if (auto const err = authorizeMPToken(
                     view(),
                     mPriorBalance,              // priorBalance
@@ -206,7 +208,8 @@ VaultDeposit::doApply()
     STAmount sharesCreated = {vault->at(sfShareMPTID)}, assetsDeposited;
     if (view().rules().enabled(fixLendingProtocolV1_1) && ctx_.tx.isFlag(tfVaultDonate))
     {
-        XRPL_ASSERT(account_ == vault->at(sfOwner), "xrpl::VaultDeposit::doApply : account is owner");
+        XRPL_ASSERT(
+            account_ == vault->at(sfOwner), "xrpl::VaultDeposit::doApply : account is owner");
         assetsDeposited = amount;
     }
     else
@@ -243,13 +246,15 @@ VaultDeposit::doApply()
                 << "VaultDeposit: overflow error with"
                 << " scale=" << (int)vault->at(sfScale).value()  //
                 << ", assetsTotal=" << vault->at(sfAssetsTotal).value()
-                << ", sharesTotal=" << sleIssuance->at(sfOutstandingAmount) << ", amount=" << amount;
+                << ", sharesTotal=" << sleIssuance->at(sfOutstandingAmount)
+                << ", amount=" << amount;
             return tecPATH_DRY;
         }
     }
 
     XRPL_ASSERT(
-        sharesCreated.asset() != assetsDeposited.asset(), "xrpl::VaultDeposit::doApply : assets are not shares");
+        sharesCreated.asset() != assetsDeposited.asset(),
+        "xrpl::VaultDeposit::doApply : assets are not shares");
 
     vault->at(sfAssetsTotal) += assetsDeposited;
     vault->at(sfAssetsAvailable) += assetsDeposited;
@@ -261,7 +266,8 @@ VaultDeposit::doApply()
         return tecLIMIT_EXCEEDED;
 
     // Transfer assets from depositor to vault.
-    if (auto const ter = accountSend(view(), account_, vaultAccount, assetsDeposited, j_, WaiveTransferFee::Yes);
+    if (auto const ter =
+            accountSend(view(), account_, vaultAccount, assetsDeposited, j_, WaiveTransferFee::Yes);
         !isTesSuccess(ter))
         return ter;
 
@@ -282,12 +288,14 @@ VaultDeposit::doApply()
 
     if (view().rules().enabled(fixLendingProtocolV1_1) && ctx_.tx.isFlag(tfVaultDonate))
     {
-        XRPL_ASSERT(sharesCreated == beast::zero, "xrpl::VaultDeposit::doApply: donation issued shares");
+        XRPL_ASSERT(
+            sharesCreated == beast::zero, "xrpl::VaultDeposit::doApply: donation issued shares");
     }
     else
     {
         // Transfer shares from vault to depositor.
-        if (auto const ter = accountSend(view(), vaultAccount, account_, sharesCreated, j_, WaiveTransferFee::Yes);
+        if (auto const ter = accountSend(
+                view(), vaultAccount, account_, sharesCreated, j_, WaiveTransferFee::Yes);
             !isTesSuccess(ter))
             return ter;
     }
