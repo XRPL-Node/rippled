@@ -329,7 +329,7 @@ protected:
 
         Number const defaultCovered = [&] {
             // New formula: DefaultCovered = min(DefaultAmount × CoverRateMinimum, CoverAvailable)
-            if (env.enabled(fixDefaultCoverLogicOptimization))
+            if (env.enabled(fixLendingProtocolV1_1))
             {
                 return std::min(defaultAmount * coverRateMin.value() / tenthBipsPerUnity.value(), coverAvailable);
             }
@@ -715,7 +715,7 @@ public:
         testCreateAsset();
         testLoanSetAndDelete();
         testLoanSetAndImpair();
-        testLoanDefaultWithdrawAndPay(all - fixDefaultCoverLogicOptimization);
+        testLoanDefaultWithdrawAndPay(all - fixLendingProtocolV1_1);
         testLoanDefaultWithdrawAndPay(all);
         testRiskFreeArbitrage();
         testRiskFreeArbitrageFails();

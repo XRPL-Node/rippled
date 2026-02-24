@@ -1863,7 +1863,7 @@ protected:
                 NumberRoundModeGuard mg(Number::upward);
                 auto const totalDefaultAmount = state.totalValue - state.managementFeeOutstanding;
                 auto const defaultAmount = [&] {
-                    if (env.enabled(fixDefaultCoverLogicOptimization))
+                    if (env.enabled(fixLendingProtocolV1_1))
                     {
                         // New formula: DefaultCovered = min(DefaultAmount × CoverRateMinimum, CoverAvailable)
                         return roundToAsset(
