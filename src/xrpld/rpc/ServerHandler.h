@@ -171,11 +171,10 @@ private:
     Json::Value
     processSession(
         std::shared_ptr<WSSession> const& session,
-        std::shared_ptr<JobQueue::Coro> const& coro,
         Json::Value const& jv);
 
     void
-    processSession(std::shared_ptr<Session> const&, std::shared_ptr<JobQueue::Coro> coro);
+    processSession(std::shared_ptr<Session> const&);
 
     void
     processRequest(
@@ -183,7 +182,6 @@ private:
         std::string const& request,
         beast::IP::Endpoint const& remoteIPAddress,
         Output&&,
-        std::shared_ptr<JobQueue::Coro> coro,
         std::string_view forwardedFor,
         std::string_view user);
 

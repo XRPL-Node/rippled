@@ -208,7 +208,7 @@ private:
     private:
         // process the request. Called inside the coroutine passed to JobQueue
         void
-        process(std::shared_ptr<JobQueue::Coro> coro);
+        processRequest();
 
         // return load type of this RPC
         Resource::Charge
