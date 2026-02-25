@@ -236,12 +236,10 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         # names get truncated.
         # Add Address and Thread (both coupled with UB) sanitizers for specific bookworm distros.
         # GCC-Asan rippled-embedded tests are failing because of https://github.com/google/sanitizers/issues/856
-        if os[
-            "distro_version"
-        ] == "bookworm" and f"{os['compiler_name']}-{os['compiler_version']}" in [
-            "clang-20",
-            "gcc-15",
-        ]:
+        if (
+            os["distro_version"] == "bookworm"
+            and f"{os['compiler_name']}-{os['compiler_version']}" == "clang-20"
+        ):
             # Add ASAN + UBSAN configuration.
             configurations.append(
                 {
