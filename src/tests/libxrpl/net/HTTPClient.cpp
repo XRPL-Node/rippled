@@ -199,7 +199,8 @@ protected:
     void
     SetUp() override
     {
-        HTTPClient::initializeSSLContext("", "", false, j_);
+        HTTPClient::initializeSSLContext(
+            "" /* sslVerifyDir*/, "" /*sslVerifyFile */, false /* sslVerify */, j_ /* journal */);
     }
 
     // Release the global SSL context to prevent memory leaks.
