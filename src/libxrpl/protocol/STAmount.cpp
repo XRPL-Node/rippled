@@ -267,7 +267,8 @@ STAmount::xrp() const
 
     // Cast to unsigned, negate if needed, then cast to signed to avoid
     // undefined behavior when mValue would represent INT64_MIN as signed
-    auto drops = mIsNegative ? static_cast<XRPAmount::value_type>(-mValue) : static_cast<XRPAmount::value_type>(mValue);
+    auto drops = mIsNegative ? static_cast<XRPAmount::value_type>(-mValue)
+                             : static_cast<XRPAmount::value_type>(mValue);
 
     return XRPAmount{drops};
 }
@@ -282,7 +283,8 @@ STAmount::iou() const
 
     // Negate in unsigned domain then cast to signed to avoid undefined
     // behavior when mValue would represent INT64_MIN as signed
-    auto mantissa = mIsNegative ? static_cast<std::int64_t>(-mValue) : static_cast<std::int64_t>(mValue);
+    auto mantissa =
+        mIsNegative ? static_cast<std::int64_t>(-mValue) : static_cast<std::int64_t>(mValue);
 
     return {mantissa, exponent};
 }
@@ -297,7 +299,8 @@ STAmount::mpt() const
 
     // Negate in unsigned domain then cast to signed to avoid undefined
     // behavior when mValue would represent INT64_MIN as signed
-    auto value = mIsNegative ? static_cast<MPTAmount::value_type>(-mValue) : static_cast<MPTAmount::value_type>(mValue);
+    auto value = mIsNegative ? static_cast<MPTAmount::value_type>(-mValue)
+                             : static_cast<MPTAmount::value_type>(mValue);
 
     return MPTAmount{value};
 }
@@ -374,14 +377,16 @@ operator+(STAmount const& v1, STAmount const& v2)
         // Perform addition in unsigned domain to avoid signed overflow UB,
         // then cast back to signed for the STAmount constructor
         auto const sum = static_cast<std::int64_t>(
-            static_cast<std::uint64_t>(getSNValue(v1)) + static_cast<std::uint64_t>(getSNValue(v2)));
+            static_cast<std::uint64_t>(getSNValue(v1)) +
+            static_cast<std::uint64_t>(getSNValue(v2)));
         return {v1.getFName(), sum};
     }
     if (v1.holds<MPTIssue>())
     {
         // Perform addition in unsigned domain to avoid signed overflow UB
         auto const sum = static_cast<MPTAmount::value_type>(
-            static_cast<std::uint64_t>(v1.mpt().value()) + static_cast<std::uint64_t>(v2.mpt().value()));
+            static_cast<std::uint64_t>(v1.mpt().value()) +
+            static_cast<std::uint64_t>(v2.mpt().value()));
         return {v1.mAsset, sum};
     }
 
