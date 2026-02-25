@@ -9,6 +9,7 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
     , name_(name)
     , running_(false)
     , coro_(
+          // Stack size of 1MB wasn't sufficient for deep calls. ASAN tests flagged the issue. Hence increasing the size to 1.5MB.
           boost::context::protected_fixedsize_stack(1536 * 1024),
           [this, fn = std::forward<F>(f)](
               boost::coroutines2::asymmetric_coroutine<void>::push_type& do_yield) {
