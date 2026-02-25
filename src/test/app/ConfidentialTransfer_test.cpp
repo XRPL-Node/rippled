@@ -312,7 +312,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 {.account = alice,
                  .amt = 10,
                  .holderPubKey = mptAlice.getPubKey(bob),
-                 .blindingFactor = Buffer(10),
+                 .blindingFactor = makeZeroBuffer(10),
                  .err = temMALFORMED});
 
             // Holder encrypted amount is empty (length 0)
@@ -336,7 +336,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 {.account = bob,
                  .amt = 10,
                  .holderPubKey = mptAlice.getPubKey(bob),
-                 .auditorEncryptedAmt = Buffer(10),
+                 .auditorEncryptedAmt = makeZeroBuffer(10),
                  .err = temBAD_CIPHERTEXT});
 
             // Auditor encrypted amount has correct length but invalid data
@@ -375,7 +375,8 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             mptAlice.convert({.account = bob, .amt = 10, .holderPubKey = Buffer{}, .err = temMALFORMED});
 
             // Holder public key has correct length but invalid EC point data
-            mptAlice.convert({.account = bob, .amt = 10, .holderPubKey = Buffer(ecPubKeyLength), .err = temMALFORMED});
+            mptAlice.convert(
+                {.account = bob, .amt = 10, .holderPubKey = makeZeroBuffer(ecPubKeyLength), .err = temMALFORMED});
         }
 
         // when registering holder pub key, the transaction must include a
@@ -492,20 +493,20 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             mptAlice.set({.account = alice, .issuerPubKey = Buffer{}, .err = temMALFORMED});
 
             // Issuer pub key has correct length but invalid EC point data
-            mptAlice.set({.account = alice, .issuerPubKey = Buffer(ecPubKeyLength), .err = temMALFORMED});
+            mptAlice.set({.account = alice, .issuerPubKey = makeZeroBuffer(ecPubKeyLength), .err = temMALFORMED});
 
             // Auditor key is invalid length
             mptAlice.set(
                 {.account = alice,
                  .issuerPubKey = mptAlice.getPubKey(alice),
-                 .auditorPubKey = Buffer(10),
+                 .auditorPubKey = makeZeroBuffer(10),
                  .err = temMALFORMED});
 
             // Auditor key has correct length but invalid EC point data
             mptAlice.set(
                 {.account = alice,
                  .issuerPubKey = mptAlice.getPubKey(alice),
-                 .auditorPubKey = Buffer(ecPubKeyLength),
+                 .auditorPubKey = makeZeroBuffer(ecPubKeyLength),
                  .err = temMALFORMED});
 
             // Cannot set auditor key without issuer key
@@ -1185,9 +1186,9 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 {.account = bob,
                  .dest = carol,
                  .amt = 10,
-                 .senderEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
-                 .destEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
-                 .issuerEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
+                 .senderEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
+                 .destEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
+                 .issuerEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
                  .err = temDISABLED});
         }
 
@@ -1230,13 +1231,25 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
 
             // sender encrypted amount wrong length
             mptAlice.send(
-                {.account = bob, .dest = carol, .amt = 10, .senderEncryptedAmt = Buffer(10), .err = temBAD_CIPHERTEXT});
+                {.account = bob,
+                 .dest = carol,
+                 .amt = 10,
+                 .senderEncryptedAmt = makeZeroBuffer(10),
+                 .err = temBAD_CIPHERTEXT});
             // dest encrypted amount wrong length
             mptAlice.send(
-                {.account = bob, .dest = carol, .amt = 10, .destEncryptedAmt = Buffer(10), .err = temBAD_CIPHERTEXT});
+                {.account = bob,
+                 .dest = carol,
+                 .amt = 10,
+                 .destEncryptedAmt = makeZeroBuffer(10),
+                 .err = temBAD_CIPHERTEXT});
             // issuer encrypted amount wrong length
             mptAlice.send(
-                {.account = bob, .dest = carol, .amt = 10, .issuerEncryptedAmt = Buffer(10), .err = temBAD_CIPHERTEXT});
+                {.account = bob,
+                 .dest = carol,
+                 .amt = 10,
+                 .issuerEncryptedAmt = makeZeroBuffer(10),
+                 .err = temBAD_CIPHERTEXT});
 
             // sender encrypted amount malformed
             mptAlice.send(
@@ -1244,7 +1257,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
-                 .senderEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
+                 .senderEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
                  .amountCommitment = getTrivialCommitment(),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temBAD_CIPHERTEXT});
@@ -1254,7 +1267,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
-                 .destEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
+                 .destEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
                  .amountCommitment = getTrivialCommitment(),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temBAD_CIPHERTEXT});
@@ -1264,7 +1277,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
-                 .issuerEncryptedAmt = Buffer(ecGamalEncryptedTotalLength),
+                 .issuerEncryptedAmt = makeZeroBuffer(ecGamalEncryptedTotalLength),
                  .amountCommitment = getTrivialCommitment(),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temBAD_CIPHERTEXT});
@@ -1285,7 +1298,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
-                 .amountCommitment = Buffer(100),
+                 .amountCommitment = makeZeroBuffer(100),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temMALFORMED});
 
@@ -1296,7 +1309,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
                  .amountCommitment = getTrivialCommitment(),
-                 .balanceCommitment = Buffer(100),
+                 .balanceCommitment = makeZeroBuffer(100),
                  .err = temMALFORMED});
 
             // amount Pedersen commitment has correct length but invalid EC point data
@@ -1305,7 +1318,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
-                 .amountCommitment = Buffer(ecPedersenCommitmentLength),
+                 .amountCommitment = makeZeroBuffer(ecPedersenCommitmentLength),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temMALFORMED});
 
@@ -1316,7 +1329,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .amt = 10,
                  .proof = getTrivialSendProofHex(3),
                  .amountCommitment = getTrivialCommitment(),
-                 .balanceCommitment = Buffer(ecPedersenCommitmentLength),
+                 .balanceCommitment = makeZeroBuffer(ecPedersenCommitmentLength),
                  .err = temMALFORMED});
         }
 
@@ -1363,7 +1376,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                  .dest = carol,
                  .amt = 10,
                  .proof = getTrivialSendProofHex(4),
-                 .auditorEncryptedAmt = Buffer(10),
+                 .auditorEncryptedAmt = makeZeroBuffer(10),
                  .amountCommitment = getTrivialCommitment(),
                  .balanceCommitment = getTrivialCommitment(),
                  .err = temBAD_CIPHERTEXT});
@@ -1914,7 +1927,43 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 .flags = tfMPTUnauthorize,
             });
         }
-        // todo: test with convert back and delete
+        // test with convert back and delete
+        // can delete mptoken if converted back (COA returns to zero)
+        {
+            Env env{*this, features};
+            Account const alice("alice");
+            Account const bob("bob");
+            MPTTester mptAlice(env, alice, {.holders = {bob}});
+
+            mptAlice.create({.ownerCount = 1, .flags = tfMPTCanTransfer | tfMPTCanLock | tfMPTCanPrivacy});
+
+            mptAlice.authorize({.account = bob});
+            mptAlice.pay(alice, bob, 100);
+
+            mptAlice.generateKeyPair(alice);
+            mptAlice.set({.account = alice, .issuerPubKey = mptAlice.getPubKey(alice)});
+            mptAlice.generateKeyPair(bob);
+
+            mptAlice.convert({
+                .account = bob,
+                .amt = 100,
+                .holderPubKey = mptAlice.getPubKey(bob),
+            });
+
+            mptAlice.mergeInbox({
+                .account = bob,
+            });
+
+            mptAlice.convertBack({.account = bob, .amt = 100});
+
+            mptAlice.pay(bob, alice, 100);
+
+            // Should be able to delete as Confidential Outstanding amount is 0
+            mptAlice.authorize({
+                .account = bob,
+                .flags = tfMPTUnauthorize,
+            });
+        }
     }
 
     void
@@ -2211,7 +2260,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             mptAlice.convertBack(
                 {.account = bob,
                  .amt = 30,
-                 .pedersenCommitment = Buffer(ecPedersenCommitmentLength),
+                 .pedersenCommitment = makeZeroBuffer(ecPedersenCommitmentLength),
                  .err = temMALFORMED});
 
             mptAlice.convertBack({.account = bob, .amt = 30, .holderEncryptedAmt = Buffer{}, .err = temBAD_CIPHERTEXT});
@@ -2225,7 +2274,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
                 {.account = bob, .amt = 30, .issuerEncryptedAmt = getBadCiphertext(), .err = temBAD_CIPHERTEXT});
 
             mptAlice.convertBack(
-                {.account = bob, .amt = 30, .auditorEncryptedAmt = Buffer(10), .err = temBAD_CIPHERTEXT});
+                {.account = bob, .amt = 30, .auditorEncryptedAmt = makeZeroBuffer(10), .err = temBAD_CIPHERTEXT});
 
             mptAlice.convertBack(
                 {.account = bob, .amt = 30, .auditorEncryptedAmt = getBadCiphertext(), .err = temBAD_CIPHERTEXT});
@@ -2233,7 +2282,7 @@ class ConfidentialTransfer_test : public beast::unit_test::suite
             // invalid proof length
             mptAlice.convertBack({.account = bob, .amt = 30, .proof = Buffer{}, .err = temMALFORMED});
 
-            mptAlice.convertBack({.account = bob, .amt = 30, .proof = Buffer(100), .err = temMALFORMED});
+            mptAlice.convertBack({.account = bob, .amt = 30, .proof = makeZeroBuffer(100), .err = temMALFORMED});
         }
     }
 
