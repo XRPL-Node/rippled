@@ -32,7 +32,10 @@ VaultCreate::checkExtraFeatures(PreflightContext const& ctx)
 std::uint32_t
 VaultCreate::getFlagsMask(PreflightContext const& ctx)
 {
-    return tfVaultCreateMask;
+    if (ctx.rules.enabled(fixLendingProtocolV1_1))
+        return tfVaultCreateMask;
+
+    return tfVaultCreateMask | tfVaultOwnerCanBlockDeposit;
 }
 
 NotTEC
@@ -155,11 +158,11 @@ VaultCreate::doApply()
         ? 0
         : ctx_.tx[~sfScale].value_or(vaultDefaultIOUScale);
 
-    auto txFlags = tx.getFlags();
     std::uint32_t mptFlags = 0;
-    if ((txFlags & tfVaultShareNonTransferable) == 0)
+    if (!tx.isFlag(tfVaultShareNonTransferable))
         mptFlags |= (lsfMPTCanEscrow | lsfMPTCanTrade | lsfMPTCanTransfer);
-    if (txFlags & tfVaultPrivate)
+
+    if (tx.isFlag(tfVaultPrivate))
         mptFlags |= lsfMPTRequireAuth;
 
     // Note, here we are **not** creating an MPToken for the assets held in
@@ -183,7 +186,12 @@ VaultCreate::doApply()
     auto const& mptIssuanceID = *maybeShare;
 
     vault->setFieldIssue(sfAsset, STIssue{sfAsset, asset});
-    vault->at(sfFlags) = txFlags & tfVaultPrivate;
+    if (tx.isFlag(tfVaultPrivate))
+        vault->setFlag(lsfVaultPrivate);
+
+    if (view().rules().enabled(fixLendingProtocolV1_1) && tx.isFlag(tfVaultOwnerCanBlockDeposit))
+        vault->setFlag(lsfVaultOwnerCanBlockDeposit);
+
     vault->at(sfSequence) = sequence;
     vault->at(sfOwner) = account_;
     vault->at(sfAccount) = pseudoId;
@@ -212,7 +220,7 @@ VaultCreate::doApply()
         return err;
 
     // If the vault is private, set the authorized flag for the vault owner
-    if (txFlags & tfVaultPrivate)
+    if (vault->isFlag(lsfVaultPrivate))
     {
         if (auto const err = authorizeMPToken(
                 view(), mPriorBalance, mptIssuanceID, pseudoId, ctx_.journal, {}, account_);

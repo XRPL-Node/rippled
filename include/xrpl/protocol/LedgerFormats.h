@@ -186,6 +186,7 @@ enum LedgerSpecificFlags {
     // ltVAULT
     lsfVaultPrivate = 0x00010000,
     lsfVaultDepositBlocked = 0x00020000, // True, vault deposit is blocked
+    lsfVaultOwnerCanBlockDeposit = 0x00040000, // True, vault owner can block deposit
 
     // ltLOAN
     lsfLoanDefault = 0x00010000,

@@ -250,7 +250,15 @@ constexpr std::uint32_t tfBridgeModifyMask = ~(tfUniversal | tfClearAccountCreat
 constexpr std::uint32_t const tfVaultPrivate               = 0x00010000;
 static_assert(tfVaultPrivate == lsfVaultPrivate);
 constexpr std::uint32_t const tfVaultShareNonTransferable  = 0x00020000;
-constexpr std::uint32_t const tfVaultCreateMask = ~(tfUniversal | tfVaultPrivate | tfVaultShareNonTransferable);
+constexpr std::uint32_t const tfVaultOwnerCanBlockDeposit  = 0x00040000;
+static_assert(tfVaultOwnerCanBlockDeposit == lsfVaultOwnerCanBlockDeposit);
+
+constexpr std::uint32_t const tfVaultCreateMask = ~(tfUniversal | tfVaultPrivate | tfVaultShareNonTransferable | tfVaultOwnerCanBlockDeposit);
+
+// VaultSet flags:
+constexpr std::uint32_t const tfVaultDepositBlock = 0x00010000;
+constexpr std::uint32_t const tfVaultDepositUnblock = 0x00020000;
+constexpr std::uint32_t const tfVaultSetMask = ~(tfUniversal | tfVaultDepositBlock | tfVaultDepositUnblock);
 
 // Batch Flags:
 constexpr std::uint32_t tfAllOrNothing                 = 0x00010000;
@@ -290,12 +298,6 @@ constexpr std::uint32_t const tfLoanDefault = 0x00010000;
 constexpr std::uint32_t const tfLoanImpair = 0x00020000;
 constexpr std::uint32_t const tfLoanUnimpair = 0x00040000;
 constexpr std::uint32_t const tfLoanManageMask = ~(tfUniversal | tfLoanDefault | tfLoanImpair | tfLoanUnimpair);
-
-// VaultSet flags:
-constexpr std::uint32_t const tfVaultDepositBlock = 0x00010000;
-constexpr std::uint32_t const tfVaultDepositUnblock = 0x00020000;
-constexpr std::uint32_t const tfVaultSetMask = ~(tfUniversal | tfVaultDepositBlock | tfVaultDepositUnblock);
-
 // clang-format on
 
 }  // namespace xrpl

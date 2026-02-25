@@ -37,10 +37,9 @@ isValidVaultUpdate(PreflightContext const& ctx)
     auto const atLeastOneFieldPresent = ctx.tx.isFieldPresent(sfDomainID) ||
         ctx.tx.isFieldPresent(sfAssetsMaximum) || ctx.tx.isFieldPresent(sfData);
 
-    auto const shouldCheckFlags = ctx.rules.enabled(fixLendingProtocolV1_1);
     auto const expectedFlags = ~(VaultSet::getFlagsMask(ctx) | tfUniversal);
 
-    return atLeastOneFieldPresent || (shouldCheckFlags && (ctx.tx.getFlags() & expectedFlags));
+    return atLeastOneFieldPresent || (ctx.tx.getFlags() & expectedFlags);
 }
 
 NotTEC
@@ -138,6 +137,14 @@ VaultSet::preclaim(PreclaimContext const& ctx)
 
     if (ctx.view.rules().enabled(fixLendingProtocolV1_1))
     {
+        // The Vault does not configured to support deposit blocking
+        if (!vault->isFlag(lsfVaultOwnerCanBlockDeposit) &&
+            (ctx.tx.isFlag(tfVaultDepositBlock) || ctx.tx.isFlag(tfVaultDepositUnblock)))
+        {
+            JLOG(ctx.j.debug()) << "VaultSet: vault does not support blocking deposits";
+            return tecNO_PERMISSION;
+        }
+
         if (vault->isFlag(lsfVaultDepositBlocked) && ctx.tx.isFlag(tfVaultDepositBlock))
         {
             JLOG(ctx.j.debug()) << "VaultSet: vault deposit is already blocked";

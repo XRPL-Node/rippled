@@ -186,38 +186,6 @@ class Vault_test : public beast::unit_test::suite
             }
 
             {
-                testcase(prefix + " fail to unblock a non-blocked vault");
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
-                env(tx, ter(tecNO_PERMISSION));
-                env.close();
-            }
-
-            {
-                testcase(prefix + " block a vault");
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
-                env(tx, ter(tesSUCCESS));
-                env.close();
-            }
-
-            {
-                testcase(prefix + " fail to block an already blocked vault");
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
-                env(tx, ter(tecNO_PERMISSION));
-                env.close();
-            }
-
-            {
-                testcase(prefix + " unblock a blocked vault");
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
-                env(tx, ter(tesSUCCESS));
-                env.close();
-            }
-
-            {
                 testcase(prefix + " fail to withdraw more than assets held");
                 auto tx = vault.withdraw(
                     {.depositor = depositor, .id = keylet.key, .amount = asset(1000)});
@@ -694,6 +662,14 @@ class Vault_test : public beast::unit_test::suite
             env(tx, ter{temINVALID_FLAG});
 
             {
+                env.disableFeature(fixLendingProtocolV1_1);
+                auto [tx, keylet] = vault.create({.owner = owner, .asset = asset});
+                tx[sfFlags] = tfVaultOwnerCanBlockDeposit;
+                env(tx, ter{temINVALID_FLAG});
+                env.enableFeature(fixLendingProtocolV1_1);
+            }
+
+            {
                 auto tx = vault.set({.owner = owner, .id = keylet.key});
                 tx[sfFlags] = tfClearDeepFreeze;
                 env(tx, ter{temINVALID_FLAG});
@@ -995,19 +971,6 @@ class Vault_test : public beast::unit_test::suite
                     auto tx =
                         vault.deposit({.depositor = owner, .id = keylet.key, .amount = asset(0)});
                     env(tx, ter(temBAD_AMOUNT));
-                }
-            });
-
-        testCase(
-            [&](Env& env, Account const&, Account const& owner, Asset const& asset, Vault& vault) {
-                testcase("invalid set immutable flag");
-
-                auto [tx, keylet] = vault.create({.owner = owner, .asset = asset});
-
-                {
-                    auto tx = vault.set({.owner = owner, .id = keylet.key});
-                    tx[sfFlags] = tfVaultDepositBlock | tfVaultDepositUnblock;
-                    env(tx, ter(temINVALID_FLAG));
                 }
             });
 
@@ -2380,77 +2343,6 @@ class Vault_test : public beast::unit_test::suite
                      PrettyAsset const& asset,
                      Vault& vault,
                      MPTTester const& mptt) {
-            testcase("MPT lsfVaultDepositBlocked prevents deposits");
-            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
-            env(tx);
-            env.close();
-
-            // First deposit assets to later show that withdrawals are not blocked
-            {
-                auto const tx =
-                    vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Block Vault deposits
-            {
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
-                env(tx, ter(tesSUCCESS), THISLINE);
-                env.close();
-            }
-
-            {
-                auto const tx =
-                    vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tecNO_PERMISSION}, THISLINE);
-                env.close();
-            }
-
-            {
-                auto tx =
-                    vault.withdraw({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Unblock Vault Deposits
-            {
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
-                env(tx, ter(tesSUCCESS), THISLINE);
-                env.close();
-            }
-
-            // Deposits now succeed
-            {
-                auto const tx =
-                    vault.deposit({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Withdraw assets from the vault to delete it
-            {
-                auto const tx =
-                    vault.withdraw({.depositor = depositor, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            env(vault.del({.owner = owner, .id = keylet.key}));
-            env.close();
-        });
-
-        testCase([&, this](
-                     Env& env,
-                     Account const&,
-                     Account const& owner,
-                     Account const& depositor,
-                     PrettyAsset const& asset,
-                     Vault& vault,
-                     MPTTester const& mptt) {
             testcase("MPT insolvent vault blocks deposits");
 
             auto const depositAmount = asset(20);
@@ -3251,78 +3143,6 @@ class Vault_test : public beast::unit_test::suite
                      Vault& vault,
                      PrettyAsset const& asset,
                      auto&&...) {
-            testcase("IOU lsfVaultDepositBlocked prevents deposits");
-            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
-            env(tx);
-            env.close();
-
-            // First deposit assets to later show that withdrawals are not blocked
-            {
-                auto const tx =
-                    vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Block Vault deposits
-            {
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock});
-                env(tx, ter(tesSUCCESS), THISLINE);
-                env.close();
-            }
-
-            {
-                auto const tx =
-                    vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tecNO_PERMISSION}, THISLINE);
-                env.close();
-            }
-
-            {
-                auto tx =
-                    vault.withdraw({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Unblock Vault Deposits
-            {
-                auto const tx =
-                    vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock});
-                env(tx, ter(tesSUCCESS), THISLINE);
-                env.close();
-            }
-
-            // Deposits now succeed
-            {
-                auto const tx =
-                    vault.deposit({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            // Withdraw assets from the vault to delete it
-            {
-                auto const tx =
-                    vault.withdraw({.depositor = issuer, .id = keylet.key, .amount = asset(20)});
-                env(tx, ter{tesSUCCESS}, THISLINE);
-                env.close();
-            }
-
-            env(vault.del({.owner = owner, .id = keylet.key}));
-            env.close();
-        });
-
-        testCase([&, this](
-                     Env& env,
-                     Account const& owner,
-                     Account const& issuer,
-                     Account const&,
-                     auto vaultAccount,
-                     Vault& vault,
-                     PrettyAsset const& asset,
-                     auto&&...) {
             testcase("IOU insolvent vault blocks deposits");
 
             auto const depositAmount = asset(20);
@@ -3450,7 +3270,10 @@ class Vault_test : public beast::unit_test::suite
         env(pay(issuer, charlie, asset(5)));
         env.close();
 
-        auto [tx, keylet] = vault.create({.owner = owner, .asset = asset, .flags = tfVaultPrivate});
+        auto [tx, keylet] = vault.create(
+            {.owner = owner,
+             .asset = asset,
+             .flags = tfVaultPrivate | tfVaultOwnerCanBlockDeposit});
         env(tx);
         env.close();
         BEAST_EXPECT(env.le(keylet));
@@ -5871,6 +5694,148 @@ class Vault_test : public beast::unit_test::suite
         }
     }
 
+    void
+    testVaultDepositBlockGeneral()
+    {
+        using namespace test::jtx;
+
+        Env env{*this};
+        Account const owner{"owner"};
+        Account const other{"other"};
+
+        env.fund(XRP(100'000'000), owner, other);
+        Vault vault{env};
+        PrettyAsset const asset = xrpIssue();
+        std::string const prefix = "VaultDepositBlock: ";
+
+        auto const blockVault = [&](TER expectedTer, Keylet const& keylet) {
+            env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositBlock}),
+                ter(expectedTer),
+                THISLINE);
+        };
+
+        auto const unblockVault = [&](TER expectedTer, Keylet const& keylet) {
+            env(vault.set({.owner = owner, .id = keylet.key, .flags = tfVaultDepositUnblock}),
+                ter(expectedTer),
+                THISLINE);
+        };
+
+        // Blocking Vault with the amendment disabled fails
+        {
+            testcase(prefix + "block/unblock fails when amendment is disabled");
+
+            env.disableFeature(fixLendingProtocolV1_1);
+            auto const [tx, keylet] = vault.create(
+                {.owner = owner, .asset = asset, .flags = tfVaultOwnerCanBlockDeposit});
+            env(tx, ter(temINVALID_FLAG), THISLINE);
+            env.close();
+
+            blockVault(temINVALID_FLAG, keylet);
+            unblockVault(temINVALID_FLAG, keylet);
+
+            env.enableFeature(fixLendingProtocolV1_1);
+        }
+
+        // Block Vault deposits fails if the vault is not configured to allow blocking deposits
+        {
+            testcase(prefix + "block/unblock fails when vault is not configured");
+            auto const [tx, keylet] = vault.create({.owner = owner, .asset = asset});
+            env(tx);
+            env.close();
+
+            blockVault(tecNO_PERMISSION, keylet);
+            unblockVault(tecNO_PERMISSION, keylet);
+
+            env(vault.del({.owner = owner, .id = keylet.key}), ter(tesSUCCESS), THISLINE);
+            env.close();
+        }
+
+        auto const [tx, keylet] =
+            vault.create({.owner = owner, .asset = asset, .flags = tfVaultOwnerCanBlockDeposit});
+        env(tx);
+        env.close();
+
+        {
+            testcase(prefix + "block/unblock succeeds");
+            // deposit assets to show that blocking deposit does not block withdrawals
+            env(vault.deposit({
+                    .depositor = owner,
+                    .id = keylet.key,
+                    .amount = XRP(10'000),
+                }),
+                ter(tesSUCCESS),
+                THISLINE);
+
+            blockVault(tesSUCCESS, keylet);
+
+            env(vault.deposit({
+                    .depositor = owner,
+                    .id = keylet.key,
+                    .amount = XRP(10'000),
+                }),
+                ter(tecNO_PERMISSION),
+                THISLINE);
+
+            // Block vault withdrawal works as normal
+            env(vault.withdraw({
+                    .depositor = owner,
+                    .id = keylet.key,
+                    .amount = XRP(10'000),
+                }),
+                ter(tesSUCCESS),
+                THISLINE);
+
+            unblockVault(tesSUCCESS, keylet);
+
+            env(vault.deposit({
+                    .depositor = owner,
+                    .id = keylet.key,
+                    .amount = XRP(10'000),
+                }),
+                ter(tesSUCCESS),
+                THISLINE);
+
+            // Withdraw to keep the vault empty
+            env(vault.withdraw({
+                    .depositor = owner,
+                    .id = keylet.key,
+                    .amount = XRP(10'000),
+                }),
+                ter(tesSUCCESS),
+                THISLINE);
+        }
+
+        {
+            testcase(prefix + "block/unblock fails when caller is not owner");
+
+            env(vault.set({.owner = other, .id = keylet.key, .flags = tfVaultDepositBlock}),
+                ter(tecNO_PERMISSION),
+                THISLINE);
+
+            blockVault(tesSUCCESS, keylet);
+
+            env(vault.set({.owner = other, .id = keylet.key, .flags = tfVaultDepositUnblock}),
+                ter(tecNO_PERMISSION),
+                THISLINE);
+
+            unblockVault(tesSUCCESS, keylet);
+        }
+
+        {
+            testcase(prefix + "unblock fails when vault is already unblocked");
+            unblockVault(tecNO_PERMISSION, keylet);
+        }
+
+        {
+            testcase(prefix + "block fails when vault is already blocked");
+            blockVault(tesSUCCESS, keylet);
+            blockVault(tecNO_PERMISSION, keylet);
+            unblockVault(tesSUCCESS, keylet);
+        }
+
+        env(vault.del({.owner = owner, .id = keylet.key}));
+    }
+
 public:
     void
     run() override
@@ -5892,6 +5857,7 @@ public:
         testVaultClawbackBurnShares();
         testVaultClawbackAssets();
         testAssetsMaximum();
+        testVaultDepositBlockGeneral();
     }
 };
 
