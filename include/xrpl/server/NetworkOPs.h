@@ -2,7 +2,6 @@
 
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/core/ServiceRegistry.h>
-#include <xrpl/ledger/ReadView.h>
 #include <xrpl/protocol/STValidation.h>
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/messages.h>
@@ -19,6 +18,8 @@ namespace xrpl {
 // Master operational handler, server sequencer, network tracker
 
 class Peer;
+class STTx;
+class ReadView;
 class LedgerMaster;
 class Transaction;
 class ValidatorKeys;
@@ -115,7 +116,11 @@ public:
      * @param failType fail_hard setting from transaction submission.
      */
     virtual void
-    processTransaction(std::shared_ptr<Transaction>& transaction, bool bUnlimited, bool bLocal, FailHard failType) = 0;
+    processTransaction(
+        std::shared_ptr<Transaction>& transaction,
+        bool bUnlimited,
+        bool bLocal,
+        FailHard failType) = 0;
 
     /**
      * Process a set of transactions synchronously, and ensuring that they are
