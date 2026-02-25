@@ -21,13 +21,14 @@ interceptor_name:xrpl/net/RegisterSSLCerts.h
 # These are triggered when fiber stacks are deallocated but ASan doesn't recognize them
 # as having been allocated via malloc (because they use mmap via boost's stack allocator)
 # We ignore these files from intrumentation already on Clang, but on GCC, we need to suppress the issues.
-interceptor_via_fun:swapcontext
-interceptor_via_fun:makecontext
-interceptor_via_fun:boost::context::basic_fixedsize_stack*deallocate
-interceptor_via_fun:boost::context::fiber::~fiber
-interceptor_name:boost/context/fiber_ucontext.hpp
-interceptor_name:boost/context/fixedsize_stack.hpp
-interceptor_name:Coro.ipp
+
+#interceptor_via_fun:swapcontext
+#interceptor_via_fun:makecontext
+#interceptor_via_fun:boost::context::basic_fixedsize_stack*deallocate
+#interceptor_via_fun:boost::context::fiber::~fiber
+#interceptor_name:boost/context/fiber_ucontext.hpp
+#interceptor_name:boost/context/fixedsize_stack.hpp
+#interceptor_name:Coro.ipp
 
 
 # Suppress false positive stack-buffer errors in thread stack allocation
