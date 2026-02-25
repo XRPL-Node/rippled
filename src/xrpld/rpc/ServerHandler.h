@@ -169,9 +169,7 @@ public:
 
 private:
     Json::Value
-    processSession(
-        std::shared_ptr<WSSession> const& session,
-        Json::Value const& jv);
+    processSession(std::shared_ptr<WSSession> const& session, Json::Value const& jv);
 
     void
     processSession(std::shared_ptr<Session> const&);

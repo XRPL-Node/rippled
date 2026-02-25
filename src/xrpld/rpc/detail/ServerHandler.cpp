@@ -12,9 +12,9 @@
 #include <xrpl/basics/base64.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/basics/make_SSLContext.h>
-#include <xrpl/core/CoroTask.h>
 #include <xrpl/beast/net/IPAddressConversion.h>
 #include <xrpl/beast/rfc2616.h>
+#include <xrpl/core/CoroTask.h>
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/json/json_reader.h>
 #include <xrpl/json/to_string.h>
@@ -376,9 +376,7 @@ logDuration(Json::Value const& request, T const& duration, beast::Journal& journ
 }
 
 Json::Value
-ServerHandler::processSession(
-    std::shared_ptr<WSSession> const& session,
-    Json::Value const& jv)
+ServerHandler::processSession(std::shared_ptr<WSSession> const& session, Json::Value const& jv)
 {
     auto is = std::static_pointer_cast<WSInfoSub>(session->appDefined);
     if (is->getConsumer().disconnect(m_journal))
@@ -516,8 +514,7 @@ ServerHandler::processSession(
 }
 
 void
-ServerHandler::processSession(
-    std::shared_ptr<Session> const& session)
+ServerHandler::processSession(std::shared_ptr<Session> const& session)
 {
     processRequest(
         session->port(),
