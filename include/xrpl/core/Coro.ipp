@@ -8,15 +8,17 @@ JobQueue::Coro::Coro(Coro_create_t, JobQueue& jq, JobType type, std::string cons
     , type_(type)
     , name_(name)
     , running_(false)
-    , coro_([this, fn = std::forward<F>(f)](
-                boost::coroutines2::asymmetric_coroutine<void>::push_type& do_yield) {
-        yield_ = &do_yield;
-        yield();
-        fn(shared_from_this());
+    , coro_(
+          boost::context::protected_fixedsize_stack(1536 * 1024),
+          [this, fn = std::forward<F>(f)](
+              boost::coroutines2::asymmetric_coroutine<void>::push_type& do_yield) {
+              yield_ = &do_yield;
+              yield();
+              fn(shared_from_this());
 #ifndef NDEBUG
-        finished_ = true;
+              finished_ = true;
 #endif
-    })
+          })
 {
 }
 

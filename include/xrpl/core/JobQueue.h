@@ -7,6 +7,7 @@
 #include <xrpl/core/detail/Workers.h>
 #include <xrpl/json/json_value.h>
 
+#include <boost/context/protected_fixedsize_stack.hpp>
 #include <boost/coroutine2/all.hpp>
 
 #include <set>
