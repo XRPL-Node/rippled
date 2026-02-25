@@ -78,6 +78,7 @@ words:
   - coro
   - coros
   - cowid
+  - cppcoro
   - cryptocondition
   - cryptoconditional
   - cryptoconditions
@@ -100,6 +101,7 @@ words:
   - endmacro
   - exceptioned
   - Falco
+  - fcontext
   - finalizers
   - firewalled
   - fcontext
@@ -196,6 +198,7 @@ words:
   - permissioned
   - pointee
   - populator
+  - pratik
   - preauth
   - preauthorization
   - preauthorize
