@@ -9,6 +9,9 @@
 
 #include <boost/coroutine/all.hpp>
 
+#include <xrpl/core/CoroTask.h>
+
+#include <coroutine>
 #include <set>
 
 namespace xrpl {
@@ -119,6 +122,96 @@ public:
         join();
     };
 
+    /** C++20 coroutine lifecycle manager. Replaces Coro for new code. */
+    class CoroTaskRunner : public std::enable_shared_from_this<CoroTaskRunner>
+    {
+    private:
+        detail::LocalValues lvs_;
+        JobQueue& jq_;
+        JobType type_;
+        std::string name_;
+        bool running_;
+        std::mutex mutex_;
+        std::mutex mutex_run_;
+        std::condition_variable cv_;
+        CoroTask<void> task_;
+#ifndef NDEBUG
+        bool finished_ = false;
+#endif
+
+    public:
+        struct create_t
+        {
+            explicit create_t() = default;
+        };
+
+        // Private: Used in the implementation of postCoroTask
+        CoroTaskRunner(
+            create_t,
+            JobQueue&,
+            JobType,
+            std::string const&);
+
+        // Not copy-constructible or assignable
+        CoroTaskRunner(CoroTaskRunner const&) = delete;
+        CoroTaskRunner&
+        operator=(CoroTaskRunner const&) = delete;
+
+        ~CoroTaskRunner();
+
+        /** Initialize with a coroutine function.
+            Must be called exactly once, after the object is managed by
+            shared_ptr. This is handled automatically by postCoroTask().
+        */
+        template <class F>
+        void
+        init(F&& f);
+
+        /** Increment the suspended coroutine count.
+            Called when the coroutine is about to suspend.
+        */
+        void
+        onSuspend();
+
+        /** Decrement the suspended coroutine count without side effects.
+            Used to undo onSuspend() when a suspend is cancelled.
+        */
+        void
+        onUndoSuspend();
+
+        /** Suspend coroutine execution.
+            Returns an awaiter for use with co_await.
+            Effects:
+              Increments nSuspend_ in the JobQueue.
+              The coroutine is suspended.
+            The caller must later call post() or resume() to continue.
+        */
+        auto
+        suspend();
+
+        /** Schedule coroutine execution on the JobQueue.
+            @return true if the job is added to the JobQueue.
+        */
+        bool
+        post();
+
+        /** Resume coroutine on current thread. */
+        void
+        resume();
+
+        /** Returns true if coroutine hasn't completed. */
+        bool
+        runnable() const;
+
+        /** Once called, allows early exit without an assert. */
+        void
+        expectEarlyExit();
+
+        /** Waits until coroutine completes. */
+        void
+        join();
+    };
+
     using JobFunction = std::function<void()>;
 
     JobQueue(
@@ -164,6 +257,19 @@ public:
     template <class F>
     std::shared_ptr<Coro>
     postCoro(JobType t, std::string const& name, F&& f);
+
+    /** Creates a C++20 coroutine and adds a job to the queue to run it.
+
+        @param t The type of job.
+        @param name Name of the job.
+        @param f Callable with signature
+            CoroTask<void>(std::shared_ptr<CoroTaskRunner>).
+
+        @return shared_ptr to posted CoroTaskRunner. nullptr if not successful.
+    */
+    template <class F>
+    std::shared_ptr<CoroTaskRunner>
+    postCoroTask(JobType t, std::string const& name, F&& f);
 
     /** Jobs waiting at this priority.
      */
@@ -379,6 +485,7 @@ private:
 }  // namespace xrpl
 
 #include <xrpl/core/Coro.ipp>
+#include <xrpl/core/CoroTaskRunner.ipp>
 
 namespace xrpl {
 
@@ -399,6 +506,29 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
         coro.reset();
     }
     return coro;
+}
+
+template <class F>
+std::shared_ptr<JobQueue::CoroTaskRunner>
+JobQueue::postCoroTask(JobType t, std::string const& name, F&& f)
+{
+    auto runner = std::make_shared<CoroTaskRunner>(
+        CoroTaskRunner::create_t{}, *this, t, name);
+    runner->init(std::forward<F>(f));
+
+    // Account for the initial suspension (lazy start).
+    // Mirrors the yield() in the Boost Coro constructor.
+    {
+        std::lock_guard lock(m_mutex);
+        ++nSuspend_;
+    }
+
+    if (!runner->post())
+    {
+        runner->expectEarlyExit();
+        runner.reset();
+    }
+    return runner;
 }
 
 }  // namespace xrpl
