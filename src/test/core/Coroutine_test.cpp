@@ -1,6 +1,5 @@
 #include <test/jtx.h>
 
-#include <xrpl/core/CoroTask.h>
 #include <xrpl/core/JobQueue.h>
 
 #include <chrono>

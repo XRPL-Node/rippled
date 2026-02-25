@@ -1,7 +1,6 @@
 #include <test/jtx/Env.h>
 
 #include <xrpl/beast/unit_test.h>
-#include <xrpl/core/CoroTask.h>
 #include <xrpl/core/JobQueue.h>
 
 namespace xrpl {
