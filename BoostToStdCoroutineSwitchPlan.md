@@ -44,30 +44,30 @@ graph LR
 
 ### 1.2 API & Programming Model Comparison
 
-| Aspect | Boost.Coroutine2 (Current) | C++20 Coroutines (Target) |
-|--------|---------------------------|--------------------------|
-| **Type** | Stackful, asymmetric | Stackless, asymmetric |
-| **Stack Model** | Dedicated 1MB stack per coroutine | Coroutine frame on heap (~200-500 bytes) |
-| **Suspension** | `(*yield_)()` — can yield from any call depth | `co_await expr` — only at explicit suspension points |
-| **Resumption** | `coro_()` — resumes from last yield | `handle.resume()` — resumes from last co_await |
-| **Creation** | `pull_type` constructor (runs to first yield) | Calling a coroutine function returns a handle |
-| **Completion Check** | `static_cast<bool>(coro_)` | `handle.done()` |
-| **Value Passing** | Typed via `pull_type<T>` / `push_type<T>` | Via `promise_type::return_value()` |
-| **Exception Handling** | Natural stack-based propagation | `promise_type::unhandled_exception()` — explicit |
-| **Cancellation** | Application-managed (poll a flag) | Via `await_ready()` / cancellation tokens |
-| **Keywords** | None (library-only) | `co_await`, `co_yield`, `co_return` |
-| **Standard** | Boost library (not ISO C++) | ISO C++20 standard |
+| Aspect                 | Boost.Coroutine2 (Current)                    | C++20 Coroutines (Target)                            |
+| ---------------------- | --------------------------------------------- | ---------------------------------------------------- |
+| **Type**               | Stackful, asymmetric                          | Stackless, asymmetric                                |
+| **Stack Model**        | Dedicated 1MB stack per coroutine             | Coroutine frame on heap (~200-500 bytes)             |
+| **Suspension**         | `(*yield_)()` — can yield from any call depth | `co_await expr` — only at explicit suspension points |
+| **Resumption**         | `coro_()` — resumes from last yield           | `handle.resume()` — resumes from last co_await       |
+| **Creation**           | `pull_type` constructor (runs to first yield) | Calling a coroutine function returns a handle        |
+| **Completion Check**   | `static_cast<bool>(coro_)`                    | `handle.done()`                                      |
+| **Value Passing**      | Typed via `pull_type<T>` / `push_type<T>`     | Via `promise_type::return_value()`                   |
+| **Exception Handling** | Natural stack-based propagation               | `promise_type::unhandled_exception()` — explicit     |
+| **Cancellation**       | Application-managed (poll a flag)             | Via `await_ready()` / cancellation tokens            |
+| **Keywords**           | None (library-only)                           | `co_await`, `co_yield`, `co_return`                  |
+| **Standard**           | Boost library (not ISO C++)                   | ISO C++20 standard                                   |
 
 ### 1.3 Performance Characteristics
 
-| Metric | Boost.Coroutine2 | C++20 Coroutines |
-|--------|------------------|------------------|
-| **Memory per coroutine** | ~1MB (fixed stack) | ~200-500 bytes (frame only) |
-| **1000 concurrent coroutines** | ~1 GB | ~0.5 MB |
-| **Context switch cost** | ~40-100 CPU cycles (fcontext save/restore) | ~20-50 CPU cycles (function call) |
-| **Allocation** | Stack allocated at creation | Heap allocation (compiler may elide) |
-| **Cache behavior** | Poor (large stack rarely fully used) | Good (small frame, hot data close) |
-| **Compiler optimization** | Opaque to compiler | Inlinable, optimizable |
+| Metric                         | Boost.Coroutine2                           | C++20 Coroutines                     |
+| ------------------------------ | ------------------------------------------ | ------------------------------------ |
+| **Memory per coroutine**       | ~1MB (fixed stack)                         | ~200-500 bytes (frame only)          |
+| **1000 concurrent coroutines** | ~1 GB                                      | ~0.5 MB                              |
+| **Context switch cost**        | ~40-100 CPU cycles (fcontext save/restore) | ~20-50 CPU cycles (function call)    |
+| **Allocation**                 | Stack allocated at creation                | Heap allocation (compiler may elide) |
+| **Cache behavior**             | Poor (large stack rarely fully used)       | Good (small frame, hot data close)   |
+| **Compiler optimization**      | Opaque to compiler                         | Inlinable, optimizable               |
 
 ### 1.4 Feature Parity Analysis
 
@@ -91,11 +91,11 @@ graph LR
 
 ### 1.5 Compiler Support
 
-| Compiler | rippled Minimum | C++20 Coroutine Support | Status |
-|----------|----------------|------------------------|--------|
-| **GCC** | 12.0+ | Full (since GCC 11) | Ready |
-| **Clang** | 16.0+ | Full (since Clang 14) | Ready |
-| **MSVC** | 19.28+ | Full (since VS2019 16.8) | Ready |
+| Compiler  | rippled Minimum | C++20 Coroutine Support  | Status |
+| --------- | --------------- | ------------------------ | ------ |
+| **GCC**   | 12.0+           | Full (since GCC 11)      | Ready  |
+| **Clang** | 16.0+           | Full (since Clang 14)    | Ready  |
+| **MSVC**  | 19.28+          | Full (since VS2019 16.8) | Ready  |
 
 rippled already requires C++20 (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`). All supported compilers have mature C++20 coroutine support. **No compiler upgrades required.**
 
@@ -283,24 +283,24 @@ class Coro : public std::enable_shared_from_this<Coro> {
 
 #### Boost.Coroutine APIs Used
 
-| API | Location | Purpose |
-|-----|----------|---------|
-| `asymmetric_coroutine<void>::pull_type` | `JobQueue.h:51` | The coroutine object itself |
-| `asymmetric_coroutine<void>::push_type` | `JobQueue.h:52` | Yield function type |
-| `boost::coroutines::attributes(megabytes(1))` | `Coro.ipp:23` | Stack size configuration |
-| `#include <boost/coroutine/all.hpp>` | `JobQueue.h:10` | Header inclusion |
+| API                                           | Location        | Purpose                     |
+| --------------------------------------------- | --------------- | --------------------------- |
+| `asymmetric_coroutine<void>::pull_type`       | `JobQueue.h:51` | The coroutine object itself |
+| `asymmetric_coroutine<void>::push_type`       | `JobQueue.h:52` | Yield function type         |
+| `boost::coroutines::attributes(megabytes(1))` | `Coro.ipp:23`   | Stack size configuration    |
+| `#include <boost/coroutine/all.hpp>`          | `JobQueue.h:10` | Header inclusion            |
 
 #### Method Behaviors
 
-| Method | Behavior |
-|--------|----------|
-| **Constructor** | Creates `pull_type` with 1MB stack. Lambda captures user function. Auto-runs to first `yield()`. |
-| **`yield()`** | Increments `jq_.nSuspend_`, calls `(*yield_)()` to suspend. Returns control to caller. |
-| **`post()`** | Sets `running_=true`, calls `jq_.addJob()` with a lambda that calls `resume()`. Returns false if JobQueue is stopping. |
-| **`resume()`** | Swaps `LocalValues`, acquires `mutex_`, calls `coro_()` to resume. Restores `LocalValues`. Sets `running_=false`, notifies `cv_`. |
-| **`runnable()`** | Returns `static_cast<bool>(coro_)` — true if coroutine hasn't returned. |
-| **`expectEarlyExit()`** | Decrements `nSuspend_`, sets `finished_=true`. Used during shutdown. |
-| **`join()`** | Blocks on `cv_` until `running_==false`. |
+| Method                  | Behavior                                                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Constructor**         | Creates `pull_type` with 1MB stack. Lambda captures user function. Auto-runs to first `yield()`.                                  |
+| **`yield()`**           | Increments `jq_.nSuspend_`, calls `(*yield_)()` to suspend. Returns control to caller.                                            |
+| **`post()`**            | Sets `running_=true`, calls `jq_.addJob()` with a lambda that calls `resume()`. Returns false if JobQueue is stopping.            |
+| **`resume()`**          | Swaps `LocalValues`, acquires `mutex_`, calls `coro_()` to resume. Restores `LocalValues`. Sets `running_=false`, notifies `cv_`. |
+| **`runnable()`**        | Returns `static_cast<bool>(coro_)` — true if coroutine hasn't returned.                                                           |
+| **`expectEarlyExit()`** | Decrements `nSuspend_`, sets `finished_=true`. Used during shutdown.                                                              |
+| **`join()`**            | Blocks on `cv_` until `running_==false`.                                                                                          |
 
 ### 2.3 Coroutine Execution Lifecycle
 
@@ -350,43 +350,43 @@ sequenceDiagram
 
 #### Core Infrastructure (Must Change)
 
-| File | Role | Lines of Interest |
-|------|------|-------------------|
-| `include/xrpl/core/JobQueue.h` | Coro class definition, postCoro template | Lines 10, 40-120, 385-402 |
-| `include/xrpl/core/Coro.ipp` | Coro method implementations | All (122 lines) |
-| `include/xrpl/basics/LocalValue.h` | Per-coroutine thread-local storage | Lines 12-59 (LocalValues) |
-| `cmake/deps/Boost.cmake` | Boost.Coroutine dependency | Lines 7, 24 |
+| File                               | Role                                     | Lines of Interest         |
+| ---------------------------------- | ---------------------------------------- | ------------------------- |
+| `include/xrpl/core/JobQueue.h`     | Coro class definition, postCoro template | Lines 10, 40-120, 385-402 |
+| `include/xrpl/core/Coro.ipp`       | Coro method implementations              | All (122 lines)           |
+| `include/xrpl/basics/LocalValue.h` | Per-coroutine thread-local storage       | Lines 12-59 (LocalValues) |
+| `cmake/deps/Boost.cmake`           | Boost.Coroutine dependency               | Lines 7, 24               |
 
 #### Entry Points (postCoro Callers)
 
-| File | Entry Point | Job Type |
-|------|-------------|----------|
-| `src/xrpld/rpc/detail/ServerHandler.cpp:287` | `onRequest()` — HTTP RPC | `jtCLIENT_RPC` |
-| `src/xrpld/rpc/detail/ServerHandler.cpp:325` | `onWSMessage()` — WebSocket | `jtCLIENT_WEBSOCKET` |
-| `src/xrpld/app/main/GRPCServer.cpp:102` | `CallData::process()` — gRPC | `jtRPC` |
+| File                                         | Entry Point                  | Job Type             |
+| -------------------------------------------- | ---------------------------- | -------------------- |
+| `src/xrpld/rpc/detail/ServerHandler.cpp:287` | `onRequest()` — HTTP RPC     | `jtCLIENT_RPC`       |
+| `src/xrpld/rpc/detail/ServerHandler.cpp:325` | `onWSMessage()` — WebSocket  | `jtCLIENT_WEBSOCKET` |
+| `src/xrpld/app/main/GRPCServer.cpp:102`      | `CallData::process()` — gRPC | `jtRPC`              |
 
 #### Context Propagation
 
-| File | Role |
-|------|------|
-| `src/xrpld/rpc/Context.h:27` | `RPC::Context` holds `shared_ptr<JobQueue::Coro> coro` |
-| `src/xrpld/rpc/ServerHandler.h:174-188` | `processSession/processRequest` pass coro through |
+| File                                    | Role                                                   |
+| --------------------------------------- | ------------------------------------------------------ |
+| `src/xrpld/rpc/Context.h:27`            | `RPC::Context` holds `shared_ptr<JobQueue::Coro> coro` |
+| `src/xrpld/rpc/ServerHandler.h:174-188` | `processSession/processRequest` pass coro through      |
 
 #### Active Coroutine Consumer (yield/post)
 
-| File | Usage |
-|------|-------|
-| `src/xrpld/rpc/handlers/RipplePathFind.cpp:131` | `context.coro->yield()` — suspends for path-finding |
+| File                                                | Usage                                                 |
+| --------------------------------------------------- | ----------------------------------------------------- |
+| `src/xrpld/rpc/handlers/RipplePathFind.cpp:131`     | `context.coro->yield()` — suspends for path-finding   |
 | `src/xrpld/rpc/handlers/RipplePathFind.cpp:116-123` | Continuation calls `coro->post()` or `coro->resume()` |
 
 #### Test Files
 
-| File | Tests |
-|------|-------|
+| File                               | Tests                                                         |
+| ---------------------------------- | ------------------------------------------------------------- |
 | `src/test/core/Coroutine_test.cpp` | `correct_order`, `incorrect_order`, `thread_specific_storage` |
-| `src/test/core/JobQueue_test.cpp` | `testPostCoro` (post/resume cycles, shutdown behavior) |
-| `src/test/app/Path_test.cpp` | Path-finding RPC via postCoro |
-| `src/test/jtx/impl/AMMTest.cpp` | AMM RPC via postCoro |
+| `src/test/core/JobQueue_test.cpp`  | `testPostCoro` (post/resume cycles, shutdown behavior)        |
+| `src/test/app/Path_test.cpp`       | Path-finding RPC via postCoro                                 |
+| `src/test/jtx/impl/AMMTest.cpp`    | AMM RPC via postCoro                                          |
 
 ### 2.5 Suspension/Continuation Model
 
@@ -505,12 +505,12 @@ graph LR
 
 ### 3.4 Breaking Changes & Compatibility
 
-| Concern | Impact | Mitigation |
-|---------|--------|------------|
-| `RPC::Context::coro` type change | All RPC handlers receive context | Migrate context field last, after all consumers updated |
-| `postCoro()` removal | 3 callers | Replace with `postCoroTask()`, remove old API in Phase 4 |
-| `LocalValue` integration | Thread-local storage must work | New implementation must swap LocalValues identically |
-| Shutdown behavior | `expectEarlyExit()`, `nSuspend_` tracking | Replicate in new CoroTask |
+| Concern                          | Impact                                    | Mitigation                                               |
+| -------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| `RPC::Context::coro` type change | All RPC handlers receive context          | Migrate context field last, after all consumers updated  |
+| `postCoro()` removal             | 3 callers                                 | Replace with `postCoroTask()`, remove old API in Phase 4 |
+| `LocalValue` integration         | Thread-local storage must work            | New implementation must swap LocalValues identically     |
+| Shutdown behavior                | `expectEarlyExit()`, `nSuspend_` tracking | Replicate in new CoroTask                                |
 
 ---
 
@@ -621,42 +621,42 @@ graph LR
 
 #### Phase 1: New Coroutine Primitives
 
-| File | Action | Description |
-|------|--------|-------------|
-| `include/xrpl/core/CoroTask.h` | **CREATE** | `CoroTask<T>` return type with `promise_type`, `FinalAwaiter` |
-| `include/xrpl/core/JobQueueAwaiter.h` | **CREATE** | Awaiter that schedules resume on JobQueue |
-| `include/xrpl/core/JobQueue.h` | **MODIFY** | Add `postCoroTask()` template alongside existing `postCoro()` |
-| `src/test/core/CoroTask_test.cpp` | **CREATE** | Unit tests for `CoroTask<T>` and `JobQueueAwaiter` |
+| File                                  | Action     | Description                                                   |
+| ------------------------------------- | ---------- | ------------------------------------------------------------- |
+| `include/xrpl/core/CoroTask.h`        | **CREATE** | `CoroTask<T>` return type with `promise_type`, `FinalAwaiter` |
+| `include/xrpl/core/JobQueueAwaiter.h` | **CREATE** | Awaiter that schedules resume on JobQueue                     |
+| `include/xrpl/core/JobQueue.h`        | **MODIFY** | Add `postCoroTask()` template alongside existing `postCoro()` |
+| `src/test/core/CoroTask_test.cpp`     | **CREATE** | Unit tests for `CoroTask<T>` and `JobQueueAwaiter`            |
 
 #### Phase 2: Entry Point Migration
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                     | Action     | Description                                                            |
+| ---------------------------------------- | ---------- | ---------------------------------------------------------------------- |
 | `src/xrpld/rpc/detail/ServerHandler.cpp` | **MODIFY** | `onRequest()` and `onWSMessage()`: replace `postCoro` → `postCoroTask` |
-| `src/xrpld/rpc/ServerHandler.h` | **MODIFY** | Update `processSession`/`processRequest` signatures |
-| `src/xrpld/app/main/GRPCServer.cpp` | **MODIFY** | `CallData::process()`: replace `postCoro` → `postCoroTask` |
-| `src/xrpld/app/main/GRPCServer.h` | **MODIFY** | Update `process()` method signature |
-| `src/xrpld/rpc/Context.h` | **MODIFY** | Change `shared_ptr<JobQueue::Coro>` to new coroutine handle type |
+| `src/xrpld/rpc/ServerHandler.h`          | **MODIFY** | Update `processSession`/`processRequest` signatures                    |
+| `src/xrpld/app/main/GRPCServer.cpp`      | **MODIFY** | `CallData::process()`: replace `postCoro` → `postCoroTask`             |
+| `src/xrpld/app/main/GRPCServer.h`        | **MODIFY** | Update `process()` method signature                                    |
+| `src/xrpld/rpc/Context.h`                | **MODIFY** | Change `shared_ptr<JobQueue::Coro>` to new coroutine handle type       |
 
 #### Phase 3: Handler Migration
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                        | Action     | Description                                                      |
+| ------------------------------------------- | ---------- | ---------------------------------------------------------------- |
 | `src/xrpld/rpc/handlers/RipplePathFind.cpp` | **MODIFY** | Replace `context.coro->yield()` / `coro->post()` with `co_await` |
-| `src/test/app/Path_test.cpp` | **MODIFY** | Update test to use new coroutine API |
-| `src/test/jtx/impl/AMMTest.cpp` | **MODIFY** | Update test to use new coroutine API |
+| `src/test/app/Path_test.cpp`                | **MODIFY** | Update test to use new coroutine API                             |
+| `src/test/jtx/impl/AMMTest.cpp`             | **MODIFY** | Update test to use new coroutine API                             |
 
 #### Phase 4: Cleanup
 
-| File | Action | Description |
-|------|--------|-------------|
-| `include/xrpl/core/Coro.ipp` | **DELETE** | Remove old Boost.Coroutine implementation |
-| `include/xrpl/core/JobQueue.h` | **MODIFY** | Remove `Coro` class, `postCoro()`, `Coro_create_t`, Boost includes |
-| `cmake/deps/Boost.cmake` | **MODIFY** | Remove `coroutine` from `find_package` and `target_link_libraries` |
-| `cmake/XrplInterface.cmake` | **MODIFY** | Remove `BOOST_COROUTINES_NO_DEPRECATION_WARNING` |
-| `src/test/core/Coroutine_test.cpp` | **MODIFY** | Rewrite tests for new CoroTask |
-| `src/test/core/JobQueue_test.cpp` | **MODIFY** | Update `testPostCoro` to use new API |
-| `include/xrpl/basics/LocalValue.h` | **MODIFY** | Update LocalValues integration for C++20 coroutines |
+| File                               | Action     | Description                                                        |
+| ---------------------------------- | ---------- | ------------------------------------------------------------------ |
+| `include/xrpl/core/Coro.ipp`       | **DELETE** | Remove old Boost.Coroutine implementation                          |
+| `include/xrpl/core/JobQueue.h`     | **MODIFY** | Remove `Coro` class, `postCoro()`, `Coro_create_t`, Boost includes |
+| `cmake/deps/Boost.cmake`           | **MODIFY** | Remove `coroutine` from `find_package` and `target_link_libraries` |
+| `cmake/XrplInterface.cmake`        | **MODIFY** | Remove `BOOST_COROUTINES_NO_DEPRECATION_WARNING`                   |
+| `src/test/core/Coroutine_test.cpp` | **MODIFY** | Rewrite tests for new CoroTask                                     |
+| `src/test/core/JobQueue_test.cpp`  | **MODIFY** | Update `testPostCoro` to use new API                               |
+| `include/xrpl/basics/LocalValue.h` | **MODIFY** | Update LocalValues integration for C++20 coroutines                |
 
 ### 4.4 LocalValue Integration Design
 
@@ -800,18 +800,18 @@ Test: Concurrent ripple_path_find requests
 
 ### 5.3 Unit Test Coverage
 
-| Test | What It Validates |
-|------|-------------------|
-| `CoroTask<void>` basic | Coroutine runs to completion, handle cleanup |
-| `CoroTask<int>` with value | `co_return` value correctly retrieved |
-| `CoroTask` exception | `unhandled_exception()` captures and rethrows |
-| `CoroTask` cancellation | Destruction before completion cleans up |
-| `JobQueueAwaiter` basic | `co_await` suspends, resumes on worker thread |
-| `JobQueueAwaiter` shutdown | Returns false / throws when JobQueue stopping |
-| `PostCoroTask` lifecycle | Create → suspend → resume → complete |
-| `PostCoroTask` multiple yields | Multiple co_await points in sequence |
-| `LocalValue` isolation | 4 coroutines, each sees own LocalValue |
-| `LocalValue` cross-thread | Resume on different thread, values preserved |
+| Test                           | What It Validates                             |
+| ------------------------------ | --------------------------------------------- |
+| `CoroTask<void>` basic         | Coroutine runs to completion, handle cleanup  |
+| `CoroTask<int>` with value     | `co_return` value correctly retrieved         |
+| `CoroTask` exception           | `unhandled_exception()` captures and rethrows |
+| `CoroTask` cancellation        | Destruction before completion cleans up       |
+| `JobQueueAwaiter` basic        | `co_await` suspends, resumes on worker thread |
+| `JobQueueAwaiter` shutdown     | Returns false / throws when JobQueue stopping |
+| `PostCoroTask` lifecycle       | Create → suspend → resume → complete          |
+| `PostCoroTask` multiple yields | Multiple co_await points in sequence          |
+| `LocalValue` isolation         | 4 coroutines, each sees own LocalValue        |
+| `LocalValue` cross-thread      | Resume on different thread, values preserved  |
 
 ### 5.4 Integration Testing
 
@@ -878,21 +878,21 @@ graph LR
 
 ### 6.1 Risk Matrix
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Performance regression** in context switching | Low | High | Benchmark before/after; C++20 should be faster |
-| **Coroutine frame lifetime bugs** (use-after-destroy) | Medium | High | ASAN testing, RAII wrapper for handle, code review |
-| **Data races on resume** | Medium | High | TSAN testing, careful await_suspend() implementation |
-| **LocalValue corruption** across threads | Low | High | Dedicated test with 4+ concurrent coroutines |
-| **Shutdown race conditions** | Medium | Medium | Replicate existing mutex/cv pattern in new design |
-| **Missed coroutine consumer** during migration | Low | Medium | Exhaustive grep audit (Section 2.4 is complete) |
-| **Compiler bugs** in coroutine codegen | Low | Medium | Test on all three compilers (GCC, Clang, MSVC) |
-| **Exception loss** across suspension points | Medium | Medium | Test exception propagation in every phase |
-| **Third-party code depending on Boost.Coroutine** | Very Low | Low | Grep confirms only internal usage |
-| **Dangling references in coroutine frames** | Medium | High | ASAN testing, avoid reference params in coroutine functions, use shared_ptr |
-| **Colored function infection spreading** | Low | Medium | Only 4 call sites need co_await; no nested handlers suspend |
-| **Symmetric transfer not available** | Very Low | High | All target compilers (GCC 12+, Clang 16+) support symmetric transfer |
-| **Future handler adding deep yield** | Low | Medium | Code review + CI: static analysis flag any yield from nested depth |
+| Risk                                                  | Probability | Impact | Mitigation                                                                  |
+| ----------------------------------------------------- | ----------- | ------ | --------------------------------------------------------------------------- |
+| **Performance regression** in context switching       | Low         | High   | Benchmark before/after; C++20 should be faster                              |
+| **Coroutine frame lifetime bugs** (use-after-destroy) | Medium      | High   | ASAN testing, RAII wrapper for handle, code review                          |
+| **Data races on resume**                              | Medium      | High   | TSAN testing, careful await_suspend() implementation                        |
+| **LocalValue corruption** across threads              | Low         | High   | Dedicated test with 4+ concurrent coroutines                                |
+| **Shutdown race conditions**                          | Medium      | Medium | Replicate existing mutex/cv pattern in new design                           |
+| **Missed coroutine consumer** during migration        | Low         | Medium | Exhaustive grep audit (Section 2.4 is complete)                             |
+| **Compiler bugs** in coroutine codegen                | Low         | Medium | Test on all three compilers (GCC, Clang, MSVC)                              |
+| **Exception loss** across suspension points           | Medium      | Medium | Test exception propagation in every phase                                   |
+| **Third-party code depending on Boost.Coroutine**     | Very Low    | Low    | Grep confirms only internal usage                                           |
+| **Dangling references in coroutine frames**           | Medium      | High   | ASAN testing, avoid reference params in coroutine functions, use shared_ptr |
+| **Colored function infection spreading**              | Low         | Medium | Only 4 call sites need co_await; no nested handlers suspend                 |
+| **Symmetric transfer not available**                  | Very Low    | High   | All target compilers (GCC 12+, Clang 16+) support symmetric transfer        |
+| **Future handler adding deep yield**                  | Low         | Medium | Code review + CI: static analysis flag any yield from nested depth          |
 
 ### 6.2 Rollback Strategy
 
@@ -1153,13 +1153,13 @@ auto doSomething() { co_return; }
 
 #### Naming Conventions
 
-| Entity | Convention | Example |
-|--------|-----------|---------|
-| Coroutine return type | `CoroTask<T>` | `CoroTask<void>`, `CoroTask<Json::Value>` |
-| Awaiter types | `*Awaiter` suffix | `JobQueueAwaiter`, `PathFindAwaiter` |
-| Coroutine functions | Same as regular functions | `doRipplePathFind(...)` |
-| Promise types | Nested `promise_type` | `CoroTask<T>::promise_type` |
-| JobQueue method | `postCoroTask()` | `jq.postCoroTask(jtCLIENT, "name", fn)` |
+| Entity                | Convention                | Example                                   |
+| --------------------- | ------------------------- | ----------------------------------------- |
+| Coroutine return type | `CoroTask<T>`             | `CoroTask<void>`, `CoroTask<Json::Value>` |
+| Awaiter types         | `*Awaiter` suffix         | `JobQueueAwaiter`, `PathFindAwaiter`      |
+| Coroutine functions   | Same as regular functions | `doRipplePathFind(...)`                   |
+| Promise types         | Nested `promise_type`     | `CoroTask<T>::promise_type`               |
+| JobQueue method       | `postCoroTask()`          | `jq.postCoroTask(jtCLIENT, "name", fn)`   |
 
 #### Code Organization
 
@@ -1180,11 +1180,11 @@ Each milestone is developed on a **sub-branch** of the main feature branch. This
 
 ```
 develop
-  └── pratik/Switch-to-std-coroutines          (main feature branch)
-        ├── pratik/std-coro/milestone-1         (Phase 1: New primitives)
-        ├── pratik/std-coro/milestone-2         (Phase 2: Entry point migration)
-        ├── pratik/std-coro/milestone-3         (Phase 3: Handler migration)
-        └── pratik/std-coro/milestone-4         (Phase 4: Cleanup + validation)
+  └── pratik/Switch-to-std-coroutines                       (main feature branch)
+        ├── pratik/std-coro/add-coroutine-primitives        (CoroTask, CoroTaskRunner, JobQueueAwaiter, postCoroTask)
+        ├── pratik/std-coro/migrate-entry-points            (ServerHandler, GRPCServer, RPC::Context)
+        ├── pratik/std-coro/migrate-handlers                (doRipplePathFind, PathFindAwaiter, tests)
+        └── pratik/std-coro/cleanup-boost-coroutine         (delete Coro.ipp, remove Boost dep, benchmarks)
 ```
 
 **Workflow**:
@@ -1197,7 +1197,7 @@ develop
 **Rules**:
 - Never push directly to the main feature branch — always via sub-branch PR
 - Each sub-branch must pass `--unittest` and sanitizers before PR
-- Sub-branch names follow the pattern: `pratik/std-coro/milestone-N`
+- Sub-branch names follow the pattern: `pratik/std-coro/<descriptive-action>` (e.g., `add-coroutine-primitives`, `migrate-entry-points`)
 - Milestone PRs must reference this plan document in the description
 
 ### 8.4 Code Review Checklist
@@ -1356,29 +1356,29 @@ For every PR in this migration:
 
 Complete list of files that reference coroutines (for audit tracking):
 
-| # | File | Must Change | Phase |
-|---|------|-------------|-------|
-| 1 | `include/xrpl/core/JobQueue.h` | Yes | 1 (add), 4 (remove old) |
-| 2 | `include/xrpl/core/Coro.ipp` | Yes | 4 (delete) |
-| 3 | `include/xrpl/basics/LocalValue.h` | Maybe | 1 (if integration changes) |
-| 4 | `cmake/deps/Boost.cmake` | Yes | 4 |
-| 5 | `cmake/XrplInterface.cmake` | Yes | 4 |
-| 6 | `src/xrpld/rpc/Context.h` | Yes | 2 |
-| 7 | `src/xrpld/rpc/detail/ServerHandler.cpp` | Yes | 2 |
-| 8 | `src/xrpld/rpc/ServerHandler.h` | Yes | 2 |
-| 9 | `src/xrpld/app/main/GRPCServer.cpp` | Yes | 2 |
-| 10 | `src/xrpld/app/main/GRPCServer.h` | Yes | 2 |
-| 11 | `src/xrpld/rpc/handlers/RipplePathFind.cpp` | Yes | 3 |
-| 12 | `src/test/core/Coroutine_test.cpp` | Yes | 3 |
-| 13 | `src/test/core/JobQueue_test.cpp` | Yes | 3 |
-| 14 | `src/test/app/Path_test.cpp` | Yes | 3 |
-| 15 | `src/test/jtx/impl/AMMTest.cpp` | Yes | 3 |
-| 16 | `src/xrpld/rpc/README.md` | Yes | 4 (update docs) |
+| #   | File                                        | Must Change | Phase                      |
+| --- | ------------------------------------------- | ----------- | -------------------------- |
+| 1   | `include/xrpl/core/JobQueue.h`              | Yes         | 1 (add), 4 (remove old)    |
+| 2   | `include/xrpl/core/Coro.ipp`                | Yes         | 4 (delete)                 |
+| 3   | `include/xrpl/basics/LocalValue.h`          | Maybe       | 1 (if integration changes) |
+| 4   | `cmake/deps/Boost.cmake`                    | Yes         | 4                          |
+| 5   | `cmake/XrplInterface.cmake`                 | Yes         | 4                          |
+| 6   | `src/xrpld/rpc/Context.h`                   | Yes         | 2                          |
+| 7   | `src/xrpld/rpc/detail/ServerHandler.cpp`    | Yes         | 2                          |
+| 8   | `src/xrpld/rpc/ServerHandler.h`             | Yes         | 2                          |
+| 9   | `src/xrpld/app/main/GRPCServer.cpp`         | Yes         | 2                          |
+| 10  | `src/xrpld/app/main/GRPCServer.h`           | Yes         | 2                          |
+| 11  | `src/xrpld/rpc/handlers/RipplePathFind.cpp` | Yes         | 3                          |
+| 12  | `src/test/core/Coroutine_test.cpp`          | Yes         | 3                          |
+| 13  | `src/test/core/JobQueue_test.cpp`           | Yes         | 3                          |
+| 14  | `src/test/app/Path_test.cpp`                | Yes         | 3                          |
+| 15  | `src/test/jtx/impl/AMMTest.cpp`             | Yes         | 3                          |
+| 16  | `src/xrpld/rpc/README.md`                   | Yes         | 4 (update docs)            |
 
 ## Appendix B: New Files to Create
 
-| # | File | Phase | Purpose |
-|---|------|-------|---------|
-| 1 | `include/xrpl/core/CoroTask.h` | 1 | `CoroTask<T>` return type + promise_type |
-| 2 | `include/xrpl/core/JobQueueAwaiter.h` | 1 | Awaiter for scheduling on JobQueue |
-| 3 | `src/test/core/CoroTask_test.cpp` | 1 | Unit tests for new primitives |
+| #   | File                                  | Phase | Purpose                                  |
+| --- | ------------------------------------- | ----- | ---------------------------------------- |
+| 1   | `include/xrpl/core/CoroTask.h`        | 1     | `CoroTask<T>` return type + promise_type |
+| 2   | `include/xrpl/core/JobQueueAwaiter.h` | 1     | Awaiter for scheduling on JobQueue       |
+| 3   | `src/test/core/CoroTask_test.cpp`     | 1     | Unit tests for new primitives            |
