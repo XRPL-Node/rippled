@@ -1,6 +1,7 @@
 #include <test/jtx/Env.h>
 
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/core/CoroTask.h>
 #include <xrpl/core/JobQueue.h>
 
 namespace xrpl {
@@ -44,86 +45,91 @@ class JobQueue_test : public beast::unit_test::suite
     }
 
     void
-    testPostCoro()
+    testPostCoroTask()
     {
         jtx::Env env{*this};
 
         JobQueue& jQueue = env.app().getJobQueue();
         {
-            // Test repeated post()s until the Coro completes.
+            // Test repeated post()s until the coroutine completes.
             std::atomic<int> yieldCount{0};
-            auto const coro = jQueue.postCoro(
+            auto const runner = jQueue.postCoroTask(
                 jtCLIENT,
                 "PostCoroTest1",
-                [&yieldCount](std::shared_ptr<JobQueue::Coro> const& coroCopy) {
+                [&yieldCount](auto runner) -> CoroTask<void> {
                     while (++yieldCount < 4)
-                        coroCopy->yield();
+                        co_await runner->suspend();
+                    co_return;
                 });
-            BEAST_EXPECT(coro != nullptr);
+            BEAST_EXPECT(runner != nullptr);
 
             // Wait for the Job to run and yield.
             while (yieldCount == 0)
                 ;
 
-            // Now re-post until the Coro says it is done.
+            // Now re-post until the CoroTaskRunner says it is done.
             int old = yieldCount;
-            while (coro->runnable())
+            while (runner->runnable())
             {
-                BEAST_EXPECT(coro->post());
+                BEAST_EXPECT(runner->post());
                 while (old == yieldCount)
                 {
                 }
-                coro->join();
+                runner->join();
                 BEAST_EXPECT(++old == yieldCount);
             }
             BEAST_EXPECT(yieldCount == 4);
         }
         {
-            // Test repeated resume()s until the Coro completes.
+            // Test repeated resume()s until the coroutine completes.
             int yieldCount{0};
-            auto const coro = jQueue.postCoro(
+            auto const runner = jQueue.postCoroTask(
                 jtCLIENT,
                 "PostCoroTest2",
-                [&yieldCount](std::shared_ptr<JobQueue::Coro> const& coroCopy) {
+                [&yieldCount](auto runner) -> CoroTask<void> {
                     while (++yieldCount < 4)
-                        coroCopy->yield();
+                        co_await runner->suspend();
+                    co_return;
                 });
-            if (!coro)
+            if (!runner)
             {
-                // There's no good reason we should not get a Coro, but we
+                // There's no good reason we should not get a runner, but we
                 // can't continue without one.
                 BEAST_EXPECT(false);
                 return;
             }
 
             // Wait for the Job to run and yield.
-            coro->join();
+            runner->join();
 
-            // Now resume until the Coro says it is done.
+            // Now resume until the CoroTaskRunner says it is done.
             int old = yieldCount;
-            while (coro->runnable())
+            while (runner->runnable())
             {
-                coro->resume();  // Resume runs synchronously on this thread.
+                runner->resume();  // Resume runs synchronously on this thread.
                 BEAST_EXPECT(++old == yieldCount);
             }
             BEAST_EXPECT(yieldCount == 4);
         }
         {
             // If the JobQueue is stopped, we should no
-            // longer be able to add a Coro (and calling postCoro() should
-            // return false).
+            // longer be able to post a coroutine (and calling postCoroTask()
+            // should return nullptr).
             using namespace std::chrono_literals;
             jQueue.stop();
 
-            // The Coro should never run, so having the Coro access this
+            // The coroutine should never run, so having it access this
             // unprotected variable on the stack should be completely safe.
             // Not recommended for the faint of heart...
             bool unprotected;
-            auto const coro = jQueue.postCoro(
-                jtCLIENT, "PostCoroTest3", [&unprotected](std::shared_ptr<JobQueue::Coro> const&) {
+            auto const runner = jQueue.postCoroTask(
+                jtCLIENT,
+                "PostCoroTest3",
+                [&unprotected](auto) -> CoroTask<void> {
                     unprotected = false;
+                    co_return;
                 });
-            BEAST_EXPECT(coro == nullptr);
+            BEAST_EXPECT(runner == nullptr);
         }
     }
 
@@ -132,7 +138,7 @@ public:
     run() override
     {
         testAddJob();
-        testPostCoro();
+        testPostCoroTask();
     }
 };
 
