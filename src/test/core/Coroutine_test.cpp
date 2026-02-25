@@ -127,21 +127,20 @@ public:
 
         for (int i = 0; i < N; ++i)
         {
-            jq.postCoroTask(
-                jtCLIENT, "CoroTest", [&, id = i](auto runner) -> CoroTask<void> {
-                    a[id] = runner;
-                    g.signal();
-                    co_await runner->suspend();
+            jq.postCoroTask(jtCLIENT, "CoroTest", [&, id = i](auto runner) -> CoroTask<void> {
+                a[id] = runner;
+                g.signal();
+                co_await runner->suspend();
 
-                    this->BEAST_EXPECT(*lv == -1);
-                    *lv = id;
-                    this->BEAST_EXPECT(*lv == id);
-                    g.signal();
-                    co_await runner->suspend();
+                this->BEAST_EXPECT(*lv == -1);
+                *lv = id;
+                this->BEAST_EXPECT(*lv == id);
+                g.signal();
+                co_await runner->suspend();
 
-                    this->BEAST_EXPECT(*lv == id);
-                    co_return;
-                });
+                this->BEAST_EXPECT(*lv == id);
+                co_return;
+            });
             BEAST_EXPECT(g.wait_for(5s));
             a[i]->join();
         }
