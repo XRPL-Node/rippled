@@ -99,7 +99,90 @@ graph LR
 
 rippled already requires C++20 (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`). All supported compilers have mature C++20 coroutine support. **No compiler upgrades required.**
 
-### 1.6 Merits & Demerits Summary
+### 1.6 Viability Analysis — Addressing Stackless Concerns
+
+C++20 stackless coroutines have well-known limitations compared to stackful coroutines. This section analyzes each concern against rippled's **actual codebase** to determine viability.
+
+#### Concern 1: Cannot Suspend from Nested Call Stacks
+
+**Claim**: Stackless coroutines cannot yield from arbitrary stack depths. If `fn_a()` calls `fn_b()` calls `yield()`, only stackful coroutines can suspend the entire chain.
+
+**Analysis**: An exhaustive codebase audit found:
+- **1 production yield() call**: `RipplePathFind.cpp:131` — directly in the handler function body
+- **All test yield() calls**: directly in `postCoro` lambda bodies (Coroutine_test.cpp, JobQueue_test.cpp)
+- **The `push_type*` architecture** makes deep-nested yield() structurally impossible — the `yield_` pointer is only available inside the `postCoro` lambda via the `shared_ptr<Coro>`, and handlers call `context.coro->yield()` at the top level
+
+**Verdict**: This concern does NOT apply. All suspension is shallow.
+
+#### Concern 2: Colored Function Problem (Viral co_await)
+
+**Claim**: Once a function needs to suspend, every caller up the chain must also be a coroutine. This "infects" the call chain.
+
+**Analysis**: In rippled's case, the coloring is minimal:
+- `postCoroTask()` launches a coroutine — this is the "root" colored function
+- The `postCoro` lambda itself becomes the coroutine function (returns `CoroTask<void>`)
+- `doRipplePathFind()` is the only handler that calls `co_await`
+- No other handler in the chain needs to become a coroutine — they continue to be regular functions dispatched through `doCommand()`
+
+The "coloring" stops at the entry point lambda and the one handler that suspends. No deep infection.
+
+**Verdict**: Minimal impact. Only 4 lambdas (3 entry points + 1 handler) need `co_await`.
+
+#### Concern 3: No Standard Library Support for Common Patterns
+
+**Claim**: C++20 provides the language primitives but no standard task type, executor integration, or composition utilities.
+
+**Analysis**: This is accurate — we need to write custom types:
+- `CoroTask<T>` (task/return type) — well-established pattern, ~80 lines
+- `JobQueueAwaiter` (executor integration) — ~20 lines
+- `FinalAwaiter` (continuation chaining) — ~10 lines
+
+However, these types are small, well-understood, and have extensive reference implementations (cppcoro, folly::coro, libunifex). The total boilerplate is approximately 150-200 lines of header code.
+
+**Verdict**: Manageable. Custom types are small and well-documented in C++ community.
+
+#### Concern 4: Stack Overflow from Synchronous Resumption Chains
+
+**Claim**: If coroutine A `co_await`s coroutine B, and B completes synchronously, B's `final_suspend` resumes A on the same stack, potentially building up unbounded stack depth.
+
+**Analysis**: This is addressed by **symmetric transfer** via `FinalAwaiter::await_suspend()` returning a `coroutine_handle<>` instead of `void`. The compiler transforms this into a tail-call, preventing stack growth. This is the standard solution used by all major coroutine libraries and is implemented in our `FinalAwaiter` design (Section 4.1).
+
+**Verdict**: Solved by symmetric transfer (already in our design).
+
+#### Concern 5: Dangling Reference Risk
+
+**Claim**: Coroutine frames are heap-allocated and outlive the calling scope, making references to locals dangerous.
+
+**Analysis**: This is a real concern that requires engineering discipline:
+- Coroutine parameters are copied into the frame (safe by default)
+- References passed to coroutine functions can dangle if the referent's scope ends before the coroutine completes
+- Our design mitigates this: `RPC::Context` is passed by reference but its lifetime is managed by `shared_ptr<Coro>` / the entry point lambda's scope, which outlives the coroutine
+
+**Verdict**: Real risk, but manageable with RAII patterns and ASAN testing.
+
+#### Concern 6: yield_to.h / boost::asio::spawn
+
+**Claim**: `yield_to.h:111` uses `boost::asio::spawn`, suggesting broader coroutine usage.
+
+**Analysis**: `yield_to.h` uses `boost::asio::spawn` with `boost::context::fixedsize_stack(2 * 1024 * 1024)` — this is a **completely separate** coroutine system:
+- Different type: `boost::asio::yield_context` (not `push_type*`)
+- Different purpose: test infrastructure for async I/O tests
+- Different mechanism: Boost.Asio stackful coroutines (not Boost.Coroutine2)
+- **Not part of this migration scope** — used only in tests and unrelated to `JobQueue::Coro`
+
+**Verdict**: Separate system. Out of scope for this migration.
+
+#### Overall Viability Conclusion
+
+The migration IS viable because:
+1. rippled's coroutine usage is **shallow** (no deep-nested yield)
+2. The **colored function infection** is limited to 4 call sites
+3. Custom types are **small and well-understood**
+4. **Symmetric transfer** solves the stack overflow concern
+5. **ASAN/TSAN** testing catches lifetime and race bugs
+6. The alternative (ASAN annotations for Boost.Context) only addresses sanitizer false positives — it does not provide memory savings, standard compliance, or the dependency elimination that C++20 migration delivers
+
+### 1.7 Merits & Demerits Summary
 
 #### Merits of C++20 Migration
 
@@ -113,11 +196,21 @@ rippled already requires C++20 (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`). Al
 
 #### Demerits / Challenges
 
-1. **Stackless limitation** — cannot yield from nested calls (not an issue for rippled's usage)
-2. **Explicit lifetime management** — `coroutine_handle::destroy()` must be called
-3. **Verbose boilerplate** — promise_type, awaiter interfaces require more code
+1. **Stackless limitation** — cannot yield from nested calls (verified: not an issue for rippled's shallow usage)
+2. **Explicit lifetime management** — `coroutine_handle::destroy()` must be called (mitigated by RAII CoroTask)
+3. **Verbose boilerplate** — promise_type, awaiter interfaces (~150-200 lines of infrastructure code)
 4. **Debugging** — no visible coroutine stack in debugger (improving with tooling)
 5. **Learning curve** — team needs familiarity with C++20 coroutine machinery
+6. **Dangling reference risk** — coroutine frames outlive calling scope (mitigated by ASAN + careful design)
+7. **No standard library task type** — must write custom CoroTask, awaiters (well-established patterns exist)
+
+#### Alternative Considered: ASAN Annotations Only
+
+Instead of full migration, one could keep Boost.Coroutine and add `__sanitizer_start_switch_fiber` / `__sanitizer_finish_switch_fiber` annotations to Coro.ipp to suppress ASAN false positives. This was evaluated and rejected because:
+- It only fixes sanitizer false positives — does NOT reduce 1MB/coroutine memory usage
+- Does NOT remove the deprecated Boost.Coroutine dependency
+- Does NOT provide standard compliance or future-proofing
+- The full migration is feasible given shallow yield usage and delivers all the above benefits
 
 ---
 
@@ -796,6 +889,10 @@ graph LR
 | **Compiler bugs** in coroutine codegen | Low | Medium | Test on all three compilers (GCC, Clang, MSVC) |
 | **Exception loss** across suspension points | Medium | Medium | Test exception propagation in every phase |
 | **Third-party code depending on Boost.Coroutine** | Very Low | Low | Grep confirms only internal usage |
+| **Dangling references in coroutine frames** | Medium | High | ASAN testing, avoid reference params in coroutine functions, use shared_ptr |
+| **Colored function infection spreading** | Low | Medium | Only 4 call sites need co_await; no nested handlers suspend |
+| **Symmetric transfer not available** | Very Low | High | All target compilers (GCC 12+, Clang 16+) support symmetric transfer |
+| **Future handler adding deep yield** | Low | Medium | Code review + CI: static analysis flag any yield from nested depth |
 
 ### 6.2 Rollback Strategy
 
@@ -1077,7 +1174,33 @@ auto doSomething() { co_return; }
 2. **Promise type must document**: exception handling behavior and suspension points.
 3. **Migration commits must reference this plan** in commit messages.
 
-### 8.3 Code Review Checklist
+### 8.3 Branch Strategy
+
+Each milestone is developed on a **sub-branch** of the main feature branch. This keeps PRs focused and independently reviewable.
+
+```
+develop
+  └── pratik/Switch-to-std-coroutines          (main feature branch)
+        ├── pratik/std-coro/milestone-1         (Phase 1: New primitives)
+        ├── pratik/std-coro/milestone-2         (Phase 2: Entry point migration)
+        ├── pratik/std-coro/milestone-3         (Phase 3: Handler migration)
+        └── pratik/std-coro/milestone-4         (Phase 4: Cleanup + validation)
+```
+
+**Workflow**:
+1. Create sub-branch from `pratik/Switch-to-std-coroutines` for each milestone
+2. Develop and test on the sub-branch
+3. Create PR from sub-branch → `pratik/Switch-to-std-coroutines`
+4. After review + merge, start next milestone sub-branch from the updated feature branch
+5. Final PR from `pratik/Switch-to-std-coroutines` → `develop`
+
+**Rules**:
+- Never push directly to the main feature branch — always via sub-branch PR
+- Each sub-branch must pass `--unittest` and sanitizers before PR
+- Sub-branch names follow the pattern: `pratik/std-coro/milestone-N`
+- Milestone PRs must reference this plan document in the description
+
+### 8.4 Code Review Checklist
 
 For every PR in this migration:
 
