@@ -89,15 +89,11 @@ AMMTestBase::testAMM(
     std::vector<FeatureBitset> const& vfeatures)
 {
     testAMM(
-        std::move(cb),
-        TestAMMArg{
-            .pool = pool, .tfee = tfee, .ter = ter, .features = vfeatures});
+        std::move(cb), TestAMMArg{.pool = pool, .tfee = tfee, .ter = ter, .features = vfeatures});
 }
 
 void
-AMMTestBase::testAMM(
-    std::function<void(jtx::AMM&, jtx::Env&)>&& cb,
-    TestAMMArg const& arg)
+AMMTestBase::testAMM(std::function<void(jtx::AMM&, jtx::Env&)>&& cb, TestAMMArg const& arg)
 {
     using namespace jtx;
 
@@ -115,8 +111,7 @@ AMMTestBase::testAMM(
             features - featureSingleAssetVault - featureLendingProtocol,
             arg.noLog ? std::make_unique<CaptureLogs>(&logs) : nullptr};
 
-        auto const [asset1, asset2] =
-            arg.pool ? *arg.pool : std::make_pair(XRP(10000), USD(10000));
+        auto const [asset1, asset2] = arg.pool ? *arg.pool : std::make_pair(XRP(10000), USD(10000));
         auto toFund = [&](STAmount const& a) -> STAmount {
             if (a.native())
             {
@@ -142,13 +137,8 @@ AMMTestBase::testAMM(
             fund(env, gw, {alice, carol}, toFund2, {toFund1}, Fund::All);
 
         AMM ammAlice(
-            env,
-            alice,
-            asset1,
-            asset2,
-            CreateArg{.log = false, .tfee = arg.tfee, .err = arg.ter});
-        if (BEAST_EXPECT(
-                ammAlice.expectBalances(asset1, asset2, ammAlice.tokens())))
+            env, alice, asset1, asset2, CreateArg{.log = false, .tfee = arg.tfee, .err = arg.ter});
+        if (BEAST_EXPECT(ammAlice.expectBalances(asset1, asset2, ammAlice.tokens())))
             cb(ammAlice, env);
     }
 }
@@ -247,8 +237,7 @@ AMMTest::find_paths(
     std::optional<STAmount> const& saSendMax,
     std::optional<Currency> const& saSrcCurrency)
 {
-    Json::Value result = find_paths_request(
-        env, src, dst, saDstAmount, saSendMax, saSrcCurrency);
+    Json::Value result = find_paths_request(env, src, dst, saDstAmount, saSendMax, saSrcCurrency);
     BEAST_EXPECT(!result.isMember(jss::error));
 
     STAmount da;

@@ -18,26 +18,17 @@ creditLimit(
 
     if (sleRippleState)
     {
-        result = sleRippleState->getFieldAmount(
-            account < issuer ? sfLowLimit : sfHighLimit);
+        result = sleRippleState->getFieldAmount(account < issuer ? sfLowLimit : sfHighLimit);
         result.setIssuer(account);
     }
 
-    XRPL_ASSERT(
-        result.getIssuer() == account,
-        "xrpl::creditLimit : result issuer match");
-    XRPL_ASSERT(
-        result.getCurrency() == currency,
-        "xrpl::creditLimit : result currency match");
+    XRPL_ASSERT(result.getIssuer() == account, "xrpl::creditLimit : result issuer match");
+    XRPL_ASSERT(result.getCurrency() == currency, "xrpl::creditLimit : result currency match");
     return result;
 }
 
 IOUAmount
-creditLimit2(
-    ReadView const& v,
-    AccountID const& acc,
-    AccountID const& iss,
-    Currency const& cur)
+creditLimit2(ReadView const& v, AccountID const& acc, AccountID const& iss, Currency const& cur)
 {
     return toAmount<IOUAmount>(creditLimit(v, acc, iss, cur));
 }
@@ -61,12 +52,8 @@ creditBalance(
         result.setIssuer(account);
     }
 
-    XRPL_ASSERT(
-        result.getIssuer() == account,
-        "xrpl::creditBalance : result issuer match");
-    XRPL_ASSERT(
-        result.getCurrency() == currency,
-        "xrpl::creditBalance : result currency match");
+    XRPL_ASSERT(result.getIssuer() == account, "xrpl::creditBalance : result issuer match");
+    XRPL_ASSERT(result.getCurrency() == currency, "xrpl::creditBalance : result currency match");
     return result;
 }
 
