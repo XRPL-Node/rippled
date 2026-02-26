@@ -338,8 +338,8 @@ Door<Handler>::do_accept(boost::asio::yield_context do_yield)
                 ec == boost::asio::error::no_buffer_space)
             {
                 auto const delay = backoff_.current();
-                JLOG(j_.warn()) << "accept: Too many open files. Pausing for "
-                                << delay.count() << "ms.";
+                JLOG(j_.warn()) << "accept: Too many open files. Pausing for " << delay.count()
+                                << "ms.";
 
                 backoff_timer_.expires_after(delay);
                 boost::system::error_code tec;

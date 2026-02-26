@@ -459,7 +459,8 @@ GRPCServerImpl::handleRpcs()
 
                             auto deadline = std::chrono::system_clock::now() + backoff_.current();
 
-                            backoffAlarm_.Set(cq_.get(), deadline, static_cast<void*>(&backoffTag_));
+                            backoffAlarm_.Set(
+                                cq_.get(), deadline, static_cast<void*>(&backoffTag_));
 
                             auto const delay = backoff_.increase();
 
@@ -514,7 +515,9 @@ GRPCServerImpl::onBackoffFired()
         std::lock_guard lk(backoffMutex_);
 
         pendingReposts_.insert(
-            pendingReposts_.end(), std::make_move_iterator(toRepost.begin()), std::make_move_iterator(toRepost.end()));
+            pendingReposts_.end(),
+            std::make_move_iterator(toRepost.begin()),
+            std::make_move_iterator(toRepost.end()));
 
         if (!backoffScheduled_)
         {
