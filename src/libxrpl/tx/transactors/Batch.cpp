@@ -496,14 +496,7 @@ Batch::checkBatchSign(PreclaimContext const& ctx)
             auto const idSigner = calcAccountID(PublicKey(makeSlice(pkSigner)));
             auto const sleAccount = ctx.view.read(keylet::account(idAccount));
 
-            // A batch can include transactions from an un-created account ONLY
-            // when the account master key is the signer
-            if (!sleAccount)
-            {
-                if (idAccount != idSigner)
-                    return tefBAD_AUTH;
-            }
-            else
+            if (sleAccount)
             {
                 if (isPseudoAccount(sleAccount))
                     return tefBAD_AUTH;
@@ -511,6 +504,14 @@ Batch::checkBatchSign(PreclaimContext const& ctx)
                 if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j);
                     !isTesSuccess(ret))
                     return ret;
+            }
+            else
+            {
+                if (idAccount != idSigner)
+                    return tefBAD_AUTH;
+
+                // A batch can include transactions from an un-created account ONLY
+                // when the account master key is the signer
             }
         }
     }
