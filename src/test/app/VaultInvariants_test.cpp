@@ -1,14 +1,10 @@
 #include <test/app/BaseInvariants_test.cpp>
+//
 #include <test/jtx.h>
 #include <test/jtx/Env.h>
 
-#include <xrpld/app/tx/apply.h>
-#include <xrpld/app/tx/detail/ApplyContext.h>
-
 #include <xrpl/beast/unit_test/suite.h>
-#include <xrpl/beast/utility/Journal.h>
 #include <xrpl/protocol/AccountID.h>
-#include <xrpl/protocol/Indexes.h>
 #include <xrpl/protocol/MPTIssue.h>
 #include <xrpl/protocol/SField.h>
 #include <xrpl/protocol/STLedgerEntry.h>
@@ -16,6 +12,8 @@
 #include <xrpl/protocol/TER.h>
 #include <xrpl/protocol/TxFormats.h>
 #include <xrpl/protocol/XRPAmount.h>
+#include <xrpl/tx/ApplyContext.h>
+#include <xrpl/tx/apply.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -64,10 +62,7 @@ class VaultInvariants_test : public BaseInvariants_test
     };
 
     Adjustments
-    createVaultAdjustments(
-        AccountID id,
-        int adjustment,
-        std::function<void(Adjustments&)> fn)
+    createVaultAdjustments(AccountID id, int adjustment, std::function<void(Adjustments&)> fn)
     {
         Adjustments sample = {
             .assetsTotal = adjustment,
@@ -109,19 +104,12 @@ class VaultInvariants_test : public BaseInvariants_test
             return false;
 
         return accountSend(
-                   ac.view(),
-                   *sender,
-                   receiver,
-                   amount,
-                   ac.journal,
-                   WaiveTransferFee::Yes) == tesSUCCESS;
+                   ac.view(), *sender, receiver, amount, ac.journal, WaiveTransferFee::Yes) ==
+            tesSUCCESS;
     }
 
     bool
-    adjustVaultAndDepositor(
-        ApplyContext& ac,
-        xrpl::Keylet keylet,
-        Adjustments args)
+    adjustVaultAndDepositor(ApplyContext& ac, xrpl::Keylet keylet, Adjustments args)
     {
         auto vaultSle = ac.view().peek(keylet);
         if (!BEAST_EXPECT(vaultSle))
@@ -140,8 +128,7 @@ class VaultInvariants_test : public BaseInvariants_test
 
         // Remaining fields are adjusted in terms of difference
         if (args.assetsTotal)
-            (*vaultSle)[sfAssetsTotal] =
-                *(*vaultSle)[sfAssetsTotal] + *args.assetsTotal;
+            (*vaultSle)[sfAssetsTotal] = *(*vaultSle)[sfAssetsTotal] + *args.assetsTotal;
         if (args.assetsAvailable)
             (*vaultSle)[sfAssetsAvailable] =
                 *(*vaultSle)[sfAssetsAvailable] + *args.assetsAvailable;
@@ -166,8 +153,7 @@ class VaultInvariants_test : public BaseInvariants_test
             if (!assets.native())
             {
                 sender = *args.vaultAssets > 0 ? assets.getIssuer() : pseudoId;
-                receiver =
-                    *args.vaultAssets > 0 ? pseudoId : assets.getIssuer();
+                receiver = *args.vaultAssets > 0 ? pseudoId : assets.getIssuer();
                 amount = STAmount{assets, std::abs(*args.vaultAssets)};
             }
 
@@ -180,9 +166,8 @@ class VaultInvariants_test : public BaseInvariants_test
             auto const& pair = *args.accountAssets;
             std::optional<AccountID> sender = std::nullopt;
             AccountID receiver = pair.account;
-            STAmount amount = assets.native()
-                ? XRPAmount(pair.amount)
-                : STAmount{assets, std::abs(pair.amount)};
+            STAmount amount =
+                assets.native() ? XRPAmount(pair.amount) : STAmount{assets, std::abs(pair.amount)};
 
             if (!assets.native())
             {
@@ -197,12 +182,10 @@ class VaultInvariants_test : public BaseInvariants_test
         if (args.accountShares)
         {
             auto const& pair = *args.accountShares;
-            auto sleMPToken =
-                ac.view().peek(keylet::mptoken(mptIssuanceID, pair.account));
+            auto sleMPToken = ac.view().peek(keylet::mptoken(mptIssuanceID, pair.account));
             if (!BEAST_EXPECT(sleMPToken))
                 return false;
-            (*sleMPToken)[sfMPTAmount] =
-                *(*sleMPToken)[sfMPTAmount] + pair.amount;
+            (*sleMPToken)[sfMPTAmount] = *(*sleMPToken)[sfMPTAmount] + pair.amount;
             ac.view().update(sleMPToken);
         }
 
@@ -221,8 +204,7 @@ class VaultInvariants_test : public BaseInvariants_test
         // The vaultCreate method creates a vault for the A1 account.
         // We need to subtract 2 from the sequence number as vaultCreate
         // also creates other objects such as trustlines for MPT Tokens.
-        auto const keylet =
-            keylet::vault(acc.id(), accSle->getFieldU32(sfSequence) - 2);
+        auto const keylet = keylet::vault(acc.id(), accSle->getFieldU32(sfSequence) - 2);
 
         return keylet;
     }
@@ -244,8 +226,7 @@ class VaultInvariants_test : public BaseInvariants_test
     createVault(AssetType assetType)
     {
         using namespace test::jtx;
-        return [&, assetType](
-                   Account const& A1, Account const& A2, Env& env) -> bool {
+        return [&, assetType](Account const& A1, Account const& A2, Env& env) -> bool {
             env.fund(XRP(1000), issuer);
             env.close();
             PrettyAsset const asset = [&]() {
@@ -263,9 +244,7 @@ class VaultInvariants_test : public BaseInvariants_test
 
                     case AssetType::MPT: {
                         MPTTester mptt{env, issuer, mptInitNoFund};
-                        mptt.create(
-                            {.flags = tfMPTCanClawback | tfMPTCanTransfer |
-                                 tfMPTCanLock});
+                        mptt.create({.flags = tfMPTCanClawback | tfMPTCanTransfer | tfMPTCanLock});
                         PrettyAsset const mptAsset = mptt.issuanceID();
                         mptt.authorize({.account = A1});
                         mptt.authorize({.account = A2});
@@ -282,15 +261,13 @@ class VaultInvariants_test : public BaseInvariants_test
             }();
 
             Vault vault{env};
-            auto const [tx, keylet] =
-                vault.create({.owner = A1, .asset = asset});
+            auto const [tx, keylet] = vault.create({.owner = A1, .asset = asset});
             env(tx, ter(tesSUCCESS));
             env.close();
 
             BEAST_EXPECT(env.le(keylet));
 
-            auto const depositVaultFunds = [&](Account const& acc,
-                                               STAmount const& amt) {
+            auto const depositVaultFunds = [&](Account const& acc, STAmount const& amt) {
                 env(vault.deposit({
                         .depositor = acc,
                         .id = keylet.key,
@@ -328,9 +305,7 @@ class VaultInvariants_test : public BaseInvariants_test
                     auto const vaultKeylet = keylet::vault(accId, sequence);
                     auto vaultSle = std::make_shared<SLE>(vaultKeylet);
                     auto const vaultPage = ac.view().dirInsert(
-                        keylet::ownerDir(accId),
-                        vaultSle->key(),
-                        describeOwnerDir(accId));
+                        keylet::ownerDir(accId), vaultSle->key(), describeOwnerDir(accId));
                     vaultSle->setFieldU64(sfOwnerNode, *vaultPage);
                     ac.view().insert(vaultSle);
                 };
@@ -345,21 +320,16 @@ class VaultInvariants_test : public BaseInvariants_test
             },
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED});
 
-        testcase(
-            prefix + "vault operation succeeded without modifying a vault");
+        testcase(prefix + "vault operation succeeded without modifying a vault");
         doInvariantCheck(
             {"vault operation succeeded without modifying a vault"},
-            [&](Account const& A1, Account const& A2, ApplyContext& ac) {
-                return true;
-            },
+            [&](Account const& A1, Account const& A2, ApplyContext& ac) { return true; },
             XRPAmount{},
             STTx{ttVAULT_CREATE, [](STObject&) {}},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createEmptyVault());
 
-        testcase(
-            prefix +
-            "updated zero sized vault must have no assets outstanding");
+        testcase(prefix + "updated zero sized vault must have no assets outstanding");
         doInvariantCheck(
             {
                 "created vault must be empty",
@@ -370,20 +340,16 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const keylet = keylet::vault(A1.id(), ac.view().seq());
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    keylet,
-                    createVaultAdjustments(
-                        A1.id(), 0, [&](Adjustments& sample) {
-                            sample.assetsTotal = 9;
-                        }));
+                    ac, keylet, createVaultAdjustments(A1.id(), 0, [&](Adjustments& sample) {
+                        sample.assetsTotal = 9;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_CREATE, [](STObject&) {}},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createEmptyVault());
 
-        testcase(
-            prefix + "updated zero sized vault must have no assets available");
+        testcase(prefix + "updated zero sized vault must have no assets available");
         doInvariantCheck(
             {
                 "created vault must be empty",
@@ -395,12 +361,9 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const keylet = keylet::vault(A1.id(), ac.view().seq());
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    keylet,
-                    createVaultAdjustments(
-                        A1.id(), 0, [&](Adjustments& sample) {
-                            sample.assetsAvailable = 9;
-                        }));
+                    ac, keylet, createVaultAdjustments(A1.id(), 0, [&](Adjustments& sample) {
+                        sample.assetsAvailable = 9;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_CREATE, [](STObject&) {}},
@@ -420,12 +383,9 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const keylet = keylet::vault(A1.id(), ac.view().seq());
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    keylet,
-                    createVaultAdjustments(
-                        A1.id(), 0, [&](Adjustments& sample) {
-                            sample.lossUnrealized = 9;
-                        }));
+                    ac, keylet, createVaultAdjustments(A1.id(), 0, [&](Adjustments& sample) {
+                        sample.lossUnrealized = 9;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_CREATE, [](STObject&) {}},
@@ -444,8 +404,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto vaultSle = ac.view().peek(keylet);
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
 
@@ -494,8 +453,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
 
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
 
@@ -511,8 +469,7 @@ class VaultInvariants_test : public BaseInvariants_test
 
         testcase(prefix + "account root created illegally");
         doInvariantCheck(
-            {"vault created by a wrong transaction type",
-             "account root created illegally"},
+            {"vault created by a wrong transaction type", "account root created illegally"},
             [&](Account const& A1, Account const& A2, ApplyContext& ac) {
                 // The code below will create a valid vault with (almost) all
                 // the invariants holding. Except one: it is created by the
@@ -521,16 +478,12 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultKeylet = keylet::vault(A1.id(), sequence);
                 auto vaultSle = std::make_shared<SLE>(vaultKeylet);
                 auto const vaultPage = ac.view().dirInsert(
-                    keylet::ownerDir(A1.id()),
-                    vaultSle->key(),
-                    describeOwnerDir(A1.id()));
+                    keylet::ownerDir(A1.id()), vaultSle->key(), describeOwnerDir(A1.id()));
                 vaultSle->setFieldU64(sfOwnerNode, *vaultPage);
 
-                auto pseudoId =
-                    pseudoAccountAddress(ac.view(), vaultKeylet.key);
+                auto pseudoId = pseudoAccountAddress(ac.view(), vaultKeylet.key);
                 // Create pseudo-account.
-                auto sleAccount =
-                    std::make_shared<SLE>(keylet::account(pseudoId));
+                auto sleAccount = std::make_shared<SLE>(keylet::account(pseudoId));
                 sleAccount->setAccountID(sfAccount, pseudoId);
                 sleAccount->setFieldAmount(sfBalance, STAmount{});
                 std::uint32_t const seqno =                             //
@@ -539,8 +492,7 @@ class VaultInvariants_test : public BaseInvariants_test
                     : sequence;
                 sleAccount->setFieldU32(sfSequence, seqno);
                 sleAccount->setFieldU32(
-                    sfFlags,
-                    lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
+                    sfFlags, lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
                 sleAccount->setFieldH256(sfVaultID, vaultKeylet.key);
                 ac.view().insert(sleAccount);
 
@@ -548,9 +500,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const sharesKeylet = keylet::mptIssuance(sharesMptId);
                 auto sleShares = std::make_shared<SLE>(sharesKeylet);
                 auto const sharesPage = ac.view().dirInsert(
-                    keylet::ownerDir(pseudoId),
-                    sharesKeylet,
-                    describeOwnerDir(pseudoId));
+                    keylet::ownerDir(pseudoId), sharesKeylet, describeOwnerDir(pseudoId));
                 sleShares->setFieldU64(sfOwnerNode, *sharesPage);
 
                 sleShares->at(sfFlags) = 0;
@@ -566,8 +516,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 vaultSle->at(sfAssetsAvailable) = Number(0);
                 vaultSle->at(sfLossUnrealized) = Number(0);
                 vaultSle->at(sfShareMPTID) = sharesMptId;
-                vaultSle->at(sfWithdrawalPolicy) =
-                    vaultStrategyFirstComeFirstServe;
+                vaultSle->at(sfWithdrawalPolicy) = vaultStrategyFirstComeFirstServe;
 
                 ac.view().insert(vaultSle);
                 ac.view().insert(sleShares);
@@ -586,16 +535,12 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultKeylet = keylet::vault(A1.id(), sequence);
                 auto vaultSle = std::make_shared<SLE>(vaultKeylet);
                 auto const vaultPage = ac.view().dirInsert(
-                    keylet::ownerDir(A1.id()),
-                    vaultSle->key(),
-                    describeOwnerDir(A1.id()));
+                    keylet::ownerDir(A1.id()), vaultSle->key(), describeOwnerDir(A1.id()));
                 vaultSle->setFieldU64(sfOwnerNode, *vaultPage);
 
-                auto pseudoId =
-                    pseudoAccountAddress(ac.view(), vaultKeylet.key);
+                auto pseudoId = pseudoAccountAddress(ac.view(), vaultKeylet.key);
                 // Create pseudo-account.
-                auto sleAccount =
-                    std::make_shared<SLE>(keylet::account(pseudoId));
+                auto sleAccount = std::make_shared<SLE>(keylet::account(pseudoId));
                 sleAccount->setAccountID(sfAccount, pseudoId);
                 sleAccount->setFieldAmount(sfBalance, STAmount{});
                 std::uint32_t const seqno =                             //
@@ -604,8 +549,7 @@ class VaultInvariants_test : public BaseInvariants_test
                     : sequence;
                 sleAccount->setFieldU32(sfSequence, seqno);
                 sleAccount->setFieldU32(
-                    sfFlags,
-                    lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
+                    sfFlags, lsfDisableMaster | lsfDefaultRipple | lsfDepositAuth);
 
                 sleAccount->setFieldH256(sfVaultID, uint256(42));
                 ac.view().insert(sleAccount);
@@ -614,9 +558,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const sharesKeylet = keylet::mptIssuance(sharesMptId);
                 auto sleShares = std::make_shared<SLE>(sharesKeylet);
                 auto const sharesPage = ac.view().dirInsert(
-                    keylet::ownerDir(pseudoId),
-                    sharesKeylet,
-                    describeOwnerDir(pseudoId));
+                    keylet::ownerDir(pseudoId), sharesKeylet, describeOwnerDir(pseudoId));
                 sleShares->setFieldU64(sfOwnerNode, *sharesPage);
 
                 sleShares->at(sfFlags) = 0;
@@ -634,8 +576,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 vaultSle->at(sfAssetsAvailable) = Number(0);
                 vaultSle->at(sfLossUnrealized) = Number(0);
                 vaultSle->at(sfShareMPTID) = sharesMptId;
-                vaultSle->at(sfWithdrawalPolicy) =
-                    vaultStrategyFirstComeFirstServe;
+                vaultSle->at(sfWithdrawalPolicy) = vaultStrategyFirstComeFirstServe;
 
                 ac.view().insert(vaultSle);
                 ac.view().insert(sleShares);
@@ -647,25 +588,20 @@ class VaultInvariants_test : public BaseInvariants_test
 
         testcase(prefix + "share issuer mus exist");
         doInvariantCheck(
-            {"shares issuer and vault pseudo-account must be the same",
-             "shares issuer must exist"},
+            {"shares issuer and vault pseudo-account must be the same", "shares issuer must exist"},
             [&](Account const& A1, Account const& A2, ApplyContext& ac) {
                 auto const sequence = ac.view().seq();
                 auto const vaultKeylet = keylet::vault(A1.id(), sequence);
                 auto vaultSle = std::make_shared<SLE>(vaultKeylet);
                 auto const vaultPage = ac.view().dirInsert(
-                    keylet::ownerDir(A1.id()),
-                    vaultSle->key(),
-                    describeOwnerDir(A1.id()));
+                    keylet::ownerDir(A1.id()), vaultSle->key(), describeOwnerDir(A1.id()));
                 vaultSle->setFieldU64(sfOwnerNode, *vaultPage);
 
                 auto const sharesMptId = makeMptID(sequence, A2.id());
                 auto const sharesKeylet = keylet::mptIssuance(sharesMptId);
                 auto sleShares = std::make_shared<SLE>(sharesKeylet);
                 auto const sharesPage = ac.view().dirInsert(
-                    keylet::ownerDir(A2.id()),
-                    sharesKeylet,
-                    describeOwnerDir(A2.id()));
+                    keylet::ownerDir(A2.id()), sharesKeylet, describeOwnerDir(A2.id()));
                 sleShares->setFieldU64(sfOwnerNode, *sharesPage);
 
                 sleShares->at(sfFlags) = 0;
@@ -682,8 +618,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 vaultSle->at(sfAssetsAvailable) = Number(0);
                 vaultSle->at(sfLossUnrealized) = Number(0);
                 vaultSle->at(sfShareMPTID) = sharesMptId;
-                vaultSle->at(sfWithdrawalPolicy) =
-                    vaultStrategyFirstComeFirstServe;
+                vaultSle->at(sfWithdrawalPolicy) = vaultStrategyFirstComeFirstServe;
 
                 ac.view().insert(vaultSle);
                 ac.view().insert(sleShares);
@@ -716,15 +651,11 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 0, [&](Adjustments& sample) {
-                            sample.assetsAvailable =
-                                (DROPS_PER_XRP * -100).value();
-                            sample.assetsTotal = (DROPS_PER_XRP * -200).value();
-                            sample.sharesTotal = -1;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
+                        sample.assetsAvailable = (DROPS_PER_XRP * -100).value();
+                        sample.assetsTotal = (DROPS_PER_XRP * -200).value();
+                        sample.sharesTotal = -1;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_SET, [](STObject& tx) {}},
@@ -760,9 +691,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultKeylet = keylet::vault(A1.id(), sequence);
                 auto vaultSle = std::make_shared<SLE>(vaultKeylet);
                 auto const vaultPage = ac.view().dirInsert(
-                    keylet::ownerDir(A1.id()),
-                    vaultSle->key(),
-                    describeOwnerDir(A1.id()));
+                    keylet::ownerDir(A1.id()), vaultSle->key(), describeOwnerDir(A1.id()));
                 vaultSle->setFieldU64(sfOwnerNode, *vaultPage);
                 ac.view().insert(vaultSle);
                 return true;
@@ -804,8 +733,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 (*vaultSle)[sfAssetsMaximum] = 200;
                 ac.view().update(vaultSle);
 
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
                 ac.view().erase(sleShares);
@@ -827,8 +755,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultSle = ac.view().peek(*keylet);
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
-                vaultSle->setFieldIssue(
-                    sfAsset, STIssue{sfAsset, MPTIssue(MPTID(42))});
+                vaultSle->setFieldIssue(sfAsset, STIssue{sfAsset, MPTIssue(MPTID(42))});
                 ac.view().update(vaultSle);
                 return true;
             },
@@ -887,13 +814,10 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 0, [&](Adjustments& sample) {
-                            sample.lossUnrealized = 13;
-                            sample.assetsTotal = 20;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
+                        sample.lossUnrealized = 13;
+                        sample.assetsTotal = 20;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_SET, [](STObject& tx) {}},
@@ -912,8 +836,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultSle = ac.view().peek(*keylet);
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
                 // Note, such an "orphaned" update of MPT issuance attached to a
@@ -937,12 +860,9 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 0, [&](Adjustments& sample) {
-                            sample.assetsMaximum = 1;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
+                        sample.assetsMaximum = 1;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_SET, [](STObject& tx) {}},
@@ -959,12 +879,9 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 0, [&](Adjustments& sample) {
-                            sample.assetsMaximum = -1;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
+                        sample.assetsMaximum = -1;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_SET, [](STObject& tx) {}},
@@ -986,8 +903,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
                 ac.view().update(vaultSle);
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
                 (*sleShares)[sfOutstandingAmount] = 0;
@@ -1073,13 +989,11 @@ class VaultInvariants_test : public BaseInvariants_test
             [&](Account const& A1, Account const& A2, Env& env) {
                 Vault vault{env};
                 {
-                    auto [tx, _] =
-                        vault.create({.owner = A1, .asset = xrpIssue()});
+                    auto [tx, _] = vault.create({.owner = A1, .asset = xrpIssue()});
                     env(tx);
                 }
                 {
-                    auto [tx, _] =
-                        vault.create({.owner = A2, .asset = xrpIssue()});
+                    auto [tx, _] = vault.create({.owner = A2, .asset = xrpIssue()});
                     env(tx);
                 }
                 return true;
@@ -1111,8 +1025,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const vaultSle = ac.view().peek(*keylet);
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
                 ac.view().erase(vaultSle);
@@ -1124,21 +1037,16 @@ class VaultInvariants_test : public BaseInvariants_test
             {tecINVARIANT_FAILED, tefINVARIANT_FAILED},
             [&](Account const& A1, Account const& A2, Env& env) {
                 Vault vault{env};
-                auto [tx, keylet] =
-                    vault.create({.owner = A1, .asset = xrpIssue()});
+                auto [tx, keylet] = vault.create({.owner = A1, .asset = xrpIssue()});
                 env(tx);
-                env(vault.deposit(
-                    {.depositor = A1, .id = keylet.key, .amount = XRP(10)}));
+                env(vault.deposit({.depositor = A1, .id = keylet.key, .amount = XRP(10)}));
                 return true;
             });
 
-        testcase(
-            prefix + "vault operation succeeded without modifying a vault");
+        testcase(prefix + "vault operation succeeded without modifying a vault");
         doInvariantCheck(
             {"vault operation succeeded without modifying a vault"},
-            [&](Account const& A1, Account const& A2, ApplyContext& ac) {
-                return true;
-            },
+            [&](Account const& A1, Account const& A2, ApplyContext& ac) { return true; },
             XRPAmount{},
             STTx{ttVAULT_DELETE, [](STObject&) {}},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
@@ -1155,13 +1063,10 @@ class VaultInvariants_test : public BaseInvariants_test
         // no benefit to run this test with multiple asset types
         if (assetType == AssetType::XRP)
         {
-            testcase(
-                prefix + "vault operation succeeded without modifying a vault");
+            testcase(prefix + "vault operation succeeded without modifying a vault");
             doInvariantCheck(
                 {"vault operation succeeded without modifying a vault"},
-                [&](Account const& A1, Account const& A2, ApplyContext& ac) {
-                    return true;
-                },
+                [&](Account const& A1, Account const& A2, ApplyContext& ac) { return true; },
                 XRPAmount{},
                 STTx{ttVAULT_DEPOSIT, [](STObject&) {}},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
@@ -1176,9 +1081,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(A1.id(), 0, [](Adjustments& sample) {
+                    ac, *keylet, createVaultAdjustments(A1.id(), 0, [](Adjustments& sample) {
                         sample.vaultAssets.reset();
                     }));
             },
@@ -1196,18 +1099,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A1.id(), 10, [&](Adjustments& sample) {
-                            // cancel out the account asset change
-                            sample.accountAssets->amount = -10;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A1.id(), 10, [&](Adjustments& sample) {
+                        // cancel out the account asset change
+                        sample.accountAssets->amount = -10;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1221,12 +1119,9 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [&](Adjustments& sample) {
-                            sample.assetsTotal = 11;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                        sample.assetsTotal = 11;
+                    }));
             },
             XRPAmount{},
             STTx{
@@ -1243,9 +1138,7 @@ class VaultInvariants_test : public BaseInvariants_test
             createVault(assetType),
             TxAccount::A2);
 
-        testcase(
-            prefix +
-            "deposit assets outstanding must not exceed assets maximum");
+        testcase(prefix + "deposit assets outstanding must not exceed assets maximum");
         doInvariantCheck(
             {"deposit assets outstanding must not exceed assets maximum"},
             [&](Account const& A1, Account const& A2, ApplyContext& ac) {
@@ -1254,19 +1147,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 200, [&](Adjustments& sample) {
-                            sample.assetsMaximum = 1;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 200, [&](Adjustments& sample) {
+                        sample.assetsMaximum = 1;
+                    }));
             },
             XRPAmount{},
             STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) {
-                    tx.setFieldAmount(sfAmount, XRPAmount(200));
-                }},
+                ttVAULT_DEPOSIT, [](STObject& tx) { tx.setFieldAmount(sfAmount, XRPAmount(200)); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1280,17 +1167,12 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [&](Adjustments& sample) {
-                            sample.accountShares.reset();
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                        sample.accountShares.reset();
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1304,34 +1186,26 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [](Adjustments& sample) {
-                            sample.sharesTotal = 0;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [](Adjustments& sample) {
+                        sample.sharesTotal = 0;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
 
         testcase(prefix + "deposit must change vault and depositor balances");
         doInvariantCheck(
-            {"deposit must increase vault balance",
-             "deposit must change depositor balance"},
+            {"deposit must increase vault balance", "deposit must change depositor balance"},
             [&](Account const& A1, Account const& A2, ApplyContext& ac) {
                 auto const keylet = vaultKeylet(ac, A1);
                 if (!BEAST_EXPECT(keylet))
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(A1.id(), -10, [&](Adjustments&) {}));
+                    ac, *keylet, createVaultAdjustments(A1.id(), -10, [&](Adjustments&) {}));
             },
             XRPAmount{},
             STTx{ttVAULT_DEPOSIT, [&](STObject&) {}},
@@ -1350,12 +1224,9 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 100, [&](Adjustments& sample) {
-                            sample.lossUnrealized = 13;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 100, [&](Adjustments& sample) {
+                        sample.lossUnrealized = 13;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_DEPOSIT, [](STObject& tx) {}},
@@ -1376,18 +1247,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [&](Adjustments& sample) {
-                            sample.accountShares->amount = -5;
-                            sample.sharesTotal = -10;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                        sample.accountShares->amount = -5;
+                        sample.sharesTotal = -10;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(5); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(5); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1413,26 +1279,18 @@ class VaultInvariants_test : public BaseInvariants_test
 
                 auto const asset = *vaultSle->at(sfAsset);
 
-                if (!BEAST_EXPECT(transferAssets(
-                        ac,
-                        asset.getIssuer(),
-                        A1,
-                        STAmount{asset, Number{10, 0}})))
+                if (!BEAST_EXPECT(
+                        transferAssets(ac, asset.getIssuer(), A1, STAmount{asset, Number{10, 0}})))
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [&](Adjustments& sample) {
-                            sample.vaultAssets = -20;
-                            sample.accountAssets->amount = 10;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                        sample.vaultAssets = -20;
+                        sample.accountAssets->amount = 10;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1447,18 +1305,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), 10, [&](Adjustments& sample) {
-                            sample.assetsTotal = 7;
-                            sample.assetsAvailable = 7;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                        sample.assetsTotal = 7;
+                        sample.assetsAvailable = 7;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_DEPOSIT,
-                [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_DEPOSIT, [](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
             TxAccount::A2);
@@ -1475,8 +1328,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
 
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
 
@@ -1484,9 +1336,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 ac.view().update(sleShares);
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(A2.id(), 10, [](Adjustments&) {}));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [](Adjustments&) {}));
             },
             XRPAmount{},
             STTx{ttVAULT_DEPOSIT, [](STObject&) {}},
@@ -1506,17 +1356,14 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(vaultSle))
                     return false;
 
-                auto sleShares = ac.view().peek(
-                    keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
+                auto sleShares = ac.view().peek(keylet::mptIssuance((*vaultSle)[sfShareMPTID]));
                 if (!BEAST_EXPECT(sleShares))
                     return false;
 
                 (*sleShares)[sfOutstandingAmount] = maxMPTokenAmount + 1;
                 ac.view().update(sleShares);
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(A2.id(), 10, [](Adjustments&) {}));
+                    ac, *keylet, createVaultAdjustments(A2.id(), 10, [](Adjustments&) {}));
             },
             XRPAmount{},
             STTx{ttVAULT_DEPOSIT, [](STObject&) {}},
@@ -1535,13 +1382,10 @@ class VaultInvariants_test : public BaseInvariants_test
         // underlying vault is empty
         if (assetType == AssetType::XRP)
         {
-            testcase(
-                prefix + "vault operation succeeded without modifying a vault");
+            testcase(prefix + "vault operation succeeded without modifying a vault");
             doInvariantCheck(
                 {"vault operation succeeded without modifying a vault"},
-                [&](Account const&, Account const&, ApplyContext& ac) {
-                    return true;
-                },
+                [&](Account const&, Account const&, ApplyContext& ac) { return true; },
                 XRPAmount{},
                 STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
@@ -1578,9 +1422,7 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(A1.id(), 0, [](Adjustments& sample) {
+                    ac, *keylet, createVaultAdjustments(A1.id(), 0, [](Adjustments& sample) {
                         sample.vaultAssets.reset();
                     }));
             },
@@ -1598,18 +1440,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A1.id(), 10, [&](Adjustments& sample) {
-                            // cancel out the account asset change
-                            sample.accountAssets->amount = -10;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A1.id(), 10, [&](Adjustments& sample) {
+                        // cancel out the account asset change
+                        sample.accountAssets->amount = -10;
+                    }));
             },
             XRPAmount{},
-            STTx{
-                ttVAULT_WITHDRAW,
-                [&](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
+            STTx{ttVAULT_WITHDRAW, [&](STObject& tx) { tx[sfAmount] = XRPAmount(10); }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType));
 
@@ -1632,21 +1469,15 @@ class VaultInvariants_test : public BaseInvariants_test
 
                 auto const asset = *vaultSle->at(sfAsset);
 
-                if (!BEAST_EXPECT(transferAssets(
-                        ac,
-                        asset.getIssuer(),
-                        A1,
-                        STAmount{asset, Number{10, 0}})))
+                if (!BEAST_EXPECT(
+                        transferAssets(ac, asset.getIssuer(), A1, STAmount{asset, Number{10, 0}})))
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.vaultAssets = 10;
-                            sample.accountAssets->amount = -20;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.vaultAssets = 10;
+                        sample.accountAssets->amount = -20;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
@@ -1669,25 +1500,20 @@ class VaultInvariants_test : public BaseInvariants_test
                 auto const asset = *vaultSle->at(sfAsset);
 
                 if (!BEAST_EXPECT(adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), -10, [&](Adjustments& sample) {
-                                *sample.vaultAssets -= 5;
-                            }))))
+                        ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                            *sample.vaultAssets -= 5;
+                        }))))
                     return false;
 
-                return BEAST_EXPECT(transferAssets(
-                    ac, asset.getIssuer(), A1, STAmount{asset, Number{5, 0}}));
+                return BEAST_EXPECT(
+                    transferAssets(ac, asset.getIssuer(), A1, STAmount{asset, Number{5, 0}}));
             },
             XRPAmount{},
             STTx{
                 ttVAULT_WITHDRAW,
                 [&](STObject& tx) {
                     tx.setAccountID(
-                        sfDestination,
-                        AccountID(
-                            decodeBase58Token(A1_ID, TokenType::AccountID)));
+                        sfDestination, AccountID(decodeBase58Token(A1_ID, TokenType::AccountID)));
                 }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(assetType),
@@ -1701,12 +1527,9 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.accountShares.reset();
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.accountShares.reset();
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
@@ -1723,12 +1546,9 @@ class VaultInvariants_test : public BaseInvariants_test
                     return false;
 
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [](Adjustments& sample) {
-                            sample.sharesTotal = 0;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [](Adjustments& sample) {
+                        sample.sharesTotal = 0;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
@@ -1746,13 +1566,10 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.accountShares->amount = 5;
-                            sample.sharesTotal = 10;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.accountShares->amount = 5;
+                        sample.sharesTotal = 10;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
@@ -1769,13 +1586,10 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.assetsTotal = -15;
-                            sample.assetsAvailable = -15;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.assetsTotal = -15;
+                        sample.assetsAvailable = -15;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [](STObject&) {}},
@@ -1791,12 +1605,9 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.assetsTotal = -7;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.assetsTotal = -7;
+                    }));
             },
             XRPAmount{},
             STTx{
@@ -1804,9 +1615,7 @@ class VaultInvariants_test : public BaseInvariants_test
                 [&](STObject& tx) {
                     tx[sfAmount] = XRPAmount(10);
                     tx.setAccountID(
-                        sfDelegate,
-                        AccountID(
-                            decodeBase58Token(A1_ID, TokenType::AccountID)));
+                        sfDelegate, AccountID(decodeBase58Token(A1_ID, TokenType::AccountID)));
                 }},
             {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
             createVault(AssetType::XRP),
@@ -1822,12 +1631,9 @@ class VaultInvariants_test : public BaseInvariants_test
                 if (!BEAST_EXPECT(keylet))
                     return false;
                 return adjustVaultAndDepositor(
-                    ac,
-                    *keylet,
-                    createVaultAdjustments(
-                        A2.id(), -10, [&](Adjustments& sample) {
-                            sample.accountShares->amount = 5;
-                        }));
+                    ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                        sample.accountShares->amount = 5;
+                    }));
             },
             XRPAmount{},
             STTx{ttVAULT_WITHDRAW, [&](STObject& tx) {}},
@@ -1841,16 +1647,13 @@ class VaultInvariants_test : public BaseInvariants_test
     {
         using namespace jtx;
         auto const prefix = "VaultClawback(" + to_string(assetType) + ") ";
-        auto const clawbackTx = STTx{
-            ttVAULT_CLAWBACK, [&](STObject& tx) {
-                tx.setAccountID(
-                    sfAccount,
-                    AccountID(
-                        decodeBase58Token(ISSUER_ID, TokenType::AccountID)));
-                tx.setAccountID(
-                    sfHolder,
-                    AccountID(decodeBase58Token(A2_ID, TokenType::AccountID)));
-            }};
+        auto const clawbackTx =
+            STTx{ttVAULT_CLAWBACK, [&](STObject& tx) {
+                     tx.setAccountID(
+                         sfAccount, AccountID(decodeBase58Token(ISSUER_ID, TokenType::AccountID)));
+                     tx.setAccountID(
+                         sfHolder, AccountID(decodeBase58Token(A2_ID, TokenType::AccountID)));
+                 }};
 
         if (assetType == AssetType::XRP)
         {
@@ -1864,25 +1667,19 @@ class VaultInvariants_test : public BaseInvariants_test
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), 0, [&](Adjustments& sample) {
+                        ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
 
-                            }));
+                        }));
                 },
                 XRPAmount{},
                 STTx{ttVAULT_CLAWBACK, [&](STObject& tx) {}},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
                 createVault(AssetType::XRP));
 
-            testcase(
-                prefix + "vault operation succeeded without modifying a vault");
+            testcase(prefix + "vault operation succeeded without modifying a vault");
             doInvariantCheck(
                 {"vault operation succeeded without modifying a vault"},
-                [&](Account const& A1, Account const& A2, ApplyContext& ac) {
-                    return true;
-                },
+                [&](Account const& A1, Account const& A2, ApplyContext& ac) { return true; },
                 XRPAmount{},
                 STTx{ttVAULT_CLAWBACK, [](STObject&) {}},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
@@ -1905,19 +1702,13 @@ class VaultInvariants_test : public BaseInvariants_test
                     auto const asset = *vaultSle->at(sfAsset);
 
                     if (!BEAST_EXPECT(transferAssets(
-                            ac,
-                            asset.getIssuer(),
-                            A1,
-                            STAmount{asset, Number{1, 0}})))
+                            ac, asset.getIssuer(), A1, STAmount{asset, Number{1, 0}})))
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), -1, [&](Adjustments& sample) {
-                                sample.vaultAssets.reset();
-                            }));
+                        ac, *keylet, createVaultAdjustments(A2.id(), -1, [&](Adjustments& sample) {
+                            sample.vaultAssets.reset();
+                        }));
                 },
                 XRPAmount{},
                 STTx{
@@ -1925,8 +1716,7 @@ class VaultInvariants_test : public BaseInvariants_test
                     [&](STObject& tx) {
                         tx.setAccountID(
                             sfAccount,
-                            AccountID(decodeBase58Token(
-                                ISSUER_ID, TokenType::AccountID)));
+                            AccountID(decodeBase58Token(ISSUER_ID, TokenType::AccountID)));
                     }},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
                 createVault(assetType));
@@ -1940,19 +1730,15 @@ class VaultInvariants_test : public BaseInvariants_test
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), 0, [&](Adjustments& sample) {}));
+                        ac, *keylet, createVaultAdjustments(A2.id(), 0, [&](Adjustments& sample) {
+                        }));
                 },
                 XRPAmount{},
                 STTx{
                     ttVAULT_CLAWBACK,
                     [&](STObject& tx) {
                         tx.setAccountID(
-                            sfAccount,
-                            AccountID(decodeBase58Token(
-                                A1_ID, TokenType::AccountID)));
+                            sfAccount, AccountID(decodeBase58Token(A1_ID, TokenType::AccountID)));
                     }},
                 {tecINVARIANT_FAILED, tecINVARIANT_FAILED},
                 createVault(assetType));
@@ -1968,12 +1754,9 @@ class VaultInvariants_test : public BaseInvariants_test
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), 10, [&](Adjustments& sample) {
-                                sample.sharesTotal = 0;
-                            }));
+                        ac, *keylet, createVaultAdjustments(A2.id(), 10, [&](Adjustments& sample) {
+                            sample.sharesTotal = 0;
+                        }));
                 },
                 XRPAmount{},
                 clawbackTx,
@@ -1988,12 +1771,9 @@ class VaultInvariants_test : public BaseInvariants_test
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), -10, [&](Adjustments& sample) {
-                                sample.accountShares.reset();
-                            }));
+                        ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                            sample.accountShares.reset();
+                        }));
                 },
                 XRPAmount{},
                 clawbackTx,
@@ -2015,14 +1795,11 @@ class VaultInvariants_test : public BaseInvariants_test
                         return false;
 
                     return adjustVaultAndDepositor(
-                        ac,
-                        *keylet,
-                        createVaultAdjustments(
-                            A2.id(), -10, [&](Adjustments& sample) {
-                                sample.accountShares->amount = -8;
-                                sample.assetsTotal = -7;
-                                sample.assetsAvailable = -7;
-                            }));
+                        ac, *keylet, createVaultAdjustments(A2.id(), -10, [&](Adjustments& sample) {
+                            sample.accountShares->amount = -8;
+                            sample.assetsTotal = -7;
+                            sample.assetsAvailable = -7;
+                        }));
                 },
                 XRPAmount{},
                 clawbackTx,

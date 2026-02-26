@@ -1,9 +1,8 @@
 #include <test/jtx.h>
 #include <test/jtx/Env.h>
 
-#include <xrpld/app/tx/detail/ApplyContext.h>
-
 #include <xrpl/beast/unit_test/suite.h>
+#include <xrpl/tx/ApplyContext.h>
 
 namespace xrpl {
 namespace test {
@@ -43,18 +42,21 @@ protected:
     // on the ledger after creating two accounts, but before closing it, and
     // before the Precheck function. These should only be valid functions, and
     // not direct manipulations. Preclose is not commonly used.
-    using Preclose = std::function<bool(
-        test::jtx::Account const& a,
-        test::jtx::Account const& b,
-        test::jtx::Env& env)>;
+    using Preclose = std::function<
+        bool(test::jtx::Account const& a, test::jtx::Account const& b, test::jtx::Env& env)>;
 
     // this is common setup/method for running a failing invariant check. The
     // precheck function is used to manipulate the ApplyContext with view
     // changes that will cause the check to fail.
-    using Precheck = std::function<bool(
-        test::jtx::Account const& a,
-        test::jtx::Account const& b,
-        ApplyContext& ac)>;
+    using Precheck = std::function<
+        bool(test::jtx::Account const& a, test::jtx::Account const& b, ApplyContext& ac)>;
+
+    static FeatureBitset
+    defaultAmendments()
+    {
+        return xrpl::test::jtx::testable_amendments() | featureInvariantsV1_1 |
+            featureSingleAssetVault;
+    }
 
     /** Run a specific test case to put the ledger into a state that will be
      * detected by an invariant. Simulates the actions of a transaction that
@@ -79,15 +81,33 @@ protected:
         Precheck const& precheck,
         XRPAmount fee = XRPAmount{},
         STTx tx = STTx{ttACCOUNT_SET, [](STObject&) {}},
-        std::initializer_list<TER> ters =
-            {tecINVARIANT_FAILED, tefINVARIANT_FAILED},
+        std::initializer_list<TER> ters = {tecINVARIANT_FAILED, tefINVARIANT_FAILED},
+        Preclose const& preclose = {},
+        TxAccount setTxAccount = TxAccount::None)
+    {
+        return doInvariantCheck(
+            test::jtx::Env(*this, defaultAmendments()),
+            expect_logs,
+            precheck,
+            fee,
+            tx,
+            ters,
+            preclose,
+            setTxAccount);
+    }
+
+    void
+    doInvariantCheck(
+        test::jtx::Env&& env,
+        std::vector<std::string> const& expect_logs,
+        Precheck const& precheck,
+        XRPAmount fee = XRPAmount{},
+        STTx tx = STTx{ttACCOUNT_SET, [](STObject&) {}},
+        std::initializer_list<TER> ters = {tecINVARIANT_FAILED, tefINVARIANT_FAILED},
         Preclose const& preclose = {},
         TxAccount setTxAccount = TxAccount::None)
     {
         using namespace test::jtx;
-        FeatureBitset amendments = testable_amendments() |
-            featureInvariantsV1_1 | featureSingleAssetVault;
-        Env env{*this, amendments};
 
         Account const A1{"A1"};
         Account const A2{"A2"};
@@ -96,20 +116,29 @@ protected:
             BEAST_EXPECT(preclose(A1, A2, env));
         env.close();
 
+        if (setTxAccount != TxAccount::None)
+            tx.setAccountID(sfAccount, setTxAccount == TxAccount::A1 ? A1.id() : A2.id());
+
+        return doInvariantCheck(std::move(env), A1, A2, expect_logs, precheck, fee, tx, ters);
+    }
+
+    void
+    doInvariantCheck(
+        test::jtx::Env&& env,
+        test::jtx::Account const& A1,
+        test::jtx::Account const& A2,
+        std::vector<std::string> const& expect_logs,
+        Precheck const& precheck,
+        XRPAmount fee = XRPAmount{},
+        STTx tx = STTx{ttACCOUNT_SET, [](STObject&) {}},
+        std::initializer_list<TER> ters = {tecINVARIANT_FAILED, tefINVARIANT_FAILED})
+    {
+        using namespace test::jtx;
+
         OpenView ov{*env.current()};
         test::StreamSink sink{beast::severities::kWarning};
         beast::Journal jlog{sink};
-        if (setTxAccount != TxAccount::None)
-            tx.setAccountID(
-                sfAccount, setTxAccount == TxAccount::A1 ? A1.id() : A2.id());
-        ApplyContext ac{
-            env.app(),
-            ov,
-            tx,
-            tesSUCCESS,
-            env.current()->fees().base,
-            tapNONE,
-            jlog};
+        ApplyContext ac{env.app(), ov, tx, tesSUCCESS, env.current()->fees().base, tapNONE, jlog};
 
         BEAST_EXPECT(precheck(A1, A2, ac));
 
@@ -121,20 +150,21 @@ protected:
         for (TER const& terExpect : ters)
         {
             terActual = ac.checkInvariants(terActual, fee);
-            BEAST_EXPECT(terExpect == terActual);
+            BEAST_EXPECTS(terExpect == terActual, std::to_string(TERtoInt(terActual)));
             auto const messages = sink.messages().str();
-            BEAST_EXPECT(
-                messages.starts_with("Invariant failed:") ||
-                messages.starts_with("Transaction caused an exception"));
+
+            if (terActual != tesSUCCESS)
+            {
+                BEAST_EXPECTS(
+                    messages.starts_with("Invariant failed:") ||
+                        messages.starts_with("Transaction caused an exception"),
+                    messages);
+            }
+
             // std::cerr << messages << '\n';
             for (auto const& m : expect_logs)
             {
-                if (messages.find(m) == std::string::npos)
-                {
-                    // uncomment if you want to log the invariant failure
-                    // std::cerr << "   --> " << m << std::endl;
-                    fail();
-                }
+                BEAST_EXPECTS(messages.find(m) != std::string::npos, m);
             }
         }
     }

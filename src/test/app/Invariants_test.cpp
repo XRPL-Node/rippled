@@ -601,13 +601,8 @@ class Invariants_test : public BaseInvariants_test
             XRPAmount{-1});
 
         doInvariantCheck(
-<<<<<<< HEAD
             {{"fee paid exceeds system limit: "s + xrpl::to_string(INITIAL_XRP)},
-             { "XRP net change of 0 doesn't match fee "s + xrpl::to_string(INITIAL_XRP) }},
-=======
-            {{"fee paid exceeds system limit: "s + to_string(INITIAL_XRP)},
-             {"XRP net change of 0 doesn't match fee "s + to_string(INITIAL_XRP)}},
->>>>>>> tapanito/lending-fix-amendment
+             {"XRP net change of 0 doesn't match fee "s + xrpl::to_string(INITIAL_XRP)}},
             [](Account const&, Account const&, ApplyContext&) { return true; },
             XRPAmount{INITIAL_XRP});
 
@@ -1911,12 +1906,6 @@ class Invariants_test : public BaseInvariants_test
 
         using namespace jtx;
 
-<<<<<<< HEAD
-=======
-        enum class Asset { XRP, IOU, MPT };
-        auto const assetTypes = std::to_array({Asset::XRP, Asset::IOU, Asset::MPT});
-
->>>>>>> tapanito/lending-fix-amendment
         for (auto const assetType : assetTypes)
         {
             // Initialize with a placeholder value because there's no default
