@@ -36,7 +36,8 @@ void
 fillJson(Json::Value& json, bool closed, LedgerHeader const& info, bool bFull, unsigned apiVersion)
 {
     json[jss::parent_hash] = to_string(info.parentHash);
-    json[jss::ledger_index] = (apiVersion > 1) ? Json::Value(info.seq) : Json::Value(std::to_string(info.seq));
+    json[jss::ledger_index] =
+        (apiVersion > 1) ? Json::Value(info.seq) : Json::Value(std::to_string(info.seq));
 
     if (closed)
     {
@@ -119,7 +120,10 @@ fillJsonTx(
 
             // Insert all synthetic fields
             RPC::insertAllSyntheticInJson(
-                txJson[jss::meta], fill.ledger, txn, {txn->getTransactionID(), fill.ledger.seq(), *stMeta});
+                txJson[jss::meta],
+                fill.ledger,
+                txn,
+                {txn->getTransactionID(), fill.ledger.seq(), *stMeta});
         }
 
         if (!fill.ledger.open())
@@ -145,7 +149,10 @@ fillJsonTx(
 
             // Insert all synthetic fields
             RPC::insertAllSyntheticInJson(
-                txJson[jss::metaData], fill.ledger, txn, {txn->getTransactionID(), fill.ledger.seq(), *stMeta});
+                txJson[jss::metaData],
+                fill.ledger,
+                txn,
+                {txn->getTransactionID(), fill.ledger.seq(), *stMeta});
         }
     }
 
@@ -159,7 +166,11 @@ fillJsonTx(
         if (account != amount.getIssuer())
         {
             auto const ownerFunds = accountFunds(
-                fill.ledger, account, amount, fhIGNORE_FREEZE, beast::Journal{beast::Journal::getNullSink()});
+                fill.ledger,
+                account,
+                amount,
+                fhIGNORE_FREEZE,
+                beast::Journal{beast::Journal::getNullSink()});
             txJson[jss::owner_funds] = ownerFunds.getText();
         }
     }
