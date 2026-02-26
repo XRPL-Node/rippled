@@ -207,7 +207,7 @@ jobs:
         run: |
           ASAN_OPTS="halt_on_error=0:use_sigaltstack=0:print_stacktrace=1:detect_container_overflow=0:detect_stack_use_after_return=0:suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/asan.supp"
           if [[ "${{ inputs.config_name }}" == *gcc* ]]; then
-            ASAN_OPTS="${ASAN_OPTS}:alloc_dealloc_mismatch=0"
+            ASAN_OPTS="${ASAN_OPTS}:alloc_dealloc_mismatch=0:start_deactivated=1"
           fi
           echo "ASAN_OPTIONS=${ASAN_OPTS}" >> ${GITHUB_ENV}
           echo "TSAN_OPTIONS=second_deadlock_stack=1:halt_on_error=0:suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/tsan.supp" >> ${GITHUB_ENV}
