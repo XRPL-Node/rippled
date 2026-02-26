@@ -550,6 +550,7 @@ class Batch_test : public beast::unit_test::suite
 
             Serializer msg;
             serializeBatch(msg, tfAllOrNothing, jt.stx->getBatchTransactionIDs());
+            finishMultiSigningData(bob.id(), msg);
             auto const sig = xrpl::sign(bob.pk(), bob.sk(), msg.slice());
             jt.jv[sfBatchSigners.jsonName][0u][sfBatchSigner.jsonName][sfAccount.jsonName] =
                 bob.human();

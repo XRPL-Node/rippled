@@ -417,6 +417,7 @@ STTx::checkBatchSingleSign(STObject const& batchSigner) const
 {
     Serializer msg;
     serializeBatch(msg, getFlags(), getBatchTransactionIDs());
+    finishMultiSigningData(batchSigner.getAccountID(sfAccount), msg);
     return singleSignHelper(batchSigner, msg.slice());
 }
 
