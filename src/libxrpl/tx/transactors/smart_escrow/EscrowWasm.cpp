@@ -2,16 +2,9 @@
 // #define DEBUG_OUTPUT 1
 #endif
 
-#include <xrpld/app/wasm/HostFunc.h>
-#include <xrpld/app/wasm/HostFuncWrapper.h>
-#include <xrpld/app/wasm/WasmiVM.h>
-
-#include <xrpl/basics/Log.h>
-#include <xrpl/protocol/AccountID.h>
-#include <xrpl/protocol/Feature.h>
-#include <xrpl/protocol/LedgerFormats.h>
-
-#include <memory>
+#include <xrpl/tx/transactors/smart_escrow/EscrowWasm.h>
+#include <xrpl/tx/transactors/smart_escrow/HostFuncWrapper.h>
+#include <xrpl/tx/transactors/smart_escrow/wasm/WasmEngine.h>
 
 namespace xrpl {
 
@@ -110,12 +103,13 @@ runEscrowWasm(
 {
     //  create VM and set cost limit
     auto& vm = WasmEngine::instance();
-    // vm.initMaxPages(MAX_PAGES);
 
     auto const ret = vm.run(wasmCode, funcName, params, createWasmImport(*hfs), hfs, gasLimit, hfs->getJournal());
 
-    // std::cout << "runEscrowWasm, mod size: " << wasmCode.size()
-    //           << ", gasLimit: " << gasLimit << ", funcName: " << funcName;
+#ifdef DEBUG_OUTPUT
+    std::cout << "runEscrowWasm, mod size: " << wasmCode.size() << ", gasLimit: " << gasLimit
+              << ", funcName: " << funcName;
+#endif
 
     if (!ret)
     {
@@ -140,63 +134,10 @@ preflightEscrowWasm(
 {
     //  create VM and set cost limit
     auto& vm = WasmEngine::instance();
-    // vm.initMaxPages(MAX_PAGES);
 
     auto const ret = vm.check(wasmCode, funcName, params, createWasmImport(*hfs), hfs, hfs->getJournal());
 
     return ret;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-WasmEngine::WasmEngine() : impl(std::make_unique<WasmiEngine>())
-{
-}
-
-WasmEngine&
-WasmEngine::instance()
-{
-    static WasmEngine e;
-    return e;
-}
-
-Expected<WasmResult<int32_t>, TER>
-WasmEngine::run(
-    Bytes const& wasmCode,
-    std::string_view funcName,
-    std::vector<WasmParam> const& params,
-    std::shared_ptr<ImportVec> const& imports,
-    std::shared_ptr<HostFunctions> const& hfs,
-    int64_t gasLimit,
-    beast::Journal j)
-{
-    return impl->run(wasmCode, funcName, params, imports, hfs, gasLimit, j);
-}
-
-NotTEC
-WasmEngine::check(
-    Bytes const& wasmCode,
-    std::string_view funcName,
-    std::vector<WasmParam> const& params,
-    std::shared_ptr<ImportVec> const& imports,
-    std::shared_ptr<HostFunctions> const& hfs,
-    beast::Journal j)
-{
-    return impl->check(wasmCode, funcName, params, imports, hfs, j);
-}
-
-void*
-WasmEngine::newTrap(std::string const& msg)
-{
-    return impl->newTrap(msg);
-}
-
-// LCOV_EXCL_START
-beast::Journal
-WasmEngine::getJournal() const
-{
-    return impl->getJournal();
-}
-// LCOV_EXCL_STOP
 
 }  // namespace xrpl

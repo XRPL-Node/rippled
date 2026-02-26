@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xrpld/app/wasm/WasmiVM.h>
+#include <xrpl/tx/transactors/smart_escrow/wasm/WasmiRuntime.h>
 
 namespace xrpl {
 

@@ -14,11 +14,14 @@ The module follows a layered architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                 WasmEngine (WasmVM.h)                       │
+│                 EscrowWasm.h                                │
 │         runEscrowWasm(), preflightEscrowWasm()              │
 │              Host function registration                     │
 ├─────────────────────────────────────────────────────────────┤
-│                 WasmiEngine (WasmiVM.h)                     │
+│                 wasm/WasmEngine.h                           │
+│         Singleton facade for WASM runtime execution         │
+├─────────────────────────────────────────────────────────────┤
+│                 wasm/WasmiRuntime.h                         │
 │            Low-level wasmi interpreter integration          │
 ├─────────────────────────────────────────────────────────────┤
 │    HostFuncWrapper          │       HostFuncImpl            │
@@ -31,15 +34,18 @@ The module follows a layered architecture:
 
 ### Key Components
 
-- **`WasmVM.h` / `detail/WasmVM.cpp`** - High-level facade providing:
-  - `WasmEngine` singleton that wraps the underlying WASM interpreter
+- **`EscrowWasm.h` / `EscrowWasm.cpp`** - Escrow-specific WASM functions:
   - `runEscrowWasm()` - Execute WASM code for escrow finish
   - `preflightEscrowWasm()` - Validate WASM code during preflight
   - `createWasmImport()` - Register all host functions
 
-- **`WasmiVM.h` / `detail/WasmiVM.cpp`** - Low-level integration with the
-  [wasmi](https://github.com/wasmi-labs/wasmi) WebAssembly interpreter:
-  - `WasmiEngine` - Manages WASM modules, instances, and execution
+- **`wasm/WasmEngine.h` / `wasm/WasmEngine.cpp`** - Generic WASM engine facade:
+  - `WasmEngine` singleton that wraps the underlying WASM interpreter
+  - WASM constants (`W_ENV`, `W_MEM`, `MAX_PAGES`, etc.)
+
+- **`wasm/WasmiRuntime.h` / `wasm/WasmiRuntime.cpp`** - Low-level integration
+  with the [wasmi](https://github.com/wasmi-labs/wasmi) WebAssembly interpreter:
+  - `WasmiRuntime` - Manages WASM modules, instances, and execution
   - Memory management and gas metering
   - Function invocation and result handling
 
@@ -85,13 +91,13 @@ organized into categories:
 
 For the complete list of available host functions, their WASM names, and gas
 costs, see the [XLS-0102 specification](https://xls.xrpl.org/xls/XLS-0102-wasm-vm.html)
-or `detail/WasmVM.cpp` where they are registered via `WASM_IMPORT_FUNC2` macros.
+or `EscrowWasm.cpp` where they are registered via `WASM_IMPORT_FUNC2` macros.
 For method signatures, see `HostFunc.h`.
 
 ## Gas Model
 
 Each host function has an associated gas cost. The gas cost is specified when
-registering the function in `detail/WasmVM.cpp`:
+registering the function in `EscrowWasm.cpp`:
 
 ```cpp
 WASM_IMPORT_FUNC2(i, getLedgerSqn, "get_ledger_sqn", hfs, 60);
@@ -173,7 +179,7 @@ myNewFunction_wrap(void* env, wasm_val_vec_t const* params, wasm_val_vec_t* resu
 }
 ```
 
-### 6. Register in WasmVM.cpp
+### 6. Register in EscrowWasm.cpp
 
 Add the function registration in `setCommonHostFunctions()` or
 `createWasmImport()`:
@@ -184,6 +190,6 @@ WASM_IMPORT_FUNC2(i, myNewFunction, "my_new_function", hfs, 100);
 ```
 
 > [!IMPORTANT]
-> New host functions MUST be amendment-gated in `WasmVM.cpp`.
+> New host functions MUST be amendment-gated in `EscrowWasm.cpp`.
 > Wrap the registration in an amendment check to ensure the function is only
 > available after the corresponding amendment is enabled on the network.

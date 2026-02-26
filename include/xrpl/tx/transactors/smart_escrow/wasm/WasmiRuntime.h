@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xrpld/app/wasm/WasmVM.h>
+#include <xrpl/tx/transactors/smart_escrow/wasm/WasmEngine.h>
 
 #include <wasm.h>
 #include <wasmi.h>
@@ -178,7 +178,7 @@ private:
     buildImports(StorePtr& s, std::shared_ptr<ImportVec> const& imports);
 };
 
-class WasmiEngine
+class WasmiRuntime
 {
     EnginePtr engine_;
     StorePtr store_;
@@ -192,8 +192,8 @@ class WasmiEngine
     std::shared_ptr<HostFunctions> hfs_;
 
 public:
-    WasmiEngine();
-    ~WasmiEngine() = default;
+    WasmiRuntime();
+    ~WasmiRuntime() = default;
 
     static EnginePtr
     init();

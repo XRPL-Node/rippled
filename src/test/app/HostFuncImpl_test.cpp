@@ -1,8 +1,8 @@
 #include <test/jtx.h>
 
-#include <xrpld/app/wasm/HostFuncImpl.h>
-
 #include <xrpl/protocol/digest.h>
+#include <xrpl/tx/ApplyContext.h>
+#include <xrpl/tx/transactors/smart_escrow/HostFuncImpl.h>
 
 namespace xrpl {
 namespace test {

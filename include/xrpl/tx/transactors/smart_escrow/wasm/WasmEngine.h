@@ -1,11 +1,12 @@
 #pragma once
 
-#include <xrpld/app/wasm/HostFunc.h>
+#include <xrpl/tx/transactors/smart_escrow/HostFunc.h>
 
 #include <string_view>
 
 namespace xrpl {
 
+// Generic WASM constants
 static std::string_view const W_ENV = "env";
 static std::string_view const W_HOST_LIB = "host_lib";
 static std::string_view const W_MEM = "memory";
@@ -16,15 +17,19 @@ static std::string_view const W_ALLOC = "allocate";
 static std::string_view const W_DEALLOC = "deallocate";
 static std::string_view const W_PROC_EXIT = "proc_exit";
 
-static std::string_view const ESCROW_FUNCTION_NAME = "finish";
-
 uint32_t const MAX_PAGES = 128;  // 8MB = 64KB*128
 
-class WasmiEngine;
+class WasmiRuntime;
 
+/**
+ * WasmEngine - Singleton facade for WASM runtime execution.
+ *
+ * This class provides a high-level interface to the underlying Wasmi runtime,
+ * hiding the implementation details and providing a simple API for WASM execution.
+ */
 class WasmEngine
 {
-    std::unique_ptr<WasmiEngine> const impl;
+    std::unique_ptr<WasmiRuntime> const impl;
 
     WasmEngine();
 
@@ -66,25 +71,5 @@ public:
     beast::Journal
     getJournal() const;
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<ImportVec>
-createWasmImport(HostFunctions& hfs);
-
-Expected<EscrowResult, TER>
-runEscrowWasm(
-    Bytes const& wasmCode,
-    std::shared_ptr<HostFunctions> const& hfs,
-    std::string_view funcName = ESCROW_FUNCTION_NAME,
-    std::vector<WasmParam> const& params = {},
-    int64_t gasLimit = -1);
-
-NotTEC
-preflightEscrowWasm(
-    Bytes const& wasmCode,
-    std::shared_ptr<HostFunctions> const& hfs,
-    std::string_view funcName = ESCROW_FUNCTION_NAME,
-    std::vector<WasmParam> const& params = {});
 
 }  // namespace xrpl

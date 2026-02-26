@@ -1,6 +1,5 @@
-#include <xrpld/app/wasm/WasmiVM.h>
-
 #include <xrpl/basics/Log.h>
+#include <xrpl/tx/transactors/smart_escrow/wasm/WasmiRuntime.h>
 
 #include <memory>
 
@@ -444,16 +443,6 @@ ModuleWrapper::addInstance(StorePtr& s, WasmExternVec const& imports)
     return 0;
 }
 
-// int
-// my_module_t::delInstance(int i)
-// {
-//     if (i >= mod_inst.size())
-//         return -1;
-//     if (!mod_inst[i])
-//         mod_inst[i] = my_mod_inst_t();
-//     return i;
-// }
-
 std::int64_t
 ModuleWrapper::getGas()
 {
@@ -462,16 +451,8 @@ ModuleWrapper::getGas()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void
-// WasmiEngine::clearModules()
-// {
-//     modules.clear();
-//     store.reset();  // to free the memory before creating new store
-//     store = {wasm_store_new(engine.get()), &wasm_store_delete};
-// }
-
 std::unique_ptr<wasm_engine_t, decltype(&wasm_engine_delete)>
-WasmiEngine::init()
+WasmiRuntime::init()
 {
     wasm_config_t* config = wasm_config_new();
     if (!config)
@@ -497,12 +478,12 @@ WasmiEngine::init()
         wasm_engine_new_with_config(config), &wasm_engine_delete);
 }
 
-WasmiEngine::WasmiEngine() : engine_(init()), store_(nullptr, &wasm_store_delete)
+WasmiRuntime::WasmiRuntime() : engine_(init()), store_(nullptr, &wasm_store_delete)
 {
 }
 
 int
-WasmiEngine::addModule(Bytes const& wasmCode, bool instantiate, int64_t gas)
+WasmiRuntime::addModule(Bytes const& wasmCode, bool instantiate, int64_t gas)
 {
     moduleWrap_.reset();
     store_.reset();  // to free the memory before creating new store
@@ -528,20 +509,14 @@ WasmiEngine::addModule(Bytes const& wasmCode, bool instantiate, int64_t gas)
     return moduleWrap_ ? 0 : -1;
 }
 
-// int
-// WasmiEngine::addInstance()
-// {
-//     return module->addInstance(store.get());
-// }
-
 FuncInfo
-WasmiEngine::getFunc(std::string_view funcName)
+WasmiRuntime::getFunc(std::string_view funcName)
 {
     return moduleWrap_->getFunc(funcName);
 }
 
 std::vector<wasm_val_t>
-WasmiEngine::convertParams(std::vector<WasmParam> const& params)
+WasmiRuntime::convertParams(std::vector<WasmParam> const& params)
 {
     std::vector<wasm_val_t> v;
     v.reserve(params.size());
@@ -580,7 +555,7 @@ WasmiEngine::convertParams(std::vector<WasmParam> const& params)
 }
 
 int
-WasmiEngine::compareParamTypes(wasm_valtype_vec_t const* ftp, std::vector<wasm_val_t> const& p)
+WasmiRuntime::compareParamTypes(wasm_valtype_vec_t const* ftp, std::vector<wasm_val_t> const& p)
 {
     if (ftp->size != p.size())
         return std::min(ftp->size, p.size());
@@ -598,7 +573,7 @@ WasmiEngine::compareParamTypes(wasm_valtype_vec_t const* ftp, std::vector<wasm_v
 
 // LCOV_EXCL_START
 void
-WasmiEngine::add_param(std::vector<wasm_val_t>& in, int32_t p)
+WasmiRuntime::add_param(std::vector<wasm_val_t>& in, int32_t p)
 {
     in.emplace_back();
     auto& el(in.back());
@@ -609,7 +584,7 @@ WasmiEngine::add_param(std::vector<wasm_val_t>& in, int32_t p)
 // LCOV_EXCL_STOP
 
 void
-WasmiEngine::add_param(std::vector<wasm_val_t>& in, int64_t p)
+WasmiRuntime::add_param(std::vector<wasm_val_t>& in, int64_t p)
 {
     in.emplace_back();
     auto& el(in.back());
@@ -618,7 +593,7 @@ WasmiEngine::add_param(std::vector<wasm_val_t>& in, int64_t p)
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(std::string_view func, Types&&... args)
+WasmiRuntime::call(std::string_view func, Types&&... args)
 {
     // Lookup our export function
     auto f = getFunc(func);
@@ -627,7 +602,7 @@ WasmiEngine::call(std::string_view func, Types&&... args)
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, Types&&... args)
+WasmiRuntime::call(FuncInfo const& f, Types&&... args)
 {
     std::vector<wasm_val_t> in;
     return call<NR>(f, in, std::forward<Types>(args)...);
@@ -646,12 +621,9 @@ usecs()
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in)
+WasmiRuntime::call(FuncInfo const& f, std::vector<wasm_val_t>& in)
 {
-    // wasm_val_t rs[1] = {WASM_I32_VAL(0)};
     WasmiResult ret(NR);
-    // if (NR)  {   wasm_val_vec_new_uninitialized(&ret, NR);    //
-    // wasm_val_vec_new(&ret, NR, &rs[0]);    // ret = WASM_ARRAY_VEC(rs);    }
 
     wasm_val_vec_t const inv = in.empty() ? wasm_val_vec_t WASM_EMPTY_VEC : wasm_val_vec_t{in.size(), in.data()};
 
@@ -673,15 +645,12 @@ WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in)
         print_wasm_error("failure to call func", trap, j_);
     }
 
-    // assert(results[0].kind == WASM_I32);
-    // if (NR) printf("Result P5: %d\n", ret[0].of.i32);
-
     return ret;
 }
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int32_t p, Types&&... args)
+WasmiRuntime::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int32_t p, Types&&... args)
 {
     add_param(in, p);
     return call<NR>(f, in, std::forward<Types>(args)...);
@@ -689,7 +658,7 @@ WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int32_t p
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int64_t p, Types&&... args)
+WasmiRuntime::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int64_t p, Types&&... args)
 {
     add_param(in, p);
     return call<NR>(f, in, std::forward<Types>(args)...);
@@ -697,7 +666,7 @@ WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, std::int64_t p
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, uint8_t const* d, int32_t sz, Types&&... args)
+WasmiRuntime::call(FuncInfo const& f, std::vector<wasm_val_t>& in, uint8_t const* d, int32_t sz, Types&&... args)
 {
     auto mem = getMem();
     if (!mem.s)
@@ -713,7 +682,7 @@ WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, uint8_t const*
 
 template <int NR, class... Types>
 WasmiResult
-WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in, Bytes const& p, Types&&... args)
+WasmiRuntime::call(FuncInfo const& f, std::vector<wasm_val_t>& in, Bytes const& p, Types&&... args)
 {
     return call<NR>(f, in, p.data(), p.size(), std::forward<Types>(args)...);
 }
@@ -729,7 +698,7 @@ checkImports(ImportVec const& imports, HostFunctions* hfs)
 }
 
 Expected<WasmResult<int32_t>, TER>
-WasmiEngine::run(
+WasmiRuntime::run(
     Bytes const& wasmCode,
     std::string_view funcName,
     std::vector<WasmParam> const& params,
@@ -766,7 +735,11 @@ WasmiEngine::run(
 }
 
 Expected<WasmResult<int32_t>, TER>
-WasmiEngine::runHlp(Bytes const& wasmCode, std::string_view funcName, std::vector<WasmParam> const& params, int64_t gas)
+WasmiRuntime::runHlp(
+    Bytes const& wasmCode,
+    std::string_view funcName,
+    std::vector<WasmParam> const& params,
+    int64_t gas)
 {
     // currently only 1 module support, possible parallel UT run
     std::lock_guard<decltype(m_)> lg(m_);
@@ -809,18 +782,11 @@ WasmiEngine::runHlp(Bytes const& wasmCode, std::string_view funcName, std::vecto
         gas = std::numeric_limits<decltype(gas)>::max();
     WasmResult<int32_t> const ret{res.r.vec_.data[0].of.i32, gas - moduleWrap_->getGas()};
 
-    // #ifdef DEBUG_OUTPUT
-    //     auto& j = std::cerr;
-    // #else
-    //     auto j = j_.debug();
-    // #endif
-    // j << "WASMI Res: " << ret.result << " cost: " << ret.cost << std::endl;
-
     return ret;
 }
 
 NotTEC
-WasmiEngine::check(
+WasmiRuntime::check(
     Bytes const& wasmCode,
     std::string_view funcName,
     std::vector<WasmParam> const& params,
@@ -857,7 +823,7 @@ WasmiEngine::check(
 }
 
 NotTEC
-WasmiEngine::checkHlp(Bytes const& wasmCode, std::string_view funcName, std::vector<WasmParam> const& params)
+WasmiRuntime::checkHlp(Bytes const& wasmCode, std::string_view funcName, std::vector<WasmParam> const& params)
 {
     // currently only 1 module support, possible parallel UT run
     std::lock_guard<decltype(m_)> lg(m_);
@@ -883,20 +849,20 @@ WasmiEngine::checkHlp(Bytes const& wasmCode, std::string_view funcName, std::vec
 
 // LCOV_EXCL_START
 std::int64_t
-WasmiEngine::getGas()
+WasmiRuntime::getGas()
 {
     return moduleWrap_ ? moduleWrap_->getGas() : -1;
 }
 // LCOV_EXCL_STOP
 
 wmem
-WasmiEngine::getMem() const
+WasmiRuntime::getMem() const
 {
     return moduleWrap_ ? moduleWrap_->getMem() : wmem();
 }
 
 InstanceWrapper const&
-WasmiEngine::getRT(int m, int i)
+WasmiRuntime::getRT(int m, int i)
 {
     if (!moduleWrap_)
         throw std::runtime_error("no module");
@@ -904,47 +870,27 @@ WasmiEngine::getRT(int m, int i)
 }
 
 int32_t
-WasmiEngine::allocate(int32_t sz)
+WasmiRuntime::allocate(int32_t sz)
 {
-    if (sz <= 0)
-        throw std::runtime_error("can't allocate memory, " + std::to_string(sz) + " bytes");
-
-    auto res = call<1>(W_ALLOC, sz);
-
-    if (res.f || !res.r.vec_.size || (res.r.vec_.data[0].kind != WASM_I32))
-        throw std::runtime_error("can't allocate memory, " + std::to_string(sz) + " bytes");  // LCOV_EXCL_LINE
-
-    int32_t const p = res.r.vec_.data[0].of.i32;
-    auto const mem = getMem();
-    if (p <= 0 || p + sz > mem.s)
-        throw std::runtime_error("invalid memory allocation, " + std::to_string(sz) + " bytes");
-
-    return p;
+    auto const f = getFunc(W_ALLOC);
+    auto const res = call<1>(f, sz);
+    if (res.f || !res.r.vec_.size || res.r.vec_.data[0].kind != WASM_I32)
+        throw std::runtime_error("can't call allocate");  // LCOV_EXCL_LINE
+    return res.r.vec_.data[0].of.i32;
 }
 
 wasm_trap_t*
-WasmiEngine::newTrap(std::string const& txt)
+WasmiRuntime::newTrap(std::string const& txt)
 {
-    static char empty[1] = {0};
-    wasm_message_t msg = {1, empty};
-
-    if (!txt.empty())
-        wasm_name_new(&msg, txt.size() + 1, txt.c_str());  // include 0
-
-    wasm_trap_t* trap = wasm_trap_new(store_.get(), &msg);
-
-    if (!txt.empty())
-        wasm_byte_vec_delete(&msg);
-
-    return trap;
+    wasm_message_t message;
+    wasm_name_new_from_string(&message, txt.c_str());
+    return wasm_trap_new(store_.get(), &message);
 }
 
-// LCOV_EXCL_START
 beast::Journal
-WasmiEngine::getJournal() const
+WasmiRuntime::getJournal() const
 {
     return j_;
 }
-// LCOV_EXCL_STOP
 
 }  // namespace xrpl
