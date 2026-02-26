@@ -457,14 +457,14 @@ GRPCServerImpl::handleRpcs()
                         {
                             backoffScheduled_ = true;
 
-                            auto deadline = std::chrono::system_clock::now() + acceptDelay_;
+                            auto deadline = std::chrono::system_clock::now() + backoff_.current();
 
                             backoffAlarm_.Set(cq_.get(), deadline, static_cast<void*>(&backoffTag_));
 
-                            acceptDelay_ = std::min(acceptDelay_ * 2, MAX_ACCEPT_DELAY);
+                            auto const delay = backoff_.increase();
 
                             JLOG(journal_.warn())
-                                << "Scheduled backoff alarm for " << acceptDelay_.count() << "ms";
+                                << "Scheduled backoff alarm for " << delay.count() << "ms";
                         }
                     }
 
@@ -474,7 +474,7 @@ GRPCServerImpl::handleRpcs()
                 else
                 {
                     // Not throttled - reset delay and clone immediately
-                    acceptDelay_ = INITIAL_ACCEPT_DELAY;
+                    backoff_.reset();
 
                     // ptr is now processing a request, so create a new CallData
                     // object to handle additional requests
@@ -520,13 +520,13 @@ GRPCServerImpl::onBackoffFired()
         {
             backoffScheduled_ = true;
 
-            auto deadline = std::chrono::system_clock::now() + acceptDelay_;
+            auto deadline = std::chrono::system_clock::now() + backoff_.current();
 
             backoffAlarm_.Set(cq_.get(), deadline, static_cast<void*>(&backoffTag_));
 
-            acceptDelay_ = std::min(acceptDelay_ * 2, MAX_ACCEPT_DELAY);
+            auto const delay = backoff_.increase();
 
-            JLOG(journal_.warn()) << "Rescheduled backoff alarm for " << acceptDelay_.count() << "ms";
+            JLOG(journal_.warn()) << "Rescheduled backoff alarm for " << delay.count() << "ms";
         }
 
         return;
@@ -534,7 +534,7 @@ GRPCServerImpl::onBackoffFired()
 
     // Recovery - FD pressure relieved
     JLOG(journal_.info()) << "FD pressure relieved - resuming normal operation";
-    acceptDelay_ = INITIAL_ACCEPT_DELAY;
+    backoff_.reset();
 
     for (auto const& ptr : toRepost)
     {

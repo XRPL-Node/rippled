@@ -11,6 +11,7 @@
 #include <xrpl/resource/Charge.h>
 #include <xrpl/server/FDGuard.h>
 #include <xrpl/server/InfoSub.h>
+#include <xrpl/server/detail/ExponentialBackoff.h>
 
 #include <grpcpp/alarm.h>
 #include <grpcpp/grpcpp.h>
@@ -95,9 +96,7 @@ private:
     // FD throttling and backoff state
     std::mutex backoffMutex_;
     bool backoffScheduled_{false};
-    std::chrono::milliseconds acceptDelay_{std::chrono::milliseconds{50}};
-    static constexpr std::chrono::milliseconds INITIAL_ACCEPT_DELAY{50};
-    static constexpr std::chrono::milliseconds MAX_ACCEPT_DELAY{2000};
+    ExponentialBackoff backoff_;
     BackoffTag backoffTag_;
     grpc::Alarm backoffAlarm_;
     std::vector<std::shared_ptr<Processor>> pendingReposts_;

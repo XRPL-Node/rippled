@@ -3,6 +3,7 @@
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/contract.h>
 #include <xrpl/server/FDGuard.h>
+#include <xrpl/server/detail/ExponentialBackoff.h>
 #include <xrpl/server/detail/PlainHTTPPeer.h>
 #include <xrpl/server/detail/SSLHTTPPeer.h>
 #include <xrpl/server/detail/io_list.h>
@@ -83,9 +84,7 @@ private:
     boost::asio::strand<boost::asio::io_context::executor_type> strand_;
     bool ssl_;
     bool plain_;
-    static constexpr std::chrono::milliseconds INITIAL_ACCEPT_DELAY{50};
-    static constexpr std::chrono::milliseconds MAX_ACCEPT_DELAY{2000};
-    std::chrono::milliseconds accept_delay_{INITIAL_ACCEPT_DELAY};
+    ExponentialBackoff backoff_;
     boost::asio::steady_timer backoff_timer_;
 
     void
@@ -317,11 +316,11 @@ Door<Handler>::do_accept(boost::asio::yield_context do_yield)
     {
         if (FDGuard::should_throttle(0.70))
         {
-            backoff_timer_.expires_after(accept_delay_);
+            backoff_timer_.expires_after(backoff_.current());
             boost::system::error_code tec;
             backoff_timer_.async_wait(do_yield[tec]);
-            accept_delay_ = std::min(accept_delay_ * 2, MAX_ACCEPT_DELAY);
-            JLOG(j_.warn()) << "Throttling do_accept for " << accept_delay_.count() << "ms.";
+            auto const delay = backoff_.increase();
+            JLOG(j_.warn()) << "Throttling do_accept for " << delay.count() << "ms.";
             continue;
         }
 
@@ -338,14 +337,15 @@ Door<Handler>::do_accept(boost::asio::yield_context do_yield)
             if (ec == boost::asio::error::no_descriptors ||
                 ec == boost::asio::error::no_buffer_space)
             {
+                auto const delay = backoff_.current();
                 JLOG(j_.warn()) << "accept: Too many open files. Pausing for "
-                                << accept_delay_.count() << "ms.";
+                                << delay.count() << "ms.";
 
-                backoff_timer_.expires_after(accept_delay_);
+                backoff_timer_.expires_after(delay);
                 boost::system::error_code tec;
                 backoff_timer_.async_wait(do_yield[tec]);
 
-                accept_delay_ = std::min(accept_delay_ * 2, MAX_ACCEPT_DELAY);
+                backoff_.increase();
             }
             else
             {
@@ -354,7 +354,7 @@ Door<Handler>::do_accept(boost::asio::yield_context do_yield)
             continue;
         }
 
-        accept_delay_ = INITIAL_ACCEPT_DELAY;
+        backoff_.reset();
 
         if (ssl_ && plain_)
         {
