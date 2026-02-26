@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_INBOUNDLEDGERS_H_INCLUDED
-#define XRPL_APP_LEDGER_INBOUNDLEDGERS_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/InboundLedger.h>
 
@@ -35,7 +34,10 @@ public:
     // VFALCO TODO Remove the dependency on the Peer object.
     //
     virtual bool
-    gotLedgerData(LedgerHash const& ledgerHash, std::shared_ptr<Peer>, std::shared_ptr<protocol::TMLedgerData>) = 0;
+    gotLedgerData(
+        LedgerHash const& ledgerHash,
+        std::shared_ptr<Peer>,
+        std::shared_ptr<protocol::TMLedgerData>) = 0;
 
     virtual void
     gotStaleData(std::shared_ptr<protocol::TMLedgerData> packet) = 0;
@@ -79,5 +81,3 @@ make_InboundLedgers(
     beast::insight::Collector::ptr const& collector);
 
 }  // namespace xrpl
-
-#endif

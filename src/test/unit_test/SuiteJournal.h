@@ -1,5 +1,4 @@
-#ifndef TEST_UNIT_TEST_SUITE_JOURNAL_H
-#define TEST_UNIT_TEST_SUITE_JOURNAL_H
+#pragma once
 
 #include <xrpl/beast/unit_test.h>
 #include <xrpl/beast/utility/Journal.h>
@@ -106,7 +105,8 @@ class StreamSink : public beast::Journal::Sink
     std::stringstream strm_;
 
 public:
-    StreamSink(beast::severities::Severity threshold = beast::severities::kDebug) : Sink(threshold, false)
+    StreamSink(beast::severities::Severity threshold = beast::severities::kDebug)
+        : Sink(threshold, false)
     {
     }
 
@@ -133,5 +133,3 @@ public:
 
 }  // namespace test
 }  // namespace xrpl
-
-#endif

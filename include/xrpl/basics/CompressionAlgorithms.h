@@ -1,5 +1,4 @@
-#ifndef XRPL_COMPRESSIONALGORITHMS_H_INCLUDED
-#define XRPL_COMPRESSIONALGORITHMS_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/contract.h>
 
@@ -36,7 +35,10 @@ lz4Compress(void const* in, std::size_t inSize, BufferFactory&& bf)
     auto compressed = bf(outCapacity);
 
     auto compressedSize = LZ4_compress_default(
-        reinterpret_cast<char const*>(in), reinterpret_cast<char*>(compressed), inSize, outCapacity);
+        reinterpret_cast<char const*>(in),
+        reinterpret_cast<char*>(compressed),
+        inSize,
+        outCapacity);
     if (compressedSize == 0)
         Throw<std::runtime_error>("lz4 compress: failed");
 
@@ -67,8 +69,10 @@ lz4Decompress(
         Throw<std::runtime_error>("lz4Decompress: integer overflow (output)");
 
     if (LZ4_decompress_safe(
-            reinterpret_cast<char const*>(in), reinterpret_cast<char*>(decompressed), inSize, decompressedSize) !=
-        decompressedSize)
+            reinterpret_cast<char const*>(in),
+            reinterpret_cast<char*>(decompressed),
+            inSize,
+            decompressedSize) != decompressedSize)
         Throw<std::runtime_error>("lz4Decompress: failed");
 
     return decompressedSize;
@@ -84,7 +88,11 @@ lz4Decompress(
  */
 template <typename InputStream>
 std::size_t
-lz4Decompress(InputStream& in, std::size_t inSize, std::uint8_t* decompressed, std::size_t decompressedSize)
+lz4Decompress(
+    InputStream& in,
+    std::size_t inSize,
+    std::uint8_t* decompressed,
+    std::size_t decompressedSize)
 {
     std::vector<std::uint8_t> compressed;
     std::uint8_t const* chunk = nullptr;
@@ -133,5 +141,3 @@ lz4Decompress(InputStream& in, std::size_t inSize, std::uint8_t* decompressed, s
 }  // namespace compression_algorithms
 
 }  // namespace xrpl
-
-#endif  // XRPL_COMPRESSIONALGORITHMS_H_INCLUDED

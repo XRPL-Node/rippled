@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STXATTESTATIONS_H_INCLUDED
-#define XRPL_PROTOCOL_STXATTESTATIONS_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Buffer.h>
 #include <xrpl/basics/Expected.h>
@@ -340,7 +339,9 @@ struct XChainCreateAccountAttestation
     match(MatchFields const& rhs) const;
 
     friend bool
-    operator==(XChainCreateAccountAttestation const& lhs, XChainCreateAccountAttestation const& rhs);
+    operator==(
+        XChainCreateAccountAttestation const& lhs,
+        XChainCreateAccountAttestation const& rhs);
 };
 
 // Attestations from witness servers for a particular claim ID and bridge.
@@ -409,7 +410,9 @@ public:
 
 template <class TAttestation>
 [[nodiscard]] inline bool
-operator==(XChainAttestationsBase<TAttestation> const& lhs, XChainAttestationsBase<TAttestation> const& rhs)
+operator==(
+    XChainAttestationsBase<TAttestation> const& lhs,
+    XChainAttestationsBase<TAttestation> const& rhs)
 {
     return lhs.attestations() == rhs.attestations();
 }
@@ -457,12 +460,11 @@ class XChainClaimAttestations final : public XChainAttestationsBase<XChainClaimA
     using TBase::TBase;
 };
 
-class XChainCreateAccountAttestations final : public XChainAttestationsBase<XChainCreateAccountAttestation>
+class XChainCreateAccountAttestations final
+    : public XChainAttestationsBase<XChainCreateAccountAttestation>
 {
     using TBase = XChainAttestationsBase<XChainCreateAccountAttestation>;
     using TBase::TBase;
 };
 
 }  // namespace xrpl
-
-#endif  // STXCHAINATTESTATIONS_H_

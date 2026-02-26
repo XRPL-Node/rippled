@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_AMOUNTCONVERSION_H_INCLUDED
-#define XRPL_PROTOCOL_AMOUNTCONVERSION_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/IOUAmount.h>
 #include <xrpl/protocol/STAmount.h>
@@ -54,7 +53,8 @@ inline IOUAmount
 toAmount<IOUAmount>(STAmount const& amt)
 {
     XRPL_ASSERT(
-        amt.mantissa() < std::numeric_limits<std::int64_t>::max(), "xrpl::toAmount<IOUAmount> : maximum mantissa");
+        amt.mantissa() < std::numeric_limits<std::int64_t>::max(),
+        "xrpl::toAmount<IOUAmount> : maximum mantissa");
     bool const isNeg = amt.negative();
     std::int64_t const sMant = isNeg ? -std::int64_t(amt.mantissa()) : amt.mantissa();
 
@@ -67,7 +67,8 @@ inline XRPAmount
 toAmount<XRPAmount>(STAmount const& amt)
 {
     XRPL_ASSERT(
-        amt.mantissa() < std::numeric_limits<std::int64_t>::max(), "xrpl::toAmount<XRPAmount> : maximum mantissa");
+        amt.mantissa() < std::numeric_limits<std::int64_t>::max(),
+        "xrpl::toAmount<XRPAmount> : maximum mantissa");
     bool const isNeg = amt.negative();
     std::int64_t const sMant = isNeg ? -std::int64_t(amt.mantissa()) : amt.mantissa();
 
@@ -184,5 +185,3 @@ get(STAmount const& a)
 }
 
 }  // namespace xrpl
-
-#endif

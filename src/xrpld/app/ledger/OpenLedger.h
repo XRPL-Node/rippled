@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_OPENLEDGER_H_INCLUDED
-#define XRPL_APP_LEDGER_OPENLEDGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/misc/CanonicalTXSet.h>
@@ -61,7 +60,10 @@ public:
 
         @param ledger A closed ledger
     */
-    explicit OpenLedger(std::shared_ptr<Ledger const> const& ledger, CachedSLEs& cache, beast::Journal journal);
+    explicit OpenLedger(
+        std::shared_ptr<Ledger const> const& ledger,
+        CachedSLEs& cache,
+        beast::Journal journal);
 
     /** Returns `true` if there are no transactions.
 
@@ -262,5 +264,3 @@ std::string
 debugTostr(std::shared_ptr<ReadView const> const& view);
 
 }  // namespace xrpl
-
-#endif

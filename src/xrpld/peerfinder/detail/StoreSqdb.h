@@ -1,9 +1,9 @@
-#ifndef XRPL_PEERFINDER_STORESQDB_H_INCLUDED
-#define XRPL_PEERFINDER_STORESQDB_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/rdb/PeerFinder.h>
-#include <xrpld/core/SociDB.h>
 #include <xrpld/peerfinder/detail/Store.h>
+
+#include <xrpl/rdb/SociDB.h>
 
 namespace xrpl {
 namespace PeerFinder {
@@ -21,7 +21,8 @@ public:
         currentSchemaVersion = 4
     };
 
-    explicit StoreSqdb(beast::Journal journal = beast::Journal{beast::Journal::getNullSink()}) : m_journal(journal)
+    explicit StoreSqdb(beast::Journal journal = beast::Journal{beast::Journal::getNullSink()})
+        : m_journal(journal)
     {
     }
 
@@ -86,5 +87,3 @@ private:
 
 }  // namespace PeerFinder
 }  // namespace xrpl
-
-#endif

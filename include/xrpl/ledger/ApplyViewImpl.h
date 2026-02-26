@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_APPLYVIEWIMPL_H_INCLUDED
-#define XRPL_LEDGER_APPLYVIEWIMPL_H_INCLUDED
+#pragma once
 
 #include <xrpl/ledger/OpenView.h>
 #include <xrpl/ledger/detail/ApplyViewBase.h>
@@ -34,7 +33,13 @@ public:
         destructor.
     */
     std::optional<TxMeta>
-    apply(OpenView& to, STTx const& tx, TER ter, std::optional<uint256> parentBatchId, bool isDryRun, beast::Journal j);
+    apply(
+        OpenView& to,
+        STTx const& tx,
+        TER ter,
+        std::optional<uint256> parentBatchId,
+        bool isDryRun,
+        beast::Journal j);
 
     /** Set the amount of currency delivered.
 
@@ -70,5 +75,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

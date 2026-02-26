@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STBITSTRING_H_INCLUDED
-#define XRPL_PROTOCOL_STBITSTRING_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/beast/utility/Zero.h>
@@ -84,7 +83,8 @@ inline STBitString<Bits>::STBitString(SField const& n, value_type const& v) : ST
 }
 
 template <int Bits>
-inline STBitString<Bits>::STBitString(SerialIter& sit, SField const& name) : STBitString(name, sit.getBitString<Bits>())
+inline STBitString<Bits>::STBitString(SerialIter& sit, SField const& name)
+    : STBitString(name, sit.getBitString<Bits>())
 {
 }
 
@@ -170,7 +170,8 @@ STBitString<Bits>::value() const
 }
 
 template <int Bits>
-STBitString<Bits>::operator value_type() const
+STBitString<Bits>::
+operator value_type() const
 {
     return value_;
 }
@@ -183,5 +184,3 @@ STBitString<Bits>::isDefault() const
 }
 
 }  // namespace xrpl
-
-#endif

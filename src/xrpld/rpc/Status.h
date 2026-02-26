@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_STATUS_H_INCLUDED
-#define XRPL_RPC_STATUS_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/protocol/ErrorCodes.h>
@@ -34,15 +33,18 @@ public:
     {
     }
 
-    Status(TER ter, Strings d = {}) : type_(Type::TER), code_(TERtoInt(ter)), messages_(std::move(d))
+    Status(TER ter, Strings d = {})
+        : type_(Type::TER), code_(TERtoInt(ter)), messages_(std::move(d))
     {
     }
 
-    Status(error_code_i e, Strings d = {}) : type_(Type::error_code_i), code_(e), messages_(std::move(d))
+    Status(error_code_i e, Strings d = {})
+        : type_(Type::error_code_i), code_(e), messages_(std::move(d))
     {
     }
 
-    Status(error_code_i e, std::string const& s) : type_(Type::error_code_i), code_(e), messages_({s})
+    Status(error_code_i e, std::string const& s)
+        : type_(Type::error_code_i), code_(e), messages_({s})
     {
     }
 
@@ -130,5 +132,3 @@ private:
 
 }  // namespace RPC
 }  // namespace xrpl
-
-#endif

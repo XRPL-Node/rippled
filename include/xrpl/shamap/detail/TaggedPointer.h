@@ -1,5 +1,4 @@
-#ifndef XRPL_SHAMAP_TAGGEDPOINTER_H_INCLUDED
-#define XRPL_SHAMAP_TAGGEDPOINTER_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/IntrusivePointer.h>
 #include <xrpl/shamap/SHAMapTreeNode.h>
@@ -40,7 +39,9 @@ namespace xrpl {
 class TaggedPointer
 {
 private:
-    static_assert(alignof(SHAMapHash) >= 4, "Bad alignment: Tag pointer requires low two bits to be zero.");
+    static_assert(
+        alignof(SHAMapHash) >= 4,
+        "Bad alignment: Tag pointer requires low two bits to be zero.");
     /** Upper bits are the pointer, lowest two bits are the tag
         A moved-from object will have a tp_ of zero.
     */
@@ -221,5 +222,3 @@ popcnt16(std::uint16_t a)
 }
 
 }  // namespace xrpl
-
-#endif

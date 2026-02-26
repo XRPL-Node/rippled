@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_NFTOKENID_H_INCLUDED
-#define XRPL_PROTOCOL_NFTOKENID_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/json/json_forwards.h>
@@ -30,9 +29,10 @@ std::vector<uint256>
 getNFTokenIDFromDeletedOffer(TxMeta const& transactionMeta);
 
 void
-insertNFTokenID(Json::Value& response, std::shared_ptr<STTx const> const& transaction, TxMeta const& transactionMeta);
+insertNFTokenID(
+    Json::Value& response,
+    std::shared_ptr<STTx const> const& transaction,
+    TxMeta const& transactionMeta);
 /** @} */
 
 }  // namespace xrpl
-
-#endif

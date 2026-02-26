@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_INBOUNDLEDGER_H_INCLUDED
-#define XRPL_APP_LEDGER_INBOUNDLEDGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
@@ -167,11 +166,10 @@ private:
 
     // Data we have received from peers
     std::mutex mReceivedDataLock;
-    std::vector<std::pair<std::weak_ptr<Peer>, std::shared_ptr<protocol::TMLedgerData>>> mReceivedData;
+    std::vector<std::pair<std::weak_ptr<Peer>, std::shared_ptr<protocol::TMLedgerData>>>
+        mReceivedData;
     bool mReceiveDispatched;
     std::unique_ptr<PeerSet> mPeerSet;
 };
 
 }  // namespace xrpl
-
-#endif

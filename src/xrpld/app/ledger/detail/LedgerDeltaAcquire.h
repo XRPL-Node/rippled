@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_LEDGERDELTAACQUIRE_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGERDELTAACQUIRE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/Ledger.h>
@@ -66,7 +65,9 @@ public:
      * @note info and Txns must have been verified against the ledger hash
      */
     void
-    processData(LedgerHeader const& info, std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns);
+    processData(
+        LedgerHeader const& info,
+        std::map<std::uint32_t, std::shared_ptr<STTx const>>&& orderedTxns);
 
     /**
      * Try to build the ledger if not already
@@ -137,5 +138,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

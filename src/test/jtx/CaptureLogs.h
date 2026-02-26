@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_CAPTURELOGS_H_INCLUDED
-#define XRPL_TEST_JTX_CAPTURELOGS_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Log.h>
 
@@ -27,7 +26,10 @@ class CaptureLogs : public Logs
         std::stringstream& strm_;
 
     public:
-        CaptureSink(beast::severities::Severity threshold, std::mutex& mutex, std::stringstream& strm)
+        CaptureSink(
+            beast::severities::Severity threshold,
+            std::mutex& mutex,
+            std::stringstream& strm)
             : beast::Journal::Sink(threshold, false), strmMutex_(mutex), strm_(strm)
         {
         }
@@ -66,5 +68,3 @@ public:
 
 }  // namespace test
 }  // namespace xrpl
-
-#endif

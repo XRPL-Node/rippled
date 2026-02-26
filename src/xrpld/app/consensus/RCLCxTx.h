@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_CONSENSUS_RCLCXTX_H_INCLUDED
-#define XRPL_APP_CONSENSUS_RCLCXTX_H_INCLUDED
+#pragma once
 
 #include <xrpl/shamap/SHAMap.h>
 
@@ -156,7 +155,8 @@ public:
         for (auto const& [k, v] : delta)
         {
             XRPL_ASSERT(
-                (v.first && !v.second) || (v.second && !v.first), "xrpl::RCLTxSet::compare : either side is set");
+                (v.first && !v.second) || (v.second && !v.first),
+                "xrpl::RCLTxSet::compare : either side is set");
 
             ret[k] = static_cast<bool>(v.first);
         }
@@ -167,4 +167,3 @@ public:
     std::shared_ptr<SHAMap> map_;
 };
 }  // namespace xrpl
-#endif

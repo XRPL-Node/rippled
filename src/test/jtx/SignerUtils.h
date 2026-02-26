@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_SIGNERUTILS_H_INCLUDED
-#define XRPL_TEST_JTX_SIGNERUTILS_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 
@@ -41,11 +40,11 @@ struct Reg
 inline void
 sortSigners(std::vector<Reg>& signers)
 {
-    std::sort(signers.begin(), signers.end(), [](Reg const& lhs, Reg const& rhs) { return lhs.acct < rhs.acct; });
+    std::sort(signers.begin(), signers.end(), [](Reg const& lhs, Reg const& rhs) {
+        return lhs.acct < rhs.acct;
+    });
 }
 
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_LEDGER_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/core/Config.h>
 #include <xrpld/core/TimeKeeper.h>
@@ -82,7 +81,11 @@ public:
 
         Amendments specified are enabled in the genesis ledger
     */
-    Ledger(create_genesis_t, Config const& config, std::vector<uint256> const& amendments, Family& family);
+    Ledger(
+        create_genesis_t,
+        Config const& config,
+        std::vector<uint256> const& amendments,
+        Family& family);
 
     Ledger(LedgerHeader const& info, Config const& config, Family& family);
 
@@ -107,7 +110,11 @@ public:
     Ledger(Ledger const& previous, NetClock::time_point closeTime);
 
     // used for database ledgers
-    Ledger(std::uint32_t ledgerSeq, NetClock::time_point closeTime, Config const& config, Family& family);
+    Ledger(
+        std::uint32_t ledgerSeq,
+        NetClock::time_point closeTime,
+        Config const& config,
+        Family& family);
 
     ~Ledger() = default;
 
@@ -239,7 +246,10 @@ public:
     }
 
     void
-    setAccepted(NetClock::time_point closeTime, NetClock::duration closeResolution, bool correctCloseTime);
+    setAccepted(
+        NetClock::time_point closeTime,
+        NetClock::duration closeResolution,
+        bool correctCloseTime);
 
     void
     setImmutable(bool rehash = true);
@@ -392,11 +402,6 @@ private:
 /** A ledger wrapped in a CachedView. */
 using CachedLedger = CachedView<Ledger>;
 
-std::uint32_t constexpr FLAG_LEDGER_INTERVAL = 256;
-/** Returns true if the given ledgerIndex is a flag ledgerIndex */
-bool
-isFlagLedger(LedgerIndex seq);
-
 //------------------------------------------------------------------------------
 //
 // API
@@ -404,7 +409,11 @@ isFlagLedger(LedgerIndex seq);
 //------------------------------------------------------------------------------
 
 extern bool
-pendSaveValidated(Application& app, std::shared_ptr<Ledger const> const& ledger, bool isSynchronous, bool isCurrent);
+pendSaveValidated(
+    Application& app,
+    std::shared_ptr<Ledger const> const& ledger,
+    bool isSynchronous,
+    bool isCurrent);
 
 std::shared_ptr<Ledger>
 loadLedgerHelper(LedgerHeader const& sinfo, Application& app, bool acquire);
@@ -444,5 +453,3 @@ uint256
 calculateLedgerHash(LedgerHeader const& info);
 
 }  // namespace xrpl
-
-#endif

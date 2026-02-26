@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_PUBLICKEY_H_INCLUDED
-#define XRPL_PROTOCOL_PUBLICKEY_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Slice.h>
 #include <xrpl/beast/net/IPEndpoint.h>
@@ -126,7 +125,8 @@ operator==(PublicKey const& lhs, PublicKey const& rhs)
 inline bool
 operator<(PublicKey const& lhs, PublicKey const& rhs)
 {
-    return std::lexicographical_compare(lhs.data(), lhs.data() + lhs.size(), rhs.data(), rhs.data() + rhs.size());
+    return std::lexicographical_compare(
+        lhs.data(), lhs.data() + lhs.size(), rhs.data(), rhs.data() + rhs.size());
 }
 
 template <class Hasher>
@@ -279,5 +279,3 @@ getOrThrow(Json::Value const& v, xrpl::SField const& field)
     Throw<JsonTypeMismatchError>(field.getJsonName(), "PublicKey");
 }
 }  // namespace Json
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef XRPL_NODESTORE_BASE_H_INCLUDED
-#define XRPL_NODESTORE_BASE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/StringUtilities.h>
 #include <xrpl/basics/random.h>
@@ -27,7 +26,8 @@ namespace NodeStore {
 struct LessThan
 {
     bool
-    operator()(std::shared_ptr<NodeObject> const& lhs, std::shared_ptr<NodeObject> const& rhs) const noexcept
+    operator()(std::shared_ptr<NodeObject> const& lhs, std::shared_ptr<NodeObject> const& rhs)
+        const noexcept
     {
         return lhs->getHash() < rhs->getHash();
     }
@@ -197,5 +197,3 @@ public:
 
 }  // namespace NodeStore
 }  // namespace xrpl
-
-#endif

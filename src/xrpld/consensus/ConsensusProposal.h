@@ -1,5 +1,4 @@
-#ifndef XRPL_CONSENSUS_CONSENSUSPROPOSAL_H_INCLUDED
-#define XRPL_CONSENSUS_CONSENSUSPROPOSAL_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/basics/chrono.h>
@@ -152,7 +151,10 @@ public:
         @param now the time The new position was taken
      */
     void
-    changePosition(Position_t const& newPosition, NetClock::time_point newCloseTime, NetClock::time_point now)
+    changePosition(
+        Position_t const& newPosition,
+        NetClock::time_point newCloseTime,
+        NetClock::time_point now)
     {
         signingHash_.reset();
         position_ = newPosition;
@@ -181,8 +183,9 @@ public:
     {
         std::stringstream ss;
         ss << "proposal: previous_ledger: " << previousLedger_ << " proposal_seq: " << proposeSeq_
-           << " position: " << position_ << " close_time: " << to_string(closeTime_) << " now: " << to_string(time_)
-           << " is_bow_out:" << isBowOut() << " node_id: " << nodeID_;
+           << " position: " << position_ << " close_time: " << to_string(closeTime_)
+           << " now: " << to_string(time_) << " is_bow_out:" << isBowOut()
+           << " node_id: " << nodeID_;
         return ss.str();
     }
 
@@ -252,8 +255,8 @@ operator==(
     ConsensusProposal<NodeID_t, LedgerID_t, Position_t> const& a,
     ConsensusProposal<NodeID_t, LedgerID_t, Position_t> const& b)
 {
-    return a.nodeID() == b.nodeID() && a.proposeSeq() == b.proposeSeq() && a.prevLedger() == b.prevLedger() &&
-        a.position() == b.position() && a.closeTime() == b.closeTime() && a.seenTime() == b.seenTime();
+    return a.nodeID() == b.nodeID() && a.proposeSeq() == b.proposeSeq() &&
+        a.prevLedger() == b.prevLedger() && a.position() == b.position() &&
+        a.closeTime() == b.closeTime() && a.seenTime() == b.seenTime();
 }
 }  // namespace xrpl
-#endif

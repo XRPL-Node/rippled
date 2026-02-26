@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STTX_H_INCLUDED
-#define XRPL_PROTOCOL_STTX_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Expected.h>
 #include <xrpl/protocol/Feature.h>
@@ -120,7 +119,11 @@ public:
     getMetaSQL(std::uint32_t inLedger, std::string const& escapedMetaData) const;
 
     std::string
-    getMetaSQL(Serializer rawTxn, std::uint32_t inLedger, char status, std::string const& escapedMetaData) const;
+    getMetaSQL(
+        Serializer rawTxn,
+        std::uint32_t inLedger,
+        char status,
+        std::string const& escapedMetaData) const;
 
     std::vector<uint256> const&
     getBatchTransactionIDs() const;
@@ -196,5 +199,3 @@ STTx::getTransactionID() const
 }
 
 }  // namespace xrpl
-
-#endif

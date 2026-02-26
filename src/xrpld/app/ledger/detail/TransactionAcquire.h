@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_TRANSACTIONACQUIRE_H_INCLUDED
-#define XRPL_APP_LEDGER_TRANSACTIONACQUIRE_H_INCLUDED
+#pragma once
 
 #include <xrpld/overlay/PeerSet.h>
 
@@ -20,7 +19,9 @@ public:
     ~TransactionAcquire() = default;
 
     SHAMapAddNode
-    takeNodes(std::vector<std::pair<SHAMapNodeID, Slice>> const& data, std::shared_ptr<Peer> const&);
+    takeNodes(
+        std::vector<std::pair<SHAMapNodeID, Slice>> const& data,
+        std::shared_ptr<Peer> const&);
 
     void
     init(int startPeers);
@@ -49,5 +50,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

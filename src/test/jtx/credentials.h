@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_CREDENTIALS_H_INCLUDED
-#define XRPL_TEST_JTX_CREDENTIALS_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 #include <test/jtx/Env.h>
@@ -12,7 +11,10 @@ namespace jtx {
 namespace credentials {
 
 inline Keylet
-keylet(test::jtx::Account const& subject, test::jtx::Account const& issuer, std::string_view credType)
+keylet(
+    test::jtx::Account const& subject,
+    test::jtx::Account const& issuer,
+    std::string_view credType)
 {
     return keylet::credential(subject.id(), issuer.id(), Slice(credType.data(), credType.size()));
 }
@@ -62,10 +64,18 @@ Json::Value
 accept(jtx::Account const& subject, jtx::Account const& issuer, std::string_view credType);
 
 Json::Value
-deleteCred(jtx::Account const& acc, jtx::Account const& subject, jtx::Account const& issuer, std::string_view credType);
+deleteCred(
+    jtx::Account const& acc,
+    jtx::Account const& subject,
+    jtx::Account const& issuer,
+    std::string_view credType);
 
 Json::Value
-ledgerEntry(jtx::Env& env, jtx::Account const& subject, jtx::Account const& issuer, std::string_view credType);
+ledgerEntry(
+    jtx::Env& env,
+    jtx::Account const& subject,
+    jtx::Account const& issuer,
+    std::string_view credType);
 
 Json::Value
 ledgerEntry(jtx::Env& env, std::string const& credIdx);
@@ -74,5 +84,3 @@ ledgerEntry(jtx::Env& env, std::string const& credIdx);
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

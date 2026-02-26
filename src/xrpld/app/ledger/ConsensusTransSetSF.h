@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_CONSENSUSTRANSSETSF_H_INCLUDED
-#define XRPL_APP_LEDGER_CONSENSUSTRANSSETSF_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/main/Application.h>
 
@@ -22,8 +21,12 @@ public:
 
     // Note that the nodeData is overwritten by this call
     void
-    gotNode(bool fromFilter, SHAMapHash const& nodeHash, std::uint32_t ledgerSeq, Blob&& nodeData, SHAMapNodeType type)
-        const override;
+    gotNode(
+        bool fromFilter,
+        SHAMapHash const& nodeHash,
+        std::uint32_t ledgerSeq,
+        Blob&& nodeData,
+        SHAMapNodeType type) const override;
 
     std::optional<Blob>
     getNode(SHAMapHash const& nodeHash) const override;
@@ -35,5 +38,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

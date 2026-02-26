@@ -1,5 +1,4 @@
-#ifndef XRPL_CORE_JOBQUEUE_H_INCLUDED
-#define XRPL_CORE_JOBQUEUE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/core/ClosureCounter.h>
@@ -141,7 +140,8 @@ public:
     */
     template <
         typename JobHandler,
-        typename = std::enable_if_t<std::is_same<decltype(std::declval<JobHandler&&>()()), void>::value>>
+        typename =
+            std::enable_if_t<std::is_same<decltype(std::declval<JobHandler&&>()()), void>::value>>
     bool
     addJob(JobType type, std::string const& name, JobHandler&& jobHandler)
     {
@@ -402,5 +402,3 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
 }
 
 }  // namespace xrpl
-
-#endif

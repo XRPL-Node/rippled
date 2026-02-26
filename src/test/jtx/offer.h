@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_OFFER_H_INCLUDED
-#define XRPL_TEST_JTX_OFFER_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 
@@ -12,7 +11,11 @@ namespace jtx {
 
 /** Create an offer. */
 Json::Value
-offer(Account const& account, STAmount const& takerPays, STAmount const& takerGets, std::uint32_t flags = 0);
+offer(
+    Account const& account,
+    STAmount const& takerPays,
+    STAmount const& takerGets,
+    std::uint32_t flags = 0);
 
 /** Cancel an offer. */
 Json::Value
@@ -21,5 +24,3 @@ offer_cancel(Account const& account, std::uint32_t offerSeq);
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

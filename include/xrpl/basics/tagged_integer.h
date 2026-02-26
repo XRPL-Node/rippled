@@ -1,7 +1,6 @@
 // Copyright (c) 2014, Nikolaos D. Bougalis <nikb@bougalis.net>
 
-#ifndef BEAST_UTILITY_TAGGED_INTEGER_H_INCLUDED
-#define BEAST_UTILITY_TAGGED_INTEGER_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/hash/hash_append.h>
 
@@ -24,14 +23,15 @@ namespace xrpl {
     allowed arithmetic operations.
 */
 template <class Int, class Tag>
-class tagged_integer
-    : boost::totally_ordered<
-          tagged_integer<Int, Tag>,
-          boost::integer_arithmetic<
-              tagged_integer<Int, Tag>,
-              boost::bitwise<
-                  tagged_integer<Int, Tag>,
-                  boost::unit_steppable<tagged_integer<Int, Tag>, boost::shiftable<tagged_integer<Int, Tag>>>>>>
+class tagged_integer : boost::totally_ordered<
+                           tagged_integer<Int, Tag>,
+                           boost::integer_arithmetic<
+                               tagged_integer<Int, Tag>,
+                               boost::bitwise<
+                                   tagged_integer<Int, Tag>,
+                                   boost::unit_steppable<
+                                       tagged_integer<Int, Tag>,
+                                       boost::shiftable<tagged_integer<Int, Tag>>>>>>
 {
 private:
     Int m_value;
@@ -44,7 +44,8 @@ public:
 
     template <
         class OtherInt,
-        class = typename std::enable_if<std::is_integral<OtherInt>::value && sizeof(OtherInt) <= sizeof(Int)>::type>
+        class = typename std::enable_if<
+            std::is_integral<OtherInt>::value && sizeof(OtherInt) <= sizeof(Int)>::type>
     explicit constexpr tagged_integer(OtherInt value) noexcept : m_value(value)
     {
         static_assert(sizeof(tagged_integer) == sizeof(Int), "tagged_integer is adding padding");
@@ -202,4 +203,3 @@ struct is_contiguously_hashable<xrpl::tagged_integer<Int, Tag>, HashAlgorithm>
 };
 
 }  // namespace beast
-#endif

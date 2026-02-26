@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_TESTSUITE_H_INCLUDED
-#define XRPL_BASICS_TESTSUITE_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/unit_test.h>
 
@@ -48,7 +47,10 @@ public:
 
     template <class Collection>
     bool
-    expectCollectionEquals(Collection const& actual, Collection const& expected, std::string const& message = "")
+    expectCollectionEquals(
+        Collection const& actual,
+        Collection const& expected,
+        std::string const& message = "")
     {
         auto msg = addPrefix(message);
         bool success = expectEquals(actual.size(), expected.size(), msg + "Sizes are different");
@@ -112,5 +114,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

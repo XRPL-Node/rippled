@@ -1,5 +1,4 @@
-#ifndef XRPL_OVERLAY_SQUELCH_H_INCLUDED
-#define XRPL_OVERLAY_SQUELCH_H_INCLUDED
+#pragma once
 
 #include <xrpld/overlay/ReduceRelayCommon.h>
 
@@ -56,7 +55,9 @@ private:
 
 template <typename clock_type>
 bool
-Squelch<clock_type>::addSquelch(PublicKey const& validator, std::chrono::seconds const& squelchDuration)
+Squelch<clock_type>::addSquelch(
+    PublicKey const& validator,
+    std::chrono::seconds const& squelchDuration)
 {
     if (squelchDuration >= MIN_UNSQUELCH_EXPIRE && squelchDuration <= MAX_UNSQUELCH_EXPIRE_PEERS)
     {
@@ -100,5 +101,3 @@ Squelch<clock_type>::expireSquelch(PublicKey const& validator)
 }  // namespace reduce_relay
 
 }  // namespace xrpl
-
-#endif  // XRPL_SQUELCH_H

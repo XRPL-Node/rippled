@@ -1,5 +1,4 @@
-#ifndef XRPL_PEERFINDER_MANAGER_H_INCLUDED
-#define XRPL_PEERFINDER_MANAGER_H_INCLUDED
+#pragma once
 
 #include <xrpld/core/Config.h>
 #include <xrpld/peerfinder/Slot.h>
@@ -85,7 +84,11 @@ struct Config
      * @return PeerFinder::Config
      */
     static Config
-    makeConfig(xrpl::Config const& config, std::uint16_t port, bool validationPublicKey, int ipLimit);
+    makeConfig(
+        xrpl::Config const& config,
+        std::uint16_t port,
+        bool validationPublicKey,
+        int ipLimit);
 
     friend bool
     operator==(Config const& lhs, Config const& rhs);
@@ -215,7 +218,9 @@ public:
         Usually this is because of a detected self-connection.
     */
     virtual std::pair<std::shared_ptr<Slot>, Result>
-    new_inbound_slot(beast::IP::Endpoint const& local_endpoint, beast::IP::Endpoint const& remote_endpoint) = 0;
+    new_inbound_slot(
+        beast::IP::Endpoint const& local_endpoint,
+        beast::IP::Endpoint const& remote_endpoint) = 0;
 
     /** Create a new outbound slot with the specified remote endpoint.
         If nullptr is returned, then the slot could not be assigned.
@@ -281,5 +286,3 @@ public:
 
 }  // namespace PeerFinder
 }  // namespace xrpl
-
-#endif

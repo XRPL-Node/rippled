@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STVECTOR256_H_INCLUDED
-#define XRPL_PROTOCOL_STVECTOR256_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/protocol/STBase.h>
@@ -111,7 +110,8 @@ inline STVector256::STVector256(std::vector<uint256> const& vector) : mValue(vec
 {
 }
 
-inline STVector256::STVector256(SField const& n, std::vector<uint256> const& vector) : STBase(n), mValue(vector)
+inline STVector256::STVector256(SField const& n, std::vector<uint256> const& vector)
+    : STBase(n), mValue(vector)
 {
 }
 
@@ -136,7 +136,8 @@ STVector256::setValue(STVector256 const& v)
 }
 
 /** Retrieve a copy of the vector we contain */
-inline STVector256::operator std::vector<uint256>() const
+inline STVector256::
+operator std::vector<uint256>() const
 {
     return mValue;
 }
@@ -232,5 +233,3 @@ STVector256::clear() noexcept
 }
 
 }  // namespace xrpl
-
-#endif

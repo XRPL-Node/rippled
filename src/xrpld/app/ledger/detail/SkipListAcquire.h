@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
-#define XRPL_APP_LEDGER_SKIPLISTACQUIRE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/Ledger.h>
@@ -114,7 +113,10 @@ private:
      * @param sl  lock. this function must be called with the lock
      */
     void
-    onSkipListAcquired(std::vector<uint256> const& skipList, std::uint32_t ledgerSeq, ScopedLockType& sl);
+    onSkipListAcquired(
+        std::vector<uint256> const& skipList,
+        std::uint32_t ledgerSeq,
+        ScopedLockType& sl);
 
     /**
      * Call the OnSkipListDataCB callbacks
@@ -134,5 +136,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

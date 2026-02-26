@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STBLOB_H_INCLUDED
-#define XRPL_PROTOCOL_STBLOB_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Buffer.h>
 #include <xrpl/basics/CountedObject.h>
@@ -69,11 +68,13 @@ private:
     friend class detail::STVar;
 };
 
-inline STBlob::STBlob(STBlob const& rhs) : STBase(rhs), CountedObject<STBlob>(rhs), value_(rhs.data(), rhs.size())
+inline STBlob::STBlob(STBlob const& rhs)
+    : STBase(rhs), CountedObject<STBlob>(rhs), value_(rhs.data(), rhs.size())
 {
 }
 
-inline STBlob::STBlob(SField const& f, void const* data, std::size_t size) : STBase(f), value_(data, size)
+inline STBlob::STBlob(SField const& f, void const* data, std::size_t size)
+    : STBase(f), value_(data, size)
 {
 }
 
@@ -124,5 +125,3 @@ STBlob::setValue(Buffer&& b)
 }
 
 }  // namespace xrpl
-
-#endif

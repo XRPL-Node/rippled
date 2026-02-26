@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_QUALITY_H_INCLUDED
-#define XRPL_PROTOCOL_QUALITY_H_INCLUDED
+#pragma once
 
 #include <xrpl/protocol/AmountConversions.h>
 #include <xrpl/protocol/IOUAmount.h>
@@ -115,7 +114,8 @@ public:
 
     /** Create a quality from the ratio of two amounts. */
     template <class In, class Out>
-    explicit Quality(TAmounts<In, Out> const& amount) : Quality(Amounts(toSTAmount(amount.in), toSTAmount(amount.out)))
+    explicit Quality(TAmounts<In, Out> const& amount)
+        : Quality(Amounts(toSTAmount(amount.in), toSTAmount(amount.out)))
     {
     }
 
@@ -264,7 +264,8 @@ public:
     friend double
     relativeDistance(Quality const& q1, Quality const& q2)
     {
-        XRPL_ASSERT(q1.m_value > 0 && q2.m_value > 0, "xrpl::Quality::relativeDistance : minimum inputs");
+        XRPL_ASSERT(
+            q1.m_value > 0 && q2.m_value > 0, "xrpl::Quality::relativeDistance : minimum inputs");
 
         if (q1.m_value == q2.m_value)  // make expected common case fast
             return 0;
@@ -279,7 +280,8 @@ public:
         auto const expDiff = exponent(maxV) - exponent(minV);
 
         double const minVD = static_cast<double>(minVMantissa);
-        double const maxVD = expDiff ? maxVMantissa * pow(10, expDiff) : static_cast<double>(maxVMantissa);
+        double const maxVD =
+            expDiff ? maxVMantissa * pow(10, expDiff) : static_cast<double>(maxVMantissa);
 
         // maxVD and minVD are scaled so they have the same exponents. Dividing
         // cancels out the exponents, so we only need to deal with the (scaled)
@@ -313,7 +315,8 @@ TAmounts<In, Out>
 Quality::ceil_in(TAmounts<In, Out> const& amount, In const& limit) const
 {
     // Construct a function pointer to the function we want to call.
-    static constexpr Amounts (Quality::*ceil_in_fn_ptr)(Amounts const&, STAmount const&) const = &Quality::ceil_in;
+    static constexpr Amounts (Quality::*ceil_in_fn_ptr)(Amounts const&, STAmount const&) const =
+        &Quality::ceil_in;
 
     return ceil_TAmounts_helper(amount, limit, amount.in, ceil_in_fn_ptr);
 }
@@ -323,8 +326,8 @@ TAmounts<In, Out>
 Quality::ceil_in_strict(TAmounts<In, Out> const& amount, In const& limit, bool roundUp) const
 {
     // Construct a function pointer to the function we want to call.
-    static constexpr Amounts (Quality::*ceil_in_fn_ptr)(Amounts const&, STAmount const&, bool) const =
-        &Quality::ceil_in_strict;
+    static constexpr Amounts (Quality::*ceil_in_fn_ptr)(Amounts const&, STAmount const&, bool)
+        const = &Quality::ceil_in_strict;
 
     return ceil_TAmounts_helper(amount, limit, amount.in, ceil_in_fn_ptr, roundUp);
 }
@@ -334,7 +337,8 @@ TAmounts<In, Out>
 Quality::ceil_out(TAmounts<In, Out> const& amount, Out const& limit) const
 {
     // Construct a function pointer to the function we want to call.
-    static constexpr Amounts (Quality::*ceil_out_fn_ptr)(Amounts const&, STAmount const&) const = &Quality::ceil_out;
+    static constexpr Amounts (Quality::*ceil_out_fn_ptr)(Amounts const&, STAmount const&) const =
+        &Quality::ceil_out;
 
     return ceil_TAmounts_helper(amount, limit, amount.out, ceil_out_fn_ptr);
 }
@@ -344,8 +348,8 @@ TAmounts<In, Out>
 Quality::ceil_out_strict(TAmounts<In, Out> const& amount, Out const& limit, bool roundUp) const
 {
     // Construct a function pointer to the function we want to call.
-    static constexpr Amounts (Quality::*ceil_out_fn_ptr)(Amounts const&, STAmount const&, bool) const =
-        &Quality::ceil_out_strict;
+    static constexpr Amounts (Quality::*ceil_out_fn_ptr)(Amounts const&, STAmount const&, bool)
+        const = &Quality::ceil_out_strict;
 
     return ceil_TAmounts_helper(amount, limit, amount.out, ceil_out_fn_ptr, roundUp);
 }
@@ -358,5 +362,3 @@ Quality
 composed_quality(Quality const& lhs, Quality const& rhs);
 
 }  // namespace xrpl
-
-#endif

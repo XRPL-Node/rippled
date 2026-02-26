@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
-#define XRPL_APP_LEDGER_TRANSACTIONSTATESF_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/AbstractFetchPackContainer.h>
 
@@ -18,8 +17,12 @@ public:
     }
 
     void
-    gotNode(bool fromFilter, SHAMapHash const& nodeHash, std::uint32_t ledgerSeq, Blob&& nodeData, SHAMapNodeType type)
-        const override;
+    gotNode(
+        bool fromFilter,
+        SHAMapHash const& nodeHash,
+        std::uint32_t ledgerSeq,
+        Blob&& nodeData,
+        SHAMapNodeType type) const override;
 
     std::optional<Blob>
     getNode(SHAMapHash const& nodeHash) const override;
@@ -30,5 +33,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

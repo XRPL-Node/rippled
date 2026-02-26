@@ -1,5 +1,4 @@
-#ifndef XRPL_PEERFINDER_HANDOUTS_H_INCLUDED
-#define XRPL_PEERFINDER_HANDOUTS_H_INCLUDED
+#pragma once
 
 #include <xrpld/peerfinder/detail/SlotImp.h>
 #include <xrpld/peerfinder/detail/Tuning.h>
@@ -297,7 +296,8 @@ public:
 };
 
 template <class>
-ConnectHandouts::ConnectHandouts(std::size_t needed, Squelches& squelches) : m_needed(needed), m_squelches(squelches)
+ConnectHandouts::ConnectHandouts(std::size_t needed, Squelches& squelches)
+    : m_needed(needed), m_squelches(squelches)
 {
     m_list.reserve(needed);
 }
@@ -331,5 +331,3 @@ ConnectHandouts::try_insert(beast::IP::Endpoint const& endpoint)
 
 }  // namespace PeerFinder
 }  // namespace xrpl
-
-#endif

@@ -2,8 +2,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BEAST_UNIT_TEST_SUITE_INFO_HPP
-#define BEAST_UNIT_TEST_SUITE_INFO_HPP
+#pragma once
 
 #include <cstring>
 #include <functional>
@@ -28,7 +27,13 @@ class suite_info
     run_type run_;
 
 public:
-    suite_info(std::string name, std::string module, std::string library, bool manual, int priority, run_type run)
+    suite_info(
+        std::string name,
+        std::string module,
+        std::string library,
+        bool manual,
+        int priority,
+        run_type run)
         : name_(std::move(name))
         , module_(std::move(module))
         , library_(std::move(library))
@@ -92,13 +97,18 @@ public:
 /// Convenience for producing suite_info for a given test type.
 template <class Suite>
 suite_info
-make_suite_info(std::string name, std::string module, std::string library, bool manual, int priority)
+make_suite_info(
+    std::string name,
+    std::string module,
+    std::string library,
+    bool manual,
+    int priority)
 {
     return suite_info(
-        std::move(name), std::move(module), std::move(library), manual, priority, [](runner& r) { Suite{}(r); });
+        std::move(name), std::move(module), std::move(library), manual, priority, [](runner& r) {
+            Suite{}(r);
+        });
 }
 
 }  // namespace unit_test
 }  // namespace beast
-
-#endif

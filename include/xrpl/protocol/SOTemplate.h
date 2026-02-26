@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_SOTEMPLATE_H_INCLUDED
-#define XRPL_PROTOCOL_SOTEMPLATE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/contract.h>
 #include <xrpl/protocol/SField.h>
@@ -54,7 +53,10 @@ public:
 
     template <typename T>
         requires(std::is_same_v<T, STAmount> || std::is_same_v<T, STIssue>)
-    SOElement(TypedField<T> const& fieldName, SOEStyle style, SOETxMPTIssue supportMpt = soeMPTNotSupported)
+    SOElement(
+        TypedField<T> const& fieldName,
+        SOEStyle style,
+        SOETxMPTIssue supportMpt = soeMPTNotSupported)
         : sField_(fieldName), style_(style), supportMpt_(supportMpt)
     {
         init(fieldName);
@@ -98,7 +100,9 @@ public:
         After creating the template fields cannot be
         added, modified, or removed.
     */
-    SOTemplate(std::initializer_list<SOElement> uniqueFields, std::initializer_list<SOElement> commonFields = {});
+    SOTemplate(
+        std::initializer_list<SOElement> uniqueFields,
+        std::initializer_list<SOElement> commonFields = {});
 
     /* Provide for the enumeration of fields */
     std::vector<SOElement>::const_iterator
@@ -148,5 +152,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

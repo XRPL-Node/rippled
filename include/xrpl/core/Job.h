@@ -1,5 +1,4 @@
-#ifndef XRPL_CORE_JOB_H_INCLUDED
-#define XRPL_CORE_JOB_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/core/ClosureCounter.h>
@@ -93,7 +92,11 @@ public:
     Job(JobType type, std::uint64_t index);
 
     // VFALCO TODO try to remove the dependency on LoadMonitor.
-    Job(JobType type, std::string const& name, std::uint64_t index, LoadMonitor& lm, std::function<void()> const& job);
+    Job(JobType type,
+        std::string const& name,
+        std::uint64_t index,
+        LoadMonitor& lm,
+        std::function<void()> const& job);
 
     JobType
     getType() const;
@@ -128,5 +131,3 @@ private:
 using JobCounter = ClosureCounter<void>;
 
 }  // namespace xrpl
-
-#endif

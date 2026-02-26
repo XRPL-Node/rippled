@@ -1,5 +1,4 @@
-#ifndef XRPL_SHAMAP_SHAMAPACCOUNTSTATELEAFNODE_H_INCLUDED
-#define XRPL_SHAMAP_SHAMAPACCOUNTSTATELEAFNODE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/protocol/HashPrefix.h>
@@ -10,7 +9,8 @@
 namespace xrpl {
 
 /** A leaf node for a state object. */
-class SHAMapAccountStateLeafNode final : public SHAMapLeafNode, public CountedObject<SHAMapAccountStateLeafNode>
+class SHAMapAccountStateLeafNode final : public SHAMapLeafNode,
+                                         public CountedObject<SHAMapAccountStateLeafNode>
 {
 public:
     SHAMapAccountStateLeafNode(boost::intrusive_ptr<SHAMapItem const> item, std::uint32_t cowid)
@@ -19,7 +19,10 @@ public:
         updateHash();
     }
 
-    SHAMapAccountStateLeafNode(boost::intrusive_ptr<SHAMapItem const> item, std::uint32_t cowid, SHAMapHash const& hash)
+    SHAMapAccountStateLeafNode(
+        boost::intrusive_ptr<SHAMapItem const> item,
+        std::uint32_t cowid,
+        SHAMapHash const& hash)
         : SHAMapLeafNode(std::move(item), cowid, hash)
     {
     }
@@ -60,5 +63,3 @@ public:
 };
 
 }  // namespace xrpl
-
-#endif

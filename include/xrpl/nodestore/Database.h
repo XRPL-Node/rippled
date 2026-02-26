@@ -1,5 +1,4 @@
-#ifndef XRPL_NODESTORE_DATABASE_H_INCLUDED
-#define XRPL_NODESTORE_DATABASE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/BasicConfig.h>
 #include <xrpl/basics/Log.h>
@@ -134,10 +133,6 @@ public:
         std::uint32_t ledgerSeq,
         std::function<void(std::shared_ptr<NodeObject> const&)>&& callback);
 
-    /** Remove expired entries from the positive and negative caches. */
-    virtual void
-    sweep() = 0;
-
     /** Gather statistics pertaining to read and write activities.
      *
      * @param obj Json object reference into which to place counters.
@@ -248,7 +243,10 @@ private:
     std::condition_variable readCondVar_;
 
     // reads to do
-    std::map<uint256, std::vector<std::pair<std::uint32_t, std::function<void(std::shared_ptr<NodeObject> const&)>>>>
+    std::map<
+        uint256,
+        std::vector<
+            std::pair<std::uint32_t, std::function<void(std::shared_ptr<NodeObject> const&)>>>>
         read_;
 
     std::atomic<bool> readStopping_ = false;
@@ -256,7 +254,11 @@ private:
     std::atomic<int> runningThreads_ = 0;
 
     virtual std::shared_ptr<NodeObject>
-    fetchNodeObject(uint256 const& hash, std::uint32_t ledgerSeq, FetchReport& fetchReport, bool duplicate) = 0;
+    fetchNodeObject(
+        uint256 const& hash,
+        std::uint32_t ledgerSeq,
+        FetchReport& fetchReport,
+        bool duplicate) = 0;
 
     /** Visit every object in the database
         This is usually called during import.
@@ -274,5 +276,3 @@ private:
 
 }  // namespace NodeStore
 }  // namespace xrpl
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
-#define XRPL_PROTOCOL_STAMOUNT_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CountedObject.h>
 #include <xrpl/basics/LocalValue.h>
@@ -81,7 +80,12 @@ public:
         unchecked);
 
     template <AssetType A>
-    STAmount(A const& asset, mantissa_type mantissa, exponent_type exponent, bool negative, unchecked);
+    STAmount(
+        A const& asset,
+        mantissa_type mantissa,
+        exponent_type exponent,
+        bool negative,
+        unchecked);
 
     // Call canonicalize
     template <AssetType A>
@@ -301,13 +305,23 @@ STAmount::STAmount(
 }
 
 template <AssetType A>
-STAmount::STAmount(A const& asset, mantissa_type mantissa, exponent_type exponent, bool negative, unchecked)
+STAmount::STAmount(
+    A const& asset,
+    mantissa_type mantissa,
+    exponent_type exponent,
+    bool negative,
+    unchecked)
     : mAsset(asset), mValue(mantissa), mOffset(exponent), mIsNegative(negative)
 {
 }
 
 template <AssetType A>
-STAmount::STAmount(SField const& name, A const& asset, std::uint64_t mantissa, int exponent, bool negative)
+STAmount::STAmount(
+    SField const& name,
+    A const& asset,
+    std::uint64_t mantissa,
+    int exponent,
+    bool negative)
     : STBase(name), mAsset(asset), mValue(mantissa), mOffset(exponent), mIsNegative(negative)
 {
     // mValue is uint64, but needs to fit in the range of int64
@@ -327,7 +341,8 @@ STAmount::STAmount(SField const& name, A const& asset, std::uint64_t mantissa, i
 }
 
 template <AssetType A>
-STAmount::STAmount(A const& asset, std::int64_t mantissa, int exponent) : mAsset(asset), mOffset(exponent)
+STAmount::STAmount(A const& asset, std::int64_t mantissa, int exponent)
+    : mAsset(asset), mOffset(exponent)
 {
     set(mantissa);
     canonicalize();
@@ -481,12 +496,14 @@ STAmount::zeroed() const
     return STAmount(mAsset);
 }
 
-inline STAmount::operator bool() const noexcept
+inline STAmount::
+operator bool() const noexcept
 {
     return *this != beast::zero;
 }
 
-inline STAmount::operator Number() const
+inline STAmount::
+operator Number() const
 {
     if (native())
         return xrp();
@@ -659,7 +676,10 @@ getRate(STAmount const& offerOut, STAmount const& offerIn);
  *
  */
 [[nodiscard]] STAmount
-roundToScale(STAmount const& value, std::int32_t scale, Number::rounding_mode rounding = Number::getround());
+roundToScale(
+    STAmount const& value,
+    std::int32_t scale,
+    Number::rounding_mode rounding = Number::getround());
 
 /** Round an arbitrary precision Number IN PLACE to the precision of a given
  * Asset.
@@ -735,4 +755,3 @@ getOrThrow(Json::Value const& v, xrpl::SField const& field)
     return amountFromJson(field, inner);
 }
 }  // namespace Json
-#endif

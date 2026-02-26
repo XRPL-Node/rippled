@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_LOG_H_INCLUDED
-#define XRPL_BASICS_LOG_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/UnorderedContainers.h>
 #include <xrpl/beast/utility/Journal.h>
@@ -171,7 +170,11 @@ public:
     partition_severities() const;
 
     void
-    write(beast::severities::Severity level, std::string const& partition, std::string const& text, bool console);
+    write(
+        beast::severities::Severity level,
+        std::string const& partition,
+        std::string const& text,
+        bool console);
 
     std::string
     rotate();
@@ -258,5 +261,3 @@ beast::Journal
 debugLog();
 
 }  // namespace xrpl
-
-#endif

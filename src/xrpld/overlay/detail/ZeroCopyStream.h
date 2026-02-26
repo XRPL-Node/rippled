@@ -1,5 +1,4 @@
-#ifndef XRPL_OVERLAY_ZEROCOPYSTREAM_H_INCLUDED
-#define XRPL_OVERLAY_ZEROCOPYSTREAM_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -49,7 +48,9 @@ public:
 
 template <class Buffers>
 ZeroCopyInputStream<Buffers>::ZeroCopyInputStream(Buffers const& buffers)
-    : last_(buffers.end()), first_(buffers.begin()), pos_((first_ != last_) ? *first_ : const_buffer(nullptr, 0))
+    : last_(buffers.end())
+    , first_(buffers.begin())
+    , pos_((first_ != last_) ? *first_ : const_buffer(nullptr, 0))
 {
 }
 
@@ -142,7 +143,10 @@ public:
 
 template <class Streambuf>
 ZeroCopyOutputStream<Streambuf>::ZeroCopyOutputStream(Streambuf& streambuf, std::size_t blockSize)
-    : streambuf_(streambuf), blockSize_(blockSize), buffers_(streambuf_.prepare(blockSize_)), pos_(buffers_.begin())
+    : streambuf_(streambuf)
+    , blockSize_(blockSize)
+    , buffers_(streambuf_.prepare(blockSize_))
+    , pos_(buffers_.begin())
 {
 }
 
@@ -188,5 +192,3 @@ ZeroCopyOutputStream<Streambuf>::BackUp(int count)
 }
 
 }  // namespace xrpl
-
-#endif

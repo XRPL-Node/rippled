@@ -1,5 +1,4 @@
-#ifndef BEAST_RANDOM_RNGFILL_H_INCLUDED
-#define BEAST_RANDOM_RNGFILL_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -36,7 +35,10 @@ rngfill(void* const buffer, std::size_t const bytes, Generator& g)
     }
 }
 
-template <class Generator, std::size_t N, class = std::enable_if_t<N % sizeof(typename Generator::result_type) == 0>>
+template <
+    class Generator,
+    std::size_t N,
+    class = std::enable_if_t<N % sizeof(typename Generator::result_type) == 0>>
 void
 rngfill(std::array<std::uint8_t, N>& a, Generator& g)
 {
@@ -48,5 +50,3 @@ rngfill(std::array<std::uint8_t, N>& a, Generator& g)
 }
 
 }  // namespace beast
-
-#endif

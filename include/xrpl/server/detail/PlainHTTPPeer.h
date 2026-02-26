@@ -1,5 +1,4 @@
-#ifndef XRPL_SERVER_PLAINHTTPPEER_H_INCLUDED
-#define XRPL_SERVER_PLAINHTTPPEER_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/rfc2616.h>
 #include <xrpl/server/detail/BaseHTTPPeer.h>
@@ -61,7 +60,13 @@ PlainHTTPPeer<Handler>::PlainHTTPPeer(
     endpoint_type remote_endpoint,
     ConstBufferSequence const& buffers,
     stream_type&& stream)
-    : BaseHTTPPeer<Handler, PlainHTTPPeer>(port, handler, ioc.get_executor(), journal, remote_endpoint, buffers)
+    : BaseHTTPPeer<Handler, PlainHTTPPeer>(
+          port,
+          handler,
+          ioc.get_executor(),
+          journal,
+          remote_endpoint,
+          buffers)
     , stream_(std::move(stream))
     , socket_(stream_.socket())
 {
@@ -86,7 +91,9 @@ PlainHTTPPeer<Handler>::run()
     if (!socket_.is_open())
         return;
 
-    util::spawn(this->strand_, std::bind(&PlainHTTPPeer::do_read, this->shared_from_this(), std::placeholders::_1));
+    util::spawn(
+        this->strand_,
+        std::bind(&PlainHTTPPeer::do_read, this->shared_from_this(), std::placeholders::_1));
 }
 
 template <class Handler>
@@ -108,7 +115,8 @@ void
 PlainHTTPPeer<Handler>::do_request()
 {
     ++this->request_count_;
-    auto const what = this->handler_.onHandoff(this->session(), std::move(this->message_), this->remote_address_);
+    auto const what =
+        this->handler_.onHandoff(this->session(), std::move(this->message_), this->remote_address_);
     if (what.moved)
         return;
     boost::system::error_code ec;
@@ -140,5 +148,3 @@ PlainHTTPPeer<Handler>::do_close()
 }
 
 }  // namespace xrpl
-
-#endif

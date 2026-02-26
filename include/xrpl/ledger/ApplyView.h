@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_APPLYVIEW_H_INCLUDED
-#define XRPL_LEDGER_APPLYVIEW_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/safe_cast.h>
 #include <xrpl/beast/utility/instrumentation.h>
@@ -34,7 +33,8 @@ constexpr ApplyFlags
 operator|(ApplyFlags const& lhs, ApplyFlags const& rhs)
 {
     return safe_cast<ApplyFlags>(
-        safe_cast<std::underlying_type_t<ApplyFlags>>(lhs) | safe_cast<std::underlying_type_t<ApplyFlags>>(rhs));
+        safe_cast<std::underlying_type_t<ApplyFlags>>(lhs) |
+        safe_cast<std::underlying_type_t<ApplyFlags>>(rhs));
 }
 
 static_assert((tapFAIL_HARD | tapRETRY) == safe_cast<ApplyFlags>(0x30u), "ApplyFlags operator |");
@@ -44,7 +44,8 @@ constexpr ApplyFlags
 operator&(ApplyFlags const& lhs, ApplyFlags const& rhs)
 {
     return safe_cast<ApplyFlags>(
-        safe_cast<std::underlying_type_t<ApplyFlags>>(lhs) & safe_cast<std::underlying_type_t<ApplyFlags>>(rhs));
+        safe_cast<std::underlying_type_t<ApplyFlags>>(lhs) &
+        safe_cast<std::underlying_type_t<ApplyFlags>>(rhs));
 }
 
 static_assert((tapFAIL_HARD & tapRETRY) == tapNONE, "ApplyFlags operator &");
@@ -212,7 +213,11 @@ public:
     // Called when a credit is made to an account
     // This is required to support PaymentSandbox
     virtual void
-    creditHook(AccountID const& from, AccountID const& to, STAmount const& amount, STAmount const& preCreditBalance)
+    creditHook(
+        AccountID const& from,
+        AccountID const& to,
+        STAmount const& amount,
+        STAmount const& preCreditBalance)
     {
     }
 
@@ -382,5 +387,3 @@ insertPage(
 
 }  // namespace directory
 }  // namespace xrpl
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef XRPL_RESOURCE_LOGIC_H_INCLUDED
-#define XRPL_RESOURCE_LOGIC_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Log.h>
 #include <xrpl/basics/UnorderedContainers.h>
@@ -69,7 +68,10 @@ private:
 
     //--------------------------------------------------------------------------
 public:
-    Logic(beast::insight::Collector::ptr const& collector, clock_type& clock, beast::Journal journal)
+    Logic(
+        beast::insight::Collector::ptr const& collector,
+        clock_type& clock,
+        beast::Journal journal)
         : m_stats(collector), m_clock(clock), m_journal(journal)
     {
     }
@@ -341,7 +343,8 @@ public:
             Import& import(iter->second);
             if (iter->second.whenExpires <= elapsed)
             {
-                for (auto item_iter(import.items.begin()); item_iter != import.items.end(); ++item_iter)
+                for (auto item_iter(import.items.begin()); item_iter != import.items.end();
+                     ++item_iter)
                 {
                     item_iter->consumer.entry().remote_balance -= item_iter->balance;
                 }
@@ -423,7 +426,8 @@ public:
         static constexpr Charge::value_type feeLogAsWarn = 3000;
         static constexpr Charge::value_type feeLogAsInfo = 1000;
         static constexpr Charge::value_type feeLogAsDebug = 100;
-        static_assert(feeLogAsWarn > feeLogAsInfo && feeLogAsInfo > feeLogAsDebug && feeLogAsDebug > 10);
+        static_assert(
+            feeLogAsWarn > feeLogAsInfo && feeLogAsInfo > feeLogAsDebug && feeLogAsDebug > 10);
 
         static auto getStream = [](Resource::Charge::value_type cost, beast::Journal& journal) {
             if (cost >= feeLogAsWarn)
@@ -480,8 +484,8 @@ public:
         int const balance(entry.balance(now));
         if (balance >= dropThreshold)
         {
-            JLOG(m_journal.warn()) << "Consumer entry " << entry << " dropped with balance " << balance
-                                   << " at or above drop threshold " << dropThreshold;
+            JLOG(m_journal.warn()) << "Consumer entry " << entry << " dropped with balance "
+                                   << balance << " at or above drop threshold " << dropThreshold;
 
             // Adding feeDrop at this point keeps the dropped connection
             // from re-connecting for at least a little while after it is
@@ -503,7 +507,10 @@ public:
     //--------------------------------------------------------------------------
 
     void
-    writeList(clock_type::time_point const now, beast::PropertyStream::Set& items, EntryIntrusiveList& list)
+    writeList(
+        clock_type::time_point const now,
+        beast::PropertyStream::Set& items,
+        EntryIntrusiveList& list)
     {
         for (auto& entry : list)
         {
@@ -548,5 +555,3 @@ public:
 
 }  // namespace Resource
 }  // namespace xrpl
-
-#endif

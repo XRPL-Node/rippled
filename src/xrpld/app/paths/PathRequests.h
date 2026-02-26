@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_PATHS_PATHREQUESTS_H_INCLUDED
-#define XRPL_APP_PATHS_PATHREQUESTS_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/paths/PathRequest.h>
@@ -15,7 +14,10 @@ class PathRequests
 {
 public:
     /** A collection of all PathRequest instances. */
-    PathRequests(Application& app, beast::Journal journal, beast::insight::Collector::ptr const& collector)
+    PathRequests(
+        Application& app,
+        beast::Journal journal,
+        beast::insight::Collector::ptr const& collector)
         : app_(app), mJournal(journal), mLastIdentifier(0)
     {
         mFast = collector->make_event("pathfind_fast");
@@ -96,5 +98,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

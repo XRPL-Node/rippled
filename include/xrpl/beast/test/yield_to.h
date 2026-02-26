@@ -2,8 +2,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BEAST_TEST_YIELD_TO_HPP
-#define BEAST_TEST_YIELD_TO_HPP
+#pragma once
 
 #include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
@@ -41,7 +40,8 @@ public:
     /// The type of yield context passed to functions.
     using yield_context = boost::asio::yield_context;
 
-    explicit enable_yield_to(std::size_t concurrency = 1) : work_(boost::asio::make_work_guard(ios_))
+    explicit enable_yield_to(std::size_t concurrency = 1)
+        : work_(boost::asio::make_work_guard(ios_))
     {
         threads_.reserve(concurrency);
         while (concurrency--)
@@ -127,5 +127,3 @@ enable_yield_to::spawn(F0&& f, FN&&... fn)
 
 }  // namespace test
 }  // namespace beast
-
-#endif

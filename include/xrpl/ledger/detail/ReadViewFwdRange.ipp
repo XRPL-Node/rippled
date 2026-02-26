@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_READVIEWFWDRANGEINL_H_INCLUDED
-#define XRPL_LEDGER_READVIEWFWDRANGEINL_H_INCLUDED
+#pragma once
 
 namespace xrpl {
 namespace detail {
@@ -17,7 +16,9 @@ ReadViewFwdRange<ValueType>::iterator::iterator(iterator&& other) noexcept
 }
 
 template <class ValueType>
-ReadViewFwdRange<ValueType>::iterator::iterator(ReadView const* view, std::unique_ptr<iter_base> impl)
+ReadViewFwdRange<ValueType>::iterator::iterator(
+    ReadView const* view,
+    std::unique_ptr<iter_base> impl)
     : view_(view), impl_(std::move(impl))
 {
 }
@@ -108,5 +109,3 @@ ReadViewFwdRange<ValueType>::iterator::operator++(int) -> iterator
 
 }  // namespace detail
 }  // namespace xrpl
-
-#endif

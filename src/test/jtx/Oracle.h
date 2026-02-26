@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_ORACLE_H_INCLUDED
-#define XRPL_TEST_JTX_ORACLE_H_INCLUDED
+#pragma once
 
 #include <test/jtx.h>
 
@@ -32,8 +31,9 @@ void
 toJsonHex(Json::Value& jv, AnyValue const& v);
 
 // base asset, quote asset, price, scale
-using DataSeries =
-    std::vector<std::tuple<std::string, std::string, std::optional<std::uint32_t>, std::optional<std::uint8_t>>>;
+using DataSeries = std::vector<
+    std::
+        tuple<std::string, std::string, std::optional<std::uint32_t>, std::optional<std::uint8_t>>>;
 
 // Typical defaults for Create
 struct CreateArg
@@ -181,5 +181,3 @@ public:
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif  // XRPL_TEST_JTX_ORACLE_H_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef BEAST_CONTAINER_AGED_CONTAINER_UTILITY_H_INCLUDED
-#define BEAST_CONTAINER_AGED_CONTAINER_UTILITY_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/container/aged_container.h>
 
@@ -15,7 +14,8 @@ expire(AgedContainer& c, std::chrono::duration<Rep, Period> const& age)
 {
     std::size_t n(0);
     auto const expired(c.clock().now() - age);
-    for (auto iter(c.chronological.cbegin()); iter != c.chronological.cend() && iter.when() <= expired;)
+    for (auto iter(c.chronological.cbegin());
+         iter != c.chronological.cend() && iter.when() <= expired;)
     {
         iter = c.erase(iter);
         ++n;
@@ -24,5 +24,3 @@ expire(AgedContainer& c, std::chrono::duration<Rep, Period> const& age)
 }
 
 }  // namespace beast
-
-#endif

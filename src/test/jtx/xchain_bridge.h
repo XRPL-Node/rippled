@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_XCHAINBRIDGE_H_INCLUDED
-#define XRPL_TEST_JTX_XCHAINBRIDGE_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 #include <test/jtx/amount.h>
@@ -71,7 +70,11 @@ sidechain_xchain_account_create(
     AnyAmount const& xChainFee);
 
 Json::Value
-sidechain_xchain_account_claim(Account const& acc, Json::Value const& bridge, Account const& dst, AnyAmount const& amt);
+sidechain_xchain_account_claim(
+    Account const& acc,
+    Json::Value const& bridge,
+    Account const& dst,
+    AnyAmount const& amt);
 
 Json::Value
 claim_attestation(
@@ -202,7 +205,18 @@ struct XChainBridgeObjects
         std::size_t const fromIdx = 0)
     {
         return create_account_attestations(
-            scAttester, jvb, mcCarol, amt, reward, payees, true, createCount, dst, signers, numAtts, fromIdx);
+            scAttester,
+            jvb,
+            mcCarol,
+            amt,
+            reward,
+            payees,
+            true,
+            createCount,
+            dst,
+            signers,
+            numAtts,
+            fromIdx);
     }
 
     Json::Value
@@ -212,12 +226,11 @@ struct XChainBridgeObjects
         STAmount const& _reward = XRP(1),
         std::optional<STAmount> const& minAccountCreate = std::nullopt)
     {
-        return bridge_create(acc, bridge == Json::nullValue ? jvb : bridge, _reward, minAccountCreate);
+        return bridge_create(
+            acc, bridge == Json::nullValue ? jvb : bridge, _reward, minAccountCreate);
     }
 };
 
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

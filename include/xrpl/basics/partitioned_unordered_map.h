@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_PARTITIONED_UNORDERED_MAP_H
-#define XRPL_BASICS_PARTITIONED_UNORDERED_MAP_H
+#pragma once
 
 #include <xrpl/beast/hash/uhash.h>
 #include <xrpl/beast/utility/instrumentation.h>
@@ -331,8 +330,8 @@ public:
         auto const& key = std::get<0>(keyTuple);
         iterator it(&map_);
         it.ait_ = it.map_->begin() + partitioner(key);
-        auto [eit, inserted] =
-            it.ait_->emplace(std::piecewise_construct, std::forward<T>(keyTuple), std::forward<U>(valueTuple));
+        auto [eit, inserted] = it.ait_->emplace(
+            std::piecewise_construct, std::forward<T>(keyTuple), std::forward<U>(valueTuple));
         it.mit_ = eit;
         return {it, inserted};
     }
@@ -393,5 +392,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif  // XRPL_BASICS_PARTITIONED_UNORDERED_MAP_H

@@ -1,5 +1,4 @@
-#ifndef XRPL_PEERFINDER_BOOTCACHE_H_INCLUDED
-#define XRPL_PEERFINDER_BOOTCACHE_H_INCLUDED
+#pragma once
 
 #include <xrpld/peerfinder/PeerfinderManager.h>
 #include <xrpld/peerfinder/detail/Store.h>
@@ -65,8 +64,10 @@ private:
         int m_valence;
     };
 
-    using left_t = boost::bimaps::
-        unordered_set_of<beast::IP::Endpoint, boost::hash<beast::IP::Endpoint>, xrpl::equal_to<beast::IP::Endpoint>>;
+    using left_t = boost::bimaps::unordered_set_of<
+        beast::IP::Endpoint,
+        boost::hash<beast::IP::Endpoint>,
+        xrpl::equal_to<beast::IP::Endpoint>>;
     using right_t = boost::bimaps::multiset_of<Entry, xrpl::less<Entry>>;
     using map_type = boost::bimap<left_t, right_t>;
     using value_type = map_type::value_type;
@@ -172,5 +173,3 @@ private:
 
 }  // namespace PeerFinder
 }  // namespace xrpl
-
-#endif

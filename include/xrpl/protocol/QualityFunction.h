@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_QUALITYFUNCTION_H_INCLUDED
-#define XRPL_PROTOCOL_QUALITYFUNCTION_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/Number.h>
 #include <xrpl/protocol/AMMCore.h>
@@ -68,7 +67,10 @@ public:
 };
 
 template <typename TIn, typename TOut>
-QualityFunction::QualityFunction(TAmounts<TIn, TOut> const& amounts, std::uint32_t tfee, QualityFunction::AMMTag)
+QualityFunction::QualityFunction(
+    TAmounts<TIn, TOut> const& amounts,
+    std::uint32_t tfee,
+    QualityFunction::AMMTag)
 {
     if (amounts.in <= beast::zero || amounts.out <= beast::zero)
         Throw<std::runtime_error>("QualityFunction amounts are 0.");
@@ -78,5 +80,3 @@ QualityFunction::QualityFunction(TAmounts<TIn, TOut> const& amounts, std::uint32
 }
 
 }  // namespace xrpl
-
-#endif  // XRPL_PROTOCOL_QUALITYFUNCTION_H_INCLUDED

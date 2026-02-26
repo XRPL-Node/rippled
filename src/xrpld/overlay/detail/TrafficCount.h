@@ -1,5 +1,4 @@
-#ifndef XRPL_OVERLAY_TRAFFIC_H_INCLUDED
-#define XRPL_OVERLAY_TRAFFIC_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 #include <xrpl/protocol/messages.h>
@@ -184,13 +183,17 @@ public:
     /** Given a protocol message, determine which traffic category it belongs to
      */
     static category
-    categorize(::google::protobuf::Message const& message, protocol::MessageType type, bool inbound);
+    categorize(
+        ::google::protobuf::Message const& message,
+        protocol::MessageType type,
+        bool inbound);
 
     /** Account for traffic associated with the given category */
     void
     addCount(category cat, bool inbound, int bytes)
     {
-        XRPL_ASSERT(cat <= category::unknown, "xrpl::TrafficCount::addCount : valid category input");
+        XRPL_ASSERT(
+            cat <= category::unknown, "xrpl::TrafficCount::addCount : valid category input");
 
         auto it = counts_.find(cat);
 
@@ -350,4 +353,3 @@ protected:
 };
 
 }  // namespace xrpl
-#endif

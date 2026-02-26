@@ -1,5 +1,4 @@
-#ifndef BEAST_HASH_HASH_APPEND_H_INCLUDED
-#define BEAST_HASH_HASH_APPEND_H_INCLUDED
+#pragma once
 
 #include <boost/container/flat_set.hpp>
 #include <boost/endian/conversion.hpp>
@@ -27,7 +26,8 @@ template <class T>
 inline void
 reverse_bytes(T& t)
 {
-    unsigned char* bytes = static_cast<unsigned char*>(std::memmove(std::addressof(t), std::addressof(t), sizeof(T)));
+    unsigned char* bytes =
+        static_cast<unsigned char*>(std::memmove(std::addressof(t), std::addressof(t), sizeof(T)));
     for (unsigned i = 0; i < sizeof(T) / 2; ++i)
         std::swap(bytes[i], bytes[sizeof(T) - 1 - i]);
 }
@@ -52,7 +52,8 @@ template <class T, class Hasher>
 inline void
 maybe_reverse_bytes(T& t, Hasher&)
 {
-    maybe_reverse_bytes(t, std::integral_constant<bool, Hasher::endian != boost::endian::order::native>{});
+    maybe_reverse_bytes(
+        t, std::integral_constant<bool, Hasher::endian != boost::endian::order::native>{});
 }
 
 }  // namespace detail
@@ -66,8 +67,9 @@ maybe_reverse_bytes(T& t, Hasher&)
 
 template <class T>
 struct is_uniquely_represented
-    : public std::
-          integral_constant<bool, std::is_integral<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>
+    : public std::integral_constant<
+          bool,
+          std::is_integral<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>
 {
     explicit is_uniquely_represented() = default;
 };
@@ -108,7 +110,8 @@ template <class... T>
 struct is_uniquely_represented<std::tuple<T...>>
     : public std::integral_constant<
           bool,
-          std::conjunction_v<is_uniquely_represented<T>...> && sizeof(std::tuple<T...>) == (sizeof(T) + ...)>
+          std::conjunction_v<is_uniquely_represented<T>...> &&
+              sizeof(std::tuple<T...>) == (sizeof(T) + ...)>
 {
     explicit is_uniquely_represented() = default;
 };
@@ -125,8 +128,9 @@ struct is_uniquely_represented<T[N]> : public is_uniquely_represented<T>
 
 template <class T, std::size_t N>
 struct is_uniquely_represented<std::array<T, N>>
-    : public std::
-          integral_constant<bool, is_uniquely_represented<T>::value && sizeof(T) * N == sizeof(std::array<T, N>)>
+    : public std::integral_constant<
+          bool,
+          is_uniquely_represented<T>::value && sizeof(T) * N == sizeof(std::array<T, N>)>
 {
     explicit is_uniquely_represented() = default;
 };
@@ -146,10 +150,11 @@ struct is_uniquely_represented<std::array<T, N>>
 */
 /** @{ */
 template <class T, class HashAlgorithm>
-struct is_contiguously_hashable : public std::integral_constant<
-                                      bool,
-                                      is_uniquely_represented<T>::value &&
-                                          (sizeof(T) == 1 || HashAlgorithm::endian == boost::endian::order::native)>
+struct is_contiguously_hashable
+    : public std::integral_constant<
+          bool,
+          is_uniquely_represented<T>::value &&
+              (sizeof(T) == 1 || HashAlgorithm::endian == boost::endian::order::native)>
 {
     explicit is_contiguously_hashable() = default;
 };
@@ -440,5 +445,3 @@ hash_append(HashAlgorithm& h, std::error_code const& ec)
 }
 
 }  // namespace beast
-
-#endif

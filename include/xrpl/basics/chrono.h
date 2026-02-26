@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_CHRONO_H_INCLUDED
-#define XRPL_BASICS_CHRONO_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/clock/abstract_clock.h>
 #include <xrpl/beast/clock/basic_seconds_clock.h>
@@ -16,7 +15,8 @@ namespace xrpl {
 
 // A few handy aliases
 
-using days = std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24>>>;
+using days =
+    std::chrono::duration<int, std::ratio_multiply<std::chrono::hours::period, std::ratio<24>>>;
 
 using weeks = std::chrono::duration<int, std::ratio_multiply<days::period, std::ratio<7>>>;
 
@@ -99,5 +99,3 @@ stopwatch()
 }
 
 }  // namespace xrpl
-
-#endif

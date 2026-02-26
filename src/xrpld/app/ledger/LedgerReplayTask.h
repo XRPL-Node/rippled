@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
-#define XRPL_APP_LEDGER_LEDGERREPLAYTASK_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/InboundLedger.h>
 #include <xrpld/app/ledger/detail/TimeoutCounter.h>
@@ -43,7 +42,10 @@ public:
          * @param finishLedgerHash  hash of the last ledger in the range
          * @param totalNumLedgers  number of ledgers to download
          */
-        TaskParameter(InboundLedger::Reason r, uint256 const& finishLedgerHash, std::uint32_t totalNumLedgers);
+        TaskParameter(
+            InboundLedger::Reason r,
+            uint256 const& finishLedgerHash,
+            std::uint32_t totalNumLedgers);
 
         /**
          * fill all the fields that was not filled during construction
@@ -152,5 +154,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

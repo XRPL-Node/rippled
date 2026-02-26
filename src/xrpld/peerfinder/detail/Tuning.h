@@ -1,5 +1,4 @@
-#ifndef XRPL_PEERFINDER_TUNING_H_INCLUDED
-#define XRPL_PEERFINDER_TUNING_H_INCLUDED
+#pragma once
 
 #include <array>
 
@@ -93,7 +92,8 @@ std::uint32_t constexpr maxHops = 6;
 std::uint32_t constexpr numberOfEndpoints = 2 * maxHops;
 
 // The most Endpoint we will accept in mtENDPOINTS
-std::uint32_t constexpr numberOfEndpointsMax = std::max<decltype(numberOfEndpoints)>(numberOfEndpoints * 2, 64);
+std::uint32_t constexpr numberOfEndpointsMax =
+    std::max<decltype(numberOfEndpoints)>(numberOfEndpoints * 2, 64);
 
 // Number of addresses we provide when redirecting.
 std::uint32_t constexpr redirectEndpointCount = 10;
@@ -115,5 +115,3 @@ std::chrono::seconds constexpr recentAttemptDuration(60);
 
 }  // namespace PeerFinder
 }  // namespace xrpl
-
-#endif

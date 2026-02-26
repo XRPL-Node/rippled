@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_OPENVIEW_H_INCLUDED
-#define XRPL_LEDGER_OPENVIEW_H_INCLUDED
+#pragma once
 
 #include <xrpl/ledger/RawView.h>
 #include <xrpl/ledger/ReadView.h>
@@ -58,7 +57,9 @@ private:
         std::shared_ptr<Serializer const> meta;
 
         // Constructor needed for emplacement in std::map
-        txData(std::shared_ptr<Serializer const> const& txn_, std::shared_ptr<Serializer const> const& meta_)
+        txData(
+            std::shared_ptr<Serializer const> const& txn_,
+            std::shared_ptr<Serializer const> const& meta_)
             : txn(txn_), meta(meta_)
         {
         }
@@ -131,7 +132,11 @@ public:
         The tx list starts empty and will contain
         all newly inserted tx.
     */
-    OpenView(open_ledger_t, ReadView const* base, Rules const& rules, std::shared_ptr<void const> hold = nullptr);
+    OpenView(
+        open_ledger_t,
+        ReadView const* base,
+        Rules const& rules,
+        std::shared_ptr<void const> hold = nullptr);
 
     OpenView(open_ledger_t, Rules const& rules, std::shared_ptr<ReadView const> const& base)
         : OpenView(open_ledger, &*base, rules, base)
@@ -240,5 +245,3 @@ public:
 };
 
 }  // namespace xrpl
-
-#endif

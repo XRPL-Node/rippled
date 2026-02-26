@@ -1,5 +1,4 @@
-#ifndef BEAST_MODULE_CORE_TEXT_LEXICALCAST_H_INCLUDED
-#define BEAST_MODULE_CORE_TEXT_LEXICALCAST_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -51,7 +50,9 @@ struct LexicalCast<Out, std::string_view>
 {
     explicit LexicalCast() = default;
 
-    static_assert(std::is_integral_v<Out>, "beast::LexicalCast can only be used with integral types");
+    static_assert(
+        std::is_integral_v<Out>,
+        "beast::LexicalCast can only be used with integral types");
 
     template <class Integral = Out>
     std::enable_if_t<std::is_integral_v<Integral> && !std::is_same_v<Integral, bool>, bool>
@@ -208,5 +209,3 @@ lexicalCast(In in, Out defaultValue = Out())
 }
 
 }  // namespace beast
-
-#endif

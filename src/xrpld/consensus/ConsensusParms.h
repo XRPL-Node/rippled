@@ -1,5 +1,4 @@
-#ifndef XRPL_CONSENSUS_CONSENSUS_PARMS_H_INCLUDED
-#define XRPL_CONSENSUS_CONSENSUS_PARMS_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -164,7 +163,8 @@ getNeededWeight(
         auto const& nextCutoff = p.avalancheCutoffs.at(currentCutoff.next);
         // See if enough time has passed to move on to the next.
         XRPL_ASSERT(
-            nextCutoff.consensusTime >= currentCutoff.consensusTime, "xrpl::getNeededWeight : next state valid");
+            nextCutoff.consensusTime >= currentCutoff.consensusTime,
+            "xrpl::getNeededWeight : next state valid");
         if (percentTime >= nextCutoff.consensusTime)
         {
             return {nextCutoff.consensusPct, currentCutoff.next};
@@ -174,4 +174,3 @@ getNeededWeight(
 }
 
 }  // namespace xrpl
-#endif

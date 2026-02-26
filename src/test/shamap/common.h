@@ -1,5 +1,4 @@
-#ifndef XRPL_SHAMAP_TESTS_COMMON_H_INCLUDED
-#define XRPL_SHAMAP_TESTS_COMMON_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/chrono.h>
 #include <xrpl/nodestore/DummyScheduler.h>
@@ -26,13 +25,19 @@ public:
     TestNodeFamily(beast::Journal j)
         : fbCache_(std::make_shared<FullBelowCache>("App family full below cache", clock_, j))
         , tnCache_(
-              std::make_shared<TreeNodeCache>("App family tree node cache", 65536, std::chrono::minutes{1}, clock_, j))
+              std::make_shared<TreeNodeCache>(
+                  "App family tree node cache",
+                  65536,
+                  std::chrono::minutes{1},
+                  clock_,
+                  j))
         , j_(j)
     {
         Section testSection;
         testSection.set("type", "memory");
         testSection.set("path", "SHAMap_test");
-        db_ = NodeStore::Manager::instance().make_Database(megabytes(4), scheduler_, 1, testSection, j);
+        db_ = NodeStore::Manager::instance().make_Database(
+            megabytes(4), scheduler_, 1, testSection, j);
     }
 
     NodeStore::Database&
@@ -100,5 +105,3 @@ public:
 
 }  // namespace tests
 }  // namespace xrpl
-
-#endif

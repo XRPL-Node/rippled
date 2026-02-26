@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_PATHS_RIPPLELINECACHE_H_INCLUDED
-#define XRPL_APP_PATHS_RIPPLELINECACHE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/ledger/Ledger.h>
 #include <xrpld/app/paths/TrustLine.h>
@@ -68,7 +67,8 @@ private:
         bool
         operator==(AccountKey const& lhs) const
         {
-            return hash_value_ == lhs.hash_value_ && account_ == lhs.account_ && direction_ == lhs.direction_;
+            return hash_value_ == lhs.hash_value_ && account_ == lhs.account_ &&
+                direction_ == lhs.direction_;
         }
 
         std::size_t
@@ -99,5 +99,3 @@ private:
 };
 
 }  // namespace xrpl
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef JOIN_H_INCLUDED
-#define JOIN_H_INCLUDED
+#pragma once
 
 #include <string>
 
@@ -24,7 +23,8 @@ public:
     Collection const& collection;
     std::string const delimiter;
 
-    explicit CollectionAndDelimiter(Collection const& c, std::string delim) : collection(c), delimiter(std::move(delim))
+    explicit CollectionAndDelimiter(Collection const& c, std::string delim)
+        : collection(c), delimiter(std::move(delim))
     {
     }
 
@@ -64,7 +64,8 @@ public:
     char const* collection;
     std::string const delimiter;
 
-    explicit CollectionAndDelimiter(char const c[N], std::string delim) : collection(c), delimiter(std::move(delim))
+    explicit CollectionAndDelimiter(char const c[N], std::string delim)
+        : collection(c), delimiter(std::move(delim))
     {
     }
 
@@ -80,5 +81,3 @@ public:
 };
 
 }  // namespace xrpl
-
-#endif

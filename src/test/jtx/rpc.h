@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_RPC_H_INCLUDED
-#define XRPL_TEST_JTX_RPC_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Env.h>
 
@@ -22,7 +21,8 @@ private:
 
 public:
     /// If there's an error code, we expect an error message
-    explicit rpc(error_code_i code, std::optional<std::string> m = {}) : code_(code), errorMessage_(m)
+    explicit rpc(error_code_i code, std::optional<std::string> m = {})
+        : code_(code), errorMessage_(m)
     {
     }
 
@@ -59,5 +59,3 @@ public:
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

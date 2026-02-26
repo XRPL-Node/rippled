@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_MISC_DETAIL_WORKBASE_H_INCLUDED
-#define XRPL_APP_MISC_DETAIL_WORKBASE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/misc/detail/Work.h>
 
@@ -25,7 +24,8 @@ protected:
     using endpoint_type = boost::asio::ip::tcp::endpoint;
 
 public:
-    using callback_type = std::function<void(error_code const&, endpoint_type const&, response_type&&)>;
+    using callback_type =
+        std::function<void(error_code const&, endpoint_type const&, response_type&&)>;
 
 protected:
     using socket_type = boost::asio::ip::tcp::socket;
@@ -131,14 +131,20 @@ WorkBase<Impl>::run()
 {
     if (!strand_.running_in_this_thread())
         return boost::asio::post(
-            ios_, boost::asio::bind_executor(strand_, std::bind(&WorkBase::run, impl().shared_from_this())));
+            ios_,
+            boost::asio::bind_executor(
+                strand_, std::bind(&WorkBase::run, impl().shared_from_this())));
 
     resolver_.async_resolve(
         host_,
         port_,
         boost::asio::bind_executor(
             strand_,
-            std::bind(&WorkBase::onResolve, impl().shared_from_this(), std::placeholders::_1, std::placeholders::_2)));
+            std::bind(
+                &WorkBase::onResolve,
+                impl().shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2)));
 }
 
 template <class Impl>
@@ -150,7 +156,8 @@ WorkBase<Impl>::cancel()
         return boost::asio::post(
             ios_,
 
-            boost::asio::bind_executor(strand_, std::bind(&WorkBase::cancel, impl().shared_from_this())));
+            boost::asio::bind_executor(
+                strand_, std::bind(&WorkBase::cancel, impl().shared_from_this())));
     }
 
     error_code ec;
@@ -181,7 +188,11 @@ WorkBase<Impl>::onResolve(error_code const& ec, results_type results)
         results,
         boost::asio::bind_executor(
             strand_,
-            std::bind(&WorkBase::onConnect, impl().shared_from_this(), std::placeholders::_1, std::placeholders::_2)));
+            std::bind(
+                &WorkBase::onConnect,
+                impl().shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2)));
 }
 
 template <class Impl>
@@ -210,7 +221,8 @@ WorkBase<Impl>::onStart()
         impl().stream(),
         req_,
         boost::asio::bind_executor(
-            strand_, std::bind(&WorkBase::onRequest, impl().shared_from_this(), std::placeholders::_1)));
+            strand_,
+            std::bind(&WorkBase::onRequest, impl().shared_from_this(), std::placeholders::_1)));
 }
 
 template <class Impl>
@@ -225,7 +237,8 @@ WorkBase<Impl>::onRequest(error_code const& ec)
         readBuf_,
         res_,
         boost::asio::bind_executor(
-            strand_, std::bind(&WorkBase::onResponse, impl().shared_from_this(), std::placeholders::_1)));
+            strand_,
+            std::bind(&WorkBase::onResponse, impl().shared_from_this(), std::placeholders::_1)));
 }
 
 template <class Impl>
@@ -258,5 +271,3 @@ WorkBase<Impl>::close()
 }  // namespace detail
 
 }  // namespace xrpl
-
-#endif

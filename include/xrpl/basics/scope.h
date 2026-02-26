@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_SCOPE_H_INCLUDED
-#define XRPL_BASICS_SCOPE_H_INCLUDED
+#pragma once
 
 #include <xrpl/beast/utility/instrumentation.h>
 
@@ -37,7 +36,8 @@ public:
 
     scope_exit(scope_exit&& rhs) noexcept(
         std::is_nothrow_move_constructible_v<EF> || std::is_nothrow_copy_constructible_v<EF>)
-        : exit_function_{std::forward<EF>(rhs.exit_function_)}, execute_on_destruction_{rhs.execute_on_destruction_}
+        : exit_function_{std::forward<EF>(rhs.exit_function_)}
+        , execute_on_destruction_{rhs.execute_on_destruction_}
     {
         rhs.release();
     }
@@ -48,8 +48,9 @@ public:
     template <class EFP>
     explicit scope_exit(
         EFP&& f,
-        std::enable_if_t<!std::is_same_v<std::remove_cv_t<EFP>, scope_exit> && std::is_constructible_v<EF, EFP>>* =
-            0) noexcept
+        std::enable_if_t<
+            !std::is_same_v<std::remove_cv_t<EFP>, scope_exit> &&
+            std::is_constructible_v<EF, EFP>>* = 0) noexcept
         : exit_function_{std::forward<EFP>(f)}
     {
         static_assert(std::is_nothrow_constructible_v<EF, decltype(std::forward<EFP>(f))>);
@@ -94,8 +95,9 @@ public:
     template <class EFP>
     explicit scope_fail(
         EFP&& f,
-        std::enable_if_t<!std::is_same_v<std::remove_cv_t<EFP>, scope_fail> && std::is_constructible_v<EF, EFP>>* =
-            0) noexcept
+        std::enable_if_t<
+            !std::is_same_v<std::remove_cv_t<EFP>, scope_fail> &&
+            std::is_constructible_v<EF, EFP>>* = 0) noexcept
         : exit_function_{std::forward<EFP>(f)}
     {
         static_assert(std::is_nothrow_constructible_v<EF, decltype(std::forward<EFP>(f))>);
@@ -140,7 +142,9 @@ public:
     template <class EFP>
     explicit scope_success(
         EFP&& f,
-        std::enable_if_t<!std::is_same_v<std::remove_cv_t<EFP>, scope_success> && std::is_constructible_v<EF, EFP>>* =
+        std::enable_if_t<
+            !std::is_same_v<std::remove_cv_t<EFP>, scope_success> &&
+            std::is_constructible_v<EF, EFP>>* =
             0) noexcept(std::is_nothrow_constructible_v<EF, EFP> || std::is_nothrow_constructible_v<EF, EFP&>)
         : exit_function_{std::forward<EFP>(f)}
     {
@@ -220,5 +224,3 @@ template <class Mutex>
 scope_unlock(std::unique_lock<Mutex>&) -> scope_unlock<Mutex>;
 
 }  // namespace xrpl
-
-#endif

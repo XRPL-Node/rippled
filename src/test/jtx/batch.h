@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_BATCH_H_INCLUDED
-#define XRPL_TEST_JTX_BATCH_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Account.h>
 #include <test/jtx/Env.h>
@@ -110,7 +109,8 @@ public:
     Account master;
     std::vector<Reg> signers;
 
-    msig(Account const& masterAccount, std::vector<Reg> signers_) : master(masterAccount), signers(std::move(signers_))
+    msig(Account const& masterAccount, std::vector<Reg> signers_)
+        : master(masterAccount), signers(std::move(signers_))
     {
         sortSigners(signers);
     }
@@ -118,7 +118,8 @@ public:
     template <class AccountType, class... Accounts>
         requires std::convertible_to<AccountType, Reg>
     explicit msig(Account const& masterAccount, AccountType&& a0, Accounts&&... aN)
-        : master(masterAccount), signers{std::forward<AccountType>(a0), std::forward<Accounts>(aN)...}
+        : master(masterAccount)
+        , signers{std::forward<AccountType>(a0), std::forward<Accounts>(aN)...}
     {
         sortSigners(signers);
     }
@@ -133,5 +134,3 @@ public:
 
 }  // namespace test
 }  // namespace xrpl
-
-#endif

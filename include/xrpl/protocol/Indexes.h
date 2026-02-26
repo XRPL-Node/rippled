@@ -1,5 +1,4 @@
-#ifndef XRPL_PROTOCOL_INDEXES_H_INCLUDED
-#define XRPL_PROTOCOL_INDEXES_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/base_uint.h>
 #include <xrpl/protocol/Book.h>
@@ -170,7 +169,9 @@ Keylet
 depositPreauth(AccountID const& owner, AccountID const& preauthorized) noexcept;
 
 Keylet
-depositPreauth(AccountID const& owner, std::set<std::pair<AccountID, Slice>> const& authCreds) noexcept;
+depositPreauth(
+    AccountID const& owner,
+    std::set<std::pair<AccountID, Slice>> const& authCreds) noexcept;
 
 inline Keylet
 depositPreauth(uint256 const& key) noexcept
@@ -385,5 +386,3 @@ MPTID
 makeMptID(std::uint32_t sequence, AccountID const& account);
 
 }  // namespace xrpl
-
-#endif

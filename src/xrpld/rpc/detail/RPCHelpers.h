@@ -1,7 +1,5 @@
-#ifndef XRPL_RPC_RPCHELPERS_H_INCLUDED
-#define XRPL_RPC_RPCHELPERS_H_INCLUDED
+#pragma once
 
-#include <xrpld/app/misc/NetworkOPs.h>
 #include <xrpld/app/misc/TxQ.h>
 #include <xrpld/rpc/Context.h>
 #include <xrpld/rpc/Status.h>
@@ -10,6 +8,7 @@
 #include <xrpl/proto/org/xrpl/rpc/v1/xrp_ledger.pb.h>
 #include <xrpl/protocol/ApiVersion.h>
 #include <xrpl/protocol/SecretKey.h>
+#include <xrpl/server/NetworkOPs.h>
 
 #include <optional>
 
@@ -48,7 +47,10 @@ getStartHint(std::shared_ptr<SLE const> const& sle, AccountID const& accountID);
  * @return true if the SLE is owned by the account, false otherwise.
  */
 bool
-isRelatedToAccount(ReadView const& ledger, std::shared_ptr<SLE const> const& sle, AccountID const& accountID);
+isRelatedToAccount(
+    ReadView const& ledger,
+    std::shared_ptr<SLE const> const& sle,
+    AccountID const& accountID);
 
 /**
  * @brief Parses an array of account IDs from a JSON value.
@@ -147,10 +149,11 @@ isAccountObjectsValidType(LedgerEntryType const& type);
  * or std::nullopt otherwise.
  */
 std::optional<std::pair<PublicKey, SecretKey>>
-keypairForSignature(Json::Value const& params, Json::Value& error, unsigned int apiVersion = apiVersionIfUnspecified);
+keypairForSignature(
+    Json::Value const& params,
+    Json::Value& error,
+    unsigned int apiVersion = apiVersionIfUnspecified);
 
 }  // namespace RPC
 
 }  // namespace xrpl
-
-#endif

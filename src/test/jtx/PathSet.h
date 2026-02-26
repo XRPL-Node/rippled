@@ -1,5 +1,4 @@
-#ifndef XRPL_LEDGER_TESTS_PATHSET_H_INCLUDED
-#define XRPL_LEDGER_TESTS_PATHSET_H_INCLUDED
+#pragma once
 
 #include <test/jtx.h>
 
@@ -12,7 +11,11 @@ namespace test {
 /** Count offer
  */
 inline std::size_t
-countOffers(jtx::Env& env, jtx::Account const& account, Issue const& takerPays, Issue const& takerGets)
+countOffers(
+    jtx::Env& env,
+    jtx::Account const& account,
+    Issue const& takerPays,
+    Issue const& takerGets)
 {
     size_t count = 0;
     forEachItem(*env.current(), account, [&](std::shared_ptr<SLE const> const& sle) {
@@ -24,7 +27,11 @@ countOffers(jtx::Env& env, jtx::Account const& account, Issue const& takerPays, 
 }
 
 inline std::size_t
-countOffers(jtx::Env& env, jtx::Account const& account, STAmount const& takerPays, STAmount const& takerGets)
+countOffers(
+    jtx::Env& env,
+    jtx::Account const& account,
+    STAmount const& takerPays,
+    STAmount const& takerGets)
 {
     size_t count = 0;
     forEachItem(*env.current(), account, [&](std::shared_ptr<SLE const> const& sle) {
@@ -38,7 +45,11 @@ countOffers(jtx::Env& env, jtx::Account const& account, STAmount const& takerPay
 /** An offer exists
  */
 inline bool
-isOffer(jtx::Env& env, jtx::Account const& account, STAmount const& takerPays, STAmount const& takerGets)
+isOffer(
+    jtx::Env& env,
+    jtx::Account const& account,
+    STAmount const& takerPays,
+    STAmount const& takerGets)
 {
     return countOffers(env, account, takerPays, takerGets) > 0;
 }
@@ -94,7 +105,11 @@ Path::push_back(STPathElement const& pe)
 inline Path&
 Path::push_back(Issue const& iss)
 {
-    path.emplace_back(STPathElement::typeCurrency | STPathElement::typeIssuer, beast::zero, iss.currency, iss.account);
+    path.emplace_back(
+        STPathElement::typeCurrency | STPathElement::typeIssuer,
+        beast::zero,
+        iss.currency,
+        iss.account);
     return *this;
 }
 
@@ -159,5 +174,3 @@ private:
 
 }  // namespace test
 }  // namespace xrpl
-
-#endif

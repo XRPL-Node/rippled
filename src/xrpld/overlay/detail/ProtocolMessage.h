@@ -1,5 +1,4 @@
-#ifndef XRPL_OVERLAY_PROTOCOLMESSAGE_H_INCLUDED
-#define XRPL_OVERLAY_PROTOCOLMESSAGE_H_INCLUDED
+#pragma once
 
 #include <xrpld/overlay/Compression.h>
 #include <xrpld/overlay/Message.h>
@@ -231,7 +230,10 @@ parseMessageHeader(boost::system::error_code& ec, BufferSequence const& bufs, st
     return std::nullopt;
 }
 
-template <class T, class Buffers, class = std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value>>
+template <
+    class T,
+    class Buffers,
+    class = std::enable_if_t<std::is_base_of<::google::protobuf::Message, T>::value>>
 std::shared_ptr<T>
 parseMessageContent(MessageHeader const& header, Buffers const& buffers)
 {
@@ -246,7 +248,11 @@ parseMessageContent(MessageHeader const& header, Buffers const& buffers)
         payload.resize(header.uncompressed_size);
 
         auto const payloadSize = xrpl::compression::decompress(
-            stream, header.payload_wire_size, payload.data(), header.uncompressed_size, header.algorithm);
+            stream,
+            header.payload_wire_size,
+            payload.data(),
+            header.uncompressed_size,
+            header.algorithm);
 
         if (payloadSize == 0 || !m->ParseFromArray(payload.data(), payloadSize))
             return {};
@@ -321,7 +327,8 @@ invokeProtocolMessage(Buffers const& buffers, Handler& handler, std::size_t& hin
     // whose size exceeds this may result in the connection being dropped. A
     // larger message size may be supported in the future or negotiated as
     // part of a protocol upgrade.
-    if (header->payload_wire_size > maximumMessageSize || header->uncompressed_size > maximumMessageSize)
+    if (header->payload_wire_size > maximumMessageSize ||
+        header->uncompressed_size > maximumMessageSize)
     {
         result.second = make_error_code(boost::system::errc::message_size);
         return result;
@@ -383,7 +390,8 @@ invokeProtocolMessage(Buffers const& buffers, Handler& handler, std::size_t& hin
             success = detail::invoke<protocol::TMValidatorList>(*header, buffers, handler);
             break;
         case protocol::mtVALIDATOR_LIST_COLLECTION:
-            success = detail::invoke<protocol::TMValidatorListCollection>(*header, buffers, handler);
+            success =
+                detail::invoke<protocol::TMValidatorListCollection>(*header, buffers, handler);
             break;
         case protocol::mtGET_OBJECTS:
             success = detail::invoke<protocol::TMGetObjectByHash>(*header, buffers, handler);
@@ -424,5 +432,3 @@ invokeProtocolMessage(Buffers const& buffers, Handler& handler, std::size_t& hin
 }
 
 }  // namespace xrpl
-
-#endif

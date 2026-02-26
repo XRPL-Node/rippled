@@ -1,5 +1,4 @@
-#ifndef XRPL_COMPRESSION_H_INCLUDED
-#define XRPL_COMPRESSION_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/CompressionAlgorithms.h>
 #include <xrpl/basics/Log.h>
@@ -37,11 +36,13 @@ decompress(
     try
     {
         if (algorithm == Algorithm::LZ4)
-            return xrpl::compression_algorithms::lz4Decompress(in, inSize, decompressed, decompressedSize);
+            return xrpl::compression_algorithms::lz4Decompress(
+                in, inSize, decompressed, decompressedSize);
         else
         {
             // LCOV_EXCL_START
-            JLOG(debugLog().warn()) << "decompress: invalid compression algorithm " << static_cast<int>(algorithm);
+            JLOG(debugLog().warn())
+                << "decompress: invalid compression algorithm " << static_cast<int>(algorithm);
             UNREACHABLE(
                 "xrpl::compression::decompress : invalid compression "
                 "algorithm");
@@ -65,16 +66,22 @@ decompress(
  */
 template <class BufferFactory>
 std::size_t
-compress(void const* in, std::size_t inSize, BufferFactory&& bf, Algorithm algorithm = Algorithm::LZ4)
+compress(
+    void const* in,
+    std::size_t inSize,
+    BufferFactory&& bf,
+    Algorithm algorithm = Algorithm::LZ4)
 {
     try
     {
         if (algorithm == Algorithm::LZ4)
-            return xrpl::compression_algorithms::lz4Compress(in, inSize, std::forward<BufferFactory>(bf));
+            return xrpl::compression_algorithms::lz4Compress(
+                in, inSize, std::forward<BufferFactory>(bf));
         else
         {
             // LCOV_EXCL_START
-            JLOG(debugLog().warn()) << "compress: invalid compression algorithm" << static_cast<int>(algorithm);
+            JLOG(debugLog().warn())
+                << "compress: invalid compression algorithm" << static_cast<int>(algorithm);
             UNREACHABLE(
                 "xrpl::compression::compress : invalid compression "
                 "algorithm");
@@ -89,5 +96,3 @@ compress(void const* in, std::size_t inSize, BufferFactory&& bf, Algorithm algor
 }  // namespace compression
 
 }  // namespace xrpl
-
-#endif  // XRPL_COMPRESSION_H_INCLUDED

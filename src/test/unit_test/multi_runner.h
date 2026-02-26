@@ -1,5 +1,4 @@
-#ifndef TEST_UNIT_TEST_MULTI_RUNNER_H
-#define TEST_UNIT_TEST_MULTI_RUNNER_H
+#pragma once
 
 #include <xrpl/beast/unit_test/global_suites.h>
 #include <xrpl/beast/unit_test/runner.h>
@@ -232,7 +231,8 @@ public:
 
 /** A class to run a subset of unit tests
  */
-class multi_runner_child : public beast::unit_test::runner, private detail::multi_runner_base</*IsParent*/ false>
+class multi_runner_child : public beast::unit_test::runner,
+                           private detail::multi_runner_base</*IsParent*/ false>
 {
 private:
     std::size_t job_index_;
@@ -334,5 +334,3 @@ multi_runner_child::run_multi(Pred pred)
 
 }  // namespace test
 }  // namespace xrpl
-
-#endif

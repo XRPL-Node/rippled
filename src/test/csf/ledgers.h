@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_CSF_LEDGERS_H_INCLUDED
-#define XRPL_TEST_CSF_LEDGERS_H_INCLUDED
+#pragma once
 
 #include <test/csf/Tx.h>
 
@@ -94,7 +93,14 @@ private:
         auto
         asTie() const
         {
-            return std::tie(seq, txs, closeTimeResolution, closeTime, closeTimeAgree, parentID, parentCloseTime);
+            return std::tie(
+                seq,
+                txs,
+                closeTimeResolution,
+                closeTime,
+                closeTimeAgree,
+                parentID,
+                parentCloseTime);
         }
 
         friend bool
@@ -330,5 +336,3 @@ struct LedgerHistoryHelper
 }  // namespace csf
 }  // namespace test
 }  // namespace xrpl
-
-#endif

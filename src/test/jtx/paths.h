@@ -1,5 +1,4 @@
-#ifndef XRPL_TEST_JTX_PATHS_H_INCLUDED
-#define XRPL_TEST_JTX_PATHS_H_INCLUDED
+#pragma once
 
 #include <test/jtx/Env.h>
 
@@ -20,7 +19,8 @@ private:
     unsigned int limit_;
 
 public:
-    paths(Issue const& in, int depth = 7, unsigned int limit = 4) : in_(in), depth_(depth), limit_(limit)
+    paths(Issue const& in, int depth = 7, unsigned int limit = 4)
+        : in_(in), depth_(depth), limit_(limit)
     {
     }
 
@@ -94,5 +94,3 @@ path::append(T const& t, Args const&... args)
 }  // namespace jtx
 }  // namespace test
 }  // namespace xrpl
-
-#endif

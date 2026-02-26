@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_MISC_DETAIL_WORKFILE_H_INCLUDED
-#define XRPL_APP_MISC_DETAIL_WORKFILE_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/misc/detail/Work.h>
 
@@ -61,7 +60,8 @@ WorkFile::run()
 {
     if (!strand_.running_in_this_thread())
         return boost::asio::post(
-            ios_, boost::asio::bind_executor(strand_, std::bind(&WorkFile::run, shared_from_this())));
+            ios_,
+            boost::asio::bind_executor(strand_, std::bind(&WorkFile::run, shared_from_this())));
 
     error_code ec;
     auto const fileContents = getFileContents(ec, path_, megabytes(1));
@@ -80,5 +80,3 @@ WorkFile::cancel()
 }  // namespace detail
 
 }  // namespace xrpl
-
-#endif

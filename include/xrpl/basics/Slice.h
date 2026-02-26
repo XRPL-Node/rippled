@@ -1,5 +1,4 @@
-#ifndef XRPL_BASICS_SLICE_H_INCLUDED
-#define XRPL_BASICS_SLICE_H_INCLUDED
+#pragma once
 
 #include <xrpl/basics/contract.h>
 #include <xrpl/basics/strHex.h>
@@ -41,7 +40,8 @@ public:
     operator=(Slice const&) noexcept = default;
 
     /** Create a slice pointing to existing memory. */
-    Slice(void const* data, std::size_t size) noexcept : data_(reinterpret_cast<std::uint8_t const*>(data)), size_(size)
+    Slice(void const* data, std::size_t size) noexcept
+        : data_(reinterpret_cast<std::uint8_t const*>(data)), size_(size)
     {
     }
 
@@ -198,7 +198,8 @@ operator!=(Slice const& lhs, Slice const& rhs) noexcept
 inline bool
 operator<(Slice const& lhs, Slice const& rhs) noexcept
 {
-    return std::lexicographical_compare(lhs.data(), lhs.data() + lhs.size(), rhs.data(), rhs.data() + rhs.size());
+    return std::lexicographical_compare(
+        lhs.data(), lhs.data() + lhs.size(), rhs.data(), rhs.data() + rhs.size());
 }
 
 template <class Stream>
@@ -231,5 +232,3 @@ makeSlice(std::basic_string<char, Traits, Alloc> const& s)
 }
 
 }  // namespace xrpl
-
-#endif

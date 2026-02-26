@@ -1,5 +1,4 @@
-#ifndef XRPL_APP_CONSENSUS_RCLCONSENSUS_H_INCLUDED
-#define XRPL_APP_CONSENSUS_RCLCONSENSUS_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/consensus/RCLCensorshipDetector.h>
 #include <xrpld/app/consensus/RCLCxLedger.h>
@@ -276,7 +275,10 @@ class RCLConsensus
            @return Tentative consensus result
         */
         Result
-        onClose(RCLCxLedger const& ledger, NetClock::time_point const& closeTime, ConsensusMode mode);
+        onClose(
+            RCLCxLedger const& ledger,
+            NetClock::time_point const& closeTime,
+            ConsensusMode mode);
 
         /** Process the accepted ledger.
 
@@ -458,7 +460,9 @@ public:
 
     //! @see Consensus::timerEntry
     void
-    timerEntry(NetClock::time_point const& now, std::unique_ptr<std::stringstream> const& clog = {});
+    timerEntry(
+        NetClock::time_point const& now,
+        std::unique_ptr<std::stringstream> const& clog = {});
 
     //! @see Consensus::gotTxSet
     void
@@ -474,7 +478,9 @@ public:
 
     //! @see Consensus::simulate
     void
-    simulate(NetClock::time_point const& now, std::optional<std::chrono::milliseconds> consensusDelay);
+    simulate(
+        NetClock::time_point const& now,
+        std::optional<std::chrono::milliseconds> consensusDelay);
 
     //! @see Consensus::proposal
     bool
@@ -524,5 +530,3 @@ public:
     }
 };
 }  // namespace xrpl
-
-#endif

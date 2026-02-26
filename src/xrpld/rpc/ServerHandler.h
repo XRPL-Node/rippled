@@ -1,5 +1,4 @@
-#ifndef XRPL_RPC_SERVERHANDLER_H_INCLUDED
-#define XRPL_RPC_SERVERHANDLER_H_INCLUDED
+#pragma once
 
 #include <xrpld/app/main/Application.h>
 #include <xrpld/app/main/CollectorManager.h>
@@ -146,7 +145,10 @@ public:
         boost::asio::ip::tcp::endpoint const& remote_address);
 
     Handoff
-    onHandoff(Session& session, http_request_type&& request, boost::asio::ip::tcp::endpoint const& remote_address)
+    onHandoff(
+        Session& session,
+        http_request_type&& request,
+        boost::asio::ip::tcp::endpoint const& remote_address)
     {
         return onHandoff(session, {}, std::forward<http_request_type>(request), remote_address);
     }
@@ -155,7 +157,9 @@ public:
     onRequest(Session& session);
 
     void
-    onWSMessage(std::shared_ptr<WSSession> session, std::vector<boost::asio::const_buffer> const& buffers);
+    onWSMessage(
+        std::shared_ptr<WSSession> session,
+        std::vector<boost::asio::const_buffer> const& buffers);
 
     void
     onClose(Session& session, boost::system::error_code const&);
@@ -200,5 +204,3 @@ make_ServerHandler(
     CollectorManager& cm);
 
 }  // namespace xrpl
-
-#endif
