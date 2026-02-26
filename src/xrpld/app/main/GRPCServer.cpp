@@ -362,7 +362,7 @@ GRPCServerImpl::shutdown()
     backoffAlarm_.Cancel();
     {
         std::lock_guard lk(backoffMutex_);
-        pendingReposts_.clear();
+        deferredListeners_.clear();
         backoffScheduled_ = false;
     }
     JLOG(journal_.debug()) << "Backoff alarm cancelled";
@@ -440,7 +440,7 @@ GRPCServerImpl::handleRpcs()
                 // Check FD pressure before creating clone
                 if (FDGuard::should_throttle(0.70))
                 {
-                    JLOG(journal_.warn()) << "gRPC FD pressure detected - deferring repost";
+                    JLOG(journal_.warn()) << "gRPC FD pressure detected - deferring listener";
 
                     {
                         std::lock_guard lk(backoffMutex_);
@@ -451,7 +451,7 @@ GRPCServerImpl::handleRpcs()
                             requests.end(),
                             [ptr](std::shared_ptr<Processor>& sPtr) { return sPtr.get() == ptr; });
                         BOOST_ASSERT(it != requests.end());
-                        pendingReposts_.push_back(*it);
+                        deferredListeners_.push_back(*it);
 
                         if (!backoffScheduled_)
                         {
@@ -498,15 +498,15 @@ GRPCServerImpl::handleRpcs()
 void
 GRPCServerImpl::onBackoffFired()
 {
-    std::vector<std::shared_ptr<Processor>> toRepost;
+    std::vector<std::shared_ptr<Processor>> deferred;
 
     {
         std::lock_guard lk(backoffMutex_);
         backoffScheduled_ = false;
-        toRepost.swap(pendingReposts_);
+        deferred.swap(deferredListeners_);
     }
 
-    JLOG(journal_.debug()) << "Processing " << toRepost.size() << " deferred reposts";
+    JLOG(journal_.debug()) << "Processing " << deferred.size() << " deferred listeners";
 
     if (FDGuard::should_throttle(0.70))
     {
@@ -514,10 +514,10 @@ GRPCServerImpl::onBackoffFired()
 
         std::lock_guard lk(backoffMutex_);
 
-        pendingReposts_.insert(
-            pendingReposts_.end(),
-            std::make_move_iterator(toRepost.begin()),
-            std::make_move_iterator(toRepost.end()));
+        deferredListeners_.insert(
+            deferredListeners_.end(),
+            std::make_move_iterator(deferred.begin()),
+            std::make_move_iterator(deferred.end()));
 
         if (!backoffScheduled_)
         {
@@ -539,7 +539,7 @@ GRPCServerImpl::onBackoffFired()
     JLOG(journal_.info()) << "FD pressure relieved - resuming normal operation";
     backoff_.reset();
 
-    for (auto const& ptr : toRepost)
+    for (auto const& ptr : deferred)
     {
         auto cloned = ptr->clone();
         requests_.push_back(cloned);

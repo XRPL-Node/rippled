@@ -99,7 +99,7 @@ private:
     ExponentialBackoff backoff_;
     BackoffTag backoffTag_;
     grpc::Alarm backoffAlarm_;
-    std::vector<std::shared_ptr<Processor>> pendingReposts_;
+    std::vector<std::shared_ptr<Processor>> deferredListeners_;
 
     // typedef for function to bind a listener
     // This is always of the form:
@@ -157,7 +157,7 @@ public:
     getEndpoint() const;
 
 private:
-    // Handle backoff alarm firing - retry deferred reposts
+    // Handle backoff alarm firing - retry deferred listeners
     void
     onBackoffFired();
 
