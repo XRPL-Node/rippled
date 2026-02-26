@@ -179,7 +179,8 @@ Transactor::preflight1(PreflightContext const& ctx, std::uint32_t flagMask)
         return temINVALID_FLAG;
 
     XRPL_ASSERT(
-        ctx.tx.isFlag(tfInnerBatchTxn) == ctx.parentBatchId.has_value() || !ctx.rules.enabled(featureBatchV1_1),
+        ctx.tx.isFlag(tfInnerBatchTxn) == ctx.parentBatchId.has_value() ||
+            !ctx.rules.enabled(featureBatchV1_1),
         "Inner batch transaction must have a parent batch ID.");
 
     return tesSUCCESS;

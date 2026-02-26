@@ -1119,7 +1119,8 @@ NetworkOPsImp::submitTransaction(std::shared_ptr<STTx const> const& iTrans)
     }
 
     // Enforce Network bar for batch txn
-    if (iTrans->isFlag(tfInnerBatchTxn) && m_ledgerMaster.getValidatedRules().enabled(featureBatchV1_1))
+    if (iTrans->isFlag(tfInnerBatchTxn) &&
+        m_ledgerMaster.getValidatedRules().enabled(featureBatchV1_1))
     {
         JLOG(m_journal.error()) << "Submitted transaction invalid: tfInnerBatchTxn flag present.";
         return;

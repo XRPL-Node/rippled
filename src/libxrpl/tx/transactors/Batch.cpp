@@ -112,7 +112,8 @@ Batch::calculateBaseFee(ReadView const& view, STTx const& tx)
                 // LCOV_EXCL_START
                 if (nestedSigners.size() > STTx::maxMultiSigners)
                 {
-                    JLOG(debugLog().error()) << "BatchTrace: Nested Signers array exceeds max entries.";
+                    JLOG(debugLog().error())
+                        << "BatchTrace: Nested Signers array exceeds max entries.";
                     return XRPAmount{INITIAL_XRP};
                 }
                 // LCOV_EXCL_STOP
@@ -215,7 +216,8 @@ Batch::preflight(PreflightContext const& ctx)
         return temARRAY_TOO_LARGE;
     }
 
-    if (ctx.tx.isFieldPresent(sfBatchSigners) && ctx.tx.getFieldArray(sfBatchSigners).size() > maxBatchTxCount)
+    if (ctx.tx.isFieldPresent(sfBatchSigners) &&
+        ctx.tx.getFieldArray(sfBatchSigners).size() > maxBatchTxCount)
     {
         JLOG(ctx.j.debug()) << "BatchTrace[" << parentBatchId << "]:"
                             << "signers array exceeds 8 entries.";
@@ -480,7 +482,8 @@ Batch::checkBatchSign(PreclaimContext const& ctx)
         Blob const& pkSigner = signer.getFieldVL(sfSigningPubKey);
         if (pkSigner.empty())
         {
-            if (ret = checkMultiSign(ctx.view, ctx.flags, idAccount, signer, ctx.j); !isTesSuccess(ret))
+            if (ret = checkMultiSign(ctx.view, ctx.flags, idAccount, signer, ctx.j);
+                !isTesSuccess(ret))
                 return ret;
         }
         else
@@ -505,7 +508,8 @@ Batch::checkBatchSign(PreclaimContext const& ctx)
                 if (isPseudoAccount(sleAccount))
                     return tefBAD_AUTH;
 
-                if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j); !isTesSuccess(ret))
+                if (ret = checkSingleSign(ctx.view, idSigner, idAccount, sleAccount, ctx.j);
+                    !isTesSuccess(ret))
                     return ret;
             }
         }
