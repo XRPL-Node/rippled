@@ -39,6 +39,11 @@ public:
         }
     };
 
+    // NOTE: All coroutine lambdas passed to postCoroTask use explicit
+    // pointer-by-value captures instead of [&] to work around a GCC 14
+    // bug where reference captures in coroutine lambdas are corrupted
+    // in the coroutine frame.
+
     // Test: CoroTask<void> runs to completion
     void
     testVoidCompletion()
@@ -55,8 +60,8 @@ public:
 
         gate g;
         auto runner = env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto) -> CoroTask<void> {
-                g.signal();
+            jtCLIENT, "CoroTaskTest", [gp = &g](auto) -> CoroTask<void> {
+                gp->signal();
                 co_return;
             });
         BEAST_EXPECT(runner);
@@ -83,11 +88,13 @@ public:
         gate g1, g2;
         std::shared_ptr<JobQueue::CoroTaskRunner> r;
         auto runner = env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto runner) -> CoroTask<void> {
-                r = runner;
-                g1.signal();
+            jtCLIENT,
+            "CoroTaskTest",
+            [rp = &r, g1p = &g1, g2p = &g2](auto runner) -> CoroTask<void> {
+                *rp = runner;
+                g1p->signal();
                 co_await runner->suspend();
-                g2.signal();
+                g2p->signal();
                 co_return;
             });
         BEAST_EXPECT(runner);
@@ -115,10 +122,10 @@ public:
 
         gate g;
         env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto runner) -> CoroTask<void> {
+            jtCLIENT, "CoroTaskTest", [gp = &g](auto runner) -> CoroTask<void> {
                 runner->post();
                 co_await runner->suspend();
-                g.signal();
+                gp->signal();
                 co_return;
             });
         BEAST_EXPECT(g.wait_for(5s));
@@ -141,13 +148,13 @@ public:
         gate g;
         int step = 0;
         env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto runner) -> CoroTask<void> {
-                step = 1;
+            jtCLIENT, "CoroTaskTest", [sp = &step, gp = &g](auto runner) -> CoroTask<void> {
+                *sp = 1;
                 co_await JobQueueAwaiter{runner};
-                step = 2;
+                *sp = 2;
                 co_await JobQueueAwaiter{runner};
-                step = 3;
-                g.signal();
+                *sp = 3;
+                gp->signal();
                 co_return;
             });
         BEAST_EXPECT(g.wait_for(5s));
@@ -185,20 +192,23 @@ public:
 
         for (int i = 0; i < N; ++i)
         {
-            jq.postCoroTask(jtCLIENT, "CoroTaskTest", [&, id = i](auto runner) -> CoroTask<void> {
-                a[id] = runner;
-                g.signal();
-                co_await runner->suspend();
+            jq.postCoroTask(
+                jtCLIENT,
+                "CoroTaskTest",
+                [this, ap = &a, gp = &g, lvp = &lv, id = i](auto runner) -> CoroTask<void> {
+                    (*ap)[id] = runner;
+                    gp->signal();
+                    co_await runner->suspend();
 
-                this->BEAST_EXPECT(*lv == -1);
-                *lv = id;
-                this->BEAST_EXPECT(*lv == id);
-                g.signal();
-                co_await runner->suspend();
+                    this->BEAST_EXPECT(**lvp == -1);
+                    **lvp = id;
+                    this->BEAST_EXPECT(**lvp == id);
+                    gp->signal();
+                    co_await runner->suspend();
 
-                this->BEAST_EXPECT(*lv == id);
-                co_return;
-            });
+                    this->BEAST_EXPECT(**lvp == id);
+                    co_return;
+                });
             BEAST_EXPECT(g.wait_for(5s));
             a[i]->join();
         }
@@ -238,8 +248,8 @@ public:
 
         gate g;
         auto runner = env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto) -> CoroTask<void> {
-                g.signal();
+            jtCLIENT, "CoroTaskTest", [gp = &g](auto) -> CoroTask<void> {
+                gp->signal();
                 throw std::runtime_error("test exception");
                 co_return;
             });
@@ -269,16 +279,18 @@ public:
         int counter = 0;
         std::shared_ptr<JobQueue::CoroTaskRunner> r;
         auto runner = env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto runner) -> CoroTask<void> {
-                r = runner;
-                ++counter;
-                g.signal();
+            jtCLIENT,
+            "CoroTaskTest",
+            [rp = &r, cp = &counter, gp = &g](auto runner) -> CoroTask<void> {
+                *rp = runner;
+                ++(*cp);
+                gp->signal();
                 co_await runner->suspend();
-                ++counter;
-                g.signal();
+                ++(*cp);
+                gp->signal();
                 co_await runner->suspend();
-                ++counter;
-                g.signal();
+                ++(*cp);
+                gp->signal();
                 co_return;
             });
         BEAST_EXPECT(runner);
@@ -296,6 +308,110 @@ public:
         BEAST_EXPECT(g.wait_for(5s));
         BEAST_EXPECT(counter == 3);
         runner->join();
+        BEAST_EXPECT(!runner->runnable());
+    }
+
+    // Test: CoroTask<T> returns a value via co_return
+    void
+    testValueReturn()
+    {
+        using namespace std::chrono_literals;
+        using namespace jtx;
+
+        testcase("value return");
+
+        Env env(*this, envconfig([](std::unique_ptr<Config> cfg) {
+            cfg->FORCE_MULTI_THREAD = true;
+            return cfg;
+        }));
+
+        gate g;
+        int result = 0;
+        auto runner = env.app().getJobQueue().postCoroTask(
+            jtCLIENT, "CoroTaskTest", [rp = &result, gp = &g](auto) -> CoroTask<void> {
+                auto inner = []() -> CoroTask<int> { co_return 42; };
+                *rp = co_await inner();
+                gp->signal();
+                co_return;
+            });
+        BEAST_EXPECT(runner);
+        BEAST_EXPECT(g.wait_for(5s));
+        runner->join();
+        BEAST_EXPECT(result == 42);
+        BEAST_EXPECT(!runner->runnable());
+    }
+
+    // Test: CoroTask<T> propagates exceptions from inner coroutines
+    void
+    testValueException()
+    {
+        using namespace std::chrono_literals;
+        using namespace jtx;
+
+        testcase("value exception");
+
+        Env env(*this, envconfig([](std::unique_ptr<Config> cfg) {
+            cfg->FORCE_MULTI_THREAD = true;
+            return cfg;
+        }));
+
+        gate g;
+        bool caught = false;
+        auto runner = env.app().getJobQueue().postCoroTask(
+            jtCLIENT, "CoroTaskTest", [cp = &caught, gp = &g](auto) -> CoroTask<void> {
+                auto inner = []() -> CoroTask<int> {
+                    throw std::runtime_error("inner error");
+                    co_return 0;
+                };
+                try
+                {
+                    co_await inner();
+                }
+                catch (std::runtime_error const& e)
+                {
+                    *cp = true;
+                }
+                gp->signal();
+                co_return;
+            });
+        BEAST_EXPECT(runner);
+        BEAST_EXPECT(g.wait_for(5s));
+        runner->join();
+        BEAST_EXPECT(caught);
+        BEAST_EXPECT(!runner->runnable());
+    }
+
+    // Test: CoroTask<T> chaining — nested value-returning coroutines
+    void
+    testValueChaining()
+    {
+        using namespace std::chrono_literals;
+        using namespace jtx;
+
+        testcase("value chaining");
+
+        Env env(*this, envconfig([](std::unique_ptr<Config> cfg) {
+            cfg->FORCE_MULTI_THREAD = true;
+            return cfg;
+        }));
+
+        gate g;
+        int result = 0;
+        auto runner = env.app().getJobQueue().postCoroTask(
+            jtCLIENT, "CoroTaskTest", [rp = &result, gp = &g](auto) -> CoroTask<void> {
+                auto add = [](int a, int b) -> CoroTask<int> { co_return a + b; };
+                auto mul = [add](int a, int b) -> CoroTask<int> {
+                    int sum = co_await add(a, b);
+                    co_return sum * 2;
+                };
+                *rp = co_await mul(3, 4);
+                gp->signal();
+                co_return;
+            });
+        BEAST_EXPECT(runner);
+        BEAST_EXPECT(g.wait_for(5s));
+        runner->join();
+        BEAST_EXPECT(result == 14);  // (3 + 4) * 2
         BEAST_EXPECT(!runner->runnable());
     }
 
@@ -317,7 +433,7 @@ public:
         env.app().getJobQueue().stop();
 
         auto runner = env.app().getJobQueue().postCoroTask(
-            jtCLIENT, "CoroTaskTest", [&](auto) -> CoroTask<void> { co_return; });
+            jtCLIENT, "CoroTaskTest", [](auto) -> CoroTask<void> { co_return; });
         BEAST_EXPECT(!runner);
     }
 
@@ -331,6 +447,9 @@ public:
         testThreadSpecificStorage();
         testExceptionPropagation();
         testMultipleYields();
+        testValueReturn();
+        testValueException();
+        testValueChaining();
         testShutdownRejection();
     }
 };

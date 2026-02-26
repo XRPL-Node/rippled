@@ -15,7 +15,15 @@ template <class F>
 void
 JobQueue::CoroTaskRunner::init(F&& f)
 {
-    task_ = std::forward<F>(f)(shared_from_this());
+    // Store the callable on the heap so it outlives the coroutine frame.
+    // Coroutine frames store a reference to the callable's implicit object
+    // parameter (the lambda). If the callable is a temporary, that reference
+    // dangles after the caller returns. Keeping the callable alive here
+    // ensures the coroutine's captures remain valid.
+    using Fn = std::decay_t<F>;
+    auto store = std::make_unique<FuncStore<Fn>>(std::forward<F>(f));
+    task_ = store->func(shared_from_this());
+    storedFunc_ = std::move(store);
 }
 
 inline JobQueue::CoroTaskRunner::~CoroTaskRunner()
@@ -133,6 +141,11 @@ JobQueue::CoroTaskRunner::expectEarlyExit()
         finished_ = true;
 #endif
     }
+    // Destroy the coroutine frame to break a potential shared_ptr cycle.
+    // The coroutine is at initial_suspend and never ran user code, so
+    // destroying it is safe. Without this, the frame holds a shared_ptr
+    // back to this CoroTaskRunner, creating an unreachable reference cycle.
+    task_ = {};
 }
 
 inline void

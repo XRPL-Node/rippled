@@ -134,6 +134,26 @@ public:
         std::mutex mutex_run_;
         std::condition_variable cv_;
         CoroTask<void> task_;
+
+        // Type-erased storage to keep the coroutine callable alive.
+        // Coroutine frames store a reference to the callable's implicit
+        // object parameter (the lambda). If the callable is a temporary,
+        // that reference dangles after the call returns. Storing the
+        // callable on the heap here ensures it outlives the coroutine.
+        struct FuncBase
+        {
+            virtual ~FuncBase() = default;
+        };
+        template <class F>
+        struct FuncStore : FuncBase
+        {
+            F func;
+            explicit FuncStore(F&& f) : func(std::move(f))
+            {
+            }
+        };
+        std::unique_ptr<FuncBase> storedFunc_;
+
 #ifndef NDEBUG
         bool finished_ = false;
 #endif
