@@ -99,7 +99,8 @@ public:
     /** The depth of the hash map: data is only present in the leaves */
     static inline constexpr unsigned int leafDepth = 64;
 
-    using DeltaItem = std::pair<boost::intrusive_ptr<SHAMapItem const>, boost::intrusive_ptr<SHAMapItem const>>;
+    using DeltaItem =
+        std::pair<boost::intrusive_ptr<SHAMapItem const>, boost::intrusive_ptr<SHAMapItem const>>;
     using Delta = std::map<uint256, DeltaItem>;
 
     SHAMap() = delete;
@@ -280,7 +281,10 @@ public:
     serializeRoot(Serializer& s) const;
 
     SHAMapAddNode
-    addRootNode(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode> rootNode, SHAMapSyncFilter const* filter);
+    addRootNode(
+        SHAMapHash const& hash,
+        intr_ptr::SharedPtr<SHAMapTreeNode> rootNode,
+        SHAMapSyncFilter const* filter);
     SHAMapAddNode
     addKnownNode(
         SHAMapNodeID const& nodeID,
@@ -328,8 +332,10 @@ public:
     invariants() const;
 
 private:
-    using SharedPtrNodeStack = std::stack<std::pair<intr_ptr::SharedPtr<SHAMapTreeNode>, SHAMapNodeID>>;
-    using DeltaRef = std::pair<boost::intrusive_ptr<SHAMapItem const>, boost::intrusive_ptr<SHAMapItem const>>;
+    using SharedPtrNodeStack =
+        std::stack<std::pair<intr_ptr::SharedPtr<SHAMapTreeNode>, SHAMapNodeID>>;
+    using DeltaRef =
+        std::pair<boost::intrusive_ptr<SHAMapItem const>, boost::intrusive_ptr<SHAMapItem const>>;
 
     // tree node cache operations
     intr_ptr::SharedPtr<SHAMapTreeNode>
@@ -352,7 +358,10 @@ private:
 
     /** Update hashes up to the root */
     void
-    dirtyUp(SharedPtrNodeStack& stack, uint256 const& target, intr_ptr::SharedPtr<SHAMapTreeNode> terminal);
+    dirtyUp(
+        SharedPtrNodeStack& stack,
+        uint256 const& target,
+        intr_ptr::SharedPtr<SHAMapTreeNode> terminal);
 
     /** Walk towards the specified id, returning the node.  Caller must check
         if the return is nullptr, and if not, if the node->peekItem()->key() ==
@@ -379,11 +388,15 @@ private:
 
     // returns the first item at or below this node
     SHAMapLeafNode*
-    firstBelow(intr_ptr::SharedPtr<SHAMapTreeNode>, SharedPtrNodeStack& stack, int branch = 0) const;
+    firstBelow(intr_ptr::SharedPtr<SHAMapTreeNode>, SharedPtrNodeStack& stack, int branch = 0)
+        const;
 
     // returns the last item at or below this node
     SHAMapLeafNode*
-    lastBelow(intr_ptr::SharedPtr<SHAMapTreeNode> node, SharedPtrNodeStack& stack, int branch = branchFactor) const;
+    lastBelow(
+        intr_ptr::SharedPtr<SHAMapTreeNode> node,
+        SharedPtrNodeStack& stack,
+        int branch = branchFactor) const;
 
     // helper function for firstBelow and lastBelow
     SHAMapLeafNode*
@@ -391,7 +404,8 @@ private:
         intr_ptr::SharedPtr<SHAMapTreeNode> node,
         SharedPtrNodeStack& stack,
         int branch,
-        std::tuple<int, std::function<bool(int)>, std::function<void(int&)>> const& loopParams) const;
+        std::tuple<int, std::function<bool(int)>, std::function<void(int&)>> const& loopParams)
+        const;
 
     // Simple descent
     // Get a child of the specified node
@@ -406,13 +420,22 @@ private:
 
     // Descend with filter
     // If pending, callback is called as if it called fetchNodeNT
-    using descendCallback = std::function<void(intr_ptr::SharedPtr<SHAMapTreeNode>, SHAMapHash const&)>;
+    using descendCallback =
+        std::function<void(intr_ptr::SharedPtr<SHAMapTreeNode>, SHAMapHash const&)>;
     SHAMapTreeNode*
-    descendAsync(SHAMapInnerNode* parent, int branch, SHAMapSyncFilter const* filter, bool& pending, descendCallback&&)
-        const;
+    descendAsync(
+        SHAMapInnerNode* parent,
+        int branch,
+        SHAMapSyncFilter const* filter,
+        bool& pending,
+        descendCallback&&) const;
 
     std::pair<SHAMapTreeNode*, SHAMapNodeID>
-    descend(SHAMapInnerNode* parent, SHAMapNodeID const& parentID, int branch, SHAMapSyncFilter const* filter) const;
+    descend(
+        SHAMapInnerNode* parent,
+        SHAMapNodeID const& parentID,
+        int branch,
+        SHAMapSyncFilter const* filter) const;
 
     // Non-storing
     // Does not hook the returned node to its parent
@@ -617,7 +640,10 @@ inline SHAMap::const_iterator::const_iterator(SHAMap const* map, std::nullptr_t)
 {
 }
 
-inline SHAMap::const_iterator::const_iterator(SHAMap const* map, pointer item, SharedPtrNodeStack&& stack)
+inline SHAMap::const_iterator::const_iterator(
+    SHAMap const* map,
+    pointer item,
+    SharedPtrNodeStack&& stack)
     : stack_(std::move(stack)), map_(map), item_(item)
 {
 }

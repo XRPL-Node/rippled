@@ -110,7 +110,8 @@ public:
             unexpected(a.size() < 1, "NodeSize");
 
             auto node = SHAMapTreeNode::makeFromWire(makeSlice(std::get<1>(a[0])));
-            BEAST_EXPECT(destination.addRootNode(source.getHash(), std::move(node), nullptr).isGood());
+            BEAST_EXPECT(
+                destination.addRootNode(source.getHash(), std::move(node), nullptr).isGood());
         }
 
         do
@@ -147,7 +148,8 @@ public:
                 // non-deterministic number of times and the number of tests run
                 // should be deterministic
                 auto node = SHAMapTreeNode::makeFromWire(makeSlice(std::get<1>(b[i])));
-                if (!destination.addKnownNode(std::get<0>(b[i]), std::move(node), nullptr).isUseful())
+                if (!destination.addKnownNode(std::get<0>(b[i]), std::move(node), nullptr)
+                         .isUseful())
                     fail("", __FILE__, __LINE__);
             }
         } while (true);

@@ -31,7 +31,8 @@ public:
     TransactionAcquire::pointer mAcquire;
     std::shared_ptr<SHAMap> mSet;
 
-    InboundTransactionSet(std::uint32_t seq, std::shared_ptr<SHAMap> const& set) : mSeq(seq), mSet(set)
+    InboundTransactionSet(std::uint32_t seq, std::shared_ptr<SHAMap> const& set)
+        : mSeq(seq), mSet(set)
     {
         ;
     }
@@ -56,7 +57,8 @@ public:
         , m_peerSetBuilder(std::move(peerSetBuilder))
         , j_(app_.journal("InboundTransactions"))
     {
-        m_zeroSet.mSet = std::make_shared<SHAMap>(SHAMapType::TRANSACTION, uint256(), app_.getNodeFamily());
+        m_zeroSet.mSet =
+            std::make_shared<SHAMap>(SHAMapType::TRANSACTION, uint256(), app_.getNodeFamily());
         m_zeroSet.mSet->setUnbacked();
     }
 
@@ -113,12 +115,15 @@ public:
     /** We received a TMLedgerData from a peer.
      */
     void
-    gotData(LedgerHash const& hash, std::shared_ptr<Peer> peer, std::shared_ptr<protocol::TMLedgerData> packet_ptr)
-        override
+    gotData(
+        LedgerHash const& hash,
+        std::shared_ptr<Peer> peer,
+        std::shared_ptr<protocol::TMLedgerData> packet_ptr) override
     {
         protocol::TMLedgerData& packet = *packet_ptr;
 
-        JLOG(j_.trace()) << "Got data (" << packet.nodes().size() << ") for acquiring ledger: " << hash;
+        JLOG(j_.trace()) << "Got data (" << packet.nodes().size()
+                         << ") for acquiring ledger: " << hash;
 
         TransactionAcquire::pointer ta = getAcquire(hash);
 
@@ -254,7 +259,8 @@ make_InboundTransactions(
     beast::insight::Collector::ptr const& collector,
     std::function<void(std::shared_ptr<SHAMap> const&, bool)> gotSet)
 {
-    return std::make_unique<InboundTransactionsImp>(app, collector, std::move(gotSet), make_PeerSetBuilder(app));
+    return std::make_unique<InboundTransactionsImp>(
+        app, collector, std::move(gotSet), make_PeerSetBuilder(app));
 }
 
 }  // namespace xrpl
