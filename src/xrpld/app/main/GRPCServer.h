@@ -9,19 +9,35 @@
 #include <xrpl/core/JobQueue.h>
 #include <xrpl/proto/org/xrpl/rpc/v1/xrp_ledger.grpc.pb.h>
 #include <xrpl/resource/Charge.h>
+#include <xrpl/server/FDGuard.h>
 #include <xrpl/server/InfoSub.h>
 
+#include <grpcpp/alarm.h>
 #include <grpcpp/grpcpp.h>
 
 namespace xrpl {
 
+// Base class for completion queue tags
+struct CQTag
+{
+    enum class Kind { CallData, Backoff };
+    Kind kind;
+
+    explicit CQTag(Kind k) : kind(k)
+    {
+    }
+    virtual ~CQTag() = default;
+};
+
 // Interface that CallData implements
-class Processor
+class Processor : public CQTag
 {
 public:
     virtual ~Processor() = default;
 
-    Processor() = default;
+    Processor() : CQTag(Kind::CallData)
+    {
+    }
 
     Processor(Processor const&) = delete;
 
@@ -43,6 +59,14 @@ public:
     // deleted once this function returns true
     virtual bool
     isFinished() = 0;
+};
+
+// Tag for backoff alarm events
+struct BackoffTag : public CQTag
+{
+    BackoffTag() : CQTag(Kind::Backoff)
+    {
+    }
 };
 
 class GRPCServerImpl final
@@ -67,6 +91,16 @@ private:
     std::vector<boost::asio::ip::address> secureGatewayIPs_;
 
     beast::Journal journal_;
+
+    // FD throttling and backoff state
+    std::mutex backoffMutex_;
+    bool backoffScheduled_{false};
+    std::chrono::milliseconds acceptDelay_{std::chrono::milliseconds{50}};
+    static constexpr std::chrono::milliseconds INITIAL_ACCEPT_DELAY{50};
+    static constexpr std::chrono::milliseconds MAX_ACCEPT_DELAY{2000};
+    BackoffTag backoffTag_;
+    grpc::Alarm backoffAlarm_;
+    std::vector<std::shared_ptr<Processor>> pendingReposts_;
 
     // typedef for function to bind a listener
     // This is always of the form:
@@ -124,6 +158,10 @@ public:
     getEndpoint() const;
 
 private:
+    // Handle backoff alarm firing - retry deferred reposts
+    void
+    onBackoffFired();
+
     // Class encompassing the state and logic needed to serve a request.
     template <class Request, class Response>
     class CallData : public Processor,
