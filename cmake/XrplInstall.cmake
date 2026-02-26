@@ -29,6 +29,7 @@ install(TARGETS common
                 xrpl.libxrpl.net
                 xrpl.libxrpl.nodestore
                 xrpl.libxrpl.protocol
+                xrpl.libxrpl.protocol_autogen
                 xrpl.libxrpl.resource
                 xrpl.libxrpl.server
                 xrpl.libxrpl.shamap

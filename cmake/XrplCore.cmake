@@ -74,15 +74,23 @@ add_module(xrpl protocol)
 target_link_libraries(xrpl.libxrpl.protocol PUBLIC xrpl.libxrpl.crypto xrpl.libxrpl.json)
 
 # Level 05
+add_module(xrpl protocol_autogen)
+target_link_libraries(xrpl.libxrpl.protocol_autogen PUBLIC xrpl.libxrpl.protocol)
+
+# Set up code generation for protocol_autogen module
+include(XrplProtocolAutogen)
+setup_protocol_autogen()
+
+# Level 06
 add_module(xrpl core)
 target_link_libraries(xrpl.libxrpl.core PUBLIC xrpl.libxrpl.basics xrpl.libxrpl.json
                                                xrpl.libxrpl.protocol)
 
-# Level 06
+# Level 07
 add_module(xrpl resource)
 target_link_libraries(xrpl.libxrpl.resource PUBLIC xrpl.libxrpl.protocol)
 
-# Level 07
+# Level 08
 add_module(xrpl net)
 target_link_libraries(xrpl.libxrpl.net PUBLIC xrpl.libxrpl.basics xrpl.libxrpl.json
                                               xrpl.libxrpl.protocol xrpl.libxrpl.resource)
@@ -140,6 +148,7 @@ target_link_modules(
     net
     nodestore
     protocol
+    protocol_autogen
     rdb
     resource
     server
