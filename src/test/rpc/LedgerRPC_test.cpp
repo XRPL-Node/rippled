@@ -9,6 +9,7 @@
 #include <xrpld/rpc/CTID.h>
 
 #include <xrpl/beast/unit_test.h>
+#include <xrpl/core/NetworkIDService.h>
 #include <xrpl/json/json_value.h>
 #include <xrpl/protocol/ErrorCodes.h>
 #include <xrpl/protocol/jss.h>
