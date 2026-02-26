@@ -204,9 +204,11 @@ jobs:
 
       - name: Set sanitizer options
         if: ${{ !inputs.build_only && env.SANITIZERS_ENABLED == 'true' }}
+        env:
+          CONFIG_NAME: ${{ inputs.config_name }}
         run: |
           ASAN_OPTS="halt_on_error=0:use_sigaltstack=0:print_stacktrace=1:detect_container_overflow=0:detect_stack_use_after_return=0:suppressions=${GITHUB_WORKSPACE}/sanitizers/suppressions/asan.supp"
-          if [[ "${{ inputs.config_name }}" == *gcc* ]]; then
+          if [[ "${CONFIG_NAME}" == *gcc* ]]; then
             ASAN_OPTS="${ASAN_OPTS}:alloc_dealloc_mismatch=0"
           fi
           echo "ASAN_OPTIONS=${ASAN_OPTS}" >> ${GITHUB_ENV}
