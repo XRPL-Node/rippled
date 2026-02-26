@@ -342,7 +342,7 @@ private:
     cacheLookup(SHAMapHash const& hash) const;
 
     void
-    canonicalize(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode>& node) const;
+    canonicalize(SHAMapHash const& hash, intr_ptr::SharedPtr<SHAMapTreeNode>&) const;
 
     // database operations
     intr_ptr::SharedPtr<SHAMapTreeNode>

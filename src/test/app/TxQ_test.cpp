@@ -1024,7 +1024,7 @@ public:
         // Charlie - queue a transaction, with a higher fee
         // than default
         env(noop(charlie), fee(15), queued);
-        checkMetrics(*this, env, 6, initQueueMax, 4, 3, 256);
+        checkMetrics(*this, env, 6, initQueueMax, 4, 3, 257);
 
         BEAST_EXPECT(env.seq(alice) == aliceSeq);
         BEAST_EXPECT(env.seq(bob) == bobSeq);

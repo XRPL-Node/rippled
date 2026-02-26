@@ -134,13 +134,13 @@ private:
     takeHeader(std::string const& data);
 
     void
-    receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode&);
+    receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san);
 
     bool
-    takeTxRootNode(std::string const& data, SHAMapAddNode&);
+    takeTxRootNode(std::string const& data, SHAMapAddNode& san);
 
     bool
-    takeAsRootNode(std::string const& data, SHAMapAddNode&);
+    takeAsRootNode(std::string const& data, SHAMapAddNode& san);
 
     std::vector<uint256>
     neededTxHashes(int max, SHAMapSyncFilter* filter) const;

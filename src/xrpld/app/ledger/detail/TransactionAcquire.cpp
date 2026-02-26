@@ -180,15 +180,12 @@ TransactionAcquire::takeNodes(
 
         for (auto& d : data)
         {
-            if (d.first.isRoot() && mHaveRoot)
-            {
-                JLOG(journal_.debug()) << "Got root TXS node, already have it";
-                continue;
-            }
-
             if (d.first.isRoot())
             {
-                if (!mMap->addRootNode(SHAMapHash{hash_}, std::move(d.second), nullptr).isGood())
+                if (mHaveRoot)
+                    JLOG(journal_.debug()) << "Got root TXS node, already have it";
+                else if (!mMap->addRootNode(SHAMapHash{hash_}, std::move(d.second), nullptr)
+                              .isGood())
                     JLOG(journal_.warn()) << "TX acquire got bad root node";
                 else
                     mHaveRoot = true;
