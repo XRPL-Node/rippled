@@ -172,7 +172,10 @@ private:
     struct Stats
     {
         template <class Handler>
-        Stats(std::string const& prefix, Handler const& handler, beast::insight::Collector::ptr const& collector)
+        Stats(
+            std::string const& prefix,
+            Handler const& handler,
+            beast::insight::Collector::ptr const& collector)
             : hook(collector->make_hook(handler))
             , size(collector->make_gauge(prefix, "size"))
             , hit_rate(collector->make_gauge(prefix, "hit_rate"))
@@ -194,7 +197,8 @@ private:
     public:
         clock_type::time_point last_access;
 
-        explicit KeyOnlyEntry(clock_type::time_point const& last_access_) : last_access(last_access_)
+        explicit KeyOnlyEntry(clock_type::time_point const& last_access_)
+            : last_access(last_access_)
         {
         }
 
