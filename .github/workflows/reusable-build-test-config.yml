@@ -233,7 +233,11 @@ jobs:
         env:
           BUILD_NPROC: ${{ steps.nproc.outputs.nproc }}
         run: |
-          ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
+          WRAPPER=""
+          if [ "${SANITIZERS_ENABLED}" = "true" ]; then
+            WRAPPER="setarch $(uname -m) -R"
+          fi
+          ${WRAPPER} ./xrpld --unittest --unittest-jobs "${BUILD_NPROC}"
 
       - name: Debug failure (Linux)
         if: ${{ failure() && runner.os == 'Linux' && !inputs.build_only }}
