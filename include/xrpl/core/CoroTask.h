@@ -90,8 +90,7 @@ public:
             handle_.destroy();
     }
 
-    CoroTask(CoroTask&& other) noexcept
-        : handle_(std::exchange(other.handle_, {}))
+    CoroTask(CoroTask&& other) noexcept : handle_(std::exchange(other.handle_, {}))
     {
     }
 
@@ -229,8 +228,7 @@ public:
             handle_.destroy();
     }
 
-    CoroTask(CoroTask&& other) noexcept
-        : handle_(std::exchange(other.handle_, {}))
+    CoroTask(CoroTask&& other) noexcept : handle_(std::exchange(other.handle_, {}))
     {
     }
 

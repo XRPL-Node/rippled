@@ -2,14 +2,13 @@
 
 #include <xrpl/basics/LocalValue.h>
 #include <xrpl/core/ClosureCounter.h>
+#include <xrpl/core/CoroTask.h>
 #include <xrpl/core/JobTypeData.h>
 #include <xrpl/core/JobTypes.h>
 #include <xrpl/core/detail/Workers.h>
 #include <xrpl/json/json_value.h>
 
 #include <boost/coroutine/all.hpp>
-
-#include <xrpl/core/CoroTask.h>
 
 #include <coroutine>
 #include <set>
@@ -146,11 +145,7 @@ public:
         };
 
         // Private: Used in the implementation of postCoroTask
-        CoroTaskRunner(
-            create_t,
-            JobQueue&,
-            JobType,
-            std::string const&);
+        CoroTaskRunner(create_t, JobQueue&, JobType, std::string const&);
 
         // Not copy-constructible or assignable
         CoroTaskRunner(CoroTaskRunner const&) = delete;
@@ -512,8 +507,7 @@ template <class F>
 std::shared_ptr<JobQueue::CoroTaskRunner>
 JobQueue::postCoroTask(JobType t, std::string const& name, F&& f)
 {
-    auto runner = std::make_shared<CoroTaskRunner>(
-        CoroTaskRunner::create_t{}, *this, t, name);
+    auto runner = std::make_shared<CoroTaskRunner>(CoroTaskRunner::create_t{}, *this, t, name);
     runner->init(std::forward<F>(f));
 
     // Account for the initial suspension (lazy start).

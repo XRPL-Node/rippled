@@ -21,9 +21,7 @@ JobQueue::CoroTaskRunner::init(F&& f)
 inline JobQueue::CoroTaskRunner::~CoroTaskRunner()
 {
 #ifndef NDEBUG
-    XRPL_ASSERT(
-        finished_,
-        "xrpl::JobQueue::CoroTaskRunner::~CoroTaskRunner : is finished");
+    XRPL_ASSERT(finished_, "xrpl::JobQueue::CoroTaskRunner::~CoroTaskRunner : is finished");
 #endif
 }
 
@@ -77,8 +75,7 @@ JobQueue::CoroTaskRunner::post()
     }
 
     // sp prevents 'this' from being destroyed while the job is pending
-    if (jq_.addJob(
-            type_, name_, [this, sp = shared_from_this()]() { resume(); }))
+    if (jq_.addJob(type_, name_, [this, sp = shared_from_this()]() { resume(); }))
     {
         return true;
     }
@@ -104,9 +101,7 @@ JobQueue::CoroTaskRunner::resume()
     auto saved = detail::getLocalValues().release();
     detail::getLocalValues().reset(&lvs_);
     std::lock_guard lock(mutex_);
-    XRPL_ASSERT(
-        !task_.done(),
-        "xrpl::JobQueue::CoroTaskRunner::resume : task is not done");
+    XRPL_ASSERT(!task_.done(), "xrpl::JobQueue::CoroTaskRunner::resume : task is not done");
     task_.handle().resume();
     detail::getLocalValues().release();
     detail::getLocalValues().reset(saved);

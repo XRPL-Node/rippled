@@ -108,6 +108,7 @@ C++20 stackless coroutines have well-known limitations compared to stackful coro
 **Claim**: Stackless coroutines cannot yield from arbitrary stack depths. If `fn_a()` calls `fn_b()` calls `yield()`, only stackful coroutines can suspend the entire chain.
 
 **Analysis**: An exhaustive codebase audit found:
+
 - **1 production yield() call**: `RipplePathFind.cpp:131` — directly in the handler function body
 - **All test yield() calls**: directly in `postCoro` lambda bodies (Coroutine_test.cpp, JobQueue_test.cpp)
 - **The `push_type*` architecture** makes deep-nested yield() structurally impossible — the `yield_` pointer is only available inside the `postCoro` lambda via the `shared_ptr<Coro>`, and handlers call `context.coro->yield()` at the top level
@@ -119,6 +120,7 @@ C++20 stackless coroutines have well-known limitations compared to stackful coro
 **Claim**: Once a function needs to suspend, every caller up the chain must also be a coroutine. This "infects" the call chain.
 
 **Analysis**: In rippled's case, the coloring is minimal:
+
 - `postCoroTask()` launches a coroutine — this is the "root" colored function
 - The `postCoro` lambda itself becomes the coroutine function (returns `CoroTask<void>`)
 - `doRipplePathFind()` is the only handler that calls `co_await`
@@ -133,6 +135,7 @@ The "coloring" stops at the entry point lambda and the one handler that suspends
 **Claim**: C++20 provides the language primitives but no standard task type, executor integration, or composition utilities.
 
 **Analysis**: This is accurate — we need to write custom types:
+
 - `CoroTask<T>` (task/return type) — well-established pattern, ~80 lines
 - `JobQueueAwaiter` (executor integration) — ~20 lines
 - `FinalAwaiter` (continuation chaining) — ~10 lines
@@ -154,6 +157,7 @@ However, these types are small, well-understood, and have extensive reference im
 **Claim**: Coroutine frames are heap-allocated and outlive the calling scope, making references to locals dangerous.
 
 **Analysis**: This is a real concern that requires engineering discipline:
+
 - Coroutine parameters are copied into the frame (safe by default)
 - References passed to coroutine functions can dangle if the referent's scope ends before the coroutine completes
 - Our design mitigates this: `RPC::Context` is passed by reference but its lifetime is managed by `shared_ptr<Coro>` / the entry point lambda's scope, which outlives the coroutine
@@ -165,6 +169,7 @@ However, these types are small, well-understood, and have extensive reference im
 **Claim**: `yield_to.h:111` uses `boost::asio::spawn`, suggesting broader coroutine usage.
 
 **Analysis**: `yield_to.h` uses `boost::asio::spawn` with `boost::context::fixedsize_stack(2 * 1024 * 1024)` — this is a **completely separate** coroutine system:
+
 - Different type: `boost::asio::yield_context` (not `push_type*`)
 - Different purpose: test infrastructure for async I/O tests
 - Different mechanism: Boost.Asio stackful coroutines (not Boost.Coroutine2)
@@ -175,6 +180,7 @@ However, these types are small, well-understood, and have extensive reference im
 #### Overall Viability Conclusion
 
 The migration IS viable because:
+
 1. rippled's coroutine usage is **shallow** (no deep-nested yield)
 2. The **colored function infection** is limited to 4 call sites
 3. Custom types are **small and well-understood**
@@ -207,6 +213,7 @@ The migration IS viable because:
 #### Alternative Considered: ASAN Annotations Only
 
 Instead of full migration, one could keep Boost.Coroutine and add `__sanitizer_start_switch_fiber` / `__sanitizer_finish_switch_fiber` annotations to Coro.ipp to suppress ASAN false positives. This was evaluated and rejected because:
+
 - It only fixes sanitizer false positives — does NOT reduce 1MB/coroutine memory usage
 - Does NOT remove the deprecated Boost.Coroutine dependency
 - Does NOT provide standard compliance or future-proofing
@@ -400,18 +407,21 @@ Coroutine    = std::function<void(Suspend)>    — given a Suspend, starts work
 ```
 
 In practice, `JobQueue::Coro` simplifies this to:
+
 - **Suspend** = `coro->yield()`
 - **Continue** = `coro->post()` (async on JobQueue) or `coro->resume()` (sync on current thread)
 
 ### 2.6 CMake Dependency
 
 In `cmake/deps/Boost.cmake`:
+
 ```cmake
 find_package(Boost REQUIRED COMPONENTS ... coroutine ...)
 target_link_libraries(xrpl_boost INTERFACE ... Boost::coroutine ...)
 ```
 
 Additionally in `cmake/XrplInterface.cmake`:
+
 ```cpp
 BOOST_COROUTINES_NO_DEPRECATION_WARNING  // Suppresses Boost.Coroutine deprecation warnings
 ```
@@ -433,6 +443,7 @@ rippled **already uses C++20 coroutines** in test code:
 **Decision: Incremental (multi-phase) migration.**
 
 Rationale:
+
 - Only **one RPC handler** (`RipplePathFind`) actively uses `yield()/post()` suspension
 - The **three entry points** (HTTP, WS, gRPC) all funnel through `postCoro()`
 - The `RPC::Context.coro` field is the sole propagation mechanism
@@ -689,6 +700,7 @@ sequenceDiagram
 ### 4.5 RipplePathFind Migration Design
 
 Current pattern:
+
 ```cpp
 // Continuation callback
 auto callback = [&context]() {
@@ -707,6 +719,7 @@ if (request) {
 ```
 
 Target pattern:
+
 ```cpp
 // Start async work, suspend via co_await
 jvResult = makeLegacyPathRequest(request, /* awaiter-based callback */, ...);
@@ -989,6 +1002,7 @@ gantt
 #### Milestone 1: New Coroutine Primitives (PR #1)
 
 **Deliverables**:
+
 - `CoroTask<T>` with `promise_type`, `FinalAwaiter`
 - `CoroTask<void>` specialization
 - `JobQueueAwaiter` for scheduling on JobQueue
@@ -997,6 +1011,7 @@ gantt
 - Unit test suite: `CoroTask_test.cpp`
 
 **Acceptance Criteria**:
+
 - All new unit tests pass
 - Existing `--unittest` suite passes (no regressions from new code)
 - ASAN + TSAN clean on new tests
@@ -1005,6 +1020,7 @@ gantt
 #### Milestone 2: Entry Point Migration (PR #2)
 
 **Deliverables**:
+
 - `ServerHandler::onRequest()` uses `postCoroTask()`
 - `ServerHandler::onWSMessage()` uses `postCoroTask()`
 - `GRPCServer::CallData::process()` uses `postCoroTask()`
@@ -1012,6 +1028,7 @@ gantt
 - `processSession`/`processRequest` signatures updated
 
 **Acceptance Criteria**:
+
 - HTTP, WebSocket, and gRPC RPC requests work end-to-end
 - Full `--unittest` suite passes
 - Manual smoke test: `ripple_path_find` via HTTP/WS
@@ -1019,11 +1036,13 @@ gantt
 #### Milestone 3: Handler Migration (PR #3)
 
 **Deliverables**:
+
 - `RipplePathFind` uses `co_await` instead of `yield()/post()`
 - Path_test and AMMTest updated
 - Coroutine_test and JobQueue_test updated for new API
 
 **Acceptance Criteria**:
+
 - Path-finding suspension/continuation works correctly
 - All `--unittest` tests pass
 - Shutdown-during-pathfind scenario tested
@@ -1031,6 +1050,7 @@ gantt
 #### Milestone 4: Cleanup & Validation (PR #4)
 
 **Deliverables**:
+
 - Old `Coro` class and `Coro.ipp` removed
 - `postCoro()` removed from `JobQueue`
 - `Boost::coroutine` removed from CMake
@@ -1039,6 +1059,7 @@ gantt
 - Sanitizer test results documented
 
 **Acceptance Criteria**:
+
 - Build succeeds without Boost.Coroutine
 - Full `--unittest` suite passes
 - Memory per coroutine ≤ 10KB (down from 1MB)
@@ -1188,6 +1209,7 @@ develop
 ```
 
 **Workflow**:
+
 1. Create sub-branch from `pratik/Switch-to-std-coroutines` for each milestone
 2. Develop and test on the sub-branch
 3. Create PR from sub-branch → `pratik/Switch-to-std-coroutines`
@@ -1195,6 +1217,7 @@ develop
 5. Final PR from `pratik/Switch-to-std-coroutines` → `develop`
 
 **Rules**:
+
 - Never push directly to the main feature branch — always via sub-branch PR
 - Each sub-branch must pass `--unittest` and sanitizers before PR
 - Sub-branch names follow the pattern: `pratik/std-coro/<descriptive-action>` (e.g., `add-coroutine-primitives`, `migrate-entry-points`)
