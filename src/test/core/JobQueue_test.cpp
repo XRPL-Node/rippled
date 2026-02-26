@@ -43,6 +43,11 @@ class JobQueue_test : public beast::unit_test::suite
         }
     }
 
+    // NOTE: All coroutine lambdas passed to postCoroTask use explicit
+    // pointer-by-value captures instead of [&] to work around a GCC 14
+    // bug where reference captures in coroutine lambdas are corrupted
+    // in the coroutine frame.
+
     void
     testPostCoroTask()
     {
@@ -53,8 +58,8 @@ class JobQueue_test : public beast::unit_test::suite
             // Test repeated post()s until the coroutine completes.
             std::atomic<int> yieldCount{0};
             auto const runner = jQueue.postCoroTask(
-                jtCLIENT, "PostCoroTest1", [&yieldCount](auto runner) -> CoroTask<void> {
-                    while (++yieldCount < 4)
+                jtCLIENT, "PostCoroTest1", [ycp = &yieldCount](auto runner) -> CoroTask<void> {
+                    while (++(*ycp) < 4)
                         co_await runner->suspend();
                     co_return;
                 });
@@ -81,8 +86,8 @@ class JobQueue_test : public beast::unit_test::suite
             // Test repeated resume()s until the coroutine completes.
             int yieldCount{0};
             auto const runner = jQueue.postCoroTask(
-                jtCLIENT, "PostCoroTest2", [&yieldCount](auto runner) -> CoroTask<void> {
-                    while (++yieldCount < 4)
+                jtCLIENT, "PostCoroTest2", [ycp = &yieldCount](auto runner) -> CoroTask<void> {
+                    while (++(*ycp) < 4)
                         co_await runner->suspend();
                     co_return;
                 });
@@ -118,8 +123,8 @@ class JobQueue_test : public beast::unit_test::suite
             // Not recommended for the faint of heart...
             bool unprotected;
             auto const runner = jQueue.postCoroTask(
-                jtCLIENT, "PostCoroTest3", [&unprotected](auto) -> CoroTask<void> {
-                    unprotected = false;
+                jtCLIENT, "PostCoroTest3", [up = &unprotected](auto) -> CoroTask<void> {
+                    *up = false;
                     co_return;
                 });
             BEAST_EXPECT(runner == nullptr);
