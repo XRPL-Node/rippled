@@ -314,8 +314,10 @@ Number::externalToInternal(rep mantissa)
     if (mantissa >= 0)
         return mantissa;
 
-    // Cast to unsigned before negating to avoid undefined behavior
-    // when v == INT64_MIN (negating INT64_MIN in signed is UB)
+    // Cast to unsigned before negating to avoid undefined behavior when
+    // mantissa == std::numeric_limits<rep>::min() (INT64_MIN). Negating
+    // INT64_MIN in signed arithmetic is UB, but casting to the unsigned
+    // internalrep first makes the operation well-defined.
     return -static_cast<internalrep>(mantissa);
 }
 
