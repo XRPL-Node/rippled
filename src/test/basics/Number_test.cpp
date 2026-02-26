@@ -311,6 +311,15 @@ public:
             test(cLarge);
     }
 
+    static std::uint64_t
+    getMaxInternalMantissa()
+    {
+        return static_cast<std::uint64_t>(
+                   static_cast<std::int64_t>(power(10, Number::mantissaLog()))) *
+            10 -
+            1;
+    }
+
     void
     test_mul()
     {
@@ -335,10 +344,7 @@ public:
                 test(cLarge);
         };
         auto const maxMantissa = Number::maxMantissa();
-        auto const maxInternalMantissa = static_cast<std::uint64_t>(static_cast<std::int64_t>(
-                                             power(10, Number::mantissaLog()))) *
-                10 -
-            1;
+        auto const maxInternalMantissa = getMaxInternalMantissa();
 
         saveNumberRoundMode save{Number::setround(Number::to_nearest)};
         {
@@ -594,13 +600,13 @@ public:
                      Number{10, 0},
                      __LINE__},
                     // Maximum internal mantissa range - rounds down to
-                    // maxMantissa/10-1
+                    // maxInternalMantissa/10-1
                     // 99'999'999'999'999'999'800'000'000'000'000'000'100
                     {Number{false, maxInternalMantissa, 0, Number::normalized{}},
                      Number{false, maxInternalMantissa, 0, Number::normalized{}},
                      Number{false, maxInternalMantissa / 10 - 1, 20, Number::normalized{}},
                      __LINE__},
-                    // Maximum mantissa range - same as int64
+                    // Maximum external mantissa range - same as INT64_MAX (2^63-1)
                     {Number{false, maxMantissa, 0, Number::normalized{}},
                      Number{false, maxMantissa, 0, Number::normalized{}},
                      Number{85'070'591'730'234'615'84, 19},
@@ -931,10 +937,7 @@ public:
         };
         */
 
-        auto const maxInternalMantissa = static_cast<std::uint64_t>(static_cast<std::int64_t>(
-                                             power(10, Number::mantissaLog()))) *
-                10 -
-            1;
+        auto const maxInternalMantissa = getMaxInternalMantissa();
 
         auto const cSmall = std::to_array<Case>(
             {{Number{2}, 2, Number{1414213562373095049, -18}},
@@ -1005,7 +1008,7 @@ public:
             }
         };
 
-        auto const maxInternalMantissa = power(10, Number::mantissaLog()) * 10 - 1;
+        Number const maxInternalMantissa = power(10, Number::mantissaLog()) * 10 - 1;
 
         auto const cSmall = std::to_array<Number>({
             Number{2},
@@ -1642,11 +1645,7 @@ public:
             NumberRoundModeGuard mg(Number::towards_zero);
 
             {
-                auto const maxInternalMantissa =
-                    static_cast<std::uint64_t>(
-                        static_cast<std::int64_t>(power(10, Number::mantissaLog()))) *
-                        10 -
-                    1;
+                auto const maxInternalMantissa = getMaxInternalMantissa();
 
                 // Rounds down to fit under 2^63
                 Number const max = Number{false, maxInternalMantissa, 0, Number::normalized{}};

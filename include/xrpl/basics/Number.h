@@ -2,6 +2,7 @@
 
 #include <xrpl/beast/utility/instrumentation.h>
 
+#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -25,13 +26,13 @@ to_string(Number const& amount);
  *
  * The return value is a pair (log, rem), where log is the estimated
  * base-10 logarithm (roughly floor(log10(value))), and rem is value with
- * all factors of 10 removed (i.e., divided by the largest power of 10 that
- * divides value). If rem is 1, then value is an exact power of ten, and
+ * all trailing 0s removed (i.e., divided by the largest power of 10 that
+ * evenly divides value). If rem is 1, then value is an exact power of ten, and
  * log is the exact log10(value).
  *
  * This function only works for positive values.
  */
-template <typename T>
+template <std::unsigned_integral T>
 constexpr std::pair<int, T>
 logTenEstimate(T value)
 {
@@ -99,20 +100,23 @@ struct MantissaRange
     explicit constexpr MantissaRange(mantissa_scale scale_)
         : max(getMax(scale_))
         , min(computeMin(max))
-        , referenceMin(getReferenceMin(scale_, min))
+        , internalMin(getInternalMin(scale_, min))
         , log(computeLog(min))
         , scale(scale_)
     {
-        // Since this is constexpr, if any of these throw, it won't compile
+        // Keep the error messages terse. Since this is constexpr, if any of these throw, it won't
+        // compile, so there's no real need to worry about runtime exceptions here.
         if (min * 10 <= max)
-            throw std::out_of_range("min * 10 <= max");
+            throw std::out_of_range("Invalid mantissa range: min * 10 <= max");
         if (max / 10 >= min)
-            throw std::out_of_range("max / 10 >= min");
+            throw std::out_of_range("Invalid mantissa range: max / 10 >= min");
         if ((min - 1) * 10 > max)
-            throw std::out_of_range("(min - 1) * 10 > max");
+            throw std::out_of_range("Invalid mantissa range: (min - 1) * 10 > max");
         // This is a little hacky
         if ((max + 10) / 10 < min)
-            throw std::out_of_range("(max + 10) / 10 < min");
+            throw std::out_of_range("Invalid mantissa range: (max + 10) / 10 < min");
+        if (computeLog(internalMin) != log)
+            throw std::out_of_range("Invalid mantissa range: computeLog(internalMin) != log");
     }
 
     // Explicitly delete copy and move operations
@@ -125,9 +129,12 @@ struct MantissaRange
 
     rep max;
     rep min;
-    // This is not a great name. Used to determine if mantissas are in range,
-    // but have fewer digits than max
-    rep referenceMin;
+    /* Used to determine if mantissas are in range, but have fewer digits than max.
+     *
+     * Unlike min, internalMin is always an exact power of 10, so a mantissa in the internal
+     * representation will always have a consistent number of digits.
+     */
+    rep internalMin;
     int log;
     mantissa_scale scale;
 
@@ -156,7 +163,7 @@ private:
     }
 
     static constexpr rep
-    getReferenceMin(mantissa_scale scale, rep min)
+    getInternalMin(mantissa_scale scale, rep min)
     {
         switch (scale)
         {
@@ -215,7 +222,7 @@ concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>
  *
  * A non-zero mantissa is (almost) always normalized, meaning it and the
  * exponent are grown or shrunk until the mantissa is in the range
- * [MantissaRange.referenceMin, MantissaRange.referenceMin * 10 - 1].
+ * [MantissaRange.internalMin, MantissaRange.internalMin * 10 - 1].
  *
  * This internal representation is only used during some operations to ensure
  * that the mantissa is a known, predictable size. The class itself stores the
@@ -225,7 +232,7 @@ concept UnsignedMantissa = std::is_unsigned_v<T> || std::is_same_v<T, uint128_t>
  *   1. Normalization can be disabled by using the "unchecked" ctor tag. This
  *      should only be used at specific conversion points, some constexpr
  *      values, and in unit tests.
- *   2. Unlike MantissaRange.min, referenceMin is always an exact power of 10,
+ *   2. Unlike MantissaRange.min, internalMin is always an exact power of 10,
  *      so a mantissa in the internal representation will always have a
  *      consistent number of digits.
  *   3. The functions toInternal() and fromInternal() are used to convert
@@ -536,14 +543,14 @@ private:
     static_assert(isPowerOfTen(smallRange.min));
     static_assert(smallRange.min == 1'000'000'000'000'000LL);
     static_assert(smallRange.max == 9'999'999'999'999'999LL);
-    static_assert(smallRange.referenceMin == smallRange.min);
+    static_assert(smallRange.internalMin == smallRange.min);
     static_assert(smallRange.log == 15);
     constexpr static MantissaRange largeRange{MantissaRange::large};
     static_assert(!isPowerOfTen(largeRange.min));
     static_assert(largeRange.min == 922'337'203'685'477'581ULL);
     static_assert(largeRange.max == internalrep(9'223'372'036'854'775'807ULL));
     static_assert(largeRange.max == std::numeric_limits<rep>::max());
-    static_assert(largeRange.referenceMin == 1'000'000'000'000'000'000ULL);
+    static_assert(largeRange.internalMin == 1'000'000'000'000'000'000ULL);
     static_assert(largeRange.log == 18);
     // There are 2 values that will not fit in largeRange without some extra
     // work

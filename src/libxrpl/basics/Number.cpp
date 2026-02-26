@@ -110,7 +110,7 @@ public:
 
     // Modify the result to the correctly rounded value
     void
-    doRound(rep& drops, std::string_view location);
+    doRound(internalrep& drops, std::string_view location);
 
 private:
     void
@@ -222,9 +222,7 @@ Number::Guard::bringIntoRange(
     {
         constexpr Number zero = Number{};
 
-        negative = false;
-        mantissa = zero.mantissa_;
-        exponent = zero.exponent_;
+        std::tie(negative, mantissa, exponent) = zero.toInternal();
     }
 }
 
@@ -278,7 +276,7 @@ Number::Guard::doRoundDown(
 
 // Modify the result to the correctly rounded value
 void
-Number::Guard::doRound(rep& drops, std::string_view location)
+Number::Guard::doRound(internalrep& drops, std::string_view location)
 {
     auto r = round();
     if (r == 1 || (r == 0 && (drops & 1) == 1))
@@ -297,8 +295,6 @@ Number::Guard::doRound(rep& drops, std::string_view location)
         }
         ++drops;
     }
-    if (is_negative())
-        drops = -drops;
 }
 
 // Number
@@ -336,16 +332,16 @@ Number::toInternal(MantissaRange const& range) const
     // case.
     Rep mantissa = static_cast<Rep>(externalToInternal(mantissa_));
 
-    auto const referenceMin = range.referenceMin;
+    auto const internalMin = range.internalMin;
     auto const minMantissa = range.min;
 
-    if (mantissa != 0 && mantissa >= minMantissa && mantissa < referenceMin)
+    if (mantissa != 0 && mantissa >= minMantissa && mantissa < internalMin)
     {
         // Ensure the mantissa has the correct number of digits
         mantissa *= 10;
         --exponent;
         XRPL_ASSERT_PARTS(
-            mantissa >= referenceMin && mantissa < referenceMin * 10,
+            mantissa >= internalMin && mantissa < internalMin * 10,
             "xrpl::Number::toInternal()",
             "Number is within reference range and has 'log' digits");
     }
@@ -441,7 +437,7 @@ constexpr Number
 Number::oneSmall()
 {
     return Number{
-        false, Number::smallRange.referenceMin, -Number::smallRange.log, Number::unchecked{}};
+        false, Number::smallRange.internalMin, -Number::smallRange.log, Number::unchecked{}};
 };
 
 constexpr Number oneSml = Number::oneSmall();
@@ -450,7 +446,7 @@ constexpr Number
 Number::oneLarge()
 {
     return Number{
-        false, Number::largeRange.referenceMin, -Number::largeRange.log, Number::unchecked{}};
+        false, Number::largeRange.internalMin, -Number::largeRange.log, Number::unchecked{}};
 };
 
 constexpr Number oneLrg = Number::oneLarge();
@@ -486,11 +482,10 @@ doNormalize(
     using Guard = Number::Guard;
 
     constexpr Number zero = Number{};
+    auto const& range = Number::range_.get();
     if (mantissa == 0 || (mantissa < minMantissa && exponent <= minExponent))
     {
-        mantissa = zero.mantissa_;
-        exponent = zero.exponent_;
-        negative = false;
+        std::tie(negative, mantissa, exponent) = zero.toInternal(range);
         return;
     }
 
@@ -513,9 +508,7 @@ doNormalize(
     }
     if ((exponent < minExponent) || (m == 0))
     {
-        mantissa = zero.mantissa_;
-        exponent = zero.exponent_;
-        negative = false;
+        std::tie(negative, mantissa, exponent) = zero.toInternal(range);
         return;
     }
 
@@ -890,30 +883,36 @@ Number::operator/=(Number const& y)
 Number::
 operator rep() const
 {
-    rep drops = mantissa();
+    auto const m = mantissa();
+    internalrep drops = externalToInternal(m);
+
+    if (drops == 0)
+        return drops;
+
     int offset = exponent();
     Guard g;
-    if (drops != 0)
+
+    if (m < 0)
     {
-        if (drops < 0)
-        {
-            g.set_negative();
-            drops = externalToInternal(drops);
-        }
-        for (; offset < 0; ++offset)
-        {
-            g.push(drops % 10);
-            drops /= 10;
-        }
-        for (; offset > 0; --offset)
-        {
-            if (drops >= largeRange.min)
-                throw std::overflow_error("Number::operator rep() overflow");
-            drops *= 10;
-        }
-        g.doRound(drops, "Number::operator rep() rounding overflow");
+        g.set_negative();
     }
-    return drops;
+    for (; offset < 0; ++offset)
+    {
+        g.push(drops % 10);
+        drops /= 10;
+    }
+    for (; offset > 0; --offset)
+    {
+        if (drops >= largeRange.min)
+            throw std::overflow_error("Number::operator rep() overflow");
+        drops *= 10;
+    }
+    g.doRound(drops, "Number::operator rep() rounding overflow");
+
+    if (g.is_negative())
+        return -drops;
+    else
+        return drops;
 }
 
 Number
@@ -1070,7 +1069,7 @@ Number::root(MantissaRange const& range, Number f, unsigned d)
         return f;
 
     auto const [e, di] = [&]() {
-        auto const [negative, mantissa, exponent] = f.toInternal(range);
+        auto const exponent = std::get<2>(f.toInternal(range));
 
         // Scale f into the range (0, 1) such that the scale change (e) is a
         // multiple of the root (d)
@@ -1159,7 +1158,7 @@ root2(Number f)
         return f;
 
     auto const e = [&]() {
-        auto const [negative, mantissa, exponent] = f.toInternal(range);
+        auto const exponent = std::get<2>(f.toInternal(range));
 
         // Scale f into the range (0, 1) such that f's exponent is a
         // multiple of d
