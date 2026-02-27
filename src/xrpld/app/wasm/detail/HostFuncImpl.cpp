@@ -25,7 +25,10 @@ WasmHostFunctionsImpl::updateData(Slice const& data)
 // =========================================================
 
 Expected<int32_t, HostFunctionError>
-WasmHostFunctionsImpl::checkSignature(Slice const& message, Slice const& signature, Slice const& pubkey) const
+WasmHostFunctionsImpl::checkSignature(
+    Slice const& message,
+    Slice const& signature,
+    Slice const& pubkey) const
 {
     if (!publicKeyType(pubkey))
         return Unexpected(HostFunctionError::INVALID_PARAMS);

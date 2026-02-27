@@ -59,7 +59,8 @@ class WasmHostFunctionsImpl : public HostFunctions
     }
 
 public:
-    WasmHostFunctionsImpl(ApplyContext& ct, Keylet const& leKey) : HostFunctions(ct.journal), ctx_(ct), leKey_(leKey)
+    WasmHostFunctionsImpl(ApplyContext& ct, Keylet const& leKey)
+        : HostFunctions(ct.journal), ctx_(ct), leKey_(leKey)
     {
     }
 
@@ -149,7 +150,8 @@ public:
     updateData(Slice const& data) override;
 
     Expected<int32_t, HostFunctionError>
-    checkSignature(Slice const& message, Slice const& signature, Slice const& pubkey) const override;
+    checkSignature(Slice const& message, Slice const& signature, Slice const& pubkey)
+        const override;
 
     Expected<Hash, HostFunctionError>
     computeSha512HalfHash(Slice const& data) const override;
@@ -164,7 +166,8 @@ public:
     checkKeylet(AccountID const& account, std::uint32_t seq) const override;
 
     Expected<Bytes, HostFunctionError>
-    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType) const override;
+    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType)
+        const override;
 
     Expected<Bytes, HostFunctionError>
     didKeylet(AccountID const& account) const override;
@@ -179,7 +182,8 @@ public:
     escrowKeylet(AccountID const& account, std::uint32_t seq) const override;
 
     Expected<Bytes, HostFunctionError>
-    lineKeylet(AccountID const& account1, AccountID const& account2, Currency const& currency) const override;
+    lineKeylet(AccountID const& account1, AccountID const& account2, Currency const& currency)
+        const override;
 
     Expected<Bytes, HostFunctionError>
     mptIssuanceKeylet(AccountID const& issuer, std::uint32_t seq) const override;
@@ -197,7 +201,8 @@ public:
     oracleKeylet(AccountID const& account, std::uint32_t docId) const override;
 
     Expected<Bytes, HostFunctionError>
-    paychanKeylet(AccountID const& account, AccountID const& destination, std::uint32_t seq) const override;
+    paychanKeylet(AccountID const& account, AccountID const& destination, std::uint32_t seq)
+        const override;
 
     Expected<Bytes, HostFunctionError>
     permissionedDomainKeylet(AccountID const& account, std::uint32_t seq) const override;

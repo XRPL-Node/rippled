@@ -182,7 +182,8 @@ struct Wasm_test : public beast::unit_test::suite
         WASM_IMPORT_FUNC2(imports, getLedgerSqn, "get_ledger_sqn", &hfs, 33);
         auto& engine = WasmEngine::instance();
 
-        auto re = engine.run(ledgerSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
+        auto re = engine.run(
+            ledgerSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
 
         checkResult(re, 0, 440);
 
@@ -227,7 +228,8 @@ struct Wasm_test : public beast::unit_test::suite
             for (auto& i : imp)
                 i.second.gas = 0;
 
-            auto re = engine.run(allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 1'000'000, env.journal);
+            auto re = engine.run(
+                allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 1'000'000, env.journal);
 
             checkResult(re, 1, 27'080);
 
@@ -248,7 +250,8 @@ struct Wasm_test : public beast::unit_test::suite
             TestHostFunctions hfs(env, 0);
             auto const imp = createWasmImport(hfs);
 
-            auto re = engine.run(allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 1'000'000, env.journal);
+            auto re = engine.run(
+                allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 1'000'000, env.journal);
 
             checkResult(re, 1, 66'340);
 
@@ -264,11 +267,13 @@ struct Wasm_test : public beast::unit_test::suite
             TestHostFunctions hfs(env, 0);
             auto const imp = createWasmImport(hfs);
 
-            auto re = engine.run(allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 200, env.journal);
+            auto re =
+                engine.run(allHostFuncWasm, hfs, ESCROW_FUNCTION_NAME, {}, imp, 200, env.journal);
 
             if (BEAST_EXPECT(!re))
             {
-                BEAST_EXPECTS(re.error() == tecFAILED_PROCESSING, std::to_string(TERtoInt(re.error())));
+                BEAST_EXPECTS(
+                    re.error() == tecFAILED_PROCESSING, std::to_string(TERtoInt(re.error())));
             }
 
             env.close();
@@ -383,7 +388,8 @@ struct Wasm_test : public beast::unit_test::suite
 
             auto& engine = WasmEngine::instance();
 
-            auto re = engine.run(lgrSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
+            auto re = engine.run(
+                lgrSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
 
             BEAST_EXPECT(!re);
         }
@@ -398,7 +404,8 @@ struct Wasm_test : public beast::unit_test::suite
 
             auto& engine = WasmEngine::instance();
 
-            auto re = engine.run(lgrSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
+            auto re = engine.run(
+                lgrSqnWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
 
             BEAST_EXPECT(!re);
         }
@@ -594,7 +601,8 @@ struct Wasm_test : public beast::unit_test::suite
         auto checkRes = engine.check(startLoopWasm, hfs, "finish", {}, imports, env.journal);
         BEAST_EXPECTS(checkRes == tesSUCCESS, std::to_string(TERtoInt(checkRes)));
 
-        auto re = engine.run(startLoopWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
+        auto re = engine.run(
+            startLoopWasm, hfs, ESCROW_FUNCTION_NAME, {}, imports, 1'000'000, env.journal);
         BEAST_EXPECTS(re.error() == tecFAILED_PROCESSING, std::to_string(TERtoInt(re.error())));
     }
 
@@ -697,7 +705,8 @@ struct Wasm_test : public beast::unit_test::suite
         //   (func $test2 (export "test2") (param i32 i32) (result i32)
         //     i32.const 1001))
         auto const wasmHex =
-            "0061736d01000000010c0260017f017f60027f7f017f03030200010503010001071a03066d656d6f7279020005746573743100"
+            "0061736d01000000010c0260017f017f60027f7f017f03030200010503010001071a03066d656d6f727902"
+            "0005746573743100"
             "0005746573743200010a0d02050041e8070b050041e9070b";
         auto const wasm = hexToBytes(wasmHex);
 
@@ -727,7 +736,8 @@ struct Wasm_test : public beast::unit_test::suite
 
         // invalid type
         {
-            auto const re = runEscrowWasm(wasm, hfs, "test1", wasmParams(std::int64_t(15)), 100'000);
+            auto const re =
+                runEscrowWasm(wasm, hfs, "test1", wasmParams(std::int64_t(15)), 100'000);
             BEAST_EXPECT(!re);
         }
     }
@@ -821,14 +831,16 @@ struct Wasm_test : public beast::unit_test::suite
         // function that create 10k local variables
         auto const locals10k = hexToBytes(locals10kHex);
         {
-            auto re = engine.run(locals10k, hfs, "test", wasmParams(0, 1), imports, 1'000'000, env.journal);
+            auto re = engine.run(
+                locals10k, hfs, "test", wasmParams(0, 1), imports, 1'000'000, env.journal);
             BEAST_EXPECT(re && re->result == 890'489'442);
         }
 
         // module has 5k functions
         auto const functions5k = hexToBytes(functions5kHex);
         {
-            auto re = engine.run(functions5k, hfs, "test0001", wasmParams(2, 3), imports, 1'000'000, env.journal);
+            auto re = engine.run(
+                functions5k, hfs, "test0001", wasmParams(2, 3), imports, 1'000'000, env.journal);
             BEAST_EXPECT(re && re->result == 5);
         }
 
@@ -876,7 +888,8 @@ struct Wasm_test : public beast::unit_test::suite
                            int64_t cost = -1,
                            std::source_location const location = std::source_location::current()) {
                 auto const lineStr = " (" + std::to_string(location.line()) + ")";
-                auto re = engine.run(code, hfs, "all_instructions", {}, imports, 1'000'000, env.journal);
+                auto re =
+                    engine.run(code, hfs, "all_instructions", {}, imports, 1'000'000, env.journal);
                 if (BEAST_EXPECTS(re.has_value() == good, transToken(re.error()) + lineStr) && good)
                     BEAST_EXPECTS(re->cost == cost, std::to_string(re->cost) + lineStr);
             };
@@ -907,7 +920,8 @@ struct Wasm_test : public beast::unit_test::suite
                              std::uint16_t finish,
                              bool good = false,
                              int64_t cost = -1,
-                             std::source_location const location = std::source_location::current()) {
+                             std::source_location const location =
+                                 std::source_location::current()) {
                 auto const lineStr = " (" + std::to_string(location.line()) + ")";
                 auto code = opcReserved;
                 auto codeRange = std::ranges::search(code, codeMarker);
@@ -928,7 +942,8 @@ struct Wasm_test : public beast::unit_test::suite
             auto testMB = [&](std::vector<std::uint8_t> const& codeSnap,
                               bool good = false,
                               int64_t cost = -1,
-                              std::source_location const location = std::source_location::current()) {
+                              std::source_location const location =
+                                  std::source_location::current()) {
                 auto const lineStr = " (" + std::to_string(location.line()) + ")";
                 auto code = opcReserved;
                 auto codeRange = std::ranges::search(code, codeMarker);

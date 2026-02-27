@@ -267,7 +267,8 @@ struct HostFunctions
     }
 
     virtual Expected<Bytes, HostFunctionError>
-    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType) const
+    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType)
+        const
     {
         return Unexpected(HostFunctionError::INTERNAL);
     }

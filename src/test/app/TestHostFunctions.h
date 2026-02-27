@@ -51,7 +51,8 @@ struct TestHostFunctions : public HostFunctions
     void const* rt_ = nullptr;
 
 public:
-    TestHostFunctions(test::jtx::Env& env, int cd = 0) : HostFunctions(env.journal), env_(env), clock_drift_(cd)
+    TestHostFunctions(test::jtx::Env& env, int cd = 0)
+        : HostFunctions(env.journal), env_(env), clock_drift_(cd)
     {
         accountID_ = env_.master.id();
         std::string t = "10000";
@@ -308,9 +309,11 @@ public:
     }
 
     Expected<Bytes, HostFunctionError>
-    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType) const override
+    credentialKeylet(AccountID const& subject, AccountID const& issuer, Slice const& credentialType)
+        const override
     {
-        if (!subject || !issuer || credentialType.empty() || credentialType.size() > maxCredentialTypeLength)
+        if (!subject || !issuer || credentialType.empty() ||
+            credentialType.size() > maxCredentialTypeLength)
             return Unexpected(HostFunctionError::INVALID_ACCOUNT);
         auto const keylet = keylet::credential(subject, issuer, credentialType);
         return Bytes{keylet.key.begin(), keylet.key.end()};
@@ -399,7 +402,9 @@ public:
     {
         if (!asHex)
         {
-            log(msg, [&data] { return std::string_view(reinterpret_cast<char const*>(data.data()), data.size()); });
+            log(msg, [&data] {
+                return std::string_view(reinterpret_cast<char const*>(data.data()), data.size());
+            });
         }
         else
         {

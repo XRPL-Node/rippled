@@ -143,7 +143,8 @@ public:
         auto const data = msg.getData();
 
 #ifdef DEBUG_OUTPUT
-        std::cout << "m: " << std::setw(20) << mantissa() << ", e: " << std::setw(12) << exponent() << ", hex: ";
+        std::cout << "m: " << std::setw(20) << mantissa() << ", e: " << std::setw(12) << exponent()
+                  << ", hex: ";
         std::cout << std::hex << std::uppercase << std::setfill('0');
         for (auto const& c : data)
             std::cout << std::setw(2) << (unsigned)c << " ";
@@ -162,7 +163,8 @@ struct FloatState
     MantissaRange::mantissa_scale oldScale_;
     bool good_;
 
-    FloatState(int32_t mode) : oldMode_(Number::getround()), oldScale_(Number::getMantissaScale()), good_(false)
+    FloatState(int32_t mode)
+        : oldMode_(Number::getround()), oldScale_(Number::getMantissaScale()), good_(false)
     {
         if (mode < Number::rounding_mode::to_nearest || mode > Number::rounding_mode::upward)
             return;

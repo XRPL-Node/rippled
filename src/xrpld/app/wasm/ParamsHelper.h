@@ -50,9 +50,11 @@ struct WasmImportFunc
 typedef std::pair<void*, WasmImportFunc> WasmUserData;
 typedef std::vector<WasmUserData> ImportVec;
 
-#define WASM_IMPORT_FUNC(v, f, ...) WasmImpFunc<f##_proto>(v, #f, reinterpret_cast<void*>(&f##_wrap), ##__VA_ARGS__)
+#define WASM_IMPORT_FUNC(v, f, ...) \
+    WasmImpFunc<f##_proto>(v, #f, reinterpret_cast<void*>(&f##_wrap), ##__VA_ARGS__)
 
-#define WASM_IMPORT_FUNC2(v, f, n, ...) WasmImpFunc<f##_proto>(v, n, reinterpret_cast<void*>(&f##_wrap), ##__VA_ARGS__)
+#define WASM_IMPORT_FUNC2(v, f, n, ...) \
+    WasmImpFunc<f##_proto>(v, n, reinterpret_cast<void*>(&f##_wrap), ##__VA_ARGS__)
 
 template <int N, int C, typename mpl>
 void
@@ -87,7 +89,8 @@ WasmImpRet(WasmImportFunc& e)
         e.result = WT_I64;
     else if constexpr (std::is_void_v<rt>)
         e.result.reset();
-#if (defined(__GNUC__) && (__GNUC__ >= 14)) || ((defined(__clang_major__)) && (__clang_major__ >= 18))
+#if (defined(__GNUC__) && (__GNUC__ >= 14)) || \
+    ((defined(__clang_major__)) && (__clang_major__ >= 18))
     else
         static_assert(false, "Unsupported return type");
 #endif
@@ -108,7 +111,12 @@ WasmImpFuncHelper(WasmImportFunc& e)
 
 template <typename F>
 void
-WasmImpFunc(ImportVec& v, std::string_view imp_name, void* f_wrap, void* data = nullptr, uint32_t gas = 0)
+WasmImpFunc(
+    ImportVec& v,
+    std::string_view imp_name,
+    void* f_wrap,
+    void* data = nullptr,
+    uint32_t gas = 0)
 {
     WasmImportFunc e;
     e.name = imp_name;

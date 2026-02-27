@@ -60,13 +60,19 @@ struct WasmVec
     }
 };
 
-using WasmValtypeVec = WasmVec<wasm_valtype_vec_t, &wasm_valtype_vec_new_uninitialized, &wasm_valtype_vec_delete>;
+using WasmValtypeVec =
+    WasmVec<wasm_valtype_vec_t, &wasm_valtype_vec_new_uninitialized, &wasm_valtype_vec_delete>;
 using WasmValVec = WasmVec<wasm_val_vec_t, &wasm_val_vec_new_uninitialized, &wasm_val_vec_delete>;
-using WasmExternVec = WasmVec<wasm_extern_vec_t, &wasm_extern_vec_new_uninitialized, &wasm_extern_vec_delete>;
-using WasmExporttypeVec =
-    WasmVec<wasm_exporttype_vec_t, &wasm_exporttype_vec_new_uninitialized, &wasm_exporttype_vec_delete>;
-using WasmImporttypeVec =
-    WasmVec<wasm_importtype_vec_t, &wasm_importtype_vec_new_uninitialized, &wasm_importtype_vec_delete>;
+using WasmExternVec =
+    WasmVec<wasm_extern_vec_t, &wasm_extern_vec_new_uninitialized, &wasm_extern_vec_delete>;
+using WasmExporttypeVec = WasmVec<
+    wasm_exporttype_vec_t,
+    &wasm_exporttype_vec_new_uninitialized,
+    &wasm_exporttype_vec_delete>;
+using WasmImporttypeVec = WasmVec<
+    wasm_importtype_vec_t,
+    &wasm_importtype_vec_new_uninitialized,
+    &wasm_importtype_vec_delete>;
 
 struct WasmiResult
 {
@@ -100,7 +106,12 @@ struct InstanceWrapper
 
 private:
     static InstancePtr
-    init(StorePtr& s, ModulePtr& m, WasmExternVec& expt, WasmExternVec const& imports, beast::Journal j);
+    init(
+        StorePtr& s,
+        ModulePtr& m,
+        WasmExternVec& expt,
+        WasmExternVec const& imports,
+        beast::Journal j);
 
 public:
     InstanceWrapper();
@@ -145,7 +156,12 @@ public:
     ModuleWrapper(ModuleWrapper&& o);
     ModuleWrapper&
     operator=(ModuleWrapper&& o);
-    ModuleWrapper(StorePtr& s, Bytes const& wasmBin, bool instantiate, ImportVec const& imports, beast::Journal j);
+    ModuleWrapper(
+        StorePtr& s,
+        Bytes const& wasmBin,
+        bool instantiate,
+        ImportVec const& imports,
+        beast::Journal j);
     ~ModuleWrapper() = default;
 
     operator bool() const;
@@ -290,7 +306,12 @@ private:
 
     template <int NR, class... Types>
     inline WasmiResult
-    call(FuncInfo const& f, std::vector<wasm_val_t>& in, uint8_t const* d, int32_t sz, Types&&... args);
+    call(
+        FuncInfo const& f,
+        std::vector<wasm_val_t>& in,
+        uint8_t const* d,
+        int32_t sz,
+        Types&&... args);
 
     template <int NR, class... Types>
     inline WasmiResult

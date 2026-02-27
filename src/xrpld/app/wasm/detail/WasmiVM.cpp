@@ -30,7 +30,8 @@ print_wasm_error(std::string_view msg, wasm_trap_t* trap, beast::Journal jlog)
 
         if (error_message.size)
         {
-            j << "WASMI Error: " << msg << ", " << std::string_view(error_message.data, error_message.size - 1);
+            j << "WASMI Error: " << msg << ", "
+              << std::string_view(error_message.data, error_message.size - 1);
         }
         else
             j << "WASMI Error: " << msg;
@@ -51,10 +52,16 @@ print_wasm_error(std::string_view msg, wasm_trap_t* trap, beast::Journal jlog)
 }  // namespace
 
 InstancePtr
-InstanceWrapper::init(StorePtr& s, ModulePtr& m, WasmExternVec& expt, WasmExternVec const& imports, beast::Journal j)
+InstanceWrapper::init(
+    StorePtr& s,
+    ModulePtr& m,
+    WasmExternVec& expt,
+    WasmExternVec const& imports,
+    beast::Journal j)
 {
     wasm_trap_t* trap = nullptr;
-    InstancePtr mi = InstancePtr(wasm_instance_new(s.get(), m.get(), &imports.vec_, &trap), &wasm_instance_delete);
+    InstancePtr mi = InstancePtr(
+        wasm_instance_new(s.get(), m.get(), &imports.vec_, &trap), &wasm_instance_delete);
 
     if (!mi || trap)
     {
@@ -76,7 +83,11 @@ InstanceWrapper::InstanceWrapper(InstanceWrapper&& o) : instance_(nullptr, &wasm
 }
 // LCOV_EXCL_STOP
 
-InstanceWrapper::InstanceWrapper(StorePtr& s, ModulePtr& m, WasmExternVec const& imports, beast::Journal j)
+InstanceWrapper::InstanceWrapper(
+    StorePtr& s,
+    ModulePtr& m,
+    WasmExternVec const& imports,
+    beast::Journal j)
     : store_(s.get()), instance_(init(s, m, exports_, imports, j)), j_(j)
 {
 }
@@ -345,7 +356,8 @@ ModuleWrapper::buildImports(StorePtr& s, ImportVec const& imports)
 
         wasm_externkind_t const itype = wasm_externtype_kind(wasm_importtype_type(importType));
         if ((itype) != WASM_EXTERN_FUNC)
-            throw std::runtime_error("Invalid import type " + std::to_string(itype));  // LCOV_EXCL_LINE
+            throw std::runtime_error(
+                "Invalid import type " + std::to_string(itype));  // LCOV_EXCL_LINE
 
         // for multi-module support
         // if ((W_ENV != modName) && (W_HOST_LIB != modName))
@@ -368,7 +380,11 @@ ModuleWrapper::buildImports(StorePtr& s, ImportVec const& imports)
             results.release();
 
             wasm_func_t* func = wasm_func_new_with_env(
-                s.get(), ftype.get(), reinterpret_cast<wasm_func_callback_with_env_t>(imp.wrap), (void*)&obj, nullptr);
+                s.get(),
+                ftype.get(),
+                reinterpret_cast<wasm_func_callback_with_env_t>(imp.wrap),
+                (void*)&obj,
+                nullptr);
             if (!func)
             {
                 // LCOV_EXCL_START
@@ -416,7 +432,8 @@ ModuleWrapper::getFuncType(std::string_view funcName) const
         auto const* exp_type(exportTypes_.vec_.data[i]);
         wasm_name_t const* name = wasm_exporttype_name(exp_type);
         wasm_externtype_t const* exn_type = wasm_exporttype_type(exp_type);
-        if (wasm_externtype_kind(exn_type) == WASM_EXTERN_FUNC && funcName == std::string_view(name->data, name->size))
+        if (wasm_externtype_kind(exn_type) == WASM_EXTERN_FUNC &&
+            funcName == std::string_view(name->data, name->size))
         {
             return wasm_externtype_as_functype(const_cast<wasm_externtype_t*>(exn_type));
         }
@@ -502,7 +519,11 @@ WasmiEngine::WasmiEngine() : engine_(init()), store_(nullptr, &wasm_store_delete
 }
 
 int
-WasmiEngine::addModule(Bytes const& wasmCode, bool instantiate, ImportVec const& imports, int64_t gas)
+WasmiEngine::addModule(
+    Bytes const& wasmCode,
+    bool instantiate,
+    ImportVec const& imports,
+    int64_t gas)
 {
     moduleWrap_.reset();
     store_.reset();  // to free the memory before creating new store
@@ -640,7 +661,8 @@ WasmiEngine::call(FuncInfo const& f, std::vector<wasm_val_t>& in)
     // if (NR)  {   wasm_val_vec_new_uninitialized(&ret, NR);    //
     // wasm_val_vec_new(&ret, NR, &rs[0]);    // ret = WASM_ARRAY_VEC(rs);    }
 
-    wasm_val_vec_t const inv = in.empty() ? wasm_val_vec_t WASM_EMPTY_VEC : wasm_val_vec_t{in.size(), in.data()};
+    wasm_val_vec_t const inv =
+        in.empty() ? wasm_val_vec_t WASM_EMPTY_VEC : wasm_val_vec_t{in.size(), in.data()};
 
 #ifdef SHOW_CALL_TIME
     auto const start = usecs();
@@ -770,11 +792,12 @@ WasmiEngine::runHlp(
     if (res.f)
         throw std::runtime_error("<" + std::string(funcName) + "> failure");
     else if (!res.r.vec_.size)
-        throw std::runtime_error("<" + std::string(funcName) + "> return nothing");  // LCOV_EXCL_LINE
+        throw std::runtime_error(
+            "<" + std::string(funcName) + "> return nothing");  // LCOV_EXCL_LINE
     else if (res.r.vec_.data[0].kind != WASM_I32)
         throw std::runtime_error(
-            "<" + std::string(funcName) +
-            "> return type mismatch, ret: " + std::to_string(static_cast<int>(res.r.vec_.data[0].kind)));
+            "<" + std::string(funcName) + "> return type mismatch, ret: " +
+            std::to_string(static_cast<int>(res.r.vec_.data[0].kind)));
 
     if (gas == -1)
         gas = std::numeric_limits<decltype(gas)>::max();

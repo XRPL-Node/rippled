@@ -14,7 +14,9 @@ WasmHostFunctionsImpl::trace(std::string_view const& msg, Slice const& data, boo
 {
     if (!asHex)
     {
-        log(msg, [&data] { return std::string_view(reinterpret_cast<char const*>(data.data()), data.size()); });
+        log(msg, [&data] {
+            return std::string_view(reinterpret_cast<char const*>(data.data()), data.size());
+        });
     }
     else
     {
