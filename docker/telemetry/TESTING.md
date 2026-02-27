@@ -370,7 +370,7 @@ See the "Verification Queries" section below.
 
 ## Expected Span Catalog
 
-All 12 production span names instrumented across Phases 2-4:
+All 16 production span names instrumented across Phases 2-5:
 
 | Span Name                   | Source File           | Phase | Key Attributes                                             | How to Trigger            |
 | --------------------------- | --------------------- | ----- | ---------------------------------------------------------- | ------------------------- |
@@ -380,10 +380,16 @@ All 12 production span names instrumented across Phases 2-4:
 | `rpc.command.<name>`        | RPCHandler.cpp:161    | 2     | `xrpl.rpc.command`, `xrpl.rpc.version`, `xrpl.rpc.role`    | Any RPC command           |
 | `tx.process`                | NetworkOPs.cpp:1227   | 3     | `xrpl.tx.hash`, `xrpl.tx.local`, `xrpl.tx.path`            | Submit transaction        |
 | `tx.receive`                | PeerImp.cpp:1273      | 3     | `xrpl.peer.id`                                             | Peer relays transaction   |
+| `tx.apply`                  | BuildLedger.cpp:88    | 5     | `xrpl.ledger.tx_count`, `xrpl.ledger.tx_failed`            | Ledger close (tx set)     |
 | `consensus.proposal.send`   | RCLConsensus.cpp:177  | 4     | `xrpl.consensus.round`                                     | Consensus proposing phase |
 | `consensus.ledger_close`    | RCLConsensus.cpp:282  | 4     | `xrpl.consensus.ledger.seq`, `xrpl.consensus.mode`         | Ledger close event        |
 | `consensus.accept`          | RCLConsensus.cpp:395  | 4     | `xrpl.consensus.proposers`, `xrpl.consensus.round_time_ms` | Ledger accepted           |
 | `consensus.validation.send` | RCLConsensus.cpp:753  | 4     | `xrpl.consensus.ledger.seq`, `xrpl.consensus.proposing`    | Validation sent           |
+| `ledger.build`              | BuildLedger.cpp:31    | 5     | `xrpl.ledger.seq`                                          | Ledger build              |
+| `ledger.validate`           | LedgerMaster.cpp:915  | 5     | `xrpl.ledger.seq`, `xrpl.ledger.validations`               | Ledger validated          |
+| `ledger.store`              | LedgerMaster.cpp:409  | 5     | `xrpl.ledger.seq`                                          | Ledger stored             |
+| `peer.proposal.receive`     | PeerImp.cpp:1667      | 5     | `xrpl.peer.id`, `xrpl.peer.proposal.trusted`               | Peer sends proposal       |
+| `peer.validation.receive`   | PeerImp.cpp:2264      | 5     | `xrpl.peer.id`, `xrpl.peer.validation.trusted`             | Peer sends validation     |
 
 ---
 
@@ -405,9 +411,11 @@ curl -s "$JAEGER/api/services/rippled/operations" | jq '.data'
 # Query traces by operation
 for op in "rpc.request" "rpc.process" \
           "rpc.command.server_info" "rpc.command.server_state" "rpc.command.ledger" \
-          "tx.process" "tx.receive" \
+          "tx.process" "tx.receive" "tx.apply" \
           "consensus.proposal.send" "consensus.ledger_close" \
-          "consensus.accept" "consensus.validation.send"; do
+          "consensus.accept" "consensus.validation.send" \
+          "ledger.build" "ledger.validate" "ledger.store" \
+          "peer.proposal.receive" "peer.validation.receive"; do
   count=$(curl -s "$JAEGER/api/traces?service=rippled&operation=$op&limit=5&lookback=1h" \
     | jq '.data | length')
   printf "%-35s %s traces\n" "$op" "$count"
@@ -434,15 +442,81 @@ curl -s "$PROM/api/v1/query?query=traces_span_metrics_calls_total{span_name=~\"r
   | jq '.data.result[] | {command: .metric["xrpl.rpc.command"], count: .value[1]}'
 ```
 
+### StatsD Metrics (beast::insight)
+
+rippled's built-in `beast::insight` framework emits StatsD metrics over UDP to the OTel Collector
+on port 8125. These appear in Prometheus alongside spanmetrics.
+
+Requires `[insight]` config in `xrpld.cfg`:
+
+```ini
+[insight]
+server=statsd
+address=127.0.0.1:8125
+prefix=rippled
+```
+
+Verify StatsD metrics in Prometheus:
+
+```bash
+# Ledger age gauge
+curl -s "$PROM/api/v1/query?query=rippled_LedgerMaster_Validated_Ledger_Age" | jq '.data.result'
+
+# Peer counts
+curl -s "$PROM/api/v1/query?query=rippled_Peer_Finder_Active_Inbound_Peers" | jq '.data.result'
+
+# RPC request counter
+curl -s "$PROM/api/v1/query?query=rippled_rpc_requests" | jq '.data.result'
+
+# State accounting
+curl -s "$PROM/api/v1/query?query=rippled_State_Accounting_Full_duration" | jq '.data.result'
+
+# Overlay traffic
+curl -s "$PROM/api/v1/query?query=rippled_total_Bytes_In" | jq '.data.result'
+```
+
+Key StatsD metrics (prefix `rippled_`):
+
+| Metric                                | Type      | Source                                    |
+| ------------------------------------- | --------- | ----------------------------------------- |
+| `LedgerMaster_Validated_Ledger_Age`   | gauge     | LedgerMaster.h:373                        |
+| `LedgerMaster_Published_Ledger_Age`   | gauge     | LedgerMaster.h:374                        |
+| `State_Accounting_{Mode}_duration`    | gauge     | NetworkOPs.cpp:774                        |
+| `State_Accounting_{Mode}_transitions` | gauge     | NetworkOPs.cpp:780                        |
+| `Peer_Finder_Active_Inbound_Peers`    | gauge     | PeerfinderManager.cpp:214                 |
+| `Peer_Finder_Active_Outbound_Peers`   | gauge     | PeerfinderManager.cpp:215                 |
+| `Overlay_Peer_Disconnects`            | gauge     | OverlayImpl.h:557                         |
+| `job_count`                           | gauge     | JobQueue.cpp:26                           |
+| `rpc_requests`                        | counter   | ServerHandler.cpp:108                     |
+| `rpc_time`                            | histogram | ServerHandler.cpp:110                     |
+| `rpc_size`                            | histogram | ServerHandler.cpp:109                     |
+| `ios_latency`                         | histogram | Application.cpp:438                       |
+| `pathfind_fast`                       | histogram | PathRequests.h:23                         |
+| `pathfind_full`                       | histogram | PathRequests.h:24                         |
+| `ledger_fetches`                      | counter   | InboundLedgers.cpp:44                     |
+| `ledger_history_mismatch`             | counter   | LedgerHistory.cpp:16                      |
+| `warn`                                | counter   | Logic.h:33                                |
+| `drop`                                | counter   | Logic.h:34                                |
+| `{category}_Bytes_In/Out`             | gauge     | OverlayImpl.h:535 (57 traffic categories) |
+| `{category}_Messages_In/Out`          | gauge     | OverlayImpl.h:535 (57 traffic categories) |
+
 ### Grafana
 
 Open http://localhost:3000 (anonymous admin access enabled).
 
-Pre-configured dashboards:
+Pre-configured dashboards (span-derived):
 
-- **RPC Performance**: Request rates, latency percentiles by command
-- **Transaction Overview**: Transaction processing rates and paths
-- **Consensus Health**: Consensus round duration and proposer counts
+- **RPC Performance**: Request rates, latency percentiles by command, top commands, WebSocket rate
+- **Transaction Overview**: Transaction processing rates, apply duration, peer relay, failed tx rate
+- **Consensus Health**: Consensus round duration, proposer counts, mode tracking, accept heatmap
+- **Ledger Operations**: Build/validate/store rates and durations, TX apply metrics
+- **Peer Network**: Proposal/validation receive rates, trusted vs untrusted breakdown (requires `trace_peer=1`)
+
+Pre-configured dashboards (StatsD):
+
+- **Node Health (StatsD)**: Validated/published ledger age, operating mode, I/O latency, job queue
+- **Network Traffic (StatsD)**: Peer counts, disconnects, overlay traffic by category
+- **RPC & Pathfinding (StatsD)**: RPC request rate/time/size, pathfinding duration, resource warnings
 
 Pre-configured datasources:
 
