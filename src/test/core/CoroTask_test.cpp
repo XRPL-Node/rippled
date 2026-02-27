@@ -9,9 +9,50 @@
 namespace xrpl {
 namespace test {
 
+/**
+ * Test suite for the C++20 coroutine primitives: CoroTask, CoroTaskRunner,
+ * and JobQueueAwaiter.
+ *
+ * Dependency Diagram
+ * ==================
+ *
+ *   CoroTask_test
+ *   +-------------------------------------------------+
+ *   | + gate (inner class) : condition_variable helper |
+ *   +-------------------------------------------------+
+ *          |  uses
+ *          v
+ *   jtx::Env  -->  JobQueue::postCoroTask()
+ *                       |
+ *                       +-- CoroTaskRunner (suspend / post / resume)
+ *                       +-- CoroTask<void> / CoroTask<T>
+ *                       +-- JobQueueAwaiter
+ *
+ * Test Coverage Matrix
+ * ====================
+ *
+ *   Test                      | Primitives exercised
+ *   --------------------------+----------------------------------------------
+ *   testVoidCompletion        | CoroTask<void> basic lifecycle
+ *   testCorrectOrder          | suspend() -> join() -> post() -> complete
+ *   testIncorrectOrder        | post() before suspend() (race-safe path)
+ *   testJobQueueAwaiter       | JobQueueAwaiter suspend + auto-repost
+ *   testThreadSpecificStorage | LocalValue isolation across coroutines
+ *   testExceptionPropagation  | unhandled_exception() in promise_type
+ *   testMultipleYields        | N sequential suspend/resume cycles
+ *   testValueReturn           | CoroTask<T> co_return value
+ *   testValueException        | CoroTask<T> exception via co_await
+ *   testValueChaining         | nested CoroTask<T> -> CoroTask<T>
+ *   testShutdownRejection     | postCoroTask returns nullptr when stopping
+ */
 class CoroTask_test : public beast::unit_test::suite
 {
 public:
+    /**
+     * Simple one-shot gate for synchronizing between test thread
+     * and coroutine worker threads. signal() sets the flag;
+     * wait_for() blocks until signaled or timeout.
+     */
     class gate
     {
     private:
@@ -20,6 +61,13 @@ public:
         bool signaled_ = false;
 
     public:
+        /**
+         * Block until signaled or timeout expires.
+         *
+         * @param rel_time Maximum duration to wait
+         *
+         * @return true if signaled before timeout
+         */
         template <class Rep, class Period>
         bool
         wait_for(std::chrono::duration<Rep, Period> const& rel_time)
@@ -30,6 +78,9 @@ public:
             return b;
         }
 
+        /**
+         * Signal the gate, waking any waiting thread.
+         */
         void
         signal()
         {
@@ -44,7 +95,9 @@ public:
     // bug where reference captures in coroutine lambdas are corrupted
     // in the coroutine frame.
 
-    // Test: CoroTask<void> runs to completion
+    /**
+     * CoroTask<void> runs to completion and runner becomes non-runnable.
+     */
     void
     testVoidCompletion()
     {
@@ -70,8 +123,10 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: correct_order — suspend, join, post, complete
-    // Mirrors existing Coroutine_test::correct_order
+    /**
+     * Correct order: suspend, join, post, complete.
+     * Mirrors existing Coroutine_test::correct_order.
+     */
     void
     testCorrectOrder()
     {
@@ -105,8 +160,10 @@ public:
         runner->join();
     }
 
-    // Test: incorrect_order — post before suspend
-    // Mirrors existing Coroutine_test::incorrect_order
+    /**
+     * Incorrect order: post() before suspend(). Verifies the
+     * race-safe path. Mirrors Coroutine_test::incorrect_order.
+     */
     void
     testIncorrectOrder()
     {
@@ -131,7 +188,9 @@ public:
         BEAST_EXPECT(g.wait_for(5s));
     }
 
-    // Test: JobQueueAwaiter — suspend + auto-repost
+    /**
+     * JobQueueAwaiter suspend + auto-repost across multiple yield points.
+     */
     void
     testJobQueueAwaiter()
     {
@@ -161,8 +220,10 @@ public:
         BEAST_EXPECT(step == 3);
     }
 
-    // Test: thread_specific_storage — per-coroutine LocalValue isolation
-    // Mirrors existing Coroutine_test::thread_specific_storage
+    /**
+     * Per-coroutine LocalValue isolation. Each coroutine sees its own
+     * copy of thread-local state. Mirrors Coroutine_test::thread_specific_storage.
+     */
     void
     testThreadSpecificStorage()
     {
@@ -232,7 +293,10 @@ public:
         BEAST_EXPECT(*lv == -1);
     }
 
-    // Test: exception propagation
+    /**
+     * Exception thrown in coroutine body is caught by
+     * promise_type::unhandled_exception(). Coroutine completes.
+     */
     void
     testExceptionPropagation()
     {
@@ -261,7 +325,9 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: multiple sequential co_await points
+    /**
+     * Multiple sequential suspend/resume cycles via co_await.
+     */
     void
     testMultipleYields()
     {
@@ -311,7 +377,10 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: CoroTask<T> returns a value via co_return
+    /**
+     * CoroTask<T> returns a value via co_return. Outer coroutine
+     * extracts it with co_await.
+     */
     void
     testValueReturn()
     {
@@ -341,7 +410,10 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: CoroTask<T> propagates exceptions from inner coroutines
+    /**
+     * CoroTask<T> propagates exceptions from inner coroutines.
+     * Outer coroutine catches via try/catch around co_await.
+     */
     void
     testValueException()
     {
@@ -381,7 +453,10 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: CoroTask<T> chaining — nested value-returning coroutines
+    /**
+     * CoroTask<T> chaining. Nested value-returning coroutines
+     * compose via co_await.
+     */
     void
     testValueChaining()
     {
@@ -415,7 +490,9 @@ public:
         BEAST_EXPECT(!runner->runnable());
     }
 
-    // Test: postCoroTask returns nullptr when JobQueue is stopping
+    /**
+     * postCoroTask returns nullptr when JobQueue is stopping.
+     */
     void
     testShutdownRejection()
     {

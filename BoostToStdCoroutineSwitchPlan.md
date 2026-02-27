@@ -26,37 +26,55 @@
 ### 1.1 Stackful (Boost.Coroutine) vs Stackless (C++20) Architecture
 
 ```mermaid
-graph LR
-    subgraph "Boost.Coroutine2 (Stackful)"
-        A[Coroutine Created] --> B[1MB Stack Allocated]
-        B --> C[Full Call Stack Available]
-        C --> D[yield from ANY nesting depth]
-        D --> E[Context Switch: Save/Restore registers + stack pointer]
+graph TD
+    subgraph Boost["Boost.Coroutine2 (Stackful)"]
+        direction TB
+        B1["Coroutine Created"]
+        B2["1 MB Stack Allocated"]
+        B3["Full Call Stack Available"]
+        B4["yield&lpar;&rpar; from ANY<br/>nesting depth"]
+        B5["Context Switch:<br/>save/restore registers<br/>+ stack pointer<br/>~40-100 CPU cycles"]
+        B1 --> B2 --> B3 --> B4 --> B5
     end
 
-    subgraph "C++20 Coroutines (Stackless)"
-        F[Coroutine Created] --> G["200-500B Frame on Heap"]
-        G --> H[No Dedicated Stack]
-        H --> I[co_await ONLY at suspension points]
-        I --> J[Context Switch: Resume via function call]
+    subgraph Std["C++20 Coroutines (Stackless)"]
+        direction TB
+        S1["Coroutine Created"]
+        S2["200-500 B Frame on Heap"]
+        S3["No Dedicated Stack"]
+        S4["co_await ONLY at<br/>explicit suspension points"]
+        S5["Context Switch:<br/>resume via function call<br/>symmetric transfer / tail-call<br/>~20-50 CPU cycles"]
+        S1 --> S2 --> S3 --> S4 --> S5
     end
 ```
 
+**Boost (right)**: Each coroutine gets a full 1 MB stack. Suspension saves the
+entire register set and stack pointer, so `yield()` can be called from any
+nesting depth — the whole call chain is preserved. The cost is high per-coroutine
+memory and a heavier context switch (~40-100 cycles for `fcontext` save/restore).
+
+**C++20 (left)**: The compiler allocates a small heap frame (200-500 bytes)
+holding only the local variables that live across suspension points. There is no
+dedicated stack — suspension is only allowed at explicit `co_await` expressions
+in the immediate coroutine function. Resumption is a normal function call
+(symmetric transfer makes it a tail-call), costing ~20-50 cycles. The trade-off
+is that nested functions that need to suspend must themselves be coroutines.
+
 ### 1.2 API & Programming Model Comparison
 
-| Aspect                 | Boost.Coroutine2 (Current)                    | C++20 Coroutines (Target)                            |
-| ---------------------- | --------------------------------------------- | ---------------------------------------------------- |
-| **Type**               | Stackful, asymmetric                          | Stackless, asymmetric                                |
-| **Stack Model**        | Dedicated 1MB stack per coroutine             | Coroutine frame on heap (~200-500 bytes)             |
-| **Suspension**         | `(*yield_)()` — can yield from any call depth | `co_await expr` — only at explicit suspension points |
-| **Resumption**         | `coro_()` — resumes from last yield           | `handle.resume()` — resumes from last co_await       |
-| **Creation**           | `pull_type` constructor (runs to first yield) | Calling a coroutine function returns a handle        |
-| **Completion Check**   | `static_cast<bool>(coro_)`                    | `handle.done()`                                      |
-| **Value Passing**      | Typed via `pull_type<T>` / `push_type<T>`     | Via `promise_type::return_value()`                   |
-| **Exception Handling** | Natural stack-based propagation               | `promise_type::unhandled_exception()` — explicit     |
-| **Cancellation**       | Application-managed (poll a flag)             | Via `await_ready()` / cancellation tokens            |
-| **Keywords**           | None (library-only)                           | `co_await`, `co_yield`, `co_return`                  |
-| **Standard**           | Boost library (not ISO C++)                   | ISO C++20 standard                                   |
+| Aspect                 | Boost.Coroutine2 (Current)                                                                                                                                                                                                                  | C++20 Coroutines (Target)                                                                                                                                                                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Type**               | **Stackful, asymmetric.** Each coroutine carries its own call stack, and control transfers between a parent (caller) and a child (coroutine) — never between two siblings directly.                                                         | **Stackless, asymmetric.** The compiler transforms the coroutine function into a state machine allocated on the heap. The same parent/child asymmetry applies, but there is no separate stack.                                                                                                                                                           |
+| **Stack Model**        | **Dedicated 1 MB stack per coroutine.** Allocated at construction via `boost::context::fixedsize_stack`. The full stack is reserved even if the coroutine only uses a few hundred bytes, leading to high memory overhead under concurrency. | **Heap frame of ~200-500 bytes.** The compiler allocates only the local variables that live across suspension points into a coroutine frame on the heap. The frame may be elided entirely if the compiler can prove the coroutine's lifetime is bounded by its caller.                                                                                   |
+| **Suspension**         | **`(*yield_)()` — can yield from any call depth.** Because the coroutine has its own stack, a call chain `fn_a() → fn_b() → yield()` suspends the entire stack. The `yield_` pointer is a `push_type*` provided by Boost.                   | **`co_await expr` — only at explicit suspension points.** Suspension is only possible in the immediate coroutine function body. If a nested regular function needs to suspend, it must itself be refactored into a coroutine returning an awaitable.                                                                                                     |
+| **Resumption**         | **`coro_()` — resumes from last yield.** Calling the `pull_type` object switches back to the coroutine's stack and continues execution right after the last `yield()` call.                                                                 | **`handle.resume()` — resumes from last co_await.** The `std::coroutine_handle<>` is a lightweight pointer to the coroutine frame. Calling `.resume()` jumps to the suspension point via a function-call dispatch (no stack switch).                                                                                                                     |
+| **Creation**           | **`pull_type` constructor auto-starts the coroutine.** When a `pull_type` is constructed, it immediately transfers control into the coroutine body, which runs until its first `yield()`. The caller must account for this eager start.     | **Calling a coroutine function returns a suspended handle.** The function body does NOT execute until `handle.resume()` is called (when `initial_suspend()` returns `suspend_always`). This lazy-start model gives the caller full control over when execution begins.                                                                                   |
+| **Completion Check**   | **`static_cast<bool>(coro_)` returns false when done.** The `pull_type` is contextually convertible to `bool`; it becomes false after the coroutine body returns.                                                                           | **`handle.done()` returns true when done.** A direct query on the coroutine handle. Calling `resume()` after `done()` is true is undefined behavior.                                                                                                                                                                                                     |
+| **Value Passing**      | **Typed via `pull_type<T>` / `push_type<T>`.** Values are exchanged through the coroutine's type parameter — `pull_type<T>` pulls values out, `push_type<T>` pushes values in. rippled uses `<void>` (no values exchanged).                 | **Via `promise_type::return_value(T)` or `co_return`.** Values are stored in the promise object inside the coroutine frame. The caller retrieves them through `await_resume()`. For void coroutines, `return_void()` is used instead.                                                                                                                    |
+| **Exception Handling** | **Natural stack-based propagation.** An exception thrown inside the coroutine unwinds its stack normally and propagates to the caller at the `pull_type` call site (i.e., whoever called `coro_()`).                                        | **Explicit capture via `promise_type::unhandled_exception()`.** Exceptions thrown in the coroutine body are caught by the promise and stored (typically as `std::exception_ptr`). They are rethrown in `await_resume()` when the caller co_awaits the result.                                                                                            |
+| **Cancellation**       | **Application-managed (poll a flag).** There is no built-in cancellation. rippled uses `expectEarlyExit()` to mark a coroutine as abandoned during shutdown, then decrements `nSuspend_` so `JobQueue::stop()` can proceed.                 | **Via `await_ready()` or cancellation tokens.** An awaiter can check a cancellation flag in `await_ready()` and return true to skip suspension. Alternatively, `std::stop_token` patterns (C++20) can be threaded through. Our `JobQueueAwaiter` returns false from `await_suspend()` when the JobQueue is stopping, effectively cancelling the suspend. |
+| **Keywords**           | **None (library-only).** All coroutine machinery is expressed through library types (`pull_type`, `push_type`) and regular function calls. No special language syntax required.                                                             | **`co_await`, `co_yield`, `co_return`.** The presence of any of these keywords in a function body makes it a coroutine. The compiler generates the state machine, frame allocation, and suspension/resumption code automatically.                                                                                                                        |
+| **Standard**           | **Boost library (not ISO C++).** `Boost.Coroutine` is deprecated in favor of `Boost.Coroutine2`, which itself has no active development. Depends on `Boost.Context` for platform-specific assembly-level stack switching.                   | **ISO C++20 standard.** Part of the language specification. Supported by all major compilers (GCC 11+, Clang 14+, MSVC 19.28+). Tooling, debugger support, and static analysis are steadily improving across the ecosystem.                                                                                                                              |
 
 ### 1.3 Performance Characteristics
 
@@ -75,7 +93,50 @@ graph LR
 
 - **Boost**: Can yield from any nesting level — `fn_a()` calls `fn_b()` calls `yield()`. The entire call stack is preserved.
 - **C++20**: Suspension only at `co_await` expressions in the immediate coroutine function. Nested functions that need to suspend must themselves be coroutines returning awaitables.
-- **Impact**: rippled's usage is **shallow** — `yield()` is called directly from the RPC handler lambda, never from deeply nested code. This makes migration straightforward.
+- **Impact**: (Assumption, needs confirmation from people who know the code better) Rippled's usage is **shallow** — `yield()` is called directly from the RPC handler lambda, never from deeply nested code. This makes migration straightforward.
+
+**Boost** — yield from coroutine body, resume later via `post()`:
+
+```cpp
+jq.postCoro(jtCLIENT, "Handler", [&](auto const& coro) {
+    auto result = doFirstHalf();
+    coro->yield();          // suspend — entire stack preserved
+    // resumes here when coro->post() is called externally
+    doSecondHalf(result);
+});
+```
+
+**C++20** — `co_await` suspends, `JobQueueAwaiter` combines yield + auto-repost:
+
+```cpp
+jq.postCoroTask(jtCLIENT, "Handler", [&](auto runner) -> CoroTask<void> {
+    auto result = doFirstHalf();
+    co_await JobQueueAwaiter{runner};  // suspend + auto-repost
+    // resumes on a worker thread when the job is picked up
+    doSecondHalf(result);
+    co_return;
+});
+```
+
+**Key difference** — Boost can yield from nested calls; C++20 cannot:
+
+```cpp
+// Boost — works: yield from inside a helper function
+void helper(std::shared_ptr<JobQueue::Coro> coro) {
+    coro->yield();  // OK — stackful, entire call stack is preserved
+}
+jq.postCoro(jtCLIENT, "Deep", [](auto coro) { helper(coro); });
+
+// C++20 — does NOT work: regular functions cannot co_await
+void helper(std::shared_ptr<CoroTaskRunner> runner) {
+    co_await runner->suspend();  // COMPILE ERROR — not a coroutine
+}
+// FIX: helper must itself be a coroutine returning CoroTask<void>
+CoroTask<void> helper(std::shared_ptr<CoroTaskRunner> runner) {
+    co_await runner->suspend();  // OK — this is a coroutine
+    co_return;
+}
+```
 
 #### Exception Handling
 
@@ -83,11 +144,109 @@ graph LR
 - **C++20**: Exceptions in coroutine body are caught by `promise_type::unhandled_exception()`. Must be explicitly stored and rethrown.
 - **Impact**: Need to implement `unhandled_exception()` in promise type. Pattern is well-established.
 
+**Boost** — exceptions propagate naturally through `yield()`:
+
+```cpp
+jq.postCoro(jtCLIENT, "Risky", [](auto coro) {
+    coro->yield();
+    throw std::runtime_error("oops");
+    // Exception propagates up the coroutine stack naturally.
+    // The Coro::resume() caller sees it when the coroutine unwinds.
+});
+```
+
+**C++20** — exceptions are captured by `promise_type` and rethrown on `co_await`:
+
+```cpp
+// Inner coroutine throws
+CoroTask<int> failingOp() {
+    throw std::runtime_error("oops");
+    co_return 0;  // never reached
+}
+
+// Outer coroutine catches — exception crosses coroutine boundary via promise
+jq.postCoroTask(jtCLIENT, "Caller", [](auto runner) -> CoroTask<void> {
+    try {
+        int v = co_await failingOp();  // rethrows here
+    } catch (std::runtime_error const& e) {
+        // e.what() == "oops" — caught across coroutine boundary
+    }
+    co_return;
+});
+```
+
+**Key difference** — C++20 requires explicit plumbing, but it's already wired up:
+
+```cpp
+// Inside CoroTask<void>::promise_type (already implemented):
+void unhandled_exception() {
+    exception_ = std::current_exception();  // capture
+}
+// Inside CoroTask<void>::await_resume() (already implemented):
+void await_resume() {
+    if (auto& ep = handle_.promise().exception_)
+        std::rethrow_exception(ep);          // rethrow to caller
+}
+```
+
 #### Cancellation
 
 - **Boost**: rippled uses `expectEarlyExit()` for graceful shutdown — not a general cancellation mechanism.
 - **C++20**: Can check cancellation in `await_ready()` before suspension, or via `stop_token` patterns.
 - **Impact**: C++20 provides strictly better cancellation support.
+
+**Boost** — `expectEarlyExit()` for cleanup when coroutine never ran:
+
+```cpp
+auto coro = std::make_shared<Coro>(create, jq, t, name, fn);
+if (!coro->post()) {
+    // JobQueue is stopping — coroutine will never run.
+    // Must manually decrement nSuspend_ so shutdown doesn't hang.
+    coro->expectEarlyExit();
+    coro.reset();
+}
+```
+
+No cooperative in-body cancellation — coroutine just runs to completion or gets abandoned.
+
+**C++20** — `expectEarlyExit()` for the same case, plus cooperative in-body checking:
+
+```cpp
+// Same early-exit pattern when post() fails:
+auto runner = CoroTaskRunner::create(jq, t, name);
+runner->init(fn);
+++nSuspend_;
+if (!runner->post()) {
+    runner->expectEarlyExit();  // decrements nSuspend_, destroys frame
+    runner.reset();
+}
+
+// Cooperative cancellation — coroutine checks jq.isStopping() after each yield:
+jq.postCoroTask(jtCLIENT, "Long", [jqp = &jq](auto runner) -> CoroTask<void> {
+    while (hasWork()) {
+        co_await JobQueueAwaiter{runner};
+        if (jqp->isStopping())
+            co_return;              // graceful exit
+        doNextChunk();
+    }
+    co_return;
+});
+```
+
+**C++20 bonus** — `JobQueueAwaiter::await_suspend()` handles shutdown automatically:
+
+```cpp
+bool await_suspend(std::coroutine_handle<>) {
+    runner->onSuspend();
+    if (!runner->post()) {
+        // JQ stopping — undo suspend, return false so coroutine
+        // continues immediately (can fall through to co_return)
+        runner->onUndoSuspend();
+        return false;
+    }
+    return true;  // actually suspend
+}
+```
 
 ### 1.5 Compiler Support
 
@@ -113,6 +272,32 @@ C++20 stackless coroutines have well-known limitations compared to stackful coro
 - **All test yield() calls**: directly in `postCoro` lambda bodies (Coroutine_test.cpp, JobQueue_test.cpp)
 - **The `push_type*` architecture** makes deep-nested yield() structurally impossible — the `yield_` pointer is only available inside the `postCoro` lambda via the `shared_ptr<Coro>`, and handlers call `context.coro->yield()` at the top level
 
+```mermaid
+graph LR
+    subgraph Stackful["Stackful &lpar;Boost&rpar; — can yield anywhere"]
+        direction TB
+        A1["postCoro lambda"] --> A2["handlerFn&lpar;&rpar;"]
+        A2 --> A3["helperFn&lpar;&rpar;"]
+        A3 --> A4["coro→yield&lpar;&rpar; ✅"]
+    end
+
+    subgraph Stackless["Stackless &lpar;C++20&rpar; — co_await at top only"]
+        direction TB
+        B1["postCoroTask lambda"] --> B2["co_await ✅"]
+        B1 --> B3["regularFn&lpar;&rpar;"]
+        B3 -.-> B4["co_await ❌"]
+    end
+
+    subgraph Rippled["rippled actual usage — all shallow"]
+        direction TB
+        C1["postCoro lambda"] --> C2["context.coro→yield&lpar;&rpar;<br/>&lpar;direct, no nesting&rpar;"]
+    end
+
+    style A4 fill:#f96,stroke:#333,color:#000
+    style B4 fill:#f66,stroke:#333,color:#fff
+    style C2 fill:#3d8,stroke:#333,color:#000
+```
+
 **Verdict**: This concern does NOT apply. All suspension is shallow.
 
 #### Concern 2: Colored Function Problem (Viral co_await)
@@ -128,6 +313,38 @@ C++20 stackless coroutines have well-known limitations compared to stackful coro
 
 The "coloring" stops at the entry point lambda and the one handler that suspends. No deep infection.
 
+```mermaid
+graph TD
+    subgraph Feared["Feared: deep coloring infection"]
+        direction TB
+        F1["main&lpar;&rpar;"] -->|"must become<br/>coroutine"| F2["Server::run&lpar;&rpar;"]
+        F2 -->|"must become<br/>coroutine"| F3["dispatch&lpar;&rpar;"]
+        F3 -->|"must become<br/>coroutine"| F4["doCommand&lpar;&rpar;"]
+        F4 -->|"must become<br/>coroutine"| F5["handler&lpar;&rpar;"]
+        F5 --> F6["co_await"]
+        style F1 fill:#f66,stroke:#333,color:#fff
+        style F2 fill:#f66,stroke:#333,color:#fff
+        style F3 fill:#f66,stroke:#333,color:#fff
+        style F4 fill:#f66,stroke:#333,color:#fff
+        style F5 fill:#f66,stroke:#333,color:#fff
+    end
+
+    subgraph Actual["Actual: coloring stops at entry point"]
+        direction TB
+        A1["main&lpar;&rpar;"] --- A2["Server::run&lpar;&rpar;"]
+        A2 --- A3["dispatch&lpar;&rpar;"]
+        A3 --- A4["doCommand&lpar;&rpar;"]
+        A4 -->|"only this<br/>is a coroutine"| A5["postCoroTask lambda<br/>→ CoroTask&lt;void&gt;"]
+        A5 --> A6["co_await"]
+        style A1 fill:#eee,stroke:#333,color:#000
+        style A2 fill:#eee,stroke:#333,color:#000
+        style A3 fill:#eee,stroke:#333,color:#000
+        style A4 fill:#eee,stroke:#333,color:#000
+        style A5 fill:#f96,stroke:#333,color:#000
+        style A6 fill:#3d8,stroke:#333,color:#000
+    end
+```
+
 **Verdict**: Minimal impact. Only 4 lambdas (3 entry points + 1 handler) need `co_await`.
 
 #### Concern 3: No Standard Library Support for Common Patterns
@@ -142,6 +359,38 @@ The "coloring" stops at the entry point lambda and the one handler that suspends
 
 However, these types are small, well-understood, and have extensive reference implementations (cppcoro, folly::coro, libunifex). The total boilerplate is approximately 150-200 lines of header code.
 
+```mermaid
+graph TD
+    subgraph StdLib["C++20 standard provides"]
+        direction LR
+        S1["coroutine_handle&lt;P&gt;"]
+        S2["suspend_always /<br/>suspend_never"]
+        S3["noop_coroutine&lpar;&rpar;"]
+        S4["co_await / co_return"]
+    end
+
+    subgraph Custom["Custom types we wrote &lpar;~150 lines total&rpar;"]
+        direction TB
+        C1["CoroTask&lt;T&gt;<br/>~80 lines<br/>&lpar;task + promise_type&rpar;"]
+        C2["JobQueueAwaiter<br/>~20 lines<br/>&lpar;suspend + repost&rpar;"]
+        C3["FinalAwaiter<br/>~10 lines<br/>&lpar;symmetric transfer&rpar;"]
+        C4["CoroTaskRunner<br/>~40 lines decl<br/>&lpar;lifecycle manager&rpar;"]
+    end
+
+    subgraph Ref["Reference implementations"]
+        direction LR
+        R1["cppcoro"]
+        R2["folly::coro"]
+        R3["libunifex"]
+    end
+
+    S1 --> C1
+    S2 --> C1
+    S3 --> C3
+    S4 --> C2
+    Ref -.->|"patterns<br/>borrowed from"| Custom
+```
+
 **Verdict**: Manageable. Custom types are small and well-documented in C++ community.
 
 #### Concern 4: Stack Overflow from Synchronous Resumption Chains
@@ -149,6 +398,31 @@ However, these types are small, well-understood, and have extensive reference im
 **Claim**: If coroutine A `co_await`s coroutine B, and B completes synchronously, B's `final_suspend` resumes A on the same stack, potentially building up unbounded stack depth.
 
 **Analysis**: This is addressed by **symmetric transfer** via `FinalAwaiter::await_suspend()` returning a `coroutine_handle<>` instead of `void`. The compiler transforms this into a tail-call, preventing stack growth. This is the standard solution used by all major coroutine libraries and is implemented in our `FinalAwaiter` design (Section 4.1).
+
+```mermaid
+graph TD
+    subgraph Problem["Without symmetric transfer — stack grows"]
+        direction TB
+        P1["A resumes B"] --> P2["B::resume&lpar;&rpar;<br/>stack frame +1"]
+        P2 --> P3["B completes<br/>final_suspend resumes A"]
+        P3 --> P4["A::resume&lpar;&rpar;<br/>stack frame +2"]
+        P4 --> P5["A resumes C"]
+        P5 --> P6["C::resume&lpar;&rpar;<br/>stack frame +3"]
+        P6 --> P7["... stack overflow ❌"]
+        style P7 fill:#f66,stroke:#333,color:#fff
+    end
+
+    subgraph Solution["With symmetric transfer — tail call, no growth"]
+        direction TB
+        S1["A resumes B"] --> S2["B::resume&lpar;&rpar;<br/>stack frame 1"]
+        S2 --> S3["B completes"]
+        S3 -->|"FinalAwaiter returns<br/>handle → tail call"| S4["A::resume&lpar;&rpar;<br/>stack frame 1 &lpar;reused&rpar;"]
+        S4 --> S5["A resumes C"]
+        S5 -->|"tail call"| S6["C::resume&lpar;&rpar;<br/>stack frame 1 &lpar;reused&rpar;"]
+        S6 --> S7["... bounded ✅"]
+        style S7 fill:#3d8,stroke:#333,color:#000
+    end
+```
 
 **Verdict**: Solved by symmetric transfer (already in our design).
 
@@ -162,6 +436,27 @@ However, these types are small, well-understood, and have extensive reference im
 - References passed to coroutine functions can dangle if the referent's scope ends before the coroutine completes
 - Our design mitigates this: `RPC::Context` is passed by reference but its lifetime is managed by `shared_ptr<Coro>` / the entry point lambda's scope, which outlives the coroutine
 
+```mermaid
+graph TD
+    subgraph Danger["Dangling reference — ❌ use-after-free"]
+        direction TB
+        D1["caller&lpar;&rpar; scope"] --> D2["int local = 42"]
+        D2 --> D3["launch coroutine<br/>with &amp;local"]
+        D3 --> D4["caller returns<br/>local destroyed"]
+        D4 --> D5["coroutine resumes<br/>reads &amp;local 💥"]
+        style D5 fill:#f66,stroke:#333,color:#fff
+    end
+
+    subgraph Safe["rippled pattern — ✅ lifetime managed"]
+        direction TB
+        S1["postCoroTask&lpar;&rpar;"] --> S2["shared_ptr&lt;Runner&gt;<br/>owns coroutine frame"]
+        S2 --> S3["lambda captures<br/>by value or<br/>shared_ptr"]
+        S3 --> S4["FuncStore keeps<br/>lambda alive on heap"]
+        S4 --> S5["coroutine resumes<br/>captures still valid ✅"]
+        style S5 fill:#3d8,stroke:#333,color:#000
+    end
+```
+
 **Verdict**: Real risk, but manageable with RAII patterns and ASAN testing.
 
 #### Concern 6: yield_to.h / boost::asio::spawn
@@ -174,6 +469,28 @@ However, these types are small, well-understood, and have extensive reference im
 - Different purpose: test infrastructure for async I/O tests
 - Different mechanism: Boost.Asio stackful coroutines (not Boost.Coroutine2)
 - **Not part of this migration scope** — used only in tests and unrelated to `JobQueue::Coro`
+
+```mermaid
+graph TD
+    subgraph ThisMigration["This migration &lpar;JobQueue::Coro&rpar;"]
+        direction TB
+        M1["Boost.Coroutine2<br/>push_type / pull_type"] -->|"replace with"| M2["C++20 coroutines<br/>CoroTask + co_await"]
+        M3["JobQueue::Coro"] -->|"replace with"| M4["CoroTaskRunner"]
+        M5["coro→yield&lpar;&rpar; + post&lpar;&rpar;"] -->|"replace with"| M6["JobQueueAwaiter"]
+    end
+
+    subgraph OutOfScope["Out of scope &lpar;yield_to.h&rpar;"]
+        direction TB
+        O1["boost::asio::spawn"]
+        O2["yield_context"]
+        O3["fixedsize_stack&lpar;2MB&rpar;"]
+        O1 --- O2
+        O1 --- O3
+    end
+
+    ThisMigration ~~~ OutOfScope
+    style OutOfScope fill:#eee,stroke:#999
+```
 
 **Verdict**: Separate system. Out of scope for this migration.
 

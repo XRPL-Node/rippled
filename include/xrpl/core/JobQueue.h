@@ -121,108 +121,382 @@ public:
         join();
     };
 
-    /** C++20 coroutine lifecycle manager. Replaces Coro for new code. */
+    /** C++20 coroutine lifecycle manager. Replaces Coro for new code.
+     *
+     *  Class / Inheritance / Dependency Diagram
+     *  =========================================
+     *
+     *  std::enable_shared_from_this<CoroTaskRunner>
+     *            ^
+     *            | (public inheritance)
+     *            |
+     *  CoroTaskRunner
+     *  +---------------------------------------------------+
+     *  | - lvs_         : detail::LocalValues               |
+     *  | - jq_          : JobQueue&                         |
+     *  | - type_        : JobType                           |
+     *  | - name_        : std::string                       |
+     *  | - running_     : bool                              |
+     *  | - mutex_       : std::mutex      (coroutine guard) |
+     *  | - mutex_run_   : std::mutex      (join guard)      |
+     *  | - cv_          : condition_variable                 |
+     *  | - task_        : CoroTask<void>                    |
+     *  | - storedFunc_  : unique_ptr<FuncBase> (type-erased)|
+     *  +---------------------------------------------------+
+     *  | + init(F&&)         : set up coroutine callable    |
+     *  | + onSuspend()       : ++jq_.nSuspend_              |
+     *  | + onUndoSuspend()   : --jq_.nSuspend_              |
+     *  | + suspend()         : returns SuspendAwaiter       |
+     *  | + post()            : schedule resume on JobQueue  |
+     *  | + resume()          : resume coroutine on caller   |
+     *  | + runnable()        : !task_.done()                |
+     *  | + expectEarlyExit() : teardown for failed post     |
+     *  | + join()            : block until not running       |
+     *  +---------------------------------------------------+
+     *          |                          |
+     *          | owns                     | references
+     *          v                          v
+     *    CoroTask<void>             JobQueue
+     *    (coroutine frame)          (thread pool + nSuspend_)
+     *
+     *    FuncBase / FuncStore<F>    (type-erased heap storage
+     *                                for the coroutine lambda)
+     *
+     *  Coroutine Lifecycle (Control Flow)
+     *  ===================================
+     *
+     *  Caller thread              JobQueue worker thread
+     *  -------------              ----------------------
+     *  postCoroTask(f)
+     *    |
+     *    +-- make_shared<CoroTaskRunner>
+     *    +-- init(f)
+     *    |     +-- store lambda on heap (FuncStore)
+     *    |     +-- task_ = f(shared_from_this())
+     *    |           [coroutine created, suspended at initial_suspend]
+     *    +-- ++nSuspend_  (lazy start counts as suspended)
+     *    +-- post()
+     *    |     +-- addJob(type_, [resume]{})
+     *    |                                    resume()
+     *    |                                      |
+     *    |                                      +-- running_ = true
+     *    |                                      +-- --nSuspend_
+     *    |                                      +-- swap in LocalValues
+     *    |                                      +-- task_.handle().resume()
+     *    |                                      |     [coroutine body runs]
+     *    |                                      |     ...
+     *    |                                      |     co_await suspend()
+     *    |                                      |       +-- ++nSuspend_
+     *    |                                      |       [coroutine suspends]
+     *    |                                      +-- swap out LocalValues
+     *    |                                      +-- running_ = false
+     *    |                                      +-- cv_.notify_all()
+     *    |
+     *  post()  <-- called externally or by JobQueueAwaiter
+     *    +-- addJob(type_, [resume]{})
+     *                                         resume()
+     *                                           |
+     *                                           +-- [coroutine body continues]
+     *                                           +-- co_return
+     *                                           +-- running_ = false
+     *                                           +-- cv_.notify_all()
+     *  join()
+     *    +-- cv_.wait([]{!running_})
+     *    +-- [done]
+     *
+     *  Usage Examples
+     *  ==============
+     *
+     *  1. Fire-and-forget coroutine (most common pattern):
+     *
+     *      jq.postCoroTask(jtCLIENT, "MyWork",
+     *          [](auto runner) -> CoroTask<void> {
+     *              doSomeWork();
+     *              co_await runner->suspend();  // yield to other jobs
+     *              doMoreWork();
+     *              co_return;
+     *          });
+     *
+     *  2. Manually controlling suspend / resume (external trigger):
+     *
+     *      auto runner = jq.postCoroTask(jtCLIENT, "ExtTrigger",
+     *          [&result](auto runner) -> CoroTask<void> {
+     *              startAsyncOperation(callback);
+     *              co_await runner->suspend();
+     *              // callback called runner->post() to get here
+     *              result = collectResult();
+     *              co_return;
+     *          });
+     *      // ... later, from the callback:
+     *      runner->post();   // reschedule the coroutine on the JobQueue
+     *
+     *  3. Using JobQueueAwaiter for automatic suspend + repost:
+     *
+     *      jq.postCoroTask(jtCLIENT, "AutoRepost",
+     *          [](auto runner) -> CoroTask<void> {
+     *              step1();
+     *              co_await JobQueueAwaiter{runner};  // yield + auto-repost
+     *              step2();
+     *              co_await JobQueueAwaiter{runner};
+     *              step3();
+     *              co_return;
+     *          });
+     *
+     *  4. Checking shutdown after co_await (cooperative cancellation):
+     *
+     *      jq.postCoroTask(jtCLIENT, "Cancellable",
+     *          [&jq](auto runner) -> CoroTask<void> {
+     *              while (moreWork()) {
+     *                  co_await JobQueueAwaiter{runner};
+     *                  if (jq.isStopping())
+     *                      co_return;  // bail out cleanly
+     *                  processNextItem();
+     *              }
+     *              co_return;
+     *          });
+     *
+     *  Caveats / Pitfalls
+     *  ==================
+     *
+     *  BUG-RISK: Calling suspend() without a matching post()/resume().
+     *    After co_await runner->suspend(), the coroutine is parked and
+     *    nSuspend_ is incremented.  If nothing ever calls post() or
+     *    resume(), the coroutine is leaked and JobQueue::stop() will
+     *    hang forever waiting for nSuspend_ to reach zero.
+     *
+     *  BUG-RISK: Calling post() on an already-running coroutine.
+     *    post() schedules a resume() job.  If the coroutine has not
+     *    actually suspended yet (no co_await executed), the resume job
+     *    will try to call handle().resume() while the coroutine is still
+     *    running on another thread.  This is UB.  The mutex_ prevents
+     *    data corruption but the logic is wrong — always co_await
+     *    suspend() before calling post().  (The test testIncorrectOrder
+     *    shows this works only because mutex_ serializes the calls.)
+     *
+     *  BUG-RISK: Dropping the shared_ptr<CoroTaskRunner> before join().
+     *    The CoroTaskRunner destructor asserts (!finished_ is false).
+     *    If you let the last shared_ptr die while the coroutine is still
+     *    running or suspended, you get an assertion failure in debug and
+     *    UB in release.  Always call join() or expectEarlyExit() first.
+     *
+     *  BUG-RISK: Lambda captures outliving the coroutine frame.
+     *    The lambda passed to postCoroTask is heap-allocated (FuncStore)
+     *    to prevent dangling.  But objects captured by pointer still need
+     *    their own lifetime management.  If you capture a raw pointer to
+     *    a stack variable, and the stack frame exits before the coroutine
+     *    finishes, the pointer dangles.  Use shared_ptr or ensure the
+     *    pointed-to object outlives the coroutine.
+     *
+     *  BUG-RISK: Forgetting co_return in a void coroutine.
+     *    If the coroutine body falls off the end without co_return,
+     *    the compiler may silently treat it as co_return (per standard),
+     *    but some compilers warn.  Always write explicit co_return.
+     *
+     *  LIMITATION: CoroTaskRunner only supports CoroTask<void>.
+     *    The task_ member is CoroTask<void>.  To return values from
+     *    the top-level coroutine, write through a captured pointer
+     *    (as the tests demonstrate), or co_await inner CoroTask<T>
+     *    coroutines that return values.
+     *
+     *  LIMITATION: One coroutine per CoroTaskRunner.
+     *    init() must be called exactly once.  You cannot reuse a
+     *    CoroTaskRunner to run a second coroutine.  Create a new one
+     *    via postCoroTask() instead.
+     *
+     *  LIMITATION: No timeout on join().
+     *    join() blocks indefinitely.  If the coroutine is suspended
+     *    and never posted, join() will deadlock.  Use timed waits
+     *    on the gate pattern (condition_variable + wait_for) in tests.
+     */
     class CoroTaskRunner : public std::enable_shared_from_this<CoroTaskRunner>
     {
     private:
+        // Per-coroutine thread-local storage. Swapped in before resume()
+        // and swapped out after, so each coroutine sees its own LocalValue
+        // state regardless of which worker thread executes it.
         detail::LocalValues lvs_;
+
+        // Back-reference to the owning JobQueue. Used to post jobs,
+        // increment/decrement nSuspend_, and acquire jq_.m_mutex.
         JobQueue& jq_;
+
+        // Job type passed to addJob() when posting this coroutine.
         JobType type_;
+
+        // Human-readable name for this coroutine job (for logging).
         std::string name_;
+
+        // True while the coroutine is actively executing on a thread.
+        // Guarded by mutex_run_. join() blocks until this is false.
         bool running_;
+
+        // Guards task_.handle().resume() to prevent the coroutine from
+        // running on two threads simultaneously. Handles the race where
+        // post() enqueues a resume before the coroutine has actually
+        // suspended (post-before-suspend pattern).
         std::mutex mutex_;
+
+        // Guards running_ flag. Used with cv_ for join() to wait
+        // until the coroutine finishes its current execution slice.
         std::mutex mutex_run_;
+
+        // Notified when running_ transitions to false, allowing
+        // join() waiters to wake up.
         std::condition_variable cv_;
+
+        // The coroutine handle wrapper. Owns the coroutine frame.
+        // Set by init(), reset to empty by expectEarlyExit() on
+        // early termination.
         CoroTask<void> task_;
 
-        // Type-erased storage to keep the coroutine callable alive.
-        // Coroutine frames store a reference to the callable's implicit
-        // object parameter (the lambda). If the callable is a temporary,
-        // that reference dangles after the call returns. Storing the
-        // callable on the heap here ensures it outlives the coroutine.
+        /**
+         * Type-erased base for heap-stored callables.
+         * Prevents the coroutine lambda from being destroyed before
+         * the coroutine frame is done with it.
+         *
+         * @see FuncStore
+         */
         struct FuncBase
         {
             virtual ~FuncBase() = default;
         };
+
+        /**
+         * Concrete type-erased storage for a callable of type F.
+         * The coroutine frame stores a reference to the lambda's implicit
+         * object parameter. If the lambda is a temporary, that reference
+         * dangles after the call returns. FuncStore keeps it alive on
+         * the heap for the lifetime of the CoroTaskRunner.
+         */
         template <class F>
         struct FuncStore : FuncBase
         {
-            F func;
+            F func;  // The stored callable (coroutine lambda).
             explicit FuncStore(F&& f) : func(std::move(f))
             {
             }
         };
+
+        // Heap-allocated callable storage. Set by init(), ensures the
+        // lambda outlives the coroutine frame that references it.
         std::unique_ptr<FuncBase> storedFunc_;
 
 #ifndef NDEBUG
+        // Debug-only flag. True once the coroutine has completed or
+        // expectEarlyExit() was called. Asserted in the destructor
+        // to catch leaked runners.
         bool finished_ = false;
 #endif
 
     public:
+        /**
+         * Tag type for private construction. Prevents external code
+         * from constructing CoroTaskRunner directly. Use postCoroTask().
+         */
         struct create_t
         {
             explicit create_t() = default;
         };
 
-        // Private: Used in the implementation of postCoroTask
+        /**
+         * Construct a CoroTaskRunner. Private by convention (create_t tag).
+         *
+         * @param jq   The JobQueue this coroutine will run on
+         * @param type Job type for scheduling priority
+         * @param name Human-readable name for logging
+         */
         CoroTaskRunner(create_t, JobQueue&, JobType, std::string const&);
 
-        // Not copy-constructible or assignable
         CoroTaskRunner(CoroTaskRunner const&) = delete;
         CoroTaskRunner&
         operator=(CoroTaskRunner const&) = delete;
 
+        /**
+         * Destructor. Asserts (debug) that the coroutine has finished
+         * or expectEarlyExit() was called.
+         */
         ~CoroTaskRunner();
 
-        /** Initialize with a coroutine function.
-            Must be called exactly once, after the object is managed by
-            shared_ptr. This is handled automatically by postCoroTask().
-        */
+        /**
+         * Initialize with a coroutine-returning callable.
+         * Must be called exactly once, after the object is managed by
+         * shared_ptr (because init uses shared_from_this internally).
+         * This is handled automatically by postCoroTask().
+         *
+         * @param f Callable: CoroTask<void>(shared_ptr<CoroTaskRunner>)
+         */
         template <class F>
         void
         init(F&& f);
 
-        /** Increment the suspended coroutine count.
-            Called when the coroutine is about to suspend.
-        */
+        /**
+         * Increment the JobQueue's suspended-coroutine count (nSuspend_).
+         * Called when the coroutine is about to suspend. Every call
+         * must be balanced by a corresponding decrement (via resume()
+         * or onUndoSuspend()), or JobQueue::stop() will hang.
+         */
         void
         onSuspend();
 
-        /** Decrement the suspended coroutine count without side effects.
-            Used to undo onSuspend() when a suspend is cancelled.
-        */
+        /**
+         * Decrement nSuspend_ without resuming.
+         * Used to undo onSuspend() when a scheduled post() fails
+         * (e.g. JobQueue is stopping).
+         */
         void
         onUndoSuspend();
 
-        /** Suspend coroutine execution.
-            Returns an awaiter for use with co_await.
-            Effects:
-              Increments nSuspend_ in the JobQueue.
-              The coroutine is suspended.
-            The caller must later call post() or resume() to continue.
-        */
+        /**
+         * Suspend the coroutine.
+         * The awaiter's await_suspend() increments nSuspend_ before the
+         * coroutine actually suspends. The caller must later call post()
+         * or resume() to continue execution.
+         *
+         * @return An awaiter for use with `co_await runner->suspend()`
+         */
         auto
         suspend();
 
-        /** Schedule coroutine execution on the JobQueue.
-            @return true if the job is added to the JobQueue.
-        */
+        /**
+         * Schedule coroutine resumption as a job on the JobQueue.
+         * Captures shared_from_this() to prevent this runner from being
+         * destroyed while the job is queued.
+         *
+         * @return true if the job was accepted; false if the JobQueue
+         *         is stopping (caller must handle cleanup)
+         */
         bool
         post();
 
-        /** Resume coroutine on current thread. */
+        /**
+         * Resume the coroutine on the current thread.
+         * Decrements nSuspend_, swaps in LocalValues, resumes the
+         * coroutine handle, swaps out LocalValues, and notifies join()
+         * waiters. Lock ordering: mutex_run_ -> jq_.m_mutex -> mutex_.
+         */
         void
         resume();
 
-        /** Returns true if coroutine hasn't completed. */
+        /**
+         * @return true if the coroutine has not yet run to completion
+         */
         bool
         runnable() const;
 
-        /** Once called, allows early exit without an assert. */
+        /**
+         * Handle early termination when the coroutine never ran.
+         * Decrements nSuspend_ and destroys the coroutine frame to
+         * break the shared_ptr cycle (frame -> lambda -> runner -> frame).
+         * Called by postCoroTask() when post() fails.
+         */
         void
         expectEarlyExit();
 
-        /** Waits until coroutine completes. */
+        /**
+         * Block until the coroutine finishes its current execution slice.
+         * Uses cv_ + mutex_run_ to wait until running_ == false.
+         * Warning: deadlocks if the coroutine is suspended and never posted.
+         */
         void
         join();
     };
@@ -523,6 +797,34 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
     return coro;
 }
 
+// postCoroTask — entry point for launching a C++20 coroutine on the JobQueue.
+//
+// Control Flow
+// ============
+//
+//   postCoroTask(t, name, f)
+//     |
+//     +-- 1. Create CoroTaskRunner (shared_ptr, ref-counted)
+//     |
+//     +-- 2. runner->init(f)
+//     |        +-- Heap-allocate the lambda (FuncStore) to prevent
+//     |        |   dangling captures in the coroutine frame
+//     |        +-- task_ = f(shared_from_this())
+//     |              [coroutine created but NOT started — lazy initial_suspend]
+//     |
+//     +-- 3. ++nSuspend_   (mirrors Boost Coro ctor's implicit yield)
+//     |        The coroutine is "suspended" from the JobQueue's perspective
+//     |        even though it hasn't run yet — this keeps the JQ shutdown
+//     |        logic correct (it waits for nSuspend_ to reach 0).
+//     |
+//     +-- 4. runner->post()
+//     |        +-- success: job queued, worker will call resume()
+//     |        |            return runner to caller
+//     |        +-- failure: JQ is stopping
+//     |              +-- runner->expectEarlyExit()
+//     |              |     --nSuspend_, destroy coroutine frame
+//     |              +-- return nullptr
+//
 template <class F>
 std::shared_ptr<JobQueue::CoroTaskRunner>
 JobQueue::postCoroTask(JobType t, std::string const& name, F&& f)
