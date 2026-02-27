@@ -10,28 +10,6 @@
 
 namespace xrpl {
 
-/**
- * @brief Validates a ledger node based on the fixLedgerNodeID amendment status.
- *
- * This function checks whether a ledger node has the expected fields based on
- * whether the fixLedgerNodeID amendment is enabled. The validation rules differ
- * depending on the amendment state:
- *
- * When the amendment is enabled:
- * - The node must have `nodedata`.
- * - The legacy `nodeid` field must NOT be present.
- * - For inner nodes: the `id` field must be present.
- * - For leaf nodes: the `depth` field must be present and <= SHAMap::leafDepth.
- *
- * When the amendment is disabled:
- * - The node must have `nodedata`.
- * - The `nodeid` field must be present.
- * - The new `id` and `depth` fields must NOT be present.
- *
- * @param app The application instance used to check amendment status.
- * @param ledger_node The ledger node to validate.
- * @return true if the ledger node has the expected fields, false otherwise.
- */
 bool
 validateLedgerNode(Application& app, protocol::TMLedgerNode const& ledger_node)
 {
@@ -55,17 +33,6 @@ validateLedgerNode(Application& app, protocol::TMLedgerNode const& ledger_node)
     return ledger_node.has_nodeid();
 }
 
-/**
- * @brief Deserializes a SHAMapTreeNode from wire format data.
- *
- * This function attempts to create a SHAMapTreeNode from the provided data
- * string. If the data is malformed or deserialization fails, the function
- * returns std::nullopt instead of throwing an exception.
- *
- * @param data The serialized node data in wire format.
- * @return An optional containing the deserialized tree node if successful, or
- *         std::nullopt if deserialization fails.
- */
 std::optional<intr_ptr::SharedPtr<SHAMapTreeNode>>
 getTreeNode(std::string const& data)
 {
@@ -80,32 +47,6 @@ getTreeNode(std::string const& data)
     }
 }
 
-/**
- * @brief Extracts or reconstructs the SHAMapNodeID from a ledger node.
- *
- * This function retrieves the SHAMapNodeID for a tree node, with behavior that
- * depends on the fixLedgerNodeID amendment status and the node type (inner vs.
- * leaf).
- *
- * When the fixLedgerNodeID amendment is enabled:
- * - For inner nodes: Deserializes the node ID from the `ledger_node.id` field.
- *   Note that root nodes are also inner nodes.
- * - For leaf nodes: Reconstructs the node ID using both the depth from the
- *   `ledger_node.depth` field and the key from the leaf node's item.
- *
- * When the amendment is disabled:
- * - For all nodes: Deserializes the node ID from the `ledger_node.nodeid`
- *   field.
- * - For leaf nodes: Validates that the node ID is consistent with the leaf's
- *   key.
- *
- * @param app The application instance used to check amendment status.
- * @param ledger_node The protocol message containing the ledger node data.
- * @param treeNode The deserialized tree node (inner or leaf node).
- * @return An optional containing the node ID if extraction/reconstruction
- *         succeeds, or std::nullopt if the required fields are missing or
- *         validation fails.
- */
 std::optional<SHAMapNodeID>
 getSHAMapNodeID(
     Application& app,

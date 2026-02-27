@@ -280,11 +280,40 @@ public:
     void
     serializeRoot(Serializer& s) const;
 
+    /** Add a root node to the SHAMap during synchronization.
+     *
+     * This function is used when receiving the root node of a SHAMap from a peer
+     * during ledger synchronization. The node must already have been deserialized.
+     *
+     * @param hash The expected hash of the root node
+     * @param rootNode A deserialized root node to add
+     * @param filter Optional sync filter to track received nodes
+     * @return Status indicating whether the node was useful, duplicate, or invalid
+     *
+     * @note This function expects the rootNode to be a valid, deserialized
+     *       SHAMapTreeNode. The caller is responsible for deserialization and
+     *       basic validation before calling this function.
+     */
     SHAMapAddNode
     addRootNode(
         SHAMapHash const& hash,
         intr_ptr::SharedPtr<SHAMapTreeNode> rootNode,
         SHAMapSyncFilter const* filter);
+
+    /** Add a known node at a specific position in the SHAMap during synchronization.
+     *
+     * This function is used when receiving nodes from peers during ledger
+     * synchronization. The node is inserted at the position specified by nodeID.
+     * The node must already have been deserialized.
+     *
+     * @param nodeID The position in the tree where this node belongs
+     * @param treeNode A deserialized tree node to add
+     * @param filter Optional sync filter to track received nodes
+     * @return Status indicating whether the node was useful, duplicate, or invalid
+     *
+     * @note This function expects that the caller has already validated that the
+     *       nodeID is consistent with the node's content.
+     */
     SHAMapAddNode
     addKnownNode(
         SHAMapNodeID const& nodeID,
