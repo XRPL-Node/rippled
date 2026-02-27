@@ -251,10 +251,17 @@ JobQueue::CoroTaskRunner::resume()
     task_.handle().resume();
     detail::getLocalValues().release();
     detail::getLocalValues().reset(saved);
-#ifndef NDEBUG
     if (task_.done())
+    {
+#ifndef NDEBUG
         finished_ = true;
 #endif
+        // Destroy the coroutine frame to break the shared_ptr cycle:
+        // frame -> lambda captures shared_ptr<CoroTaskRunner> -> this.
+        // Also release the heap-stored callable (no longer needed).
+        task_ = {};
+        storedFunc_.reset();
+    }
     std::lock_guard lk(mutex_run_);
     running_ = false;
     cv_.notify_all();
@@ -266,7 +273,9 @@ JobQueue::CoroTaskRunner::resume()
 inline bool
 JobQueue::CoroTaskRunner::runnable() const
 {
-    return !task_.done();
+    // After normal completion, task_ is reset to break the shared_ptr cycle
+    // (handle_ becomes null). A null handle means the coroutine is done.
+    return task_.handle() && !task_.done();
 }
 
 /**
@@ -292,6 +301,7 @@ JobQueue::CoroTaskRunner::expectEarlyExit()
     // destroying it is safe. Without this, the frame holds a shared_ptr
     // back to this CoroTaskRunner, creating an unreachable reference cycle.
     task_ = {};
+    storedFunc_.reset();
 }
 
 /**
