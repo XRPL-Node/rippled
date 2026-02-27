@@ -1,8 +1,12 @@
 # OpenTelemetry Collector configuration for rippled development.
 #
-# Pipeline: OTLP receiver -> batch processor -> debug exporter + Jaeger.
+# Pipelines:
+#   traces: OTLP receiver -> batch processor -> debug + Jaeger + spanmetrics
+#   metrics: spanmetrics connector -> Prometheus exporter
+#
 # rippled sends traces via OTLP/HTTP to port 4318. The collector batches
-# them and forwards to Jaeger via OTLP/gRPC on the Docker network.
+# them, forwards to Jaeger, and derives RED metrics via the spanmetrics
+# connector, which Prometheus scrapes on port 8889.
 
 receivers:
   otlp:
@@ -17,6 +21,17 @@ processors:
     timeout: 1s
     send_batch_size: 100
 
+connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [1ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 5s]
+    dimensions:
+      - name: xrpl.rpc.command
+      - name: xrpl.rpc.status
+      - name: xrpl.consensus.mode
+      - name: xrpl.tx.local
+
 exporters:
   debug:
     verbosity: detailed
@@ -24,10 +39,15 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  prometheus:
+    endpoint: 0.0.0.0:8889
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlp/jaeger]
+      exporters: [debug, otlp/jaeger, spanmetrics]
+    metrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]

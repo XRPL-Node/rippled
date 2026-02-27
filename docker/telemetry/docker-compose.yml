@@ -23,6 +23,7 @@ services:
     ports:
       - "4317:4317" # OTLP gRPC
       - "4318:4318" # OTLP HTTP
+      - "8889:8889" # Prometheus metrics (spanmetrics)
       - "13133:13133" # Health check
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
@@ -41,6 +42,17 @@ services:
     networks:
       - rippled-telemetry
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - otel-collector
+    networks:
+      - rippled-telemetry
+
   grafana:
     image: grafana/grafana:latest
     environment:
@@ -50,8 +62,10 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - jaeger
+      - prometheus
     networks:
       - rippled-telemetry
 
