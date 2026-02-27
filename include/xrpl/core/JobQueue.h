@@ -169,28 +169,26 @@ public:
      *  -------------              ----------------------
      *  postCoroTask(f)
      *    |
+     *    +-- check stopping_ (reject if JQ shutting down)
+     *    +-- ++nSuspend_  (lazy start counts as suspended)
      *    +-- make_shared<CoroTaskRunner>
      *    +-- init(f)
      *    |     +-- store lambda on heap (FuncStore)
      *    |     +-- task_ = f(shared_from_this())
      *    |           [coroutine created, suspended at initial_suspend]
-     *    +-- ++nSuspend_  (lazy start counts as suspended)
-     *    +-- post()
-     *    |     +-- addJob(type_, [resume]{})
-     *    |                                    resume()
-     *    |                                      |
-     *    |                                      +-- running_ = true
-     *    |                                      +-- --nSuspend_
-     *    |                                      +-- swap in LocalValues
-     *    |                                      +-- task_.handle().resume()
-     *    |                                      |     [coroutine body runs]
-     *    |                                      |     ...
-     *    |                                      |     co_await suspend()
-     *    |                                      |       +-- ++nSuspend_
-     *    |                                      |       [coroutine suspends]
-     *    |                                      +-- swap out LocalValues
-     *    |                                      +-- running_ = false
-     *    |                                      +-- cv_.notify_all()
+     *    +-- resume()   (synchronous — runs on caller's thread)
+     *    |     +-- running_ = true
+     *    |     +-- --nSuspend_
+     *    |     +-- swap in LocalValues
+     *    |     +-- task_.handle().resume()
+     *    |     |     [coroutine body runs to first co_await or co_return]
+     *    |     |     ...
+     *    |     |     co_await suspend()
+     *    |     |       +-- ++nSuspend_
+     *    |     |       [coroutine suspends]
+     *    |     +-- swap out LocalValues
+     *    |     +-- running_ = false
+     *    |     +-- cv_.notify_all()
      *    |
      *  post()  <-- called externally or by JobQueueAwaiter
      *    +-- addJob(type_, [resume]{})
@@ -804,46 +802,55 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
 //
 //   postCoroTask(t, name, f)
 //     |
-//     +-- 1. Create CoroTaskRunner (shared_ptr, ref-counted)
+//     +-- 1. Check stopping_ — reject if JQ shutting down
 //     |
-//     +-- 2. runner->init(f)
+//     +-- 2. ++nSuspend_   (mirrors Boost Coro ctor's implicit yield)
+//     |        The coroutine is "suspended" from the JobQueue's perspective
+//     |        even though it hasn't run yet — this keeps the JQ shutdown
+//     |        logic correct (it waits for nSuspend_ to reach 0).
+//     |
+//     +-- 3. Create CoroTaskRunner (shared_ptr, ref-counted)
+//     |
+//     +-- 4. runner->init(f)
 //     |        +-- Heap-allocate the lambda (FuncStore) to prevent
 //     |        |   dangling captures in the coroutine frame
 //     |        +-- task_ = f(shared_from_this())
 //     |              [coroutine created but NOT started — lazy initial_suspend]
 //     |
-//     +-- 3. ++nSuspend_   (mirrors Boost Coro ctor's implicit yield)
-//     |        The coroutine is "suspended" from the JobQueue's perspective
-//     |        even though it hasn't run yet — this keeps the JQ shutdown
-//     |        logic correct (it waits for nSuspend_ to reach 0).
-//     |
-//     +-- 4. runner->post()
-//     |        +-- success: job queued, worker will call resume()
-//     |        |            return runner to caller
-//     |        +-- failure: JQ is stopping
-//     |              +-- runner->expectEarlyExit()
-//     |              |     --nSuspend_, destroy coroutine frame
-//     |              +-- return nullptr
+//     +-- 5. runner->resume()   (synchronous — runs on caller's thread)
+//     |        +-- --nSuspend_
+//     |        +-- task_.handle().resume()
+//     |        |     [coroutine body runs until first co_await or co_return]
+//     |        +-- return runner to caller
+//
+// Why synchronous resume instead of async post()?
+// ================================================
+// The initial resume runs the coroutine body on the caller's thread to its
+// first suspension point (co_await) or completion (co_return). This matches
+// the behavioral pattern of the Boost Coro constructor, which ran coroutine
+// setup code synchronously. The synchronous approach ensures the coroutine
+// frame and its captured shared_ptr are in a determinate state before
+// postCoroTask returns, eliminating a class of non-deterministic lifetime
+// issues observed with async initial dispatch on GCC-12/15 debug builds.
 //
 template <class F>
 std::shared_ptr<JobQueue::CoroTaskRunner>
 JobQueue::postCoroTask(JobType t, std::string const& name, F&& f)
 {
-    auto runner = std::make_shared<CoroTaskRunner>(CoroTaskRunner::create_t{}, *this, t, name);
-    runner->init(std::forward<F>(f));
+    // Reject if the JQ is shutting down — matches addJob()'s stopping_ check.
+    // Must check before incrementing nSuspend_ to avoid leaving an orphan
+    // count that would cause stop() to hang.
+    if (stopping_)
+        return nullptr;
 
-    // Account for the initial suspension (lazy start).
-    // Mirrors the yield() in the Boost Coro constructor.
     {
         std::lock_guard lock(m_mutex);
         ++nSuspend_;
     }
 
-    if (!runner->post())
-    {
-        runner->expectEarlyExit();
-        runner.reset();
-    }
+    auto runner = std::make_shared<CoroTaskRunner>(CoroTaskRunner::create_t{}, *this, t, name);
+    runner->init(std::forward<F>(f));
+    runner->resume();
     return runner;
 }
 
