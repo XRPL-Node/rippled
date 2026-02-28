@@ -15,7 +15,6 @@
 #include <xrpl/basics/safe_cast.h>
 #include <xrpl/core/HashRouter.h>
 #include <xrpl/core/PerfLog.h>
-#include <xrpl/ledger/AmendmentTable.h>
 #include <xrpl/protocol/TxFlags.h>
 #include <xrpl/protocol/digest.h>
 #include <xrpl/server/LoadFeeTrack.h>
@@ -3268,9 +3267,9 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                         auto const& node_data = std::get<1>(d);
                         node->set_nodedata(node_data.data(), node_data.size());
 
-                        // When the LedgerNode protocol feature is not supported by the peer, we
-                        // always set the node ID. However, when it is supported then we only set it
-                        // for inner nodes, while for leaf nodes we set the node depth instead.
+                        // When the LedgerNodeDepth protocol feature is not supported by the peer,
+                        // we always set the node ID. However, when it is supported then we only set
+                        // it for inner nodes, while for leaf nodes we set the node depth instead.
                         auto const& nodeID = std::get<0>(d);
                         if (!supportsFeature(ProtocolFeature::LedgerNodeDepth))
                             node->set_nodeid(nodeID.getRawString());

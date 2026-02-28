@@ -63,6 +63,8 @@ getTreeNode(std::string const& data);
  * @param treeNode The deserialized tree node (inner or leaf node).
  * @return An optional containing the node ID if extraction/reconstruction succeeds, or std::nullopt
  *         if the required fields are missing or validation fails.
+ * @note This function expects that the caller has already validated the ledger node by calling the
+ *       `validateLedgerNode` function and obtained a valid tree node by calling `getTreeNode`.
  */
 [[nodiscard]] std::optional<SHAMapNodeID>
 getSHAMapNodeID(

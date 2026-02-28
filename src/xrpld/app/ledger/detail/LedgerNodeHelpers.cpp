@@ -54,7 +54,6 @@ getSHAMapNodeID(
     {
         if (treeNode->isInner())
         {
-            XRPL_ASSERT(ledger_node.has_id(), "xrpl::getSHAMapNodeID : node ID is present");
             if (!ledger_node.has_id())
                 return std::nullopt;
 
@@ -63,7 +62,6 @@ getSHAMapNodeID(
 
         if (treeNode->isLeaf())
         {
-            XRPL_ASSERT(ledger_node.has_depth(), "xrpl::getSHAMapNodeID : node depth is present");
             if (!ledger_node.has_depth())
                 return std::nullopt;
 
@@ -75,7 +73,6 @@ getSHAMapNodeID(
         return std::nullopt;
     }
 
-    XRPL_ASSERT(ledger_node.has_nodeid(), "xrpl::getSHAMapNodeID : node ID is present");
     if (!ledger_node.has_nodeid())
         return std::nullopt;
 
