@@ -32,10 +32,13 @@ We will further set additional CMake arguments as follows:
 """
 
 
-def generate_strategy_matrix(all: bool, config: Config) -> list:
+def generate_strategy_matrix(all: bool, config: Config, distro: str = "") -> list:
     configurations = []
+    os_entries = config.os
+    if distro:
+        os_entries = [o for o in os_entries if o["distro_name"] == distro]
     for architecture, os, build_type, cmake_args in itertools.product(
-        config.architecture, config.os, config.build_type, config.cmake_args
+        config.architecture, os_entries, config.build_type, config.cmake_args
     ):
         # The default CMake target is 'all' for Linux and MacOS and 'install'
         # for Windows, but it can get overridden for certain configurations.
@@ -223,7 +226,7 @@ def generate_strategy_matrix(all: bool, config: Config) -> list:
         if (n := os["compiler_version"]) != "":
             config_name += f"-{n}"
         config_name += (
-            f"-{architecture['platform'][architecture['platform'].find('/')+1:]}"
+            f"-{architecture['platform'][architecture['platform'].find('/') + 1 :]}"
         )
         config_name += f"-{build_type.lower()}"
         if "-Dcoverage=ON" in cmake_args:
@@ -313,21 +316,32 @@ if __name__ == "__main__":
         required=False,
         type=Path,
     )
+    parser.add_argument(
+        "-d",
+        "--distro",
+        help="Filter OS entries to only include those with this distro_name (e.g. 'debian', 'rhel', 'ubuntu').",
+        required=False,
+        type=str,
+        default="",
+    )
     args = parser.parse_args()
 
     matrix = []
     if args.config is None or args.config == "":
         matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "linux.json")
+            args.all, read_config(THIS_DIR / "linux.json"), args.distro
         )
         matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "macos.json")
+            args.all, read_config(THIS_DIR / "macos.json"), args.distro
         )
         matrix += generate_strategy_matrix(
-            args.all, read_config(THIS_DIR / "windows.json")
+            args.all, read_config(THIS_DIR / "windows.json"), args.distro
         )
     else:
-        matrix += generate_strategy_matrix(args.all, read_config(args.config))
+        matrix += generate_strategy_matrix(
+            args.all, read_config(args.config), args.distro
+        )
 
     # Generate the strategy matrix.
-    print(f"matrix={json.dumps({'include': matrix})}")
+    # print(f"matrix={json.dumps({'include': matrix})}")
+    print(json.dumps(matrix, indent=2))

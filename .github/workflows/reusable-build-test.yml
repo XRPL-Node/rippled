@@ -26,6 +26,12 @@ on:
         type: string
         default: "minimal"
 
+      distro:
+        description: 'Filter to only include configs for this distro (e.g. "debian", "rhel", "ubuntu"). Leave empty for no filtering.'
+        required: false
+        type: string
+        default: ""
+
     secrets:
       CODECOV_TOKEN:
         description: "The Codecov token to use for uploading coverage reports."
@@ -38,9 +44,11 @@ jobs:
     with:
       os: ${{ inputs.os }}
       strategy_matrix: ${{ inputs.strategy_matrix }}
+      distro: ${{ inputs.distro }}
 
   # Build and test the binary for each configuration.
   build-test-config:
+    name: ${{ matrix.config_name }}
     needs:
       - generate-matrix
     uses: ./.github/workflows/reusable-build-test-config.yml
