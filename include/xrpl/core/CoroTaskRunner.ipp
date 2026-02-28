@@ -119,12 +119,21 @@ JobQueue::CoroTaskRunner::init(F&& f)
 }
 
 /**
- * Destructor. Asserts (debug) that the coroutine has finished
- * or expectEarlyExit() was called.
+ * Destructor. Waits for any in-flight resume() to complete, then
+ * asserts (debug) that the coroutine has finished or
+ * expectEarlyExit() was called.
+ *
+ * The join() call is necessary because with async dispatch the
+ * coroutine runs on a worker thread. The gate signal (which wakes
+ * the test thread) can arrive before resume() has set finished_.
+ * join() synchronizes via mutex_run_, establishing a happens-before
+ * edge: finished_ = true → unlock(mutex_run_) in resume() →
+ * lock(mutex_run_) in join() → read finished_.
  */
 inline JobQueue::CoroTaskRunner::~CoroTaskRunner()
 {
 #ifndef NDEBUG
+    join();
     XRPL_ASSERT(finished_, "xrpl::JobQueue::CoroTaskRunner::~CoroTaskRunner : is finished");
 #endif
 }
