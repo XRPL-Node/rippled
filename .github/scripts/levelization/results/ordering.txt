@@ -42,6 +42,7 @@ libxrpl.tx > xrpl.server
 libxrpl.tx > xrpl.tx
 test.app > test.jtx
 test.app > test.rpc
+test.app > test.shamap
 test.app > test.toplevel
 test.app > test.unit_test
 test.app > xrpl.basics
@@ -57,6 +58,7 @@ test.app > xrpl.protocol
 test.app > xrpl.rdb
 test.app > xrpl.resource
 test.app > xrpl.server
+test.app > xrpl.shamap
 test.app > xrpl.tx
 test.basics > test.jtx
 test.basics > test.unit_test
@@ -239,6 +241,7 @@ xrpld.overlay > xrpl.core
 xrpld.overlay > xrpld.core
 xrpld.overlay > xrpld.peerfinder
 xrpld.overlay > xrpl.json
+xrpld.overlay > xrpl.ledger
 xrpld.overlay > xrpl.protocol
 xrpld.overlay > xrpl.rdb
 xrpld.overlay > xrpl.resource
