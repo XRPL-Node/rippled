@@ -176,19 +176,22 @@ public:
      *    |     +-- store lambda on heap (FuncStore)
      *    |     +-- task_ = f(shared_from_this())
      *    |           [coroutine created, suspended at initial_suspend]
-     *    +-- resume()   (synchronous — runs on caller's thread)
-     *    |     +-- running_ = true
-     *    |     +-- --nSuspend_
-     *    |     +-- swap in LocalValues
-     *    |     +-- task_.handle().resume()
-     *    |     |     [coroutine body runs to first co_await or co_return]
-     *    |     |     ...
-     *    |     |     co_await suspend()
-     *    |     |       +-- ++nSuspend_
-     *    |     |       [coroutine suspends]
-     *    |     +-- swap out LocalValues
-     *    |     +-- running_ = false
-     *    |     +-- cv_.notify_all()
+     *    +-- post()
+     *    |     +-- addJob(type_, [resume]{})
+     *    |                                    resume()
+     *    |                                      |
+     *    |                                      +-- running_ = true
+     *    |                                      +-- --nSuspend_
+     *    |                                      +-- swap in LocalValues
+     *    |                                      +-- task_.handle().resume()
+     *    |                                      |     [coroutine body runs]
+     *    |                                      |     ...
+     *    |                                      |     co_await suspend()
+     *    |                                      |       +-- ++nSuspend_
+     *    |                                      |       [coroutine suspends]
+     *    |                                      +-- swap out LocalValues
+     *    |                                      +-- running_ = false
+     *    |                                      +-- cv_.notify_all()
      *    |
      *  post()  <-- called externally or by JobQueueAwaiter
      *    +-- addJob(type_, [resume]{})
@@ -817,21 +820,23 @@ JobQueue::postCoro(JobType t, std::string const& name, F&& f)
 //     |        +-- task_ = f(shared_from_this())
 //     |              [coroutine created but NOT started — lazy initial_suspend]
 //     |
-//     +-- 5. runner->resume()   (synchronous — runs on caller's thread)
-//     |        +-- --nSuspend_
-//     |        +-- task_.handle().resume()
-//     |        |     [coroutine body runs until first co_await or co_return]
-//     |        +-- return runner to caller
+//     +-- 5. runner->post()
+//     |        +-- addJob(type_, [resume]{})   → resume on worker thread
+//     |        +-- failure (JQ stopping):
+//     |              +-- runner->expectEarlyExit()
+//     |              |     --nSuspend_, destroy coroutine frame
+//     |              +-- return nullptr
 //
-// Why synchronous resume instead of async post()?
-// ================================================
-// The initial resume runs the coroutine body on the caller's thread to its
-// first suspension point (co_await) or completion (co_return). This matches
-// the behavioral pattern of the Boost Coro constructor, which ran coroutine
-// setup code synchronously. The synchronous approach ensures the coroutine
-// frame and its captured shared_ptr are in a determinate state before
-// postCoroTask returns, eliminating a class of non-deterministic lifetime
-// issues observed with async initial dispatch on GCC-12/15 debug builds.
+// Why async post() instead of synchronous resume()?
+// ==================================================
+// The initial dispatch MUST use async post() so the coroutine body runs on
+// a JobQueue worker thread, not the caller's thread.  resume() swaps the
+// caller's thread-local LocalValues with the coroutine's private copy.
+// If the coroutine mutates LocalValues (e.g. thread_specific_storage test),
+// those mutations bleed back into the caller's thread-local state after the
+// swap-out, corrupting subsequent tests that share the same thread pool.
+// Async post() avoids this by running the coroutine on a worker thread whose
+// LocalValues are managed by the thread pool, not by the caller.
 //
 template <class F>
 std::shared_ptr<JobQueue::CoroTaskRunner>
@@ -850,7 +855,11 @@ JobQueue::postCoroTask(JobType t, std::string const& name, F&& f)
 
     auto runner = std::make_shared<CoroTaskRunner>(CoroTaskRunner::create_t{}, *this, t, name);
     runner->init(std::forward<F>(f));
-    runner->resume();
+    if (!runner->post())
+    {
+        runner->expectEarlyExit();
+        runner.reset();
+    }
     return runner;
 }
 
