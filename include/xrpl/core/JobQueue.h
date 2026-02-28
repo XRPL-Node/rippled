@@ -136,7 +136,7 @@ public:
      *  | - jq_          : JobQueue&                         |
      *  | - type_        : JobType                           |
      *  | - name_        : std::string                       |
-     *  | - running_     : bool                              |
+     *  | - runCount_    : int         (in-flight resumes)    |
      *  | - mutex_       : std::mutex      (coroutine guard) |
      *  | - mutex_run_   : std::mutex      (join guard)      |
      *  | - cv_          : condition_variable                 |
@@ -177,10 +177,10 @@ public:
      *    |     +-- task_ = f(shared_from_this())
      *    |           [coroutine created, suspended at initial_suspend]
      *    +-- post()
+     *    |     +-- ++runCount_
      *    |     +-- addJob(type_, [resume]{})
      *    |                                    resume()
      *    |                                      |
-     *    |                                      +-- running_ = true
      *    |                                      +-- --nSuspend_
      *    |                                      +-- swap in LocalValues
      *    |                                      +-- task_.handle().resume()
@@ -190,19 +190,20 @@ public:
      *    |                                      |       +-- ++nSuspend_
      *    |                                      |       [coroutine suspends]
      *    |                                      +-- swap out LocalValues
-     *    |                                      +-- running_ = false
+     *    |                                      +-- --runCount_
      *    |                                      +-- cv_.notify_all()
      *    |
      *  post()  <-- called externally or by JobQueueAwaiter
+     *    +-- ++runCount_
      *    +-- addJob(type_, [resume]{})
      *                                         resume()
      *                                           |
      *                                           +-- [coroutine body continues]
      *                                           +-- co_return
-     *                                           +-- running_ = false
+     *                                           +-- --runCount_
      *                                           +-- cv_.notify_all()
      *  join()
-     *    +-- cv_.wait([]{!running_})
+     *    +-- cv_.wait([]{runCount_ == 0})
      *    +-- [done]
      *
      *  Usage Examples
@@ -327,9 +328,16 @@ public:
         // Human-readable name for this coroutine job (for logging).
         std::string name_;
 
-        // True while the coroutine is actively executing on a thread.
-        // Guarded by mutex_run_. join() blocks until this is false.
-        bool running_;
+        // Number of in-flight resume operations (pending + active).
+        // Incremented by post(), decremented when resume() finishes.
+        // Guarded by mutex_run_. join() blocks until this reaches 0.
+        //
+        // A counter (not a bool) is needed because post() can be called
+        // from within the coroutine body (e.g. via JobQueueAwaiter),
+        // enqueuing a second resume while the first is still running.
+        // A bool would be clobbered: R2.post() sets true, then R1's
+        // cleanup sets false — losing the fact that R2 is still pending.
+        int runCount_;
 
         // Guards task_.handle().resume() to prevent the coroutine from
         // running on two threads simultaneously. Handles the race where
@@ -337,11 +345,11 @@ public:
         // suspended (post-before-suspend pattern).
         std::mutex mutex_;
 
-        // Guards running_ flag. Used with cv_ for join() to wait
-        // until the coroutine finishes its current execution slice.
+        // Guards runCount_. Used with cv_ for join() to wait
+        // until all pending/active resume operations complete.
         std::mutex mutex_run_;
 
-        // Notified when running_ transitions to false, allowing
+        // Notified when runCount_ reaches zero, allowing
         // join() waiters to wake up.
         std::condition_variable cv_;
 
@@ -494,8 +502,8 @@ public:
         expectEarlyExit();
 
         /**
-         * Block until the coroutine finishes its current execution slice.
-         * Uses cv_ + mutex_run_ to wait until running_ == false.
+         * Block until all pending/active resume operations complete.
+         * Uses cv_ + mutex_run_ to wait until runCount_ reaches 0.
          * Warning: deadlocks if the coroutine is suspended and never posted.
          */
         void
