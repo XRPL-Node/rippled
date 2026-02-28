@@ -343,5 +343,5 @@ if __name__ == "__main__":
         )
 
     # Generate the strategy matrix.
-    # print(f"matrix={json.dumps({'include': matrix})}")
-    print(json.dumps(matrix, indent=2))
+    print(f"matrix={json.dumps({'include': matrix})}")
+    # print(json.dumps(matrix, indent=2))
