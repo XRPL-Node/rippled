@@ -245,8 +245,8 @@ message TMGetObjectByHash {
 message TMLedgerNode {
   required bytes nodedata = 1;
 
-  // Used when protocol version <2.3.
-  optional bytes nodeid = 2;  // missing for ledger base data
+  // Used when protocol version <2.3. Not set for ledger base data.
+  optional bytes nodeid = 2;
 
   // Used when protocol version >=2.3. Neither value is set for ledger base data.
   oneof reference {
