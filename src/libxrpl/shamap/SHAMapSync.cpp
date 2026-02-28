@@ -496,7 +496,10 @@ SHAMap::addRootNode(
 
     XRPL_ASSERT(cowid_ >= 1, "xrpl::SHAMap::addRootNode : valid cowid");
     if (rootNode->getHash() != hash)
+    {
+        JLOG(journal_.warn()) << "Corrupt node received";
         return SHAMapAddNode::invalid();
+    }
 
     if (backed_)
         canonicalize(hash, rootNode);
