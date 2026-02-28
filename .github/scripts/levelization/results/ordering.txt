@@ -241,7 +241,6 @@ xrpld.overlay > xrpl.core
 xrpld.overlay > xrpld.core
 xrpld.overlay > xrpld.peerfinder
 xrpld.overlay > xrpl.json
-xrpld.overlay > xrpl.ledger
 xrpld.overlay > xrpl.protocol
 xrpld.overlay > xrpl.rdb
 xrpld.overlay > xrpl.resource
