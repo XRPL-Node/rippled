@@ -17,6 +17,7 @@ enum class ProtocolFeature {
     ValidatorListPropagation,
     ValidatorList2Propagation,
     LedgerReplay,
+    LedgerNodeDepth,
 };
 
 /** Represents a peer connection in the overlay. */

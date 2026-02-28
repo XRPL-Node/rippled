@@ -138,7 +138,7 @@ public:
 
         for (auto const& ledger_node : packet.nodes())
         {
-            if (!validateLedgerNode(app_, ledger_node))
+            if (!validateLedgerNode(ledger_node))
             {
                 JLOG(j_.warn()) << "Got malformed ledger node";
                 peer->charge(Resource::feeMalformedRequest, "ledger_node");
@@ -153,7 +153,7 @@ public:
                 return;
             }
 
-            auto const nodeID = getSHAMapNodeID(app_, ledger_node, *treeNode);
+            auto const nodeID = getSHAMapNodeID(ledger_node, *treeNode);
             if (!nodeID)
             {
                 JLOG(j_.warn()) << "Got invalid node id";

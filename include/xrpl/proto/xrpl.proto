@@ -245,10 +245,10 @@ message TMGetObjectByHash {
 message TMLedgerNode {
   required bytes nodedata = 1;
 
-  // Used when fixLedgerNodeID is disabled.
+  // Used when protocol version <2.3.
   optional bytes nodeid = 2;  // missing for ledger base data
 
-  // Used when fixLedgerNodeID is enabled. Neither value is set for ledger base data.
+  // Used when protocol version >=2.3. Neither value is set for ledger base data.
   oneof reference {
     bytes id = 3;      // Set for inner nodes.
     uint32 depth = 4;  // Set for leaf nodes.

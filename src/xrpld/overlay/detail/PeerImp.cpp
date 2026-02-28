@@ -472,6 +472,8 @@ PeerImp::supportsFeature(ProtocolFeature f) const
             return protocol_ >= make_protocol(2, 1);
         case ProtocolFeature::ValidatorList2Propagation:
             return protocol_ >= make_protocol(2, 2);
+        case ProtocolFeature::LedgerNodeDepth:
+            return protocol_ >= make_protocol(2, 3);
         case ProtocolFeature::LedgerReplay:
             return ledgerReplayEnabled_;
     }
@@ -3266,11 +3268,11 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                         auto const& node_data = std::get<1>(d);
                         node->set_nodedata(node_data.data(), node_data.size());
 
-                        // When the amendment is disabled, we always set the node ID. However, when
-                        // the amendment is enabled, we only set it for inner nodes, while for leaf
-                        // nodes we set the node depth instead.
+                        // When the LedgerNode protocol feature is not supported by the peer, we
+                        // always set the node ID. However, when it is supported then we only set it
+                        // for inner nodes, while for leaf nodes we set the node depth instead.
                         auto const& nodeID = std::get<0>(d);
-                        if (!app_.getAmendmentTable().isEnabled(fixLedgerNodeID))
+                        if (!supportsFeature(ProtocolFeature::LedgerNodeDepth))
                             node->set_nodeid(nodeID.getRawString());
                         else if (std::get<2>(d))
                             node->set_depth(nodeID.getDepth());

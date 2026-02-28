@@ -223,7 +223,7 @@ public:
         Serializer s;
         for (auto const& ledger_node : packet_ptr->nodes())
         {
-            if (!validateLedgerNode(app_, ledger_node))
+            if (!validateLedgerNode(ledger_node))
                 return;
 
             auto const treeNode = getTreeNode(ledger_node.nodedata());

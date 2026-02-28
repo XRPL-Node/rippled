@@ -1,36 +1,31 @@
 #include <xrpld/app/ledger/detail/LedgerNodeHelpers.h>
-#include <xrpld/app/main/Application.h>
 
 #include <xrpl/basics/IntrusivePointer.h>
+#include <xrpl/basics/Slice.h>
 #include <xrpl/beast/utility/instrumentation.h>
-#include <xrpl/ledger/AmendmentTable.h>
+#include <xrpl/protocol/messages.h>
+#include <xrpl/shamap/SHAMap.h>
 #include <xrpl/shamap/SHAMapLeafNode.h>
 #include <xrpl/shamap/SHAMapNodeID.h>
 #include <xrpl/shamap/SHAMapTreeNode.h>
 
+#include <optional>
+#include <string>
+
 namespace xrpl {
 
 bool
-validateLedgerNode(Application& app, protocol::TMLedgerNode const& ledger_node)
+validateLedgerNode(protocol::TMLedgerNode const& ledger_node)
 {
     if (!ledger_node.has_nodedata())
         return false;
 
-    if (app.getAmendmentTable().isEnabled(fixLedgerNodeID))
-    {
-        // Note that we cannot confirm here whether the node is actually an
-        // inner or leaf node, and will need to perform additional checks
-        // separately.
-        if (ledger_node.has_nodeid())
-            return false;
-        if (ledger_node.has_id())
-            return true;
-        return ledger_node.has_depth() && ledger_node.depth() <= SHAMap::leafDepth;
-    }
+    if (ledger_node.has_nodeid())
+        return !ledger_node.has_id() && !ledger_node.has_depth();
 
-    if (ledger_node.has_id() || ledger_node.has_depth())
-        return false;
-    return ledger_node.has_nodeid();
+    return ledger_node.has_id() ||
+        (ledger_node.has_depth() && ledger_node.depth() >= 1 &&
+         ledger_node.depth() <= SHAMap::leafDepth);
 }
 
 std::optional<intr_ptr::SharedPtr<SHAMapTreeNode>>
@@ -39,7 +34,10 @@ getTreeNode(std::string const& data)
     auto const slice = makeSlice(data);
     try
     {
-        return SHAMapTreeNode::makeFromWire(slice);
+        auto treeNode = SHAMapTreeNode::makeFromWire(slice);
+        if (!treeNode)
+            return std::nullopt;
+        return treeNode;
     }
     catch (std::exception const&)
     {
@@ -49,12 +47,10 @@ getTreeNode(std::string const& data)
 
 std::optional<SHAMapNodeID>
 getSHAMapNodeID(
-    Application& app,
     protocol::TMLedgerNode const& ledger_node,
     intr_ptr::SharedPtr<SHAMapTreeNode> const& treeNode)
 {
-    // When the amendment is enabled and a node depth is present, we can calculate the node ID.
-    if (app.getAmendmentTable().isEnabled(fixLedgerNodeID))
+    if (ledger_node.has_id() || ledger_node.has_depth())
     {
         if (treeNode->isInner())
         {
@@ -79,9 +75,6 @@ getSHAMapNodeID(
         return std::nullopt;
     }
 
-    // When the amendment is disabled, we expect the node ID to always be present. For leaf nodes
-    // we perform an extra check to ensure the node's position in the tree is consistent with its
-    // content.
     XRPL_ASSERT(ledger_node.has_nodeid(), "xrpl::getSHAMapNodeID : node ID is present");
     if (!ledger_node.has_nodeid())
         return std::nullopt;

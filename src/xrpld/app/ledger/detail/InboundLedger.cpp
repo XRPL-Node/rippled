@@ -840,7 +840,7 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
 
     for (auto const& ledger_node : packet.nodes())
     {
-        if (!validateLedgerNode(app_, ledger_node))
+        if (!validateLedgerNode(ledger_node))
         {
             JLOG(journal_.warn()) << "Got malformed ledger node";
             san.incInvalid();
@@ -855,7 +855,7 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
             return;
         }
 
-        auto const nodeID = getSHAMapNodeID(app_, ledger_node, *treeNode);
+        auto const nodeID = getSHAMapNodeID(ledger_node, *treeNode);
         if (!nodeID)
         {
             JLOG(journal_.warn()) << "Got invalid node id";
@@ -1092,7 +1092,7 @@ InboundLedger::processData(std::shared_ptr<Peer> peer, protocol::TMLedgerData& p
         // Verify nodes are complete
         for (auto const& ledger_node : packet.nodes())
         {
-            if (!validateLedgerNode(app_, ledger_node))
+            if (!validateLedgerNode(ledger_node))
             {
                 JLOG(journal_.warn()) << "Got malformed ledger node";
                 peer->charge(Resource::feeMalformedRequest, "ledger_node");
