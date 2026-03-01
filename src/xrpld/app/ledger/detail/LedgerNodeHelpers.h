@@ -5,6 +5,7 @@
 #include <xrpl/shamap/SHAMapTreeNode.h>
 
 #include <optional>
+#include <string>
 
 namespace protocol {
 class TMLedgerNode;

@@ -3240,6 +3240,7 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
         auto const queryDepth{m->has_querydepth() ? m->querydepth() : (isHighLatency() ? 2 : 1)};
 
         std::vector<std::tuple<SHAMapNodeID, Blob, bool>> data;
+        auto const useLedgerNodeDepth = supportsFeature(ProtocolFeature::LedgerNodeDepth);
 
         for (int i = 0;
              i < m->nodeids_size() && ledgerData.nodes_size() < Tuning::softMaxReplyNodes;
@@ -3252,8 +3253,6 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
 
             try
             {
-                auto const useLedgerNodeDepth = supportsFeature(ProtocolFeature::LedgerNodeDepth);
-
                 if (map->getNodeFat(*shaMapNodeId, data, fatLeaves, queryDepth))
                 {
                     JLOG(p_journal_.trace())
@@ -3266,12 +3265,12 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
 
                         protocol::TMLedgerNode* node{ledgerData.add_nodes()};
 
-                        auto const& node_data = std::get<1>(d);
-                        node->set_nodedata(node_data.data(), node_data.size());
+                        auto const& nodeData = std::get<1>(d);
+                        node->set_nodedata(nodeData.data(), nodeData.size());
 
                         // When the LedgerNodeDepth protocol feature is not supported by the peer,
-                        // we always set the node ID. However, when it is supported then we only set
-                        // it for inner nodes, while for leaf nodes we set the node depth instead.
+                        // we always set the `nodeid` field. However, when it is supported then we
+                        // set the `id` field for inner nodes and the `depth` field for leaf nodes.
                         auto const& nodeID = std::get<0>(d);
                         if (!useLedgerNodeDepth)
                             node->set_nodeid(nodeID.getRawString());
