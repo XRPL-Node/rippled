@@ -145,7 +145,7 @@ public:
                 return;
             }
 
-            auto const treeNode = getTreeNode(ledger_node.nodedata());
+            auto treeNode = getTreeNode(ledger_node.nodedata());
             if (!treeNode)
             {
                 JLOG(j_.warn()) << "Got invalid node data";
@@ -161,7 +161,7 @@ public:
                 return;
             }
 
-            data.emplace_back(std::make_pair(*nodeID, *treeNode));
+            data.emplace_back(std::make_pair(*nodeID, std::move(*treeNode)));
         }
 
         if (!ta->takeNodes(data, peer).isUseful())

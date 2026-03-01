@@ -24,8 +24,7 @@ validateLedgerNode(protocol::TMLedgerNode const& ledger_node)
         return !ledger_node.has_id() && !ledger_node.has_depth();
 
     return ledger_node.has_id() ||
-        (ledger_node.has_depth() && ledger_node.depth() >= 1 &&
-         ledger_node.depth() <= SHAMap::leafDepth);
+        (ledger_node.has_depth() && ledger_node.depth() <= SHAMap::leafDepth);
 }
 
 std::optional<intr_ptr::SharedPtr<SHAMapTreeNode>>

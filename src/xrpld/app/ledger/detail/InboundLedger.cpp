@@ -962,7 +962,8 @@ InboundLedger::takeTxRootNode(std::string const& data, SHAMapAddNode& san)
     }
 
     TransactionStateSF filter(mLedger->txMap().family().db(), app_.getLedgerMaster());
-    san += mLedger->txMap().addRootNode(SHAMapHash{mLedger->header().txHash}, *treeNode, &filter);
+    san += mLedger->txMap().addRootNode(
+        SHAMapHash{mLedger->header().txHash}, std::move(*treeNode), &filter);
     return san.isGood();
 }
 

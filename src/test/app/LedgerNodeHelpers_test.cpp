@@ -115,19 +115,11 @@ class LedgerNodeHelpers_test : public beast::unit_test::suite
             BEAST_EXPECT(validateLedgerNode(node));
         }
 
-        // Invalid: `depth` is less than minimum depth.
-        {
-            protocol::TMLedgerNode node;
-            node.set_nodedata("test_data");
-            node.set_depth(0);
-            BEAST_EXPECT(!validateLedgerNode(node));
-        }
-
         // Valid: `depth` at minimum depth.
         {
             protocol::TMLedgerNode node;
             node.set_nodedata("test_data");
-            node.set_depth(1);
+            node.set_depth(0);
             BEAST_EXPECT(validateLedgerNode(node));
         }
 
@@ -161,13 +153,13 @@ class LedgerNodeHelpers_test : public beast::unit_test::suite
     {
         testcase("getTreeNode");
 
-        // Valid: root (=inner) node. It must have at least one child.
+        // Valid: inner node. It must have at least one child for `serializeNode` to work.
         {
-            auto const rootNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
+            auto const innerNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
             auto const childNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
-            rootNode->setChild(0, childNode);
-            auto const rootData = serializeNode(rootNode);
-            auto const result = getTreeNode(rootData);
+            innerNode->setChild(0, childNode);
+            auto const innerData = serializeNode(innerNode);
+            auto const result = getTreeNode(innerData);
             BEAST_EXPECT(result.has_value());
             BEAST_EXPECT((*result)->isInner());
         }
@@ -215,84 +207,50 @@ class LedgerNodeHelpers_test : public beast::unit_test::suite
         testcase("getSHAMapNodeID");
 
         {
-            // Tests using a root node (=inner node at depth 0).
-            auto const rootNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
-            auto const childNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
-            rootNode->setChild(0, childNode);
-            auto const rootData = serializeNode(rootNode);
-            auto const rootNodeID = SHAMapNodeID{};
-
-            // Valid: legacy `nodeid` field.
-            {
-                protocol::TMLedgerNode node;
-                node.set_nodedata(rootData);
-                node.set_nodeid(rootNodeID.getRawString());
-                auto const result = getSHAMapNodeID(node, rootNode);
-                BEAST_EXPECT(result.has_value());
-                BEAST_EXPECT(*result == rootNodeID);
-            }
-
-            // Valid: new `id` field.
-            {
-                protocol::TMLedgerNode node;
-                node.set_nodedata(rootData);
-                node.set_id(rootNodeID.getRawString());
-                auto const result = getSHAMapNodeID(node, rootNode);
-                BEAST_EXPECT(result.has_value());
-                BEAST_EXPECT(*result == rootNodeID);
-            }
-
-            // Invalid: new `depth` field is present but should not be used for inner nodes.
-            {
-                protocol::TMLedgerNode node;
-                node.set_nodedata(rootData);
-                node.set_depth(0);
-                auto const result = getSHAMapNodeID(node, rootNode);
-                BEAST_EXPECT(!result.has_value());
-            }
-        }
-
-        {
-            // Tests using an inner node at arbitrary depth.
+            // Tests using inner nodes at various depths.
             auto const innerNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
             auto const childNode = intr_ptr::make_shared<SHAMapInnerNode>(1);
             innerNode->setChild(0, childNode);
             auto const innerData = serializeNode(innerNode);
-            auto const innerDepth = 3;
-            auto const innerNodeID = SHAMapNodeID::createID(innerDepth, uint256{});
 
-            // Valid: legacy `nodeid` field.
+            // Valid: legacy `nodeid` field at arbitrary depth.
             {
+                auto const innerDepth = 3;
+                auto const innerID = SHAMapNodeID::createID(innerDepth, uint256{});
+
                 protocol::TMLedgerNode node;
                 node.set_nodedata(innerData);
-                node.set_nodeid(innerNodeID.getRawString());
+                node.set_nodeid(innerID.getRawString());
                 auto const result = getSHAMapNodeID(node, innerNode);
                 BEAST_EXPECT(result.has_value());
-                BEAST_EXPECT(*result == innerNodeID);
+                BEAST_EXPECT(*result == innerID);
             }
 
-            // Valid: new `id` field.
+            // Valid: new `id` field at minimum depth.
             {
+                auto const innerDepth = 0;
+                auto const innerID = SHAMapNodeID::createID(innerDepth, uint256{});
+
                 protocol::TMLedgerNode node;
                 node.set_nodedata(innerData);
-                node.set_id(innerNodeID.getRawString());
+                node.set_id(innerID.getRawString());
                 auto const result = getSHAMapNodeID(node, innerNode);
                 BEAST_EXPECT(result.has_value());
-                BEAST_EXPECT(*result == innerNodeID);
+                BEAST_EXPECT(*result == innerID);
             }
 
             // Invalid: new `depth` field should not be used for inner nodes.
             {
                 protocol::TMLedgerNode node;
                 node.set_nodedata(innerData);
-                node.set_depth(innerDepth);
+                node.set_depth(10);
                 auto const result = getSHAMapNodeID(node, innerNode);
                 BEAST_EXPECT(!result.has_value());
             }
         }
 
         {
-            // Tests using leaf nodes at various depths, but with the same key.
+            // Tests using leaf nodes at various depths.
             auto const leafItem = makeTestItem(12345);
             auto const leafNode = intr_ptr::make_shared<SHAMapAccountStateLeafNode>(leafItem, 1);
             auto const leafData = serializeNode(leafNode);
@@ -324,11 +282,8 @@ class LedgerNodeHelpers_test : public beast::unit_test::suite
             }
 
             // Valid: new `depth` field at minimum depth.
-            // Note that we do not test a depth less than the minimum depth, because the proto
-            // message is assumed to have been validated by the time the getSHAMapNodeID function is
-            // called.
             {
-                auto const leafDepth = 1;
+                auto const leafDepth = 0;
                 auto const leafID = SHAMapNodeID::createID(leafDepth, leafKey);
 
                 protocol::TMLedgerNode node;
