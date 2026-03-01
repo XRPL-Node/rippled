@@ -929,7 +929,7 @@ InboundLedger::takeAsRootNode(std::string const& data, SHAMapAddNode& san)
 
     AccountStateSF filter(mLedger->stateMap().family().db(), app_.getLedgerMaster());
     san += mLedger->stateMap().addRootNode(
-        SHAMapHash{mLedger->header().accountHash}, *treeNode, &filter);
+        SHAMapHash{mLedger->header().accountHash}, std::move(*treeNode), &filter);
     return san.isGood();
 }
 

@@ -16,6 +16,7 @@
 
 #include <set>
 #include <stack>
+#include <tuple>
 #include <vector>
 
 namespace xrpl {
