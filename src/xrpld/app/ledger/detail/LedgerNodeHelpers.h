@@ -26,7 +26,7 @@ namespace xrpl {
  * @param ledger_node The ledger node to validate.
  * @return true if the ledger node has the expected fields, false otherwise.
  */
-bool
+[[nodiscard]] bool
 validateLedgerNode(protocol::TMLedgerNode const& ledger_node);
 
 /**

@@ -486,6 +486,13 @@ SHAMap::addRootNode(
     intr_ptr::SharedPtr<SHAMapTreeNode> rootNode,
     SHAMapSyncFilter const* filter)
 {
+    XRPL_ASSERT(rootNode, "xrpl::SHAMap::addKnownNode : non-null root node");
+    if (!rootNode)
+    {
+        JLOG(journal_.error()) << "Null node received";
+        return SHAMapAddNode::invalid();
+    }
+
     // we already have a root_ node
     if (root_->getHash().isNonZero())
     {
@@ -527,6 +534,12 @@ SHAMap::addKnownNode(
     SHAMapSyncFilter const* filter)
 {
     XRPL_ASSERT(!nodeID.isRoot(), "xrpl::SHAMap::addKnownNode : valid node input");
+    XRPL_ASSERT(treeNode, "xrpl::SHAMap::addKnownNode : non-null tree node");
+    if (!treeNode)
+    {
+        JLOG(journal_.error()) << "Null node received";
+        return SHAMapAddNode::invalid();
+    }
 
     if (!isSynching())
     {
