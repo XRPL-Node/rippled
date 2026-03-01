@@ -836,43 +836,52 @@ InboundLedger::receiveNode(protocol::TMLedgerData& packet, SHAMapAddNode& san)
                 mLedger->stateMap().family().db(), app_.getLedgerMaster())};
     }();
 
-    auto const f = filter.get();
-
-    for (auto const& ledger_node : packet.nodes())
+    try
     {
-        if (!validateLedgerNode(ledger_node))
-        {
-            JLOG(journal_.warn()) << "Got malformed ledger node";
-            san.incInvalid();
-            return;
-        }
+        auto const f = filter.get();
 
-        auto treeNode = getTreeNode(ledger_node.nodedata());
-        if (!treeNode)
+        for (auto const& ledger_node : packet.nodes())
         {
-            JLOG(journal_.warn()) << "Got invalid node data";
-            san.incInvalid();
-            return;
-        }
+            if (!validateLedgerNode(ledger_node))
+            {
+                JLOG(journal_.warn()) << "Got malformed ledger node";
+                san.incInvalid();
+                return;
+            }
 
-        auto const nodeID = getSHAMapNodeID(ledger_node, *treeNode);
-        if (!nodeID)
-        {
-            JLOG(journal_.warn()) << "Got invalid node id";
-            san.incInvalid();
-            return;
-        }
+            auto treeNode = getTreeNode(ledger_node.nodedata());
+            if (!treeNode)
+            {
+                JLOG(journal_.warn()) << "Got invalid node data";
+                san.incInvalid();
+                return;
+            }
 
-        if (nodeID->isRoot())
-            san += map.addRootNode(rootHash, std::move(*treeNode), f);
-        else
-            san += map.addKnownNode(*nodeID, std::move(*treeNode), f);
+            auto const nodeID = getSHAMapNodeID(ledger_node, *treeNode);
+            if (!nodeID)
+            {
+                JLOG(journal_.warn()) << "Got invalid node id";
+                san.incInvalid();
+                return;
+            }
 
-        if (!san.isGood())
-        {
-            JLOG(journal_.warn()) << "Received bad node data";
-            return;
+            if (nodeID->isRoot())
+                san += map.addRootNode(rootHash, std::move(*treeNode), f);
+            else
+                san += map.addKnownNode(*nodeID, std::move(*treeNode), f);
+
+            if (!san.isGood())
+            {
+                JLOG(journal_.warn()) << "Received bad node data";
+                return;
+            }
         }
+    }
+    catch (std::exception const& e)
+    {
+        JLOG(journal_.error()) << "Received bad node data: " << e.what();
+        san.incInvalid();
+        return;
     }
 
     if (!map.isSynching())
