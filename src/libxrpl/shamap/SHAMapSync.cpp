@@ -486,7 +486,7 @@ SHAMap::addRootNode(
     intr_ptr::SharedPtr<SHAMapTreeNode> rootNode,
     SHAMapSyncFilter const* filter)
 {
-    XRPL_ASSERT(rootNode, "xrpl::SHAMap::addKnownNode : non-null root node");
+    XRPL_ASSERT(rootNode, "xrpl::SHAMap::addRootNode : non-null root node");
     if (!rootNode)
     {
         JLOG(journal_.error()) << "Null node received";

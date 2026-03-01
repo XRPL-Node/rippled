@@ -3252,6 +3252,8 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
 
             try
             {
+                auto const useLedgerNodeDepth = supportsFeature(ProtocolFeature::LedgerNodeDepth);
+
                 if (map->getNodeFat(*shaMapNodeId, data, fatLeaves, queryDepth))
                 {
                     JLOG(p_journal_.trace())
@@ -3271,7 +3273,7 @@ PeerImp::processLedgerRequest(std::shared_ptr<protocol::TMGetLedger> const& m)
                         // we always set the node ID. However, when it is supported then we only set
                         // it for inner nodes, while for leaf nodes we set the node depth instead.
                         auto const& nodeID = std::get<0>(d);
-                        if (!supportsFeature(ProtocolFeature::LedgerNodeDepth))
+                        if (!useLedgerNodeDepth)
                             node->set_nodeid(nodeID.getRawString());
                         else if (std::get<2>(d))
                             node->set_depth(nodeID.getDepth());
