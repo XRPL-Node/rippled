@@ -19,62 +19,6 @@ _After executing the command, the node will begin initializing and syncing with 
 
 When you first run an XRP node, your node will need to sync with the XRP Ledger network. This process can take a few minutes, depending on your internet connection speed. You will see synchronization progress in the Command Prompt window.
 
-
-## Node Types
-
-The XRP Ledger network consists of different types of servers that work together to process transactions and maintain the decentralized ledger. All servers use the rippled software and participate in the consensus protocol to validate transactions.
-
-Running a node means that you will:
-
-1. Track the XRP Ledger network in real-time
-2. Submit transactions to the network
-3. Access historical ledger data
-4. Participate in the consensus process (for validators)
-
-
-### Validator
-
-Validators are specialized servers that participate in the consensus process by voting on the validity and order of transactions. They are included in Unique Node Lists (UNLs) - lists of trusted validators that other servers use to determine consensus.
-
-Running a validator requires:
-
-• High reliability and uptime (99.9%+)
-• Strong security measures
-• Sufficient bandwidth and processing power
-• Public identification and accountability
-
-XRP validator rewards are paid for sustained node availability (uptime) and reliable participation in block validation and consensus.
-
-### Stock Server (rippled)
-
-A stock server is the standard XRP Ledger server that anyone can run. It tracks the network, processes transactions, and maintains a complete copy of the ledger.
-
-Stock servers can run on desktop computers, servers, or cloud infrastructure. They are designed for users who want to:
-
-• Submit transactions directly to the network
-• Query ledger data and transaction history
-• Monitor the network status in real-time
-• Maintain independence from third-party services
-
-Ledger History: Stock servers store the complete ledger history, including all validated transactions and account states. You can configure how much historical data to retain based on your storage capacity and needs.
-
-System Requirements: A stock server typically requires at least 8GB RAM, a multi-core processor, and sufficient disk space for ledger history (minimum 50GB recommended, more for full history).
-
-Configuration: Stock servers can be configured for different use cases, from personal transaction submission to serving API requests for applications.
-
-### Hub Server
-
-Hub servers are high-capacity stock servers configured to handle large volumes of API requests. They are ideal for:
-
-• Exchanges and trading platforms
-• Payment processors
-• Wallet providers
-• Applications requiring high-throughput access to ledger data
-
-Hub servers require more powerful hardware and network infrastructure to handle concurrent connections and API requests efficiently.
-
-
-
 # Community
 Thanks to all XRP validators supporting the network.
 
