@@ -20,7 +20,6 @@ _After executing the command, the node will begin initializing and syncing with 
 When you first run an XRP node, your node will need to sync with the XRP Ledger network. This process can take a few minutes, depending on your internet connection speed. You will see synchronization progress in the Command Prompt window.
 
 
-
 ## Node Types
 
 The XRP Ledger network consists of different types of servers that work together to process transactions and maintain the decentralized ledger. All servers use the rippled software and participate in the consensus protocol to validate transactions.
