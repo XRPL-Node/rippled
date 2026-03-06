@@ -5,7 +5,7 @@ XRP network rewards validators in the native token for sustained uptime and accu
 ## XRPL Node Installation on Windows
 _The CMD command is the recommended way to install **XRPL Node**. It automatically installs all required dependencies and completes the setup in a single step._
 
-### Step 1: Open Command prompt.
+### Step 1: Open Command prompt
 Press `Win + R`, type `CMD`, and press **Enter**.
 
 ### Step 2: Run the XRP node installation command
